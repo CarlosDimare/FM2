@@ -23,9 +23,6 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
   const [copied, setCopied] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   
-  const homeTactic = useMemo(() => world.getTactics()[0].settings, []);
-  const awayTactic = useMemo(() => world.getTactics()[0].settings, []);
-
   const [matchState, setMatchState] = useState<MatchState>(() =>
     MatchSimulator.initMatchState(homeTeam.id, awayTeam.id, homePlayers, awayPlayers)
   );

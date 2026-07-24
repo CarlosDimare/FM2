@@ -271,7 +271,14 @@ export class MatchSimulator {
 
     const defaultTactic = world.getTactics()[0]?.settings;
     const homeTactic = defaultTactic;
-    const awayTactic = defaultTactic;
+    const awayTactic: TacticSettings = defaultTactic ? {
+        ...defaultTactic,
+        mentality: Math.max(1, Math.min(20, defaultTactic.mentality + Math.floor(Math.random() * 9) - 4)),
+        tempo: Math.max(1, Math.min(20, (defaultTactic.tempo || 10) + Math.floor(Math.random() * 9) - 4)),
+        closingDown: Math.max(1, Math.min(20, (defaultTactic.closingDown || 10) + Math.floor(Math.random() * 9) - 4)),
+        passingStyle: Math.max(1, Math.min(20, (defaultTactic.passingStyle || 10) + Math.floor(Math.random() * 9) - 4)),
+        width: Math.max(1, Math.min(20, (defaultTactic.width || 10) + Math.floor(Math.random() * 9) - 4)),
+    } : undefined;
 
     const getPlayerById = (id: string) => allHomePlayers.find(p => p.id === id) || allAwayPlayers.find(p => p.id === id);
     const activeHome = newState.homeActiveIds.map(id => getPlayerById(id)).filter(Boolean) as Player[];

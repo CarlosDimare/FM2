@@ -346,211 +346,215 @@ const App: React.FC = () => {
   const renderCurrentView = () => {
     if (!userClub) return null;
 
-    const staticViews: Record<string, React.ReactNode> = {
-      'HOME': (
-        <div className="p-4 space-y-4 overflow-y-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 bg-slate-200 p-6 rounded-sm border border-slate-500 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-10 text-slate-900"><Globe size={120} /></div>
-              <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-4 border-b border-slate-400 pb-1">Próximo Encuentro</h3>
-              {nextFixture ? (
-                <div className="flex items-center justify-center gap-8 py-4 relative z-10">
-                  <div className="text-center"><div className={`w-16 h-16 rounded-full mx-auto mb-2 shadow-md flex items-center justify-center text-white font-black text-xl ${userClub.primaryColor} ${userClub.primaryColor === 'bg-white' ? 'text-slate-950 border border-slate-400' : 'text-white'}`}>{userClub.shortName}</div><p className="font-black text-slate-950 text-xs">{userClub.name}</p></div>
-                  <div className="text-4xl font-black text-slate-400 italic">VS</div>
-                  <div className="text-center"><div className={`w-16 h-16 rounded-full mx-auto mb-2 shadow-md flex items-center justify-center font-black text-xl ${world.getClub(nextFixture.homeTeamId === userClub.id ? nextFixture.awayTeamId : nextFixture.homeTeamId)?.primaryColor} ${world.getClub(nextFixture.homeTeamId === userClub.id ? nextFixture.awayTeamId : nextFixture.homeTeamId)?.primaryColor === 'bg-white' ? 'text-slate-950 border border-slate-400' : 'text-white'}`}>{world.getClub(nextFixture.homeTeamId === userClub.id ? nextFixture.awayTeamId : nextFixture.homeTeamId)?.shortName}</div><p className="font-black text-slate-950 text-xs">{world.getClub(nextFixture.homeTeamId === userClub.id ? nextFixture.awayTeamId : nextFixture.homeTeamId)?.name}</p></div>
+    switch (currentView) {
+      case 'HOME':
+        return (
+          <div className="p-4 space-y-4 overflow-y-auto pb-14">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 bg-slate-200 p-6 rounded-sm border border-slate-500 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10 text-slate-900"><Globe size={120} /></div>
+                <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-4 border-b border-slate-400 pb-1">Próximo Encuentro</h3>
+                {nextFixture ? (
+                  <div className="flex items-center justify-center gap-8 py-4 relative z-10">
+                    <div className="text-center"><div className={`w-16 h-16 rounded-full mx-auto mb-2 shadow-md flex items-center justify-center text-white font-black text-xl ${userClub.primaryColor} ${userClub.primaryColor === 'bg-white' ? 'text-slate-950 border border-slate-400' : 'text-white'}`}>{userClub.shortName}</div><p className="font-black text-slate-950 text-xs">{userClub.name}</p></div>
+                    <div className="text-4xl font-black text-slate-400 italic">VS</div>
+                    <div className="text-center"><div className={`w-16 h-16 rounded-full mx-auto mb-2 shadow-md flex items-center justify-center font-black text-xl ${world.getClub(nextFixture.homeTeamId === userClub.id ? nextFixture.awayTeamId : nextFixture.homeTeamId)?.primaryColor} ${world.getClub(nextFixture.homeTeamId === userClub.id ? nextFixture.awayTeamId : nextFixture.homeTeamId)?.primaryColor === 'bg-white' ? 'text-slate-950 border border-slate-400' : 'text-white'}`}>{world.getClub(nextFixture.homeTeamId === userClub.id ? nextFixture.awayTeamId : nextFixture.homeTeamId)?.shortName}</div><p className="font-black text-slate-950 text-xs">{world.getClub(nextFixture.homeTeamId === userClub.id ? nextFixture.awayTeamId : nextFixture.homeTeamId)?.name}</p></div>
+                  </div>
+                ) : <p className="text-center text-slate-500 italic py-10">No hay partidos próximos.</p>}
+                <div className="mt-4 text-center text-slate-600 font-mono text-[10px] uppercase tracking-widest">{nextFixture?.date.toLocaleDateString()}</div>
+              </div>
+              <div className="bg-slate-200 p-4 rounded-sm border border-slate-500 shadow-sm flex flex-col">
+                <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-2 border-b border-slate-400 pb-1 flex items-center gap-2"><Trophy size={14} /> Competiciones</h3>
+                <div className="flex-1 space-y-2 overflow-y-auto">
+                  {world.competitions.filter(c => {
+                    if (c.id === userClub.leagueId) return true;
+                    if (c.type !== 'LEAGUE') return fixtures.some(f => f.competitionId === c.id && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id));
+                    return false;
+                  }).map(comp => {
+                    let statusText = "";
+                    if (comp.type === 'LEAGUE') {
+                      const table = world.getLeagueTable(comp.id, fixtures, 'SENIOR');
+                      const rank = table.findIndex(e => e.clubId === userClub.id) + 1;
+                      statusText = rank > 0 ? `${rank}º Clasificado` : '-';
+                    } else statusText = "En curso";
+                    return (
+                      <div key={comp.id} className="flex justify-between items-center p-2 bg-slate-300/50 rounded-sm border-l-4 border-slate-500">
+                        <span className="text-[10px] font-black text-slate-700 uppercase truncate max-w-[100px]">{comp.name}</span>
+                        <span className="text-[10px] font-bold text-slate-950 uppercase">{statusText}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ) : <p className="text-center text-slate-500 italic py-10">No hay partidos próximos.</p>}
-              <div className="mt-4 text-center text-slate-600 font-mono text-[10px] uppercase tracking-widest">{nextFixture?.date.toLocaleDateString()}</div>
+              </div>
             </div>
-            <div className="bg-slate-200 p-4 rounded-sm border border-slate-500 shadow-sm flex flex-col">
-              <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-2 border-b border-slate-400 pb-1 flex items-center gap-2"><Trophy size={14} /> Competiciones</h3>
-              <div className="flex-1 space-y-2 overflow-y-auto">
-                {world.competitions.filter(c => {
-                  if (c.id === userClub.leagueId) return true;
-                  if (c.type !== 'LEAGUE') return fixtures.some(f => f.competitionId === c.id && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id));
-                  return false;
-                }).map(comp => {
-                  let statusText = "";
-                  if (comp.type === 'LEAGUE') {
-                    const table = world.getLeagueTable(comp.id, fixtures, 'SENIOR');
-                    const rank = table.findIndex(e => e.clubId === userClub.id) + 1;
-                    statusText = rank > 0 ? `${rank}º Clasificado` : '-';
-                  } else statusText = "En curso";
+            <div className="bg-slate-100 p-4 rounded-sm border border-slate-300 shadow-sm">
+              <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-4 border-b border-slate-300 pb-1 flex items-center justify-between">
+                <div className="flex items-center gap-2"><Mail size={14} /> Últimas Noticias</div>
+                <button onClick={() => setView('INBOX')} className="text-[9px] text-blue-600 hover:underline flex items-center">Ver todo <ChevronRight size={10} /></button>
+              </h3>
+              <div className="space-y-2">
+                {world.inbox.slice(0, 3).map((msg) => (
+                  <div key={msg.id} className="p-3 bg-slate-200 border-l-4 border-slate-400 hover:bg-slate-300 transition-colors cursor-pointer" onClick={() => setView('INBOX')}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={`text-[9px] font-black px-1.5 py-0.5 rounded text-white ${msg.category === 'MARKET' ? 'bg-blue-600' : msg.category === 'SQUAD' ? 'bg-green-600' : 'bg-slate-600'}`}>{msg.category}</span>
+                      <span className="text-[9px] text-slate-500 font-mono">{msg.date.toLocaleDateString()}</span>
+                    </div>
+                    <h4 className="text-xs font-black text-slate-900 uppercase truncate">{msg.subject}</h4>
+                    <p className="text-[10px] text-slate-600 truncate italic">{msg.body}</p>
+                  </div>
+                ))}
+                {world.inbox.length === 0 && <p className="text-center text-slate-400 italic text-xs py-4">No hay noticias recientes.</p>}
+              </div>
+            </div>
+          </div>
+        );
+      case 'INBOX':
+        return <InboxView setView={setView} />;
+      case 'TABLE':
+        return (
+          <div className="p-2 h-full flex flex-col">
+            <LeagueTable
+              entries={world.getLeagueTable(viewLeagueId || userClub.leagueId, fixtures, viewSquadType)}
+              userClubId={userClub.id}
+              allLeagues={world.getLeagues()}
+              currentLeagueId={viewLeagueId || userClub.leagueId}
+              onLeagueChange={setViewLeagueId}
+              currentSquadType={viewSquadType}
+              onSquadTypeChange={setViewSquadType}
+            />
+          </div>
+        );
+      case 'MARKET':
+        return <MarketView userClubId={userClub.id} onSelectPlayer={setSelectedPlayer} currentDate={currentDate} />;
+      case 'SEARCH':
+        return <SearchView onSelectPlayer={setSelectedPlayer} />;
+      case 'NEGOTIATIONS':
+        return <NegotiationsView userClubId={userClub.id} currentDate={currentDate} />;
+      case 'ECONOMY':
+        return <EconomyView club={userClub} />;
+      case 'STAFF':
+        return <StaffView staff={world.getStaffByClub(userClub.id)} />;
+      case 'TRAINING':
+        return <TrainingView club={userClub} players={world.getPlayersByClub(userClub.id)} staff={world.getStaffByClub(userClub.id)} />;
+      case 'SCOUTING':
+        return <ScoutingView clubId={userClub.id} onSelectPlayer={setSelectedPlayer} />;
+      case 'CLUBS_LIST':
+        return <ClubsListView onSelectClub={(c) => { setViewExternalClub(c); setView('EXTERNAL_CLUB'); }} />;
+      case 'EXTERNAL_CLUB':
+        if (viewExternalClub) {
+          return (
+            <div className="flex flex-col h-full bg-slate-300">
+              <div className="p-2 bg-slate-200 border-b border-slate-400 flex justify-between items-center shadow-sm">
+                <h3 className="font-black uppercase text-slate-800 text-xs flex items-center gap-2">
+                  <div className={`w-6 h-6 rounded-full ${viewExternalClub.primaryColor} border flex items-center justify-center text-[8px] text-white shadow-sm`}>
+                    {viewExternalClub.shortName.substring(0, 2)}
+                  </div>
+                  {viewExternalClub.name} - PLANTILLA
+                </h3>
+                <button onClick={() => setView('CLUBS_LIST')} className="text-[10px] font-bold uppercase bg-white border border-slate-400 px-3 py-1 rounded-sm hover:bg-slate-50 flex items-center gap-1 shadow-sm">
+                  <ArrowLeft size={10} /> Volver
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <SquadView
+                  players={world.getPlayersByClub(viewExternalClub.id).filter(p => p.squad === 'SENIOR')}
+                  onSelectPlayer={setSelectedPlayer}
+                  customTitle={`PLANTILLA - ${viewExternalClub.name}`}
+                  currentDate={currentDate}
+                />
+              </div>
+            </div>
+          );
+        }
+        return null;
+      case 'PRESS_CONFERENCE_PRE': {
+        const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
+        const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
+        if (nextFixture && homeClub && awayClub) {
+          const opponent = homeClub.id === userClub.id ? awayClub : homeClub;
+          return <PressConferenceView club={userClub} opponent={opponent} context="PRE_MATCH" onFinish={() => setView('MATCH')} />;
+        }
+        return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
+      }
+      case 'PRESS_CONFERENCE_POST': {
+        const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
+        const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
+        if (nextFixture && homeClub && awayClub) {
+          const opponent = homeClub.id === userClub.id ? awayClub : homeClub;
+          return <PressConferenceView club={userClub} opponent={opponent} context="POST_MATCH" homeScore={nextFixture.homeScore} awayScore={nextFixture.awayScore} onFinish={() => { setView('HOME'); updateNextFixture(fixtures, currentDate, userClub.id); }} />;
+        }
+        return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
+      }
+      case 'PRE_MATCH': {
+        const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
+        const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
+        if (nextFixture && homeClub && awayClub) {
+          return <PreMatchView club={userClub} opponent={homeClub.id === userClub.id ? awayClub : homeClub} starters={world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR')} onStart={() => setView('PRESS_CONFERENCE_PRE')} onGoToTactics={() => setView('SENIOR_TACTICS')} />;
+        }
+        return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
+      }
+      case 'MATCH': {
+        const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
+        const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
+        if (nextFixture && homeClub && awayClub) {
+          return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats) => {
+            nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
+            MatchSimulator.finalizeSeasonStats(
+              world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),
+              world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, h, a, nextFixture.competitionId
+            );
+            LifecycleManager.processPostMatchSuspensions(nextFixture.homeTeamId, nextFixture.awayTeamId);
+            MatchSimulator.processMatchInjuries(stats);
+            setView('PRESS_CONFERENCE_POST');
+            notify();
+          }} />;
+        }
+        return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
+      }
+      default:
+        if (currentView.endsWith('_SQUAD')) {
+          const type = currentView.split('_')[0] as SquadType;
+          return <SquadView players={world.getPlayersByClub(userClub.id).filter(p => p.squad === type)} onSelectPlayer={setSelectedPlayer} onContextMenu={handlePlayerContextMenu} currentDate={currentDate} />;
+        }
+        if (currentView.endsWith('_TACTICS')) {
+          const type = currentView.split('_')[0] as SquadType;
+          return <TacticsView club={userClub} players={world.getPlayersByClub(userClub.id).filter(p => p.squad === type)} onContextMenu={handlePlayerContextMenu} />;
+        }
+        if (currentView.endsWith('_SCHEDULE')) {
+          const type = currentView.split('_')[0] as SquadType;
+          const squadFixtures = fixtures.filter(f => (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) && f.squadType === type);
+          return (
+            <div className="p-4 h-full flex flex-col">
+              <h2 className="text-xl font-black text-slate-950 mb-4 uppercase tracking-tighter border-b border-slate-500 pb-2 italic">Calendario - {type}</h2>
+              <div className="bg-slate-200 rounded-sm border border-slate-500 overflow-y-auto shadow-md flex-1 p-2">
+                {squadFixtures.map(f => {
+                  const home = world.getClub(f.homeTeamId); const away = world.getClub(f.awayTeamId);
+                  const isPenalty = f.penaltyHome !== undefined;
+                  const comp = world.competitions.find(c => c.id === f.competitionId);
                   return (
-                    <div key={comp.id} className="flex justify-between items-center p-2 bg-slate-300/50 rounded-sm border-l-4 border-slate-500">
-                      <span className="text-[10px] font-black text-slate-700 uppercase truncate max-w-[100px]">{comp.name}</span>
-                      <span className="text-[10px] font-bold text-slate-950 uppercase">{statusText}</span>
+                    <div key={f.id} className="flex flex-col p-2 border-b border-slate-400 hover:bg-slate-300">
+                      <div className="flex items-center text-[11px]">
+                        <div className="w-20 text-slate-700 font-mono font-bold">{f.date.toLocaleDateString()}</div>
+                        <div className="flex-1 text-right font-black text-slate-900 pr-2 uppercase">{home?.name}</div>
+                        <div className={`w-20 text-center font-black bg-slate-300 rounded px-1 border border-slate-500 ${f.played ? 'text-slate-950' : 'text-slate-500'}`}>
+                          {f.played ? (isPenalty ? `${f.homeScore}-${f.awayScore} (p)` : `${f.homeScore}-${f.awayScore}`) : 'v'}
+                        </div>
+                        <div className="flex-1 text-left font-black text-slate-900 pl-2 uppercase">{away?.name}</div>
+                      </div>
+                      <div className="ml-20 text-[9px] font-black uppercase text-slate-500 italic tracking-widest mt-1">{comp?.name || 'Amistoso'}</div>
                     </div>
                   );
                 })}
               </div>
             </div>
-          </div>
-          <div className="bg-slate-100 p-4 rounded-sm border border-slate-300 shadow-sm">
-            <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-4 border-b border-slate-300 pb-1 flex items-center justify-between">
-              <div className="flex items-center gap-2"><Mail size={14} /> Últimas Noticias</div>
-              <button onClick={() => setView('INBOX')} className="text-[9px] text-blue-600 hover:underline flex items-center">Ver todo <ChevronRight size={10} /></button>
-            </h3>
-            <div className="space-y-2">
-              {world.inbox.slice(0, 3).map((msg) => (
-                <div key={msg.id} className="p-3 bg-slate-200 border-l-4 border-slate-400 hover:bg-slate-300 transition-colors cursor-pointer" onClick={() => setView('INBOX')}>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded text-white ${msg.category === 'MARKET' ? 'bg-blue-600' : msg.category === 'SQUAD' ? 'bg-green-600' : 'bg-slate-600'}`}>{msg.category}</span>
-                    <span className="text-[9px] text-slate-500 font-mono">{msg.date.toLocaleDateString()}</span>
-                  </div>
-                  <h4 className="text-xs font-black text-slate-900 uppercase truncate">{msg.subject}</h4>
-                  <p className="text-[10px] text-slate-600 truncate italic">{msg.body}</p>
-                </div>
-              ))}
-              {world.inbox.length === 0 && <p className="text-center text-slate-400 italic text-xs py-4">No hay noticias recientes.</p>}
-            </div>
-          </div>
-        </div>
-      ),
-      'INBOX': <InboxView setView={setView} />,
-      'TABLE': (
-        <div className="p-2 h-full flex flex-col">
-          <LeagueTable
-            entries={world.getLeagueTable(viewLeagueId || userClub.leagueId, fixtures, viewSquadType)}
-            userClubId={userClub.id}
-            allLeagues={world.getLeagues()}
-            currentLeagueId={viewLeagueId || userClub.leagueId}
-            onLeagueChange={setViewLeagueId}
-            currentSquadType={viewSquadType}
-            onSquadTypeChange={setViewSquadType}
-          />
-        </div>
-      ),
-      'MARKET': <MarketView userClubId={userClub.id} onSelectPlayer={setSelectedPlayer} currentDate={currentDate} />,
-      'SEARCH': <SearchView onSelectPlayer={setSelectedPlayer} />,
-      'NEGOTIATIONS': <NegotiationsView userClubId={userClub.id} currentDate={currentDate} />,
-      'ECONOMY': <EconomyView club={userClub} />,
-      'STAFF': <StaffView staff={world.getStaffByClub(userClub.id)} />,
-      'TRAINING': <TrainingView club={userClub} players={world.getPlayersByClub(userClub.id)} staff={world.getStaffByClub(userClub.id)} />,
-      'SCOUTING': <ScoutingView clubId={userClub.id} onSelectPlayer={setSelectedPlayer} />,
-    };
-
-    if (staticViews[currentView]) return staticViews[currentView];
-
-    let homeClub: Club | undefined;
-    let awayClub: Club | undefined;
-    if (nextFixture) {
-      homeClub = nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId);
-      awayClub = nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId);
-    }
-
-    if (currentView === 'CLUBS_LIST') {
-      return <ClubsListView onSelectClub={(c) => { setViewExternalClub(c); setView('EXTERNAL_CLUB'); }} />;
-    }
-
-    if (currentView === 'EXTERNAL_CLUB' && viewExternalClub) {
-      return (
-        <div className="flex flex-col h-full bg-slate-300">
-          <div className="p-2 bg-slate-200 border-b border-slate-400 flex justify-between items-center shadow-sm">
-            <h3 className="font-black uppercase text-slate-800 text-xs flex items-center gap-2">
-              <div className={`w-6 h-6 rounded-full ${viewExternalClub.primaryColor} border flex items-center justify-center text-[8px] text-white shadow-sm`}>
-                {viewExternalClub.shortName.substring(0, 2)}
-              </div>
-              {viewExternalClub.name} - PLANTILLA
-            </h3>
-            <button onClick={() => setView('CLUBS_LIST')} className="text-[10px] font-bold uppercase bg-white border border-slate-400 px-3 py-1 rounded-sm hover:bg-slate-50 flex items-center gap-1 shadow-sm">
-              <ArrowLeft size={10} /> Volver
-            </button>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <SquadView
-              players={world.getPlayersByClub(viewExternalClub.id).filter(p => p.squad === 'SENIOR')}
-              onSelectPlayer={setSelectedPlayer}
-              customTitle={`PLANTILLA - ${viewExternalClub.name}`}
-              currentDate={currentDate}
-            />
-          </div>
-        </div>
-      );
-    }
-
-    if (currentView === 'PRESS_CONFERENCE_PRE') {
-      if (nextFixture && homeClub && awayClub) {
-        const opponent = homeClub.id === userClub.id ? awayClub : homeClub;
-        return <PressConferenceView club={userClub} opponent={opponent} context="PRE_MATCH" onFinish={() => setView('MATCH')} />;
-      }
-      return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
-    }
-
-    if (currentView === 'PRESS_CONFERENCE_POST') {
-      if (nextFixture && homeClub && awayClub) {
-        const opponent = homeClub.id === userClub.id ? awayClub : homeClub;
-        return <PressConferenceView club={userClub} opponent={opponent} context="POST_MATCH" homeScore={nextFixture.homeScore} awayScore={nextFixture.awayScore} onFinish={() => { setView('HOME'); updateNextFixture(fixtures, currentDate, userClub.id); }} />;
-      }
-      return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
-    }
-
-    if (currentView === 'PRE_MATCH') {
-      if (nextFixture && homeClub && awayClub) {
-        return <PreMatchView club={userClub} opponent={homeClub.id === userClub.id ? awayClub : homeClub} starters={world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR')} onStart={() => setView('PRESS_CONFERENCE_PRE')} onGoToTactics={() => setView('SENIOR_TACTICS')} />;
-      }
-      return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
-    }
-
-    if (currentView === 'MATCH') {
-      if (nextFixture && homeClub && awayClub) {
-        return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats) => {
-          nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
-          MatchSimulator.finalizeSeasonStats(
-            world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),
-            world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, h, a, nextFixture.competitionId
           );
-          LifecycleManager.processPostMatchSuspensions(nextFixture.homeTeamId, nextFixture.awayTeamId);
-          MatchSimulator.processMatchInjuries(stats);
-          setView('PRESS_CONFERENCE_POST');
-          notify();
-        }} />;
-      }
-      return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
+        }
+        if (currentView.startsWith('COMP_')) {
+          const competition = world.competitions.find(c => c.id === currentView.replace('COMP_', ''));
+          return competition ? <TournamentHub competition={competition} fixtures={fixtures} userClubId={userClub.id} /> : null;
+        }
+        return null;
     }
-
-    if (currentView.endsWith('_SQUAD')) {
-      const type = currentView.split('_')[0] as SquadType;
-      return <SquadView players={world.getPlayersByClub(userClub.id).filter(p => p.squad === type)} onSelectPlayer={setSelectedPlayer} onContextMenu={handlePlayerContextMenu} currentDate={currentDate} />;
-    }
-    if (currentView.endsWith('_TACTICS')) {
-      const type = currentView.split('_')[0] as SquadType;
-      return <TacticsView club={userClub} players={world.getPlayersByClub(userClub.id).filter(p => p.squad === type)} onContextMenu={handlePlayerContextMenu} />;
-    }
-    if (currentView.endsWith('_SCHEDULE')) {
-      const type = currentView.split('_')[0] as SquadType;
-      const squadFixtures = fixtures.filter(f => (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) && f.squadType === type);
-      return (
-        <div className="p-4 h-full flex flex-col">
-          <h2 className="text-xl font-black text-slate-950 mb-4 uppercase tracking-tighter border-b border-slate-500 pb-2 italic">Calendario - {type}</h2>
-          <div className="bg-slate-200 rounded-sm border border-slate-500 overflow-y-auto shadow-md flex-1 p-2">
-            {squadFixtures.map(f => {
-              const home = world.getClub(f.homeTeamId); const away = world.getClub(f.awayTeamId);
-              const isPenalty = f.penaltyHome !== undefined;
-              const comp = world.competitions.find(c => c.id === f.competitionId);
-              return (
-                <div key={f.id} className="flex flex-col p-2 border-b border-slate-400 hover:bg-slate-300">
-                  <div className="flex items-center text-[11px]">
-                    <div className="w-20 text-slate-700 font-mono font-bold">{f.date.toLocaleDateString()}</div>
-                    <div className="flex-1 text-right font-black text-slate-900 pr-2 uppercase">{home?.name}</div>
-                    <div className={`w-20 text-center font-black bg-slate-300 rounded px-1 border border-slate-500 ${f.played ? 'text-slate-950' : 'text-slate-500'}`}>
-                      {f.played ? (isPenalty ? `${f.homeScore}-${f.awayScore} (p)` : `${f.homeScore}-${f.awayScore}`) : 'v'}
-                    </div>
-                    <div className="flex-1 text-left font-black text-slate-900 pl-2 uppercase">{away?.name}</div>
-                  </div>
-                  <div className="ml-20 text-[9px] font-black uppercase text-slate-500 italic tracking-widest mt-1">{comp?.name || 'Amistoso'}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-    if (currentView.startsWith('COMP_')) {
-      const competition = world.competitions.find(c => c.id === currentView.replace('COMP_', ''));
-      return competition ? <TournamentHub competition={competition} fixtures={fixtures} userClubId={userClub.id} /> : null;
-    }
-    return null;
   };
 
   if (gameState === 'LOADING') return <div className="h-screen w-screen bg-slate-400 flex items-center justify-center text-slate-950"><div className="animate-pulse flex flex-col items-center"><RefreshCw className="w-10 h-10 animate-spin mb-4 text-slate-900" /><h1 className="text-2xl font-black italic tracking-widest uppercase">FM Argentina</h1></div></div>;

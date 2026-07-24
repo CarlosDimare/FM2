@@ -1,6 +1,5 @@
 
-import React from 'react';
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Player, POSITION_ORDER } from '../types';
 import { FMBox, FMTable, FMTableCell } from './FMUI';
 import { TrendingUp, TrendingDown, Minus, X, MessageSquare } from 'lucide-react';
@@ -40,7 +39,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
       }
   };
 
-  const sortedPlayers = [...players].sort((a, b) => {
+  const sortedPlayers = useMemo(() => [...players].sort((a, b) => {
     let res = 0;
     switch (sortField) {
       case 'STATUS': 
@@ -73,7 +72,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
           break;
     }
     return sortDesc ? -res : res;
-  });
+  }), [players, sortField, sortDesc]);
 
   const renderTrend = (trend: string | undefined) => {
     if (trend === 'RISING') return <TrendingUp size={12} className="text-green-600 mx-auto" />;
