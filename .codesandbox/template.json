@@ -1,7 +1,7 @@
 {
-  "title": "Node HTTP Server",
-  "description": "Node.js example server starter project",
+  "title": "FM Argentina",
+  "description": "Football Manager Argentina - Simulador de futbol con ligas argentinas",
   "iconUrl": "https://raw.githubusercontent.com/codesandbox/sandbox-templates/main/node-http-server/.codesandbox/icon.png",
-  "tags": ["node", "javascript", "http-server", "backend"],
+  "tags": ["react", "typescript", "vite", "game"],
   "published": true
 }
