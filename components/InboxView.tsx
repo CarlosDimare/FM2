@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { world } from '../services/worldManager';
 import { InboxMessage, MessageCategory } from '../types';
-import { useWorldStore } from '../stores/worldStore';
+import { notifyInbox } from '../stores/worldStore';
 import { useUIStore } from '../stores/uiStore';
 import { Mail, ShoppingBag, Users, MessageSquare, Wallet, Trash2, Clock, ChevronRight, Inbox, Trophy, ArrowLeft, ChevronLeft, Binoculars } from 'lucide-react';
 import { FMButton } from './FMUI';
@@ -30,7 +30,7 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
     const msg = world.inbox.find(m => m.id === id);
     if (msg && !msg.isRead) {
       msg.isRead = true;
-      useWorldStore.getState().notify();
+      notifyInbox();
     }
     setShowDetailOnMobile(true);
   };
@@ -49,11 +49,11 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
   const deleteMessage = (id: string, e: React.MouseEvent) => {
      e.stopPropagation();
      world.inbox = world.inbox.filter(m => m.id !== id);
-     if (selectedMessageId === id) {
-         setSelectedMessageId(null);
-         setShowDetailOnMobile(false);
-      }
-      useWorldStore.getState().notify();
+      if (selectedMessageId === id) {
+          setSelectedMessageId(null);
+          setShowDetailOnMobile(false);
+       }
+       notifyInbox();
   };
 
   const handleActionRequired = () => {

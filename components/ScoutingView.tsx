@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Player, ScoutingReport } from '../types';
 import { world } from '../services/worldManager';
-import { useWorldStore } from '../stores/worldStore';
+import { notifyAll } from '../stores/worldStore';
 import { FMBox, FMButton } from './FMUI';
 import { Binoculars, User, Star, TrendingUp, ArrowDown, Eye, Crosshair } from 'lucide-react';
 
@@ -23,7 +23,6 @@ const ATTRIBUTE_TRANSLATIONS: Record<string, string> = {
 
 export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlayer }) => {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-  const notify = useWorldStore(s => s.notify);
 
   const reports = useMemo(() => {
     const all = world.getScoutingReports(clubId, 100);
@@ -32,12 +31,12 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlay
 
   const markRead = (reportId: string) => {
     const r = world.scoutingReports.find(sr => sr.id === reportId);
-    if (r) { r.isRead = true; notify(); }
+    if (r) { r.isRead = true; notifyAll(); }
   };
 
   const scoutPlayer = (playerId: string) => {
     world.generateScoutingReport(playerId, clubId, new Date(), clubId);
-    notify();
+    notifyAll();
   };
 
   return (

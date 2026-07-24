@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Club } from '../types';
 import { world } from '../services/worldManager';
-import { useWorldStore } from '../stores/worldStore';
+import { notifyPlayers, notifyClubs } from '../stores/worldStore';
 import { FMButton, FMBox } from './FMUI';
 import { Mic, Newspaper, ThumbsUp, ThumbsDown, Minus } from 'lucide-react';
 
@@ -114,7 +114,7 @@ export const PressConferenceView: React.FC<PressConferenceViewProps> = ({ club, 
     });
 
     club.boardConfidence = Math.max(1, Math.min(100, club.boardConfidence + totalConfidence));
-    useWorldStore.getState().notify();
+    notifyPlayers(); notifyClubs();
   };
 
   return (

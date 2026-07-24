@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Player, Staff, Club, TrainingSchedule, TrainingCategory } from '../types';
 import { world } from '../services/worldManager';
-import { useWorldStore } from '../stores/worldStore';
+import { useWorldStore, notifyPlayers, notifyClubs } from '../stores/worldStore';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 import { TRAINING_PRESETS } from '../data/static';
 import { User, Dumbbell, Users, Settings2, Shield, Target, Zap, Activity, X } from 'lucide-react';
@@ -60,7 +60,7 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club
       p.trainingSchedule = { ...preset.schedule };
     });
     setSelectedPresetId(presetId);
-    useWorldStore.getState().notify();
+    notifyPlayers();
   };
 
   const handleUpdateIndividual = (cat: TrainingCategory, val: number) => {
@@ -69,12 +69,12 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club
       selectedPlayer.trainingSchedule = { ...TRAINING_PRESETS[0].schedule };
     }
     selectedPlayer.trainingSchedule = { ...selectedPlayer.trainingSchedule, [cat]: val };
-    useWorldStore.getState().notify();
+    notifyPlayers();
   };
 
   const handleDelegate = (staffId: string) => {
     club.trainingDelegatedTo = club.trainingDelegatedTo === staffId ? undefined : staffId;
-    useWorldStore.getState().notify();
+    notifyClubs();
   };
 
   const handlePlayerSelect = (id: string) => {

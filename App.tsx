@@ -86,6 +86,26 @@ const App: React.FC = () => {
     return () => window.removeEventListener('click', handleGlobalClick);
   }, [handleGlobalClick]);
 
+  const advanceTimeRef = useRef<() => void>(null as any);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+      if (e.key === 'Escape') {
+        if (isSaveModalOpen) setIsSaveModalOpen(false);
+        else if (currentView !== 'HOME' && gameState === 'PLAYING') setView('HOME');
+      }
+      if (e.key === ' ' && currentView === 'HOME' && currentView !== 'MATCH' && gameState === 'PLAYING' && !isVacationModalOpen) {
+        e.preventDefault();
+        advanceTimeRef.current();
+      }
+      if (e.key === 'm' && gameState === 'PLAYING' && currentView === 'HOME') setView('MARKET');
+      if (e.key === 't' && gameState === 'PLAYING' && currentView === 'HOME') setView('SENIOR_TACTICS');
+      if (e.key === 's' && gameState === 'PLAYING' && currentView === 'HOME') setView('SENIOR_SQUAD');
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [currentView, gameState, isSaveModalOpen, isVacationModalOpen, setView]);
+
   const handlePlayerContextMenu = (e: React.MouseEvent, player: Player) => {
     e.preventDefault();
     setContextMenu({ player, x: e.clientX, y: e.clientY });
@@ -167,6 +187,8 @@ const App: React.FC = () => {
     }
     notify();
   };
+
+  advanceTimeRef.current = advanceTime;
 
   const startVacation = async (targetOverride?: Date) => {
     let target = targetOverride;
@@ -636,27 +658,6 @@ const App: React.FC = () => {
     </div>
   );
 
-  const advanceTimeRef = useRef(advanceTime);
-  advanceTimeRef.current = advanceTime;
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
-      if (e.key === 'Escape') {
-        if (isSaveModalOpen) setIsSaveModalOpen(false);
-        else if (currentView !== 'HOME' && gameState === 'PLAYING') setView('HOME');
-      }
-      if (e.key === ' ' && currentView === 'HOME' && !isMatchView && gameState === 'PLAYING' && !isVacationModalOpen) {
-        e.preventDefault();
-        advanceTimeRef.current();
-      }
-      if (e.key === 'm' && gameState === 'PLAYING' && currentView === 'HOME') setView('MARKET');
-      if (e.key === 't' && gameState === 'PLAYING' && currentView === 'HOME') setView('SENIOR_TACTICS');
-      if (e.key === 's' && gameState === 'PLAYING' && currentView === 'HOME') setView('SENIOR_SQUAD');
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [currentView, gameState, isSaveModalOpen, isVacationModalOpen, setView]);
-
   const isMatchView = currentView === 'MATCH';
   const isPreMatchView = currentView === 'PRE_MATCH' || currentView === 'PRESS_CONFERENCE_PRE' || currentView === 'PRESS_CONFERENCE_POST';
 
@@ -715,11 +716,11 @@ const App: React.FC = () => {
         </header>
       )}
 
-      <div className="flex flex-1 overflow-hidden relative pb-14 lg:pb-0">
+      <div className="flex flex-1 overflow-hidden relative">
         {userClub && !isMatchView && (
           <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
         )}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#94a3b8] relative overflow-hidden">
+        <main className="flex-1 flex flex-col min-w-0 bg-[#94a3b8] relative overflow-hidden pb-14 lg:pb-0">
           {renderCurrentView()}
         </main>
       </div>

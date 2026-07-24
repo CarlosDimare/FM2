@@ -2,7 +2,7 @@
 import React from 'react';
 import { Player } from '../types';
 import { world } from '../services/worldManager';
-import { useWorldStore } from '../stores/worldStore';
+import { notifyPlayers } from '../stores/worldStore';
 import { UserPlus, UserMinus, ArrowRightLeft, DollarSign, Clock, ShieldCheck, UserX } from 'lucide-react';
 
 interface PlayerContextMenuProps {
@@ -16,7 +16,7 @@ interface PlayerContextMenuProps {
 export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x, y, onClose, currentDate }) => {
   const handleAction = (action: () => void) => {
     action();
-    useWorldStore.getState().notify();
+    notifyPlayers();
     onClose();
   };
 

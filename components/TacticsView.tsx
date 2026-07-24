@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Player, Position, Club, TacticSettings, PlayerTacticSettings, Tactic } from '../types';
 import { world } from '../services/worldManager';
-import { useWorldStore } from '../stores/worldStore';
+import { notifyPlayers, notifyTactics } from '../stores/worldStore';
 import { SLOT_CONFIG } from '../services/engine';
 import { Save, UserCheck, SlidersHorizontal, MousePointer2, Settings2, Trash2, ArrowUpRight, ChevronRight, LayoutGrid, ClipboardList } from 'lucide-react';
 import { FMButton, FMBox } from './FMUI';
@@ -116,7 +116,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    const updateTeamSettings = (key: keyof TacticSettings, val: any) => {
        if (!activeTactic) return;
         activeTactic.settings = { ...activeTactic.settings, [key]: val };
-        useWorldStore.getState().notify();
+         notifyTactics();
    };
 
    const updateIndividualSettings = (slot: number, key: keyof PlayerTacticSettings, val: any) => {
@@ -128,14 +128,14 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                crossBall: 'MIXED', marking: 'ZONAL', tightMarking: false, holdUpBall: false
            };
        }
-       activeTactic.individualSettings[slot] = { ...activeTactic.individualSettings[slot], [key]: val };
-       useWorldStore.getState().notify();
+        activeTactic.individualSettings[slot] = { ...activeTactic.individualSettings[slot], [key]: val };
+        notifyTactics();
    };
 
    const handleAutoPick = () => {
       const currentSquad = players.length > 0 ? players[0].squad : 'SENIOR';
       world.selectBestEleven(club.id, currentSquad, activeTactic.id); 
-      if (players.length > 0) useWorldStore.getState().notify();
+      if (players.length > 0) notifyPlayers();
    };
 
    const isPlayerSuitableForLine = (p: Player, line: string) => {
@@ -187,14 +187,14 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
            if (bestIdx !== -1) {
                unassignedPlayers[bestIdx].tacticalPosition = slot;
                unassignedPlayers.splice(bestIdx, 1);
-               targetSlots.splice(targetSlots.indexOf(slot), 1);
-           }
-       }
-       
-       useWorldStore.getState().notify();
-   };
+            targetSlots.splice(targetSlots.indexOf(slot), 1);
+            }
+        }
+        
+        notifyPlayers(); notifyTactics();
+    };
 
-   const handleSlotDrop = (targetSlot: number) => {
+    const handleSlotDrop = (targetSlot: number) => {
       if (draggingSlot === null || draggingSlot === targetSlot) return;
       
       const p1 = starters.find(p => p.tacticalPosition === draggingSlot);
@@ -232,18 +232,18 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       else delete activeTactic.arrows[sSlot];
 
       setDraggingSlot(null);
-      useWorldStore.getState().notify();
+      notifyPlayers(); notifyTactics();
    };
 
    const handleCreateArrow = (targetSlot: number) => {
-       if (drawingArrowFrom === null) return;
-       if (drawingArrowFrom !== targetSlot) {
-           activeTactic.arrows[drawingArrowFrom] = targetSlot;
-       } else {
-           delete activeTactic.arrows[drawingArrowFrom];
-       }
-       setDrawingArrowFrom(null);
-       useWorldStore.getState().notify();
+        if (drawingArrowFrom === null) return;
+        if (drawingArrowFrom !== targetSlot) {
+            activeTactic.arrows[drawingArrowFrom] = targetSlot;
+        } else {
+            delete activeTactic.arrows[drawingArrowFrom];
+        }
+        setDrawingArrowFrom(null);
+        notifyTactics();
    };
 
    const getMentalityLabel = (v: number) => v <= 4 ? "Ultra Def." : v <= 8 ? "Defensiva" : v <= 12 ? "Normal" : v <= 16 ? "Atacante" : "Agobio";
