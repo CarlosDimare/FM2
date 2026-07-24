@@ -72,27 +72,29 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
   }, []);
 
   const durationRef = useRef(tickDuration);
+  const matchStateRef = useRef(matchState);
+  matchStateRef.current = matchState;
 
   useEffect(() => {
     let timeoutId: any;
 
-    const gameLoop = () => {
+    const step = () => {
       if (!isMountedRef.current) return;
-      setMatchState(prev => {
-        if (!prev.isPlaying || prev.minute >= 90) return prev;
-        const { nextState, slowMotion } = MatchSimulator.simulateStep(
-            prev, homeTeam, awayTeam, homePlayers, awayPlayers
-        );
-        const newDur = slowMotion ? 900 : GAME_SPEED_MS / 10;
-        durationRef.current = newDur;
-        setTickDuration(newDur);
-        return nextState;
-      });
-      if (isMountedRef.current) timeoutId = setTimeout(gameLoop, durationRef.current);
+      const prev = matchStateRef.current;
+      if (!prev.isPlaying || prev.minute >= 90) return;
+      const { nextState, slowMotion } = MatchSimulator.simulateStep(
+          prev, homeTeam, awayTeam, homePlayers, awayPlayers
+      );
+      matchStateRef.current = nextState;
+      const newDur = slowMotion ? 900 : GAME_SPEED_MS / 10;
+      durationRef.current = newDur;
+      setMatchState(nextState);
+      setTickDuration(newDur);
+      if (isMountedRef.current) timeoutId = setTimeout(step, newDur);
     };
 
     if (matchState.isPlaying) {
-      timeoutId = setTimeout(gameLoop, tickDuration);
+      timeoutId = setTimeout(step, tickDuration);
     }
 
     return () => {

@@ -202,16 +202,20 @@ const App: React.FC = () => {
 
     let tempDate = new Date(currentDate);
     let localFixtures = [...fixtures];
+    let batchCount = 0;
+    const BATCH_SIZE = 7;
 
     while (tempDate < target) {
       tempDate.setDate(tempDate.getDate() + 1);
-      setCurrentDate(new Date(tempDate));
+      batchCount++;
+
       LifecycleManager.checkBirthdays(tempDate);
       LifecycleManager.recoverDailyFitness();
       world.checkRenewalTriggers(tempDate, userClub?.id);
       world.processTransferDecisions(tempDate);
       world.processAIActivity(tempDate);
       world.processDailyContracts(tempDate, userClub?.id);
+      world.processDailyScouting(tempDate, userClub?.id);
 
       const dayFixtures = localFixtures.filter(f =>
         f.date.toDateString() === tempDate.toDateString() && !f.played
@@ -237,20 +241,25 @@ const App: React.FC = () => {
         setUserWonLeague(result.userWonLeague);
         setIsSimulating(false);
         setIsVacationModalOpen(false);
+        setCurrentDate(tempDate);
         notify();
         return;
       }
-      await new Promise(r => setTimeout(r, 20));
+
+      if (batchCount >= BATCH_SIZE) {
+        setCurrentDate(new Date(tempDate));
+        batchCount = 0;
+        await new Promise(r => setTimeout(r, 10));
+      }
     }
 
-    if (tempDate < seasonEndDate) {
-      setFixtures(localFixtures);
-      if (userClub) updateNextFixture(localFixtures, tempDate, userClub.id);
-      setIsSimulating(false);
-      setIsVacationModalOpen(false);
-      setView('HOME');
-      notify();
-    }
+    setFixtures(localFixtures);
+    setCurrentDate(new Date(tempDate));
+    if (userClub) updateNextFixture(localFixtures, tempDate, userClub.id);
+    setIsSimulating(false);
+    setIsVacationModalOpen(false);
+    setView('HOME');
+    notify();
   };
 
   const handleOpenSaveModal = () => {
