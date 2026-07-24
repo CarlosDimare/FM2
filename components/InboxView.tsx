@@ -2,18 +2,20 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { world } from '../services/worldManager';
 import { InboxMessage, MessageCategory } from '../types';
-import { Mail, ShoppingBag, Users, MessageSquare, Wallet, Trash2, Clock, ChevronRight, Inbox, Trophy, ArrowLeft, ChevronLeft } from 'lucide-react';
+import { useWorldStore } from '../stores/worldStore';
+import { useUIStore } from '../stores/uiStore';
+import { Mail, ShoppingBag, Users, MessageSquare, Wallet, Trash2, Clock, ChevronRight, Inbox, Trophy, ArrowLeft, ChevronLeft, Binoculars } from 'lucide-react';
 import { FMButton } from './FMUI';
 
 interface InboxViewProps {
-  onUpdate: () => void;
   setView: (view: string) => void;
 }
 
-export const InboxView: React.FC<InboxViewProps> = ({ onUpdate, setView }) => {
+export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'ALL' | MessageCategory>('ALL');
   const [showDetailOnMobile, setShowDetailOnMobile] = useState(false);
+  const userClub = useUIStore(s => s.userClub);
 
   const filteredMessages = useMemo(() => {
     return world.inbox.filter(m => filter === 'ALL' || m.category === filter);
@@ -28,7 +30,7 @@ export const InboxView: React.FC<InboxViewProps> = ({ onUpdate, setView }) => {
     const msg = world.inbox.find(m => m.id === id);
     if (msg && !msg.isRead) {
       msg.isRead = true;
-      onUpdate();
+      useWorldStore.getState().notify();
     }
     setShowDetailOnMobile(true);
   };
@@ -40,6 +42,7 @@ export const InboxView: React.FC<InboxViewProps> = ({ onUpdate, setView }) => {
       case 'STATEMENTS': return <MessageSquare size={14} className="text-amber-700" />;
       case 'FINANCE': return <Wallet size={14} className="text-emerald-700" />;
       case 'COMPETITION': return <Trophy size={14} className="text-amber-600" />;
+      case 'SCOUTING': return <Binoculars size={14} className="text-purple-700" />;
     }
   };
 
@@ -49,8 +52,8 @@ export const InboxView: React.FC<InboxViewProps> = ({ onUpdate, setView }) => {
      if (selectedMessageId === id) {
          setSelectedMessageId(null);
          setShowDetailOnMobile(false);
-     }
-     onUpdate();
+      }
+      useWorldStore.getState().notify();
   };
 
   const handleActionRequired = () => {
@@ -69,13 +72,36 @@ export const InboxView: React.FC<InboxViewProps> = ({ onUpdate, setView }) => {
             <Inbox size={18} className="text-slate-800" />
             <h2 className="text-lg font-black text-slate-900 uppercase italic tracking-tighter" style={{ fontFamily: 'Verdana, sans-serif' }}>CORREO</h2>
           </div>
+          {userClub && (
+            <div className="flex items-center gap-3 mb-2 text-[9px] font-black uppercase tracking-wider">
+              <span className="text-slate-600">Directiva:</span>
+              <div className="flex items-center gap-1">
+                <div className="w-16 h-2 bg-slate-300 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all"
+                       style={{ width: `${userClub.boardConfidence || 50}%`, background: (userClub.boardConfidence || 50) > 60 ? '#22c55e' : (userClub.boardConfidence || 50) > 30 ? '#eab308' : '#ef4444' }}>
+                  </div>
+                </div>
+                <span className="text-slate-500">{userClub.boardConfidence || 50}%</span>
+              </div>
+              <span className="text-slate-400">|</span>
+              <span className="text-slate-600">
+                Objetivo: {userClub.seasonObjective === 'WIN_LEAGUE' ? 'Campeón' :
+                  userClub.seasonObjective === 'TOP_4' ? 'Top 4' :
+                  userClub.seasonObjective === 'TOP_HALF' ? 'Mitad Superior' :
+                  userClub.seasonObjective === 'AVOID_RELEGATION' ? 'Permanencia' :
+                  userClub.seasonObjective === 'WIN_CUP' ? 'Ganar Copa' :
+                  userClub.seasonObjective === 'CUP_SEMIS' ? 'Semis Copa' : 'N/A'}
+              </span>
+            </div>
+          )}
           <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
             {[
               { id: 'ALL', label: 'TODOS' },
               { id: 'MARKET', label: 'MERCADO' },
               { id: 'SQUAD', label: 'PLANTEL' },
               { id: 'STATEMENTS', label: 'PRENSA' },
-              { id: 'COMPETITION', label: 'TORNEO' }
+              { id: 'COMPETITION', label: 'TORNEO' },
+              { id: 'SCOUTING', label: 'SCOUTING' }
             ].map((f) => (
               <button
                 key={f.id}
@@ -138,7 +164,7 @@ export const InboxView: React.FC<InboxViewProps> = ({ onUpdate, setView }) => {
             </header>
 
             <div className="flex-1 overflow-y-auto custom-scroll p-4 md:p-6 lg:p-8">
-              <div className="max-w-3xl mx-auto bg-white border border-[#a0b0a0] shadow-xl rounded-sm overflow-hidden flex flex-col min-h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+               <div className="max-w-3xl mx-auto bg-white border border-[#a0b0a0] shadow-xl rounded-sm overflow-hidden flex flex-col min-h-full animate-fade-up">
                 <div className="p-4 md:p-6 border-b border-[#a0b0a0] bg-[#f8faf8] flex flex-col gap-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                      <div className="flex items-center gap-2 px-2 py-1 bg-[#3a4a3a]/10 border border-[#3a4a3a]/20 rounded-[1px]">

@@ -184,6 +184,8 @@ export interface Club {
   youthFacilities: number;
   qualifiedFor?: string | null;
   trainingDelegatedTo?: string;
+  boardConfidence: number;
+  seasonObjective?: 'WIN_LEAGUE' | 'TOP_4' | 'TOP_HALF' | 'AVOID_RELEGATION' | 'WIN_CUP' | 'CUP_SEMIS';
 }
 
 export type CompetitionType = 'LEAGUE' | 'CUP' | 'CONTINENTAL_ELITE' | 'CONTINENTAL_SMALL' | 'GLOBAL';
@@ -284,7 +286,7 @@ export interface Tactic {
 export interface MatchEvent {
   minute: number;
   second?: number;
-  type: 'GOAL' | 'CHANCE' | 'MISS' | 'YELLOW_CARD' | 'RED_CARD' | 'WHISTLE' | 'INJURY' | 'PASS' | 'TACKLE' | 'INTERCEPTION' | 'SAVE' | 'CORNER' | 'FREE_KICK' | 'KICKOFF';
+  type: 'GOAL' | 'CHANCE' | 'MISS' | 'YELLOW_CARD' | 'RED_CARD' | 'WHISTLE' | 'INJURY' | 'PASS' | 'TACKLE' | 'INTERCEPTION' | 'SAVE' | 'CORNER' | 'FREE_KICK' | 'KICKOFF' | 'SUBSTITUTION';
   text: string;
   teamId?: string;
   playerId?: string;
@@ -311,6 +313,12 @@ export interface MatchState {
   possessorId?: string | null;
   ballState: BallState;
   ballPosition: { x: number; y: number };
+  homeSubsUsed: number;
+  awaySubsUsed: number;
+  homeActiveIds: string[];
+  awayActiveIds: string[];
+  homeBenchIds: string[];
+  awayBenchIds: string[];
 }
 
 export interface TacticalReport {
@@ -370,6 +378,8 @@ export interface TeamMatchStats {
   shotsOnTarget: number;
   fouls: number;
   corners: number;
+  yellowCards: number;
+  redCards: number;
 }
 
 export type StaffRole = 'HEAD_COACH' | 'ASSISTANT_MANAGER' | 'PHYSIO' | 'FITNESS_COACH' | 'RESERVE_MANAGER' | 'YOUTH_MANAGER';
@@ -405,7 +415,21 @@ export interface Staff {
   history: StaffHistoryEntry[];
 }
 
-export type MessageCategory = 'MARKET' | 'SQUAD' | 'STATEMENTS' | 'FINANCE' | 'COMPETITION';
+export type MessageCategory = 'MARKET' | 'SQUAD' | 'STATEMENTS' | 'FINANCE' | 'COMPETITION' | 'SCOUTING';
+
+export interface ScoutingReport {
+  id: string;
+  playerId: string;
+  clubId: string;
+  date: Date;
+  currentAbility: number;
+  potentialAbility: number;
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  personality: string;
+  isRead: boolean;
+}
 
 export interface InboxMessage {
   id: string;

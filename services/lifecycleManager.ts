@@ -70,6 +70,7 @@ export class LifecycleManager {
         const hEleven = world.selectBestEleven(f.homeTeamId, 'SENIOR');
         const aEleven = world.selectBestEleven(f.awayTeamId, 'SENIOR');
         MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore, f.competitionId);
+        MatchSimulator.processMatchInjuries(stats);
     });
 
     // 3. Generate Summaries
@@ -205,9 +206,9 @@ export class LifecycleManager {
                   }
                   const hEleven = world.selectBestEleven(f.homeTeamId, 'SENIOR');
                   const aEleven = world.selectBestEleven(f.awayTeamId, 'SENIOR');
-                  MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore, f.competitionId);
-                  // Ensure we reduce suspensions for simulated matches
-                  this.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId);
+                    MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore, f.competitionId);
+                    MatchSimulator.processMatchInjuries(stats);
+                    this.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId);
               });
           }
 

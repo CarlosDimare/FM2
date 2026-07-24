@@ -86,7 +86,7 @@ export const ContractNegotiationModal: React.FC<ContractNegotiationModalProps> =
 
            {/* Feedback Area */}
            {feedback && (
-              <div className={`p-4 rounded-xl border flex items-start gap-3 animate-in fade-in slide-in-from-top-2 ${
+              <div className={`p-4 rounded-xl border flex items-start gap-3 animate-fade-up ${
                  feedback.type === 'SUCCESS' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
                  feedback.type === 'ERROR' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
                  'bg-slate-700/50 border-slate-600 text-slate-300'

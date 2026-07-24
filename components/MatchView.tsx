@@ -4,7 +4,7 @@ import { Club, Player, MatchState, MatchEvent, PlayerMatchStats, Position, Tacti
 import { MatchSimulator } from '../services/engine';
 import { GAME_SPEED_MS } from '../constants';
 import { world } from '../services/worldManager';
-import { Play, Pause, List, BarChart3, Users, Zap, Table, FastForward, SkipForward, Copy, Terminal, Check } from 'lucide-react';
+import { Play, Pause, List, BarChart3, Users, Zap, Table, FastForward, SkipForward, Copy, Terminal, Check, UserPlus, ArrowRightFromLine } from 'lucide-react';
 import { MatchStatsTable } from './MatchStatsTable';
 import { FMBox, FMButton } from './FMUI';
 
@@ -26,26 +26,27 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
   const homeTactic = useMemo(() => world.getTactics()[0].settings, []);
   const awayTactic = useMemo(() => world.getTactics()[0].settings, []);
 
-  const [matchState, setMatchState] = useState<MatchState>(() => ({
-    isPlaying: false,
-    minute: 0,
-    second: 0,
-    homeScore: 0,
-    awayScore: 0,
-    events: [],
-    homeTeamId: homeTeam.id,
-    awayTeamId: awayTeam.id,
-    homeStats: { possession: 50, possessionTime: 0, shots: 0, shotsOnTarget: 0, fouls: 0, corners: 0 },
-    awayStats: { possession: 50, possessionTime: 0, shots: 0, shotsOnTarget: 0, fouls: 0, corners: 0 },
-    playerStats: MatchSimulator.initMatchStats([...homePlayers, ...awayPlayers]),
-    halftimeTriggered: false,
-    ballState: 'KICKOFF',
-    ballPosition: { x: 500, y: 500 }
-  }));
+  const [matchState, setMatchState] = useState<MatchState>(() =>
+    MatchSimulator.initMatchState(homeTeam.id, awayTeam.id, homePlayers, awayPlayers)
+  );
 
   const [tickDuration, setTickDuration] = useState(GAME_SPEED_MS / 8); 
   const scrollRef = useRef<HTMLDivElement>(null);
   const techScrollRef = useRef<HTMLDivElement>(null);
+  const [scoreFlashKey, setScoreFlashKey] = useState(0);
+  const prevScore = useRef({ home: 0, away: 0 });
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [subTarget, setSubTarget] = useState<string | null>(null);
+  const isUserHome = userClubId === homeTeam.id;
+
+  useEffect(() => {
+    const h = matchState.homeScore;
+    const a = matchState.awayScore;
+    if (h !== prevScore.current.home || a !== prevScore.current.away) {
+      setScoreFlashKey(k => k + 1);
+      prevScore.current = { home: h, away: a };
+    }
+  }, [matchState.homeScore, matchState.awayScore]);
 
   const { hCol, aCol } = useMemo(() => {
     let hBg = homeTeam.primaryColor;
@@ -64,23 +65,40 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
     if (techScrollRef.current) techScrollRef.current.scrollTop = techScrollRef.current.scrollHeight;
   }, [matchState.events, activeTab]);
 
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
+
+  const durationRef = useRef(tickDuration);
+
   useEffect(() => {
     let timeoutId: any;
+
     const gameLoop = () => {
-      if (!matchState.isPlaying || matchState.minute >= 90) return;
-      
+      if (!isMountedRef.current) return;
       setMatchState(prev => {
+        if (!prev.isPlaying || prev.minute >= 90) return prev;
         const { nextState, slowMotion } = MatchSimulator.simulateStep(
             prev, homeTeam, awayTeam, homePlayers, awayPlayers
         );
-        setTickDuration(slowMotion ? 900 : GAME_SPEED_MS / 10);
+        const newDur = slowMotion ? 900 : GAME_SPEED_MS / 10;
+        durationRef.current = newDur;
+        setTickDuration(newDur);
         return nextState;
       });
-      timeoutId = setTimeout(gameLoop, tickDuration);
+      if (isMountedRef.current) timeoutId = setTimeout(gameLoop, durationRef.current);
     };
-    if (matchState.isPlaying) timeoutId = setTimeout(gameLoop, tickDuration);
-    return () => clearTimeout(timeoutId);
-  }, [matchState.isPlaying, tickDuration, homeTeam, awayTeam, homePlayers, awayPlayers]);
+
+    if (matchState.isPlaying) {
+      timeoutId = setTimeout(gameLoop, tickDuration);
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [matchState.isPlaying, homeTeam.id, awayTeam.id]);
 
   const skipToTime = (targetMin: number) => {
     setMatchState(prev => {
@@ -186,8 +204,24 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         fontClass = "font-black uppercase"; 
     }
 
+    if (e.type === 'SUBSTITUTION') {
+      containerClass = 'bg-amber-100 border-amber-300';
+      textStyle = { color: '#92400e' };
+    } else if (e.type === 'YELLOW_CARD') {
+      containerClass = 'bg-yellow-100 border-yellow-400';
+      textStyle = { color: '#854d0e' };
+    } else if (e.type === 'RED_CARD') {
+      containerClass = 'bg-red-100 border-red-500';
+      textStyle = { color: '#991b1b' };
+    } else if (e.type === 'INJURY') {
+      containerClass = 'bg-orange-100 border-orange-400';
+      textStyle = { color: '#9a3412' };
+    }
+
+    const animationDelay = `${Math.min(i * 30, 500)}ms`;
     return (
-      <div key={i} className={`w-full max-w-4xl flex gap-3 p-3 rounded-sm border shadow-sm animate-in fade-in slide-in-from-left-4 duration-500 ${containerClass}`}>
+      <div key={i} className={`w-full max-w-4xl flex gap-3 p-3 rounded-sm border shadow-sm animate-fade-in ${containerClass}`}
+           style={{ animationDelay }}>
         <span className="font-mono font-black shrink-0 border-r border-black/10 pr-3 min-w-[60px] text-center flex items-center justify-center opacity-70" style={textStyle}>
             {e.minute}:{(e.second ?? 0).toString().padStart(2, '0')}'
         </span>
@@ -208,14 +242,14 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
             </div>
         </div>
 
-        <div className="shrink-0 bg-[#111] px-4 md:px-10 flex items-center gap-4 border-x-4 border-yellow-500/80">
-           <span className="font-mono font-bold text-4xl md:text-6xl text-yellow-400">{matchState.homeScore}</span>
+         <div className="shrink-0 bg-[#111] px-4 md:px-10 flex items-center gap-4 border-x-4 border-yellow-500/80">
+           <span key={`h-${scoreFlashKey}`} className="font-mono font-bold text-4xl md:text-6xl text-yellow-400 animate-score-flash">{matchState.homeScore}</span>
            <div className="flex flex-col items-center min-w-[80px]">
               <span className="font-mono font-bold text-xl md:text-2xl text-slate-200 tracking-widest tabular-nums">
                  {matchState.minute < 10 ? `0${matchState.minute}` : matchState.minute}:{matchState.second < 10 ? `0${matchState.second}` : matchState.second}
               </span>
            </div>
-           <span className="font-mono font-bold text-4xl md:text-6xl text-yellow-400">{matchState.awayScore}</span>
+           <span key={`a-${scoreFlashKey}`} className="font-mono font-bold text-4xl md:text-6xl text-yellow-400 animate-score-flash">{matchState.awayScore}</span>
         </div>
 
         <div className={`flex-1 flex items-center justify-start pl-4 md:pl-10 relative overflow-hidden transition-colors ${aCol.bg}`}>
@@ -223,6 +257,12 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                <span className={`font-black text-xl md:text-4xl uppercase tracking-tighter text-left leading-none ${aCol.text}`}>{awayTeam.shortName}</span>
                <span className={`text-[10px] font-bold text-left mt-1 opacity-90 truncate max-w-[150px] ${aCol.text}`}>{getScorers(awayTeam.id)}</span>
             </div>
+        </div>
+      </div>
+
+      <div className="w-full bg-slate-900 h-1.5 shrink-0 z-10">
+        <div className="h-full bg-gradient-to-r from-yellow-500 via-yellow-400 to-green-400 transition-all duration-300 animate-progress-pulse"
+             style={{ width: `${Math.min((matchState.minute / 90) * 100, 100)}%` }}>
         </div>
       </div>
 
@@ -276,11 +316,14 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         {activeTab === 'STATS' && (
           <div className="flex-1 p-6 space-y-6 overflow-y-auto bg-[#e8ece8]">
                 <FMBox title="Estadísticas de Equipo">
-                   <div className="space-y-6 p-4">
-                      {renderStatsRow("Posesión", matchState.homeStats.possession, matchState.awayStats.possession, true)}
-                      {renderStatsRow("Remates", matchState.homeStats.shots, matchState.awayStats.shots)}
-                      {renderStatsRow("Tiros al Arco", matchState.homeStats.shotsOnTarget, matchState.awayStats.shotsOnTarget)}
-                   </div>
+                    <div className="space-y-6 p-4">
+                       {renderStatsRow("Posesión", matchState.homeStats.possession, matchState.awayStats.possession, true)}
+                       {renderStatsRow("Remates", matchState.homeStats.shots, matchState.awayStats.shots)}
+                       {renderStatsRow("Tiros al Arco", matchState.homeStats.shotsOnTarget, matchState.awayStats.shotsOnTarget)}
+                       {renderStatsRow("Faltas", matchState.homeStats.fouls, matchState.awayStats.fouls)}
+                       {renderStatsRow("Tarjetas Amarillas", matchState.homeStats.yellowCards, matchState.awayStats.yellowCards)}
+                       {renderStatsRow("Tarjetas Rojas", matchState.homeStats.redCards, matchState.awayStats.redCards)}
+                    </div>
                 </FMBox>
 
                 <div className="bg-slate-800 text-white p-4 rounded-sm border border-slate-600 shadow-md">
@@ -299,7 +342,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                 <FMBox title="Análisis Táctico">
                     <div className="p-4 bg-white/50">
                         {showAnalysis ? (
-                            <div className="animate-in fade-in slide-in-from-top-2">
+                            <div className="animate-fade-up">
                                 <div className="flex items-start gap-4 mb-4">
                                     <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center border-2 border-slate-300 shrink-0">
                                         <Users size={24} className="text-slate-600" />
@@ -332,7 +375,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
 
       <footer className="bg-slate-900 p-3 md:p-4 flex items-center justify-center gap-4 shrink-0 border-t border-slate-700">
         {matchState.minute < 90 ? (
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
             <button 
                 onClick={() => setMatchState(p => ({...p, isPlaying: !p.isPlaying}))} 
                 className={`w-16 h-12 rounded-sm transition-all active:scale-95 shadow-lg border-b-4 flex items-center justify-center ${matchState.isPlaying ? 'bg-slate-300 text-slate-800 border-slate-500' : 'bg-green-600 text-white border-green-800 hover:bg-green-500'}`}
@@ -340,9 +383,16 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
             >
                 {matchState.isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
             </button>
-            
+
             {!matchState.isPlaying && (
                 <>
+                    {(isUserHome ? matchState.homeSubsUsed : matchState.awaySubsUsed) < 5 && (
+                      <button onClick={() => { setSubTarget(null); setShowSubModal(true); }}
+                          className="h-12 px-3 bg-amber-600 hover:bg-amber-500 text-white rounded-sm flex items-center gap-2 border-b-4 border-amber-800 text-[10px] font-black uppercase transition-all active:scale-95 shadow-lg"
+                          title="Realizar Cambio">
+                          <UserPlus size={18} /> CAMBIO
+                      </button>
+                    )}
                     {matchState.minute < 45 && (
                         <button 
                             onClick={() => skipToTime(45)}
@@ -366,6 +416,68 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
           <button onClick={() => onFinish(matchState.homeScore, matchState.awayScore, matchState.playerStats)} className="w-full max-w-sm h-12 bg-blue-700 hover:bg-blue-600 text-white rounded-sm font-black uppercase text-xs shadow-xl border-b-4 border-blue-900 transition-all active:scale-95">SALIR DEL PARTIDO</button>
         )}
       </footer>
+
+      {showSubModal && (
+        <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setShowSubModal(false)}>
+          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-slate-800 text-white p-3 flex items-center justify-between shrink-0">
+              <span className="text-sm font-black uppercase tracking-wider flex items-center gap-2"><UserPlus size={16} /> Realizar Cambio</span>
+              <span className="text-[10px] font-bold text-amber-400">{(isUserHome ? 5 - matchState.homeSubsUsed : 5 - matchState.awaySubsUsed)} cambios restantes</span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {!subTarget ? (
+                <>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Seleccioná el jugador a reemplazar:</div>
+                  {(isUserHome ? homePlayers : awayPlayers)
+                    .filter(p => (isUserHome ? matchState.homeActiveIds : matchState.awayActiveIds).includes(p.id))
+                    .map(p => {
+                      const pos = p.positions[0];
+                      return (
+                        <div key={p.id} onClick={() => setSubTarget(p.id)}
+                             className="flex items-center gap-3 p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-sm cursor-pointer transition-colors">
+                          <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center font-black text-[10px]">{pos}</div>
+                          <div className="flex-1">
+                            <div className="font-bold text-xs text-slate-900">{p.name}</div>
+                            <div className="text-[9px] text-slate-500">
+                              Cond: {Math.round(matchState.playerStats[p.id]?.condition || 0)}% | Calif: {matchState.playerStats[p.id]?.rating.toFixed(1) || '6.0'}
+                            </div>
+                          </div>
+                          <ArrowRightFromLine size={16} className="text-slate-400" />
+                        </div>
+                      );
+                    })}
+                </>
+              ) : (
+                <>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Seleccioná el sustituto:</div>
+                  {(isUserHome ? homePlayers : awayPlayers)
+                    .filter(p => (isUserHome ? matchState.homeBenchIds : matchState.awayBenchIds).includes(p.id))
+                    .map(p => (
+                      <div key={p.id} onClick={() => {
+                        const newState = MatchSimulator.performSubstitution(
+                          matchState, isUserHome, subTarget, p.id,
+                          homePlayers, awayPlayers, homeTeam, awayTeam
+                        );
+                        setMatchState(newState);
+                        setShowSubModal(false);
+                        setSubTarget(null);
+                      }}
+                           className="flex items-center gap-3 p-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-sm cursor-pointer transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-amber-300 flex items-center justify-center font-black text-[10px]">{p.positions[0]}</div>
+                        <div className="flex-1">
+                          <div className="font-bold text-xs text-slate-900">{p.name}</div>
+                          <div className="text-[9px] text-slate-500">{p.positions.map(pos => pos).join(', ')}</div>
+                        </div>
+                        <span className="text-[9px] font-bold text-amber-700">INGRESA</span>
+                      </div>
+                    ))}
+                  <button onClick={() => setSubTarget(null)} className="w-full py-2 text-[10px] font-bold text-slate-500 hover:bg-slate-100 rounded-sm transition-colors">← Volver</button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

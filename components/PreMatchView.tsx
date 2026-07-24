@@ -19,7 +19,7 @@ export const PreMatchView: React.FC<PreMatchViewProps> = ({ club, opponent, star
   return (
     <div className="h-full flex flex-col bg-slate-400 overflow-hidden">
       <div className="flex-1 overflow-y-auto custom-scroll pb-32 md:pb-0">
-        <div className="max-w-5xl mx-auto md:my-8 bg-slate-200 md:rounded-sm border-x md:border border-slate-600 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500 flex flex-col">
+         <div className="max-w-5xl mx-auto md:my-8 bg-slate-200 md:rounded-sm border-x md:border border-slate-600 shadow-2xl overflow-hidden animate-zoom-in flex flex-col">
           
           {/* Header */}
           <header className="p-4 sm:p-8 bg-slate-300 border-b border-slate-500 flex flex-col sm:flex-row justify-between items-center gap-6 shrink-0">

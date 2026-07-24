@@ -146,7 +146,7 @@ export const MatchStatsTable: React.FC<MatchStatsTableProps> = ({ players, stats
         <div className="w-full bg-[#d4dcd4] border border-[#a0b0a0] rounded-sm shadow-sm select-none flex flex-col h-full overflow-hidden relative">
             
             {selectedStats && (
-                <div className="absolute inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in" onClick={() => setSelectedStats(null)}>
+                <div className="absolute inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-overlay-in" onClick={() => setSelectedStats(null)}>
                     <div className="bg-[#e8ece8] w-full max-sm rounded-sm border border-[#a0b0a0] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
                         <div className="border-b border-[#a0b0a0] px-3 py-1.5 flex justify-between items-center bg-gradient-to-b from-[#cfd8cf] to-[#a3b4a3]">
                             <span className="text-[#1a1a1a] font-black text-[11px] uppercase tracking-tighter">ESTADÍSTICAS: {selectedStats.player.name.toUpperCase()}</span>

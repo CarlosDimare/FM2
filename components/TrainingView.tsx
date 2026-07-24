@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Player, Staff, Club, TrainingSchedule, TrainingCategory } from '../types';
 import { world } from '../services/worldManager';
+import { useWorldStore } from '../stores/worldStore';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 import { TRAINING_PRESETS } from '../data/static';
 import { User, Dumbbell, Users, Settings2, Shield, Target, Zap, Activity, X } from 'lucide-react';
@@ -10,7 +11,6 @@ interface TrainingViewProps {
   players: Player[];
   staff: Staff[];
   club: Club;
-  onUpdate: () => void;
 }
 
 const IntensitySegment: React.FC<{ value: number; max?: number }> = ({ value, max = 20 }) => {
@@ -46,7 +46,7 @@ const TrainingSlider: React.FC<{
   </div>
 );
 
-export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club, onUpdate }) => {
+export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club }) => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(players[0]?.id || null);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('GENERAL');
   const [isMobileEditorOpen, setIsMobileEditorOpen] = useState(false);
@@ -60,7 +60,7 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club
       p.trainingSchedule = { ...preset.schedule };
     });
     setSelectedPresetId(presetId);
-    onUpdate();
+    useWorldStore.getState().notify();
   };
 
   const handleUpdateIndividual = (cat: TrainingCategory, val: number) => {
@@ -69,12 +69,12 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club
       selectedPlayer.trainingSchedule = { ...TRAINING_PRESETS[0].schedule };
     }
     selectedPlayer.trainingSchedule = { ...selectedPlayer.trainingSchedule, [cat]: val };
-    onUpdate();
+    useWorldStore.getState().notify();
   };
 
   const handleDelegate = (staffId: string) => {
     club.trainingDelegatedTo = club.trainingDelegatedTo === staffId ? undefined : staffId;
-    onUpdate();
+    useWorldStore.getState().notify();
   };
 
   const handlePlayerSelect = (id: string) => {
@@ -215,7 +215,7 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club
 
         {/* Mobile Modal for Editor */}
         {isMobileEditorOpen && selectedPlayer && (
-            <div className="fixed inset-0 z-[200] lg:hidden bg-slate-900/80 flex items-end justify-center backdrop-blur-sm animate-in slide-in-from-bottom-10" onClick={() => setIsMobileEditorOpen(false)}>
+            <div className="fixed inset-0 z-[200] lg:hidden bg-slate-900/80 flex items-end justify-center backdrop-blur-sm animate-slide-up" onClick={() => setIsMobileEditorOpen(false)}>
                 <div className="bg-[#d4dcd4] w-full max-h-[80vh] rounded-t-lg border-t border-x border-[#a0b0a0] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
                     <div className="p-3 border-b border-[#a0b0a0] bg-[#e8ece8] flex justify-between items-center rounded-t-lg">
                         <div>

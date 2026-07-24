@@ -1,5 +1,5 @@
 
-import { Player, Club, Competition, Position, PlayerStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, TacticalStyle, TacticSettings, MatchSettings } from "../types";
+import { Player, Club, Competition, Position, PlayerStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport } from "../types";
 import { generateUUID, randomInt, weightedRandom } from "./utils";
 import { NATIONS } from "../constants";
 import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, RealClubDef } from "../data/static";
@@ -17,6 +17,7 @@ export class WorldManager {
   matchSettings: MatchSettings = {
      pauseAtHalftime: true
   };
+  scoutingReports: ScoutingReport[] = [];
 
   constructor() { this.initWorld(); }
 
@@ -63,9 +64,11 @@ export class WorldManager {
            reputation: def.rep,
            stadium: def.stadium,
            honours: this.generateRandomHonours(),
-           trainingFacilities: Math.min(20, Math.floor(def.rep / 500) + randomInt(-2, 2)),
-           youthFacilities: Math.min(20, Math.floor(def.rep / 550) + randomInt(-3, 3))
-        };
+            trainingFacilities: Math.min(20, Math.floor(def.rep / 500) + randomInt(-2, 2)),
+            youthFacilities: Math.min(20, Math.floor(def.rep / 550) + randomInt(-3, 3)),
+            boardConfidence: 65 + randomInt(0, 25),
+            seasonObjective: def.rep > 4000 ? 'TOP_4' : def.rep > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION'
+         };
         this.clubs.push(club);
         this.injectRealPlayers(club);
         this.generateSquadsForClub(club.id);
@@ -371,6 +374,102 @@ export class WorldManager {
 
   addInboxMessage(category: MessageCategory, subject: string, body: string, date: Date, relatedId?: string) {
     this.inbox.unshift({ id: generateUUID(), date: new Date(date), category, subject, body, isRead: false, relatedId });
+  }
+
+  generateScoutingReport(playerId: string, clubId: string, date: Date, userClubId?: string) {
+    const player = this.players.find(p => p.id === playerId);
+    if (!player) return null;
+
+    const scouts = this.getStaffByClub(clubId).filter(s => s.role !== 'PHYSIO');
+    const scoutAbility = scouts.length > 0
+      ? scouts.reduce((a,b) => a + b.attributes.judgingAbility, 0) / scouts.length
+      : 8;
+    const scoutPotential = scouts.length > 0
+      ? scouts.reduce((a,b) => a + b.attributes.judgingPotential, 0) / scouts.length
+      : 8;
+
+    const abilityError = Math.round((20 - scoutAbility) * (Math.random() * 5 - 2));
+    const potentialError = Math.round((20 - scoutPotential) * (Math.random() * 6 - 3));
+
+    const reportedCA = Math.max(1, Math.min(200, player.currentAbility + abilityError));
+    const reportedPA = Math.max(1, Math.min(200, player.potentialAbility + potentialError));
+
+    const strengths: string[] = [];
+    const weaknesses: string[] = [];
+
+    const techKeys = Object.entries(player.stats.technical).sort(([,a], [,b]) => b - a);
+    const mentalKeys = Object.entries(player.stats.mental).sort(([,a], [,b]) => b - a);
+
+    if (techKeys[0][1] >= 15) strengths.push(techKeys[0][0]);
+    if (mentalKeys[0][1] >= 15) strengths.push(mentalKeys[0][0]);
+    if (techKeys[techKeys.length-1][1] <= 8) weaknesses.push(techKeys[techKeys.length-1][0]);
+    if (mentalKeys[mentalKeys.length-1][1] <= 8) weaknesses.push(mentalKeys[mentalKeys.length-1][0]);
+
+    const summary = reportedCA >= 150 ? "Jugador de clase mundial." :
+      reportedCA >= 120 ? "Excelente jugador para el equipo." :
+      reportedCA >= 100 ? "Jugador de primer nivel." :
+      reportedCA >= 80 ? "Puede ser útil en la rotación." :
+      "Jugador de relleno. No recomiendo su fichaje.";
+
+    let personality = "Equilibrado";
+    if (player.stats.mental.professionalism >= 17) personality = "Modelo de profesionalidad";
+    else if (player.stats.mental.determination >= 17) personality = "Muy determinado";
+    else if (player.stats.mental.ambition >= 17) personality = "Muy ambicioso";
+    else if (player.stats.mental.temperament <= 6) personality = "Volátil";
+    else if (player.stats.mental.leadership >= 16) personality = "Líder nato";
+
+    const report: ScoutingReport = {
+      id: generateUUID(),
+      playerId,
+      clubId,
+      date: new Date(date),
+      currentAbility: reportedCA,
+      potentialAbility: reportedPA,
+      summary,
+      strengths,
+      weaknesses,
+      personality,
+      isRead: false,
+    };
+
+    this.scoutingReports.unshift(report);
+
+    if (clubId === userClubId) {
+      this.addInboxMessage('SCOUTING', `Informe de ${player.name}`,
+        `Nuestros ojeadores han completado un informe sobre ${player.name}. CA: ${reportedCA}/200, PA: ${reportedPA}/200.`,
+        date, playerId
+      );
+    }
+
+    return report;
+  }
+
+  processDailyScouting(date: Date, userClubId?: string) {
+    if (!userClubId) return;
+    if (Math.random() > 0.3) return;
+
+    const scouts = this.getStaffByClub(userClubId).filter(s => s.role === 'HEAD_COACH' || s.role === 'ASSISTANT_MANAGER');
+    const scoutCount = Math.max(1, scouts.length);
+    const reportsToday = Math.min(3, scoutCount);
+
+    for (let i = 0; i < reportsToday; i++) {
+      const alreadyReported = new Set(this.scoutingReports.filter(r => r.clubId === userClubId).map(r => r.playerId));
+      const candidates = this.players.filter(p =>
+        p.clubId !== userClubId &&
+        !alreadyReported.has(p.id) &&
+        p.age > 16
+      );
+
+      if (candidates.length === 0) break;
+      const target = candidates[randomInt(0, candidates.length - 1)];
+      this.generateScoutingReport(target.id, userClubId, date);
+    }
+  }
+
+  getScoutingReports(clubId: string, limit = 50): ScoutingReport[] {
+    return this.scoutingReports
+      .filter(r => r.clubId === clubId)
+      .slice(0, limit);
   }
 }
 

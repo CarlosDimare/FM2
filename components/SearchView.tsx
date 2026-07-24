@@ -1,6 +1,6 @@
-
-import React, { useState, useMemo } from 'react';
-import { Player, Position } from '../types';
+import React, { useState, useMemo, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { Player } from '../types';
 import { world } from '../services/worldManager';
 import { Search, SlidersHorizontal, User } from 'lucide-react';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
@@ -22,8 +22,16 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
       const matchesPos = posFilter === 'ALL' || p.positions.some(pos => pos.includes(posFilter));
       const matchesAge = p.age >= minAge && p.age <= maxAge;
       return matchesSearch && matchesPos && matchesAge;
-    }).sort((a,b) => b.currentAbility - a.currentAbility).slice(0, 50);
+    }).sort((a,b) => b.currentAbility - a.currentAbility).slice(0, 200);
   }, [search, posFilter, minAge, maxAge]);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: results.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 44,
+    overscan: 10,
+  });
 
   return (
     <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-hidden">
@@ -73,34 +81,48 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
       </FMBox>
 
       <FMBox title={`Resultados de Búsqueda (${results.length})`} className="flex-1" noPadding>
-         <FMTable headers={['Jugador', 'Club', 'Edad', 'Valor']} colWidths={['auto', 'auto', '40px', '80px']}>
-            {results.map((p, idx) => (
-                <tr 
-                  key={p.id} 
-                  onClick={() => onSelectPlayer(p)} 
-                  className={`cursor-pointer transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc]`}
-                >
-                  <FMTableCell>
-                     <div className="flex flex-col">
-                        <span className="font-bold text-slate-900 text-[11px]">{p.name}</span>
-                        <span className="text-[9px] text-slate-500 font-bold uppercase">{p.positions[0]}</span>
-                     </div>
-                  </FMTableCell>
-                  <FMTableCell className="text-slate-700 text-[10px] italic truncate max-w-[120px]">
-                     {world.getClub(p.clubId)?.name || 'Agente Libre'}
-                  </FMTableCell>
-                  <FMTableCell className="text-center font-bold" isNumber>{p.age}</FMTableCell>
-                  <FMTableCell className="text-right font-bold text-slate-900" isNumber>
-                     £{(p.value / 1000000).toFixed(1)}M
-                  </FMTableCell>
-                </tr>
-            ))}
-         </FMTable>
-         {results.length === 0 && (
-            <div className="p-20 text-center text-slate-400 italic text-[10px] font-bold uppercase tracking-widest">
-               {search.length < 3 && posFilter === 'ALL' ? 'Introduce al menos 3 caracteres para buscar.' : 'No se han encontrado resultados.'}
+        <div className="flex flex-col h-full">
+          <div className="flex text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-200 border-b border-slate-400 px-3 py-2 shrink-0">
+            <div className="flex-1">Jugador</div>
+            <div className="w-[120px]">Club</div>
+            <div className="w-[40px] text-center">Edad</div>
+            <div className="w-[80px] text-right">Valor</div>
+          </div>
+          <div ref={parentRef} className="flex-1 overflow-y-auto custom-scroll">
+            <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
+              {virtualizer.getVirtualItems().map(virtualItem => {
+                const p = results[virtualItem.index];
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => onSelectPlayer(p)}
+                    className={`flex items-center px-3 py-2 cursor-pointer transition-colors text-[11px] absolute top-0 left-0 w-full ${
+                      virtualItem.index % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'
+                    } hover:bg-[#ccd9cc]`}
+                    style={{ height: `${virtualItem.size}px`, transform: `translateY(${virtualItem.start}px)` }}
+                  >
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <span className="font-bold text-slate-900 truncate">{p.name}</span>
+                      <span className="text-[9px] text-slate-500 font-bold uppercase">{p.positions[0]}</span>
+                    </div>
+                    <div className="w-[120px] text-slate-700 text-[10px] italic truncate px-2">
+                      {world.getClub(p.clubId)?.name || 'Agente Libre'}
+                    </div>
+                    <div className="w-[40px] text-center font-bold">{p.age}</div>
+                    <div className="w-[80px] text-right font-bold text-slate-900">
+                      £{(p.value / 1000000).toFixed(1)}M
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-         )}
+          </div>
+        </div>
+        {results.length === 0 && (
+          <div className="p-20 text-center text-slate-400 italic text-[10px] font-bold uppercase tracking-widest">
+            {search.length < 3 && posFilter === 'ALL' ? 'Introduce al menos 3 caracteres para buscar.' : 'No se han encontrado resultados.'}
+          </div>
+        )}
       </FMBox>
     </div>
   );

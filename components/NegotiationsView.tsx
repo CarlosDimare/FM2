@@ -2,16 +2,16 @@
 import React, { useState, useMemo } from 'react';
 import { world } from '../services/worldManager';
 import { TransferOffer, Club, Player } from '../types';
+import { useWorldStore } from '../stores/worldStore';
 import { MessageSquare, History, CheckCircle, XCircle, Clock, ArrowRightLeft, DollarSign, Info, UserCheck, Wallet } from 'lucide-react';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 
 interface NegotiationsViewProps {
   userClubId: string;
-  onUpdate: () => void;
   currentDate: Date; 
 }
 
-export const NegotiationsView: React.FC<NegotiationsViewProps> = ({ userClubId, onUpdate, currentDate }) => {
+export const NegotiationsView: React.FC<NegotiationsViewProps> = ({ userClubId, currentDate }) => {
   const [activeTab, setActiveTab] = useState<'ACTIVE' | 'HISTORY'>('ACTIVE');
 
   const offers = useMemo(() => {
@@ -43,7 +43,7 @@ export const NegotiationsView: React.FC<NegotiationsViewProps> = ({ userClubId, 
 
   const handleFinalize = (offer: TransferOffer) => {
       world.completeTransfer(offer);
-      onUpdate();
+      useWorldStore.getState().notify();
   };
 
   const renderOfferRow = (offer: TransferOffer) => {
@@ -90,7 +90,7 @@ export const NegotiationsView: React.FC<NegotiationsViewProps> = ({ userClubId, 
           <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
             {offer.status === 'COUNTER_OFFER' && isBuying && (
               <button 
-                onClick={() => { world.acceptCounterOffer(offer.id, currentDate); onUpdate(); }}
+                onClick={() => { world.acceptCounterOffer(offer.id, currentDate); useWorldStore.getState().notify(); }}
                 className="flex-1 md:flex-none bg-gradient-to-b from-[#e0a040] to-[#b07020] text-white text-[9px] font-black px-4 py-2 rounded shadow-sm hover:brightness-110 uppercase tracking-widest"
               >
                 Aceptar £{offer.counterAmount?.toLocaleString()}

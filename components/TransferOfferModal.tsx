@@ -136,7 +136,7 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
               </button>
             </>
           ) : (
-            <div className="text-center py-8 animate-in zoom-in duration-300">
+            <div className="text-center py-8 animate-zoom-in">
               <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-blue-500/10 border-4 border-blue-500 text-blue-500">
                 <Clock size={40} />
               </div>

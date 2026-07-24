@@ -70,7 +70,7 @@ export const SeasonSummaryModal: React.FC<SeasonSummaryModalProps> = ({ summary,
            {/* Main Content */}
            <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#e8ece8] custom-scroll">
               {activeComp ? (
-                 <div className="space-y-8 animate-in fade-in zoom-in duration-300">
+                 <div className="space-y-8 animate-zoom-in">
                     {/* Champion Section */}
                     <div className="text-center py-2 md:py-6 bg-white/40 border border-[#a0b0a0] rounded-sm p-6 shadow-sm">
                        <div className="inline-block p-4 md:p-6 bg-gradient-to-b from-[#f0f4f0] to-[#d0d8d0] border border-[#a0b0a0] rounded-full mb-4 shadow-xl relative">

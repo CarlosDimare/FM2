@@ -344,7 +344,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
              {activeTab === 'INTERACTION' && (
                <div className="h-full flex flex-col p-2 gap-4 overflow-y-auto">
                   {personalMotive && !dialogueResult && (
-                    <div className="bg-amber-100 border border-amber-300 p-3 rounded-sm flex items-start gap-3 animate-in slide-in-from-top-2">
+                    <div className="bg-amber-100 border border-amber-300 p-3 rounded-sm flex items-start gap-3 animate-fade-up">
                        <AlertCircle className="text-amber-600 shrink-0" size={18} />
                        <div className="flex-1">
                           <p className="text-[10px] font-black text-amber-700 uppercase">Petición del Jugador</p>
@@ -358,7 +358,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                   )}
 
                   {dialogueResult ? (
-                    <div className="bg-white border border-[#a0b0a0] p-6 rounded-sm text-center flex flex-col items-center gap-4 animate-in zoom-in">
+                    <div className="bg-white border border-[#a0b0a0] p-6 rounded-sm text-center flex flex-col items-center gap-4 animate-zoom-in">
                        <div className={`p-4 rounded-full border-4 ${dialogueResult.reactionType === 'POSITIVE' ? 'bg-green-100 border-green-500 text-green-600' : dialogueResult.reactionType === 'NEGATIVE' ? 'bg-red-100 border-red-500 text-red-600' : 'bg-slate-100 border-slate-400 text-slate-600'}`}>
                           <MessageCircle size={48} />
                        </div>

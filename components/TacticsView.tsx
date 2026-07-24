@@ -1,7 +1,8 @@
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Player, Position, Club, TacticSettings, PlayerTacticSettings, Tactic } from '../types';
 import { world } from '../services/worldManager';
+import { useWorldStore } from '../stores/worldStore';
 import { SLOT_CONFIG } from '../services/engine';
 import { Save, UserCheck, SlidersHorizontal, MousePointer2, Settings2, Trash2, ArrowUpRight, ChevronRight, LayoutGrid, ClipboardList } from 'lucide-react';
 import { FMButton, FMBox } from './FMUI';
@@ -9,7 +10,6 @@ import { FMButton, FMBox } from './FMUI';
 interface TacticsViewProps {
    players: Player[];
    club: Club;
-   onUpdatePlayer: (player: Player) => void;
    onContextMenu?: (e: React.MouseEvent, player: Player) => void;
 }
 
@@ -91,7 +91,7 @@ const CycleOption: React.FC<{ label: string; value: string; options: { id: strin
     </div>
 );
 
-export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onUpdatePlayer, onContextMenu }) => {
+export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onContextMenu }) => {
    const [viewMode, setViewMode] = useState<'PITCH' | 'INSTRUCTIONS'>('PITCH');
    const [instructionType, setInstructionType] = useState<'TEAM' | 'INDIVIDUAL'>('TEAM');
    const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
@@ -115,8 +115,8 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onUpdat
 
    const updateTeamSettings = (key: keyof TacticSettings, val: any) => {
        if (!activeTactic) return;
-       activeTactic.settings = { ...activeTactic.settings, [key]: val };
-       onUpdatePlayer(players[0]); 
+        activeTactic.settings = { ...activeTactic.settings, [key]: val };
+        useWorldStore.getState().notify();
    };
 
    const updateIndividualSettings = (slot: number, key: keyof PlayerTacticSettings, val: any) => {
@@ -129,13 +129,13 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onUpdat
            };
        }
        activeTactic.individualSettings[slot] = { ...activeTactic.individualSettings[slot], [key]: val };
-       onUpdatePlayer(players[0]);
+       useWorldStore.getState().notify();
    };
 
    const handleAutoPick = () => {
       const currentSquad = players.length > 0 ? players[0].squad : 'SENIOR';
       world.selectBestEleven(club.id, currentSquad, activeTactic.id); 
-      if (players.length > 0) onUpdatePlayer(players[0]);
+      if (players.length > 0) useWorldStore.getState().notify();
    };
 
    const isPlayerSuitableForLine = (p: Player, line: string) => {
@@ -191,7 +191,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onUpdat
            }
        }
        
-       onUpdatePlayer(players[0]);
+       useWorldStore.getState().notify();
    };
 
    const handleSlotDrop = (targetSlot: number) => {
@@ -232,7 +232,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onUpdat
       else delete activeTactic.arrows[sSlot];
 
       setDraggingSlot(null);
-      onUpdatePlayer(players[0]);
+      useWorldStore.getState().notify();
    };
 
    const handleCreateArrow = (targetSlot: number) => {
@@ -243,83 +243,132 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onUpdat
            delete activeTactic.arrows[drawingArrowFrom];
        }
        setDrawingArrowFrom(null);
-       onUpdatePlayer(players[0]);
+       useWorldStore.getState().notify();
    };
 
    const getMentalityLabel = (v: number) => v <= 4 ? "Ultra Def." : v <= 8 ? "Defensiva" : v <= 12 ? "Normal" : v <= 16 ? "Atacante" : "Agobio";
 
-   const renderPitch = () => (
-      <div className="relative w-full max-w-[420px] aspect-[3/4] shadow-2xl bg-[#1e3a29] border-[3px] border-white/30 rounded-sm overflow-hidden ring-4 ring-[#a0b0a0]/30"
-           onMouseLeave={() => { setDraggingSlot(null); setDrawingArrowFrom(null); setCurrentHoverSlot(null); }}>
-          <svg className="absolute inset-0 w-full h-full opacity-40 pointer-events-none">
-             <g stroke="white" strokeWidth="2" fill="none">
-                <rect x="5%" y="5%" width="90%" height="90%" />
-                <line x1="5%" y1="50%" x2="95%" y2="50%" />
-                <circle cx="50%" cy="50%" r="15%" />
-                <rect x="25%" y="5%" width="50%" height="15%" />
-                <rect x="25%" y="80%" width="50%" height="15%" />
-             </g>
-          </svg>
+   const touchStartSlot = useRef<number | null>(null);
 
-          <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
-              <defs>
-                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                      <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
-                  </marker>
-              </defs>
-              {Object.entries(activeTactic.arrows).map(([from, to]) => {
-                  const start = SLOT_COORDS[parseInt(from)];
-                  const end = SLOT_COORDS[to];
-                  if (!start || !end) return null;
-                  return (
-                      <line key={from} x1={`${start.l}%`} y1={`${start.t}%`} x2={`${end.l}%`} y2={`${end.t}%`} 
-                            stroke="#fbbf24" strokeWidth="2" strokeDasharray="4" markerEnd="url(#arrowhead)" />
-                  );
-              })}
-          </svg>
+   const handleTouchStart = (e: React.TouchEvent, slotIdx: number) => {
+      e.preventDefault();
+      touchStartSlot.current = slotIdx;
+      setDraggingSlot(slotIdx);
+      setSelectedSlot(slotIdx);
+   };
 
-          {Object.entries(SLOT_COORDS).map(([idx, coords]) => {
-             const slotIdx = parseInt(idx);
-             const p = starters.find(pl => pl.tacticalPosition === slotIdx);
-             const isSelected = selectedSlot === slotIdx;
-             
-             // Render ALL slots to allow free dragging
-             return (
-                <div 
-                    key={idx} 
-                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-16 sm:h-16 flex flex-col items-center justify-center z-10 
-                                ${draggingSlot === slotIdx ? 'opacity-30 scale-90' : ''}
-                                ${currentHoverSlot === slotIdx ? 'ring-2 ring-white/50 rounded-full' : ''}`} 
-                    style={{ top: `${coords.t}%`, left: `${coords.l}%` }}
-                    onMouseEnter={() => setCurrentHoverSlot(slotIdx)}
-                    onMouseDown={(e) => {
-                        if (e.button === 0) setDraggingSlot(slotIdx);
-                        if (e.button === 2) setDrawingArrowFrom(slotIdx);
-                        setSelectedSlot(slotIdx);
-                    }}
-                    onMouseUp={() => {
-                        if (draggingSlot !== null) handleSlotDrop(slotIdx);
-                        if (drawingArrowFrom !== null) handleCreateArrow(slotIdx);
-                    }}
-                    onContextMenu={(e) => { e.preventDefault(); if (p) onContextMenu?.(e, p); }}
-                >
-                   {p ? (
-                      <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center font-black text-[9px] sm:text-xs shadow-lg transition-all hover:scale-110 cursor-pointer ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : `${club.primaryColor} ${club.secondaryColor} border-black/20`}`}>
-                         {p.positions[0]}
-                         <div className="absolute -bottom-4 sm:-bottom-5 bg-black/80 text-white px-1.5 py-0.5 rounded-[1px] text-[7px] sm:text-[8px] font-black uppercase whitespace-nowrap truncate max-w-[60px] sm:max-w-[80px] shadow-sm">
-                            {p.name.split(' ').pop()}
-                         </div>
-                      </div>
-                   ) : (
-                      <div className={`w-7 h-7 sm:w-10 sm:h-10 rounded-full border border-dashed flex items-center justify-center transition-colors ${currentHoverSlot === slotIdx ? 'border-white bg-white/20' : 'border-white/10'}`}>
-                         {/* Show subtle indicator for empty slots */}
-                      </div>
-                   )}
-                </div>
-             );
-          })}
-      </div>
-   );
+   const handlePitchTouchMove = (e: React.TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (el) {
+         const slotEl = el.closest('[data-slot]');
+         if (slotEl) {
+            const slot = parseInt(slotEl.getAttribute('data-slot') || '', 10);
+            if (!isNaN(slot)) {
+               setCurrentHoverSlot(slot);
+               setDraggingSlot(slot);
+            }
+         }
+      }
+   };
+
+   const handlePitchTouchEnd = (e: React.TouchEvent) => {
+      e.preventDefault();
+      const touch = e.changedTouches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (el) {
+         const slotEl = el.closest('[data-slot]');
+         if (slotEl) {
+            const targetSlot = parseInt(slotEl.getAttribute('data-slot') || '', 10);
+            if (!isNaN(targetSlot)) {
+               if (touchStartSlot.current !== null && touchStartSlot.current !== targetSlot) {
+                  handleSlotDrop(targetSlot);
+               }
+            }
+         }
+      }
+      touchStartSlot.current = null;
+      setDraggingSlot(null);
+      setCurrentHoverSlot(null);
+   };
+
+    const renderPitch = () => (
+       <div className="relative w-full max-w-[420px] aspect-[3/4] shadow-2xl bg-[#1e3a29] border-[3px] border-white/30 rounded-sm overflow-hidden ring-4 ring-[#a0b0a0]/30"
+            onMouseLeave={() => { setDraggingSlot(null); setDrawingArrowFrom(null); setCurrentHoverSlot(null); }}
+            onTouchMove={handlePitchTouchMove}
+            onTouchEnd={handlePitchTouchEnd}>
+           <svg className="absolute inset-0 w-full h-full opacity-40 pointer-events-none">
+              <g stroke="white" strokeWidth="2" fill="none">
+                 <rect x="5%" y="5%" width="90%" height="90%" />
+                 <line x1="5%" y1="50%" x2="95%" y2="50%" />
+                 <circle cx="50%" cy="50%" r="15%" />
+                 <rect x="25%" y="5%" width="50%" height="15%" />
+                 <rect x="25%" y="80%" width="50%" height="15%" />
+              </g>
+           </svg>
+
+           <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+               <defs>
+                   <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                       <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
+                   </marker>
+               </defs>
+               {Object.entries(activeTactic.arrows).map(([from, to]) => {
+                   const start = SLOT_COORDS[parseInt(from)];
+                   const end = SLOT_COORDS[to];
+                   if (!start || !end) return null;
+                   return (
+                       <line key={from} x1={`${start.l}%`} y1={`${start.t}%`} x2={`${end.l}%`} y2={`${end.t}%`} 
+                             stroke="#fbbf24" strokeWidth="2" strokeDasharray="4" markerEnd="url(#arrowhead)" />
+                   );
+               })}
+           </svg>
+
+           {Object.entries(SLOT_COORDS).map(([idx, coords]) => {
+              const slotIdx = parseInt(idx);
+              const p = starters.find(pl => pl.tacticalPosition === slotIdx);
+              const isSelected = selectedSlot === slotIdx;
+              
+              // Render ALL slots to allow free dragging
+              return (
+                 <div 
+                     key={idx} 
+                     data-slot={slotIdx}
+                     className={`absolute transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-16 sm:h-16 flex flex-col items-center justify-center z-10 
+                                 ${draggingSlot === slotIdx ? 'opacity-30 scale-90' : ''}
+                                 ${currentHoverSlot === slotIdx ? 'ring-2 ring-white/50 rounded-full' : ''}`} 
+                     style={{ top: `${coords.t}%`, left: `${coords.l}%` }}
+                     onMouseEnter={() => setCurrentHoverSlot(slotIdx)}
+                     onMouseDown={(e) => {
+                         if (e.button === 0) setDraggingSlot(slotIdx);
+                         if (e.button === 2) setDrawingArrowFrom(slotIdx);
+                         setSelectedSlot(slotIdx);
+                     }}
+                     onMouseUp={() => {
+                         if (draggingSlot !== null) handleSlotDrop(slotIdx);
+                         if (drawingArrowFrom !== null) handleCreateArrow(slotIdx);
+                     }}
+                     onContextMenu={(e) => { e.preventDefault(); if (p) onContextMenu?.(e, p); }}
+                     onTouchStart={(e) => handleTouchStart(e, slotIdx)}
+                 >
+                    {p ? (
+                       <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center font-black text-[9px] sm:text-xs shadow-lg transition-all hover:scale-110 cursor-pointer ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : `${club.primaryColor} ${club.secondaryColor} border-black/20`}`}>
+                          {p.positions[0]}
+                          <div className="absolute -bottom-4 sm:-bottom-5 bg-black/80 text-white px-1.5 py-0.5 rounded-[1px] text-[7px] sm:text-[8px] font-black uppercase whitespace-nowrap truncate max-w-[60px] sm:max-w-[80px] shadow-sm">
+                             {p.name.split(' ').pop()}
+                          </div>
+                       </div>
+                    ) : (
+                       <div className={`w-7 h-7 sm:w-10 sm:h-10 rounded-full border border-dashed flex items-center justify-center transition-colors ${currentHoverSlot === slotIdx ? 'border-white bg-white/20' : 'border-white/10'}`}>
+                          {/* Show subtle indicator for empty slots */}
+                       </div>
+                    )}
+                 </div>
+              );
+           })}
+       </div>
+    );
 
    return (
       <div className="flex flex-col h-full bg-[#d4dcd4] overflow-hidden select-none" onContextMenu={e => e.preventDefault()}>
@@ -365,7 +414,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onUpdat
                       </div>
                   </div>
                ) : (
-                  <div className="w-full max-w-4xl flex flex-col gap-4 pb-12 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                   <div className="w-full max-w-4xl flex flex-col gap-4 pb-12 animate-fade-up">
                       <div className="flex gap-1 bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] self-stretch sm:self-start shadow-sm">
                           <button onClick={() => setInstructionType('TEAM')} className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all ${instructionType === 'TEAM' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>Instrucciones de Equipo</button>
                           <button onClick={() => setInstructionType('INDIVIDUAL')} className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all ${instructionType === 'INDIVIDUAL' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>Instrucciones Individuales</button>
@@ -479,7 +528,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onUpdat
 
          {/* Save Modal */}
          {isSaveModalOpen && (
-            <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in">
                <FMBox title="Guardar Esquema Táctico" className="w-full max-w-sm shadow-2xl border-2 border-slate-400">
                   <div className="p-6 space-y-6">
                      <div className="space-y-2">

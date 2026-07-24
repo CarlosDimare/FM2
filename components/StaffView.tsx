@@ -61,7 +61,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff }) => {
 
       {selectedStaff && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden animate-in zoom-in duration-200">
+          <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden animate-zoom-in">
             {(() => {
                const club = world.getClub(selectedStaff.clubId);
                const headerClasses = club ? `${club.primaryColor} ${club.secondaryColor}` : 'bg-slate-900 text-white';

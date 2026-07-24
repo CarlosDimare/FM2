@@ -73,7 +73,7 @@ export const ClubsListView: React.FC<ClubsListViewProps> = ({ onSelectClub }) =>
                         </button>
 
                         {isOpen && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 p-1 bg-slate-200 animate-in slide-in-from-top-1 duration-200">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 p-1 bg-slate-200 animate-fade-up">
                                 {groupedClubs[country].sort((a,b) => b.reputation - a.reputation).map(club => (
                                     <button 
                                         key={club.id}

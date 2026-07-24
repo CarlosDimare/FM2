@@ -50,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
           {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
         {isOpen && (
-          <div className="mt-1 ml-4 space-y-1 border-l border-slate-300 animate-in slide-in-from-left-2 duration-200">
+          <div className="mt-1 ml-4 space-y-1 border-l border-slate-300 animate-fade-in">
             <SubNavItem id={`${squadType}_SQUAD`} label="Plantel" icon={Users} active={currentView === `${squadType}_SQUAD`} onClick={() => setView(`${squadType}_SQUAD`)} />
             <SubNavItem id={`${squadType}_TACTICS`} label="Tácticas" icon={Clipboard} active={currentView === `${squadType}_TACTICS`} onClick={() => setView(`${squadType}_TACTICS`)} />
             <SubNavItem id={`${squadType}_SCHEDULE`} label="Partidos" icon={Calendar} active={currentView === `${squadType}_SCHEDULE`} onClick={() => setView(`${squadType}_SCHEDULE`)} />

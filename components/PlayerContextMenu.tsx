@@ -2,6 +2,7 @@
 import React from 'react';
 import { Player } from '../types';
 import { world } from '../services/worldManager';
+import { useWorldStore } from '../stores/worldStore';
 import { UserPlus, UserMinus, ArrowRightLeft, DollarSign, Clock, ShieldCheck, UserX } from 'lucide-react';
 
 interface PlayerContextMenuProps {
@@ -9,14 +10,13 @@ interface PlayerContextMenuProps {
   x: number;
   y: number;
   onClose: () => void;
-  onUpdate: () => void;
   currentDate?: Date;
 }
 
-export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x, y, onClose, onUpdate, currentDate }) => {
+export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x, y, onClose, currentDate }) => {
   const handleAction = (action: () => void) => {
     action();
-    onUpdate();
+    useWorldStore.getState().notify();
     onClose();
   };
 
@@ -34,7 +34,7 @@ export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x,
 
   return (
     <div 
-      className="fixed z-[1000] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl py-2 w-56 animate-in fade-in zoom-in duration-100"
+      className="fixed z-[1000] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl py-2 w-56 animate-zoom-in"
       style={{ left: x, top: y }}
       onClick={(e) => e.stopPropagation()}
     >
