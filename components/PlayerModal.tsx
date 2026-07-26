@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Player, Attribute, DialogueType, DialogueResult, ATTRIBUTE_LABELS, Position, SquadType, DialogueTone, POSITION_FULL_NAMES, PlayerHistoryEntry } from '../types';
+import { Player, Attribute, DialogueType, DialogueResult, ATTRIBUTE_LABELS, ATTRIBUTE_TOOLTIPS, Position, SquadType, DialogueTone, POSITION_FULL_NAMES, PlayerHistoryEntry } from '../types';
 import { world } from '../services/worldManager';
 import { ProfileNarrativeEngine } from '../services/engine';
 import { DialogueSystem } from '../services/dialogueSystem';
@@ -52,7 +52,7 @@ const AttributeRow: React.FC<{ label: string; value: Attribute; isKey: boolean; 
   const labelColor = value >= 11 ? 'text-slate-600' : 'text-slate-400/60';
   
   return (
-    <div className={`flex items-center px-1.5 py-0.5 border-b border-[#a0b0a0]/5 hover:bg-[#ccd9cc] transition-colors cursor-default group ${isKey ? 'bg-blue-700/5' : ''}`}>
+    <div className={`flex items-center px-1.5 py-0.5 border-b border-[#a0b0a0]/5 hover:bg-[#ccd9cc] transition-colors cursor-default group ${isKey ? 'bg-blue-700/5' : ''}`} title={ATTRIBUTE_TOOLTIPS[label] || ''}>
       <div className="w-5 flex items-center justify-end mr-2">
          <span className={`text-[11px] font-black leading-tight ${valueColor}`} style={{ fontFamily: 'Verdana, sans-serif' }}>
             {value}

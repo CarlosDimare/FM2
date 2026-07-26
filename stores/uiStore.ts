@@ -30,6 +30,7 @@ interface UIStore {
   saveNameInput: string;
   isLoadModalOpen: boolean;
   availableSaves: SaveMetadata[];
+  isAutoSaveEnabled: boolean;
 
   setGameState: (state: GameState) => void;
   setView: (view: string) => void;
@@ -55,6 +56,7 @@ interface UIStore {
   setSaveNameInput: (name: string) => void;
   setIsLoadModalOpen: (open: boolean) => void;
   setAvailableSaves: (saves: SaveMetadata[]) => void;
+  setIsAutoSaveEnabled: (enabled: boolean) => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -82,6 +84,7 @@ export const useUIStore = create<UIStore>((set) => ({
   saveNameInput: '',
   isLoadModalOpen: false,
   availableSaves: [],
+  isAutoSaveEnabled: false,
 
   setGameState: (gameState) => set({ gameState }),
   setView: (currentView) => set({ currentView }),
@@ -107,4 +110,5 @@ export const useUIStore = create<UIStore>((set) => ({
   setSaveNameInput: (saveNameInput) => set({ saveNameInput }),
   setIsLoadModalOpen: (isLoadModalOpen) => set({ isLoadModalOpen }),
   setAvailableSaves: (availableSaves) => set({ availableSaves }),
+  setIsAutoSaveEnabled: (isAutoSaveEnabled) => set({ isAutoSaveEnabled }),
 }));

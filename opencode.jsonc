@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "nvidia": {
+      "name": "NVIDIA NIM",
+      "options": {
+        "apiKey": "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",
+        "baseURL": "https://integrate.api.nvidia.com/v1"
+      }
+    }
+  }
+}

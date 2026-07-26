@@ -3,25 +3,18 @@ export enum Position {
   GK = 'P',
   SW = 'LIB',
   DC = 'DFC',
-  DRC = 'DFC',
-  DLC = 'DFC',
   DR = 'LD',
   DL = 'LI',
   DMR = 'CD',
   DML = 'CI',
-  DMC = 'MCD',
   DM = 'MCD',
   MC = 'MC',
-  MCR = 'MC',
-  MCL = 'MC',
   MR = 'MD',
   ML = 'MI',
   AM = 'MPC',
-  AMC = 'MPC',
   AMR = 'ED',
   AML = 'EI',
   ST = 'DC',
-  STC = 'DC',
   STR = 'WD',
   STL = 'WI'
 }
@@ -120,6 +113,20 @@ export interface PlayerHistoryEntry {
   stats: PlayerSeasonStats;
 }
 
+export interface ManagerHistory {
+  totalGames: number;
+  totalWins: number;
+  totalDraws: number;
+  totalLosses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  currentStreak: 'W' | 'D' | 'L' | null;
+  streakCount: number;
+  longestWinStreak: number;
+  titles: string[];
+  seasonsCompleted: number;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -160,6 +167,8 @@ export interface Player {
   loanDetails?: { originalClubId: string; wageShare: number };
   lastMotiveInteraction?: Date;
   trainingSchedule?: TrainingSchedule;
+  formRatings: number[];
+  isTransferListed: boolean;
 }
 
 export interface Club {
@@ -176,6 +185,7 @@ export interface Club {
     wageBudget: number;
     monthlyIncome: number;
     monthlyExpenses: number;
+    scoutingBudget: number;
   };
   reputation: number;
   stadium: string;
@@ -186,6 +196,7 @@ export interface Club {
   trainingDelegatedTo?: string;
   boardConfidence: number;
   seasonObjective?: 'WIN_LEAGUE' | 'TOP_4' | 'TOP_HALF' | 'AVOID_RELEGATION' | 'WIN_CUP' | 'CUP_SEMIS';
+  shortlistedPlayerIds: string[];
 }
 
 export type CompetitionType = 'LEAGUE' | 'CUP' | 'CONTINENTAL_ELITE' | 'CONTINENTAL_SMALL' | 'GLOBAL';
@@ -382,7 +393,7 @@ export interface TeamMatchStats {
   redCards: number;
 }
 
-export type StaffRole = 'HEAD_COACH' | 'ASSISTANT_MANAGER' | 'PHYSIO' | 'FITNESS_COACH' | 'RESERVE_MANAGER' | 'YOUTH_MANAGER';
+export type StaffRole = 'HEAD_COACH' | 'ASSISTANT_MANAGER' | 'PHYSIO' | 'FITNESS_COACH' | 'RESERVE_MANAGER' | 'YOUTH_MANAGER' | 'SCOUT';
 
 export interface StaffAttributes {
   coaching: number;
@@ -493,6 +504,71 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
   coaching: "Entrenamiento", judgingAbility: "Juzgar habilidad", judgingPotential: "Juzgar potencial",
   tacticalKnowledge: "Conocimientos tácticos", medical: "Medicina", physiotherapy: "Fisioterapia",
   motivation: "Motivación", manManagement: "Gestión personal"
+};
+
+export const ATTRIBUTE_TOOLTIPS: Record<string, string> = {
+  aggression: "Determina la aspereza del jugador en las entradas.",
+  anticipation: "Capacidad de prever y reaccionar a los movimientos del rival.",
+  bravery: "Disposición a arriesgarse en jugadas peligrosas.",
+  composure: "Mantiene la calma bajo presión en momentos decisivos.",
+  concentration: "Mantiene el foco durante todo el partido sin errores.",
+  decisions: "Evalúa correctamente cuándo pasar, regatear o disparar.",
+  determination: "Empuje para seguir adelante incluso en situaciones adversas.",
+  flair: "Capacidad de hacer jugadas impredecibles con creatividad.",
+  leadership: "Influye positivamente en el rendimiento de sus compañeros.",
+  offTheBall: "Movimiento inteligente sin balón para desmarcarse.",
+  positioning: "Se coloca en la posición óptima defensiva o ofensiva.",
+  teamwork: "Sigue las instrucciones tácticas y trabaja para el equipo.",
+  vision: "Capacidad de ver y ejecutar pases que otros no ven.",
+  workRate: "Esfuerzo físico constante durante todo el partido.",
+  professionalism: "Compromiso con el entrenamiento y la carrera profesional.",
+  ambition: "Deseo de triunfar y alcanzar la élite del fútbol.",
+  pressure: "Rendimiento bajo presión en situaciones importantes.",
+  temperament: "Control emocional ante provocaciones del rival.",
+  loyalty: "Fidelidad al club y al contrato firmado.",
+  adaptability: "Capacidad de adaptarse a nuevas ligas y culturas.",
+  sportsmanship: "Juego limpio y respeto por las reglas.",
+  corners: "Precisión en el lanzamiento de córners.",
+  crossing: "Precisión en los centros al área desde las bandas.",
+  dribbling: "Capacidad para superar rivales con el balón controlado.",
+  finishing: "Precisión en la definición de cara al arco.",
+  firstTouch: "Control del balón en el primer contacto.",
+  freeKickTaking: "Habilidad en el lanzamiento de tiros libres directos.",
+  heading: "Eficacia en el juego aéreo, tanto ofensivo como defensivo.",
+  longShots: "Potencia y precisión en disparos desde media distancia.",
+  longThrows: "Capacidad para realizar saques de banda largos y precisos.",
+  marking: "Capacidad de seguir y presionar al rival directo.",
+  passing: "Precisión en los pases cortos y largos.",
+  penaltyTaking: "Efectividad en la ejecución de penaltis.",
+  tackling: "Limpieza y efectividad en las entradas al rival.",
+  technique: "Calidad técnica general con el balón.",
+  acceleration: "Capacidad de alcanzar la velocidad máxima rápidamente.",
+  agility: "Capacidad de cambiar de dirección con rapidez.",
+  balance: "Mantiene el equilibrio ante la presión del rival.",
+  jumpingReach: "Altura máxima que alcanza al saltar.",
+  naturalFitness: "Rapidez con la que se recupera la forma física tras lesiones.",
+  pace: "Velocidad máxima que puede alcanzar el jugador.",
+  stamina: "Capacidad de mantener el esfuerzo durante todo el partido.",
+  strength: "Fuerza física en el cuerpo a cuerpo.",
+  aerialReach: "Alcance aéreo del portero para atrapar balones colgados.",
+  commandOfArea: "Mando y control del área chica por parte del portero.",
+  communication: "Comunicación del portero con la línea defensiva.",
+  eccentricity: "Tendencia del portero a realizar jugadas arriesgadas.",
+  handling: "Seguridad del portero al atrapar el balón.",
+  kicking: "Precisión del portero en los saques de puerta largos.",
+  oneOnOnes: "Capacidad del portero en situaciones de mano a mano.",
+  reflexes: "Rapidez de reacción del portero ante disparos cercanos.",
+  rushingOut: "Capacidad del portero para salir del arco a cortar jugadas.",
+  punching: "Eficacia del portero al despejar el balón con los puños.",
+  throwing: "Precisión del portero en los saques con la mano.",
+  coaching: "Calidad del entrenador en el desarrollo de habilidades.",
+  judgingAbility: "Precisión al evaluar la habilidad actual de un jugador.",
+  judgingPotential: "Precisión al evaluar el potencial futuro de un jugador.",
+  tacticalKnowledge: "Nivel de conocimiento táctico del entrenador.",
+  medical: "Habilidad del médico en el tratamiento de lesiones.",
+  physiotherapy: "Habilidad del fisioterapeuta en la rehabilitación.",
+  motivation: "Capacidad del entrenador para motivar a la plantilla.",
+  manManagement: "Habilidad para manejar las relaciones con los jugadores."
 };
 
 export const POSITION_FULL_NAMES: Record<string, string> = {

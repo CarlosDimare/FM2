@@ -21,6 +21,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff }) => {
       case 'FITNESS_COACH': return 'Preparador Físico';
       case 'RESERVE_MANAGER': return 'E. Reserva';
       case 'YOUTH_MANAGER': return 'E. Juveniles';
+      case 'SCOUT': return 'Ojeador';
       default: return role;
     }
   };

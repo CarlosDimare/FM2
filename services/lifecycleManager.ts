@@ -19,12 +19,23 @@ export class LifecycleManager {
 
      world.players.forEach(p => {
         const physioScore = clubPhysioMap.get(p.clubId) || 5;
-        const physioMult = 1 + (physioScore / 40); 
+        const physioMult = 1 + (physioScore / 40);
 
-        // Fitness Recovery
+        const schedule = p.trainingSchedule || { STRENGTH: 8, AEROBIC: 8, TACTICAL: 8, BALL_CONTROL: 8, DEFENDING: 8, ATTACKING: 8, SHOOTING: 8, SET_PIECES: 4 };
+        const totalIntensity = Object.values(schedule).reduce((a, b) => a + b, 0);
+        const trainingFatigue = Math.max(0, (totalIntensity - 40) * 0.08);
+
+        // Fitness Recovery (reduced by training load)
         if (p.fitness < 100) {
-           const recovery = (2 + (p.stats.physical.naturalFitness * 0.65)) * physioMult;
-           p.fitness = Math.min(100, Math.round(p.fitness + recovery));
+           const recovery = (2 + (p.stats.physical.naturalFitness * 0.65)) * physioMult - trainingFatigue;
+           p.fitness = Math.min(100, Math.round(p.fitness + Math.max(0, recovery)));
+        }
+
+        // Training injury risk (high load + low fitness)
+        if (p.fitness < 60 && totalIntensity > 50 && Math.random() < 0.005 * (totalIntensity - 40) / 20) {
+           if (!p.injury) {
+             p.injury = { type: 'Entrenamiento', daysLeft: randomInt(3, 10) };
+           }
         }
 
         // Injury Recovery
@@ -32,7 +43,6 @@ export class LifecycleManager {
            p.injury.daysLeft -= 1;
            if (p.injury.daysLeft <= 0) {
               p.injury = undefined;
-              // Optional: notify recovery?
            }
         }
      });
@@ -433,35 +443,97 @@ export class LifecycleManager {
      const coachingScore = coaches.length > 0 ? coaches.reduce((a,b) => a + b.attributes.coaching, 0) / coaches.length : 8;
      growthFactor *= (0.8 + (coachingScore / 50)); 
 
+     const schedule = p.trainingSchedule || { STRENGTH: 8, AEROBIC: 8, TACTICAL: 8, BALL_CONTROL: 8, DEFENDING: 8, ATTACKING: 8, SHOOTING: 8, SET_PIECES: 4 };
+     const totalIntensity = Object.values(schedule).reduce((a, b) => a + b, 0);
+     const intensityFactor = Math.min(2, totalIntensity / 56);
+
      let phase: 'YOUNG' | 'PRIME' | 'VETERAN' = 'PRIME';
      if (p.age < 24) phase = 'YOUNG';
      else if (p.age > 30) phase = 'VETERAN';
 
      let totalChange = 0;
 
+     const getTrainingBias = (attrGroup: string, attrKey: string): number => {
+       const trainingMap: Record<string, Record<string, string[]>> = {
+         technical: {
+           STRENGTH: [], AEROBIC: [], TACTICAL: [],
+           BALL_CONTROL: ['firstTouch', 'dribbling', 'technique'],
+           DEFENDING: ['tackling', 'marking'],
+           ATTACKING: ['crossing', 'finishing', 'heading', 'passing'],
+           SHOOTING: ['finishing', 'longShots', 'penaltyTaking', 'freeKickTaking'],
+           SET_PIECES: ['corners', 'freeKickTaking', 'longThrows']
+         },
+         physical: {
+           STRENGTH: ['strength', 'jumpingReach'],
+           AEROBIC: ['stamina', 'acceleration', 'pace', 'naturalFitness'],
+           TACTICAL: [], BALL_CONTROL: [], DEFENDING: [], ATTACKING: [], SHOOTING: [], SET_PIECES: []
+         },
+         mental: {
+           STRENGTH: ['bravery', 'aggression'],
+           AEROBIC: ['workRate'],
+           TACTICAL: ['decisions', 'positioning', 'anticipation', 'teamwork', 'concentration'],
+           BALL_CONTROL: ['composure', 'flair'],
+           DEFENDING: ['positioning', 'concentration'],
+           ATTACKING: ['offTheBall', 'flair', 'vision'],
+           SHOOTING: ['composure', 'decisions'],
+           SET_PIECES: []
+         }
+       };
+       const groupMap = trainingMap[attrGroup];
+       if (!groupMap) return 1;
+       let bias = 0;
+       for (const [cat, keys] of Object.entries(groupMap)) {
+         if (keys.includes(attrKey)) {
+           bias = Math.max(bias, ((schedule as any)[cat] || 8) / 10);
+         }
+       }
+       return Math.max(0.3, bias);
+     };
+
      if (phase === 'YOUNG') {
         if (p.currentAbility < p.potentialAbility) {
-           const chance = 0.4 * growthFactor; 
-           Object.keys(technical).forEach(k => { if ((technical as any)[k] < 20 && Math.random() < chance) { (technical as any)[k]++; totalChange++; } });
-           Object.keys(physical).forEach(k => { if ((physical as any)[k] < 20 && Math.random() < (chance * 0.7)) { (physical as any)[k]++; totalChange++; } });
-           Object.keys(mental).forEach(k => { if ((mental as any)[k] < 20 && Math.random() < (chance * 0.3)) { (mental as any)[k]++; totalChange++; } });
+           const chance = 0.4 * growthFactor * intensityFactor;
+           Object.keys(technical).forEach(k => {
+             if ((technical as any)[k] < 20 && Math.random() < chance * getTrainingBias('technical', k)) { (technical as any)[k]++; totalChange++; }
+           });
+           Object.keys(physical).forEach(k => {
+             if ((physical as any)[k] < 20 && Math.random() < (chance * 0.7) * getTrainingBias('physical', k)) { (physical as any)[k]++; totalChange++; }
+           });
+           Object.keys(mental).forEach(k => {
+             if ((mental as any)[k] < 20 && Math.random() < (chance * 0.3) * getTrainingBias('mental', k)) { (mental as any)[k]++; totalChange++; }
+           });
         }
      } 
      else if (phase === 'PRIME') {
-        const mentalChance = 0.3 * growthFactor;
-        Object.keys(mental).forEach(k => { if ((mental as any)[k] < 20 && Math.random() < mentalChance) { (mental as any)[k]++; totalChange++; } });
+        const mentalChance = 0.3 * growthFactor * intensityFactor;
+        Object.keys(mental).forEach(k => {
+          if ((mental as any)[k] < 20 && Math.random() < mentalChance * getTrainingBias('mental', k)) { (mental as any)[k]++; totalChange++; }
+        });
         if (avgRating > 7.2 && p.currentAbility < p.potentialAbility) {
            const keys = Object.keys(technical);
-           const k = keys[randomInt(0, keys.length - 1)];
-           if ((technical as any)[k] < 20) { (technical as any)[k]++; totalChange++; }
+           const weights = keys.map(k => getTrainingBias('technical', k));
+           const totalW = weights.reduce((a, b) => a + b, 0);
+           let r = Math.random() * totalW;
+           for (let i = 0; i < keys.length; i++) {
+             r -= weights[i];
+             if (r <= 0) {
+               if ((technical as any)[keys[i]] < 20) { (technical as any)[keys[i]]++; totalChange++; }
+               break;
+             }
+           }
         }
      }
      else {
-        const declineBase = (p.age - 30) * 0.15; 
-        const mitigation = (p.stats.physical.naturalFitness / 40) + (growthFactor * 0.2); 
+        const declineBase = (p.age - 30) * 0.15;
+        const trainingMitigation = intensityFactor * 0.1;
+        const mitigation = (p.stats.physical.naturalFitness / 40) + (growthFactor * 0.2) + trainingMitigation;
         const declineChance = Math.max(0.05, declineBase - mitigation);
-        Object.keys(physical).forEach(k => { if ((physical as any)[k] > 1 && Math.random() < declineChance) { (physical as any)[k]--; totalChange--; } });
-        Object.keys(technical).forEach(k => { if ((technical as any)[k] > 1 && Math.random() < (declineChance * 0.5)) { (technical as any)[k]--; totalChange--; } });
+        Object.keys(physical).forEach(k => {
+          if ((physical as any)[k] > 1 && Math.random() < declineChance) { (physical as any)[k]--; totalChange--; }
+        });
+        Object.keys(technical).forEach(k => {
+          if ((technical as any)[k] > 1 && Math.random() < (declineChance * 0.5)) { (technical as any)[k]--; totalChange--; }
+        });
         if (Math.random() < 0.3) {
             const mKeys = ['decisions', 'positioning', 'anticipation', 'leadership', 'composure'];
             const k = mKeys[randomInt(0, mKeys.length - 1)];

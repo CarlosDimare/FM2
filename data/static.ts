@@ -322,8 +322,8 @@ export const STAFF_NAMES = {
 
 export const POS_DEFINITIONS = {
     GK: [Position.GK],
-    DEF: [Position.SW, Position.DC, Position.DRC, Position.DLC, Position.DR, Position.DL],
-    DM: [Position.DM, Position.DMC, Position.DMR, Position.DML],
-    MID: [Position.MC, Position.MCL, Position.MCR, Position.ML, Position.MR],
-    ATT: [Position.AM, Position.AMC, Position.AMR, Position.AML, Position.ST, Position.STC, Position.STR, Position.STL]
+    DEF: [Position.SW, Position.DC, Position.DR, Position.DL],
+    DM: [Position.DM, Position.DMR, Position.DML],
+    MID: [Position.MC, Position.ML, Position.MR],
+    ATT: [Position.AM, Position.AMR, Position.AML, Position.ST, Position.STR, Position.STL]
 };

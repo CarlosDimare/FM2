@@ -250,7 +250,9 @@ export class MatchSimulator {
   static simulateStep(
     state: MatchState,
     homeTeam: Club, awayTeam: Club,
-    allHomePlayers: Player[], allAwayPlayers: Player[]
+    allHomePlayers: Player[], allAwayPlayers: Player[],
+    homeTacticSettings?: TacticSettings,
+    awayTacticSettings?: TacticSettings
   ): { nextState: MatchState, slowMotion: boolean } {
     
     const newState: MatchState = { 
@@ -269,16 +271,20 @@ export class MatchSimulator {
     let timeConsumed = 0;
     let slowMotion = false;
 
-    const defaultTactic = world.getTactics()[0]?.settings;
-    const homeTactic = defaultTactic;
-    const awayTactic: TacticSettings = defaultTactic ? {
-        ...defaultTactic,
-        mentality: Math.max(1, Math.min(20, defaultTactic.mentality + Math.floor(Math.random() * 9) - 4)),
-        tempo: Math.max(1, Math.min(20, (defaultTactic.tempo || 10) + Math.floor(Math.random() * 9) - 4)),
-        closingDown: Math.max(1, Math.min(20, (defaultTactic.closingDown || 10) + Math.floor(Math.random() * 9) - 4)),
-        passingStyle: Math.max(1, Math.min(20, (defaultTactic.passingStyle || 10) + Math.floor(Math.random() * 9) - 4)),
-        width: Math.max(1, Math.min(20, (defaultTactic.width || 10) + Math.floor(Math.random() * 9) - 4)),
-    } : undefined;
+    const generateRandomTactic = (base?: TacticSettings): TacticSettings | undefined => {
+      if (!base) return undefined;
+      return {
+        ...base,
+        mentality: Math.max(1, Math.min(20, base.mentality + Math.floor(Math.random() * 9) - 4)),
+        tempo: Math.max(1, Math.min(20, (base.tempo || 10) + Math.floor(Math.random() * 9) - 4)),
+        closingDown: Math.max(1, Math.min(20, (base.closingDown || 10) + Math.floor(Math.random() * 9) - 4)),
+        passingStyle: Math.max(1, Math.min(20, (base.passingStyle || 10) + Math.floor(Math.random() * 9) - 4)),
+        width: Math.max(1, Math.min(20, (base.width || 10) + Math.floor(Math.random() * 9) - 4)),
+      };
+    };
+
+    const homeTactic = homeTacticSettings;
+    const awayTactic = awayTacticSettings || generateRandomTactic(homeTacticSettings);
 
     const getPlayerById = (id: string) => allHomePlayers.find(p => p.id === id) || allAwayPlayers.find(p => p.id === id);
     const activeHome = newState.homeActiveIds.map(id => getPlayerById(id)).filter(Boolean) as Player[];
@@ -458,6 +464,7 @@ export class MatchSimulator {
                     const passBaseDifficulty = (isBallInAttackingThird ? 11 : 6) + Math.random() * 5; 
                     
                     if (target && passQuality > passBaseDifficulty) {
+                        newState.playerStats[actor.id].passesAttempted++;
                         newState.playerStats[actor.id].passesCompleted++;
                         newState.possessorId = target.id;
                         this.moveBall(newState, isHomeActor, 110, 45, widthSetting);
@@ -538,8 +545,10 @@ export class MatchSimulator {
       state.playerStats[fouler.id].rating -= 0.5;
       const teamStat = state[fouler.clubId === state.homeTeamId ? 'homeStats' : 'awayStats'];
       teamStat.yellowCards++;
+      fouler.yellowCardsAccumulated++;
 
-      if ((fouler.yellowCardsAccumulated + 1) % 5 === 0) {
+      if (fouler.yellowCardsAccumulated % 5 === 0) {
+        fouler.suspension = { matchesLeft: 1 };
         state.events.push({ minute, second, type: 'YELLOW_CARD', text: `${this.getPlayerLabel(fouler, foulerClub)} acumula tarjetas y se perderá el próximo partido por suspensión.`, teamId: fouler.clubId, playerId: fouler.id, importance: 'MEDIUM', intensity: 2, isTechnical: true });
       }
     } else {
@@ -610,6 +619,8 @@ export class MatchSimulator {
           p.seasonStats.appearances++; p.seasonStats.goals += s.goals; p.seasonStats.assists += s.assists; p.seasonStats.conceded += ga; p.seasonStats.totalRating += s.rating;
           if(!p.statsByCompetition[cId]) p.statsByCompetition[cId] = { appearances:0, goals:0, assists:0, cleanSheets:0, conceded:0, totalRating:0 };
           const cs = p.statsByCompetition[cId]; cs.appearances++; cs.goals += s.goals; cs.assists += s.assists; cs.conceded += ga; cs.totalRating += s.rating;
+          p.formRatings.push(s.rating);
+          if (p.formRatings.length > 5) p.formRatings.shift();
       });
       proc(hS, a); proc(aS, h);
   }

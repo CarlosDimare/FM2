@@ -1,8 +1,7 @@
 import { create } from 'zustand';
-import { Fixture } from '../types';
+import { Fixture, ManagerHistory } from '../types';
 import { world } from '../services/worldManager';
 import { Scheduler } from '../services/scheduler';
-import { MatchSimulator } from '../services/engine';
 import { LifecycleManager } from '../services/lifecycleManager';
 
 interface GameStore {
@@ -10,16 +9,20 @@ interface GameStore {
   nextFixture: Fixture | null;
   currentDate: Date;
   seasonEndDate: Date;
+  managerHistory: ManagerHistory;
+  managerReputation: number;
 
   setFixtures: (fixtures: Fixture[]) => void;
   setNextFixture: (f: Fixture | null) => void;
   setCurrentDate: (d: Date) => void;
   setSeasonEndDate: (d: Date) => void;
+  setManagerHistory: (h: ManagerHistory) => void;
+  setManagerReputation: (r: number) => void;
+  trackMatchResult: (userScore: number, opponentScore: number) => void;
+  trackTitle: (title: string) => void;
 
   initSeasonFixtures: (startFrom: Date, clubId?: string) => Fixture[];
   updateNextFixture: (fixtures: Fixture[], date: Date, clubId: string) => Fixture | null;
-  advanceTime: (currentDate: Date, userClubId?: string) => { newDate: Date; hasSeniorMatch: boolean; };
-  simulateDay: (day: Date, fixtures: Fixture[]) => Fixture[];
   finishSeason: (fixtures: Fixture[], userClubId?: string, dateOverride?: Date) => {
     summaries: any[];
     userWonLeague: boolean;
@@ -34,11 +37,66 @@ export const useGameStore = create<GameStore>((set, get) => ({
   nextFixture: null,
   currentDate: new Date(2008, 7, 16),
   seasonEndDate: new Date(2009, 6, 10),
+  managerHistory: {
+    totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
+    goalsFor: 0, goalsAgainst: 0, currentStreak: null, streakCount: 0,
+    longestWinStreak: 0, titles: [], seasonsCompleted: 0
+  },
+  managerReputation: 50,
 
   setFixtures: (fixtures) => set({ fixtures }),
   setNextFixture: (nextFixture) => set({ nextFixture }),
   setCurrentDate: (currentDate) => set({ currentDate }),
   setSeasonEndDate: (seasonEndDate) => set({ seasonEndDate }),
+  setManagerHistory: (managerHistory) => set({ managerHistory }),
+  setManagerReputation: (managerReputation) => set({ managerReputation }),
+
+  trackMatchResult: (userScore, opponentScore) => {
+    const { managerHistory } = get();
+    const newHistory = { ...managerHistory };
+    newHistory.totalGames++;
+    newHistory.goalsFor += userScore;
+    newHistory.goalsAgainst += opponentScore;
+
+    if (userScore > opponentScore) {
+      newHistory.totalWins++;
+      if (newHistory.currentStreak === 'W') {
+        newHistory.streakCount++;
+      } else {
+        newHistory.currentStreak = 'W';
+        newHistory.streakCount = 1;
+      }
+      if (newHistory.streakCount > newHistory.longestWinStreak) {
+        newHistory.longestWinStreak = newHistory.streakCount;
+      }
+    } else if (userScore < opponentScore) {
+      newHistory.totalLosses++;
+      newHistory.currentStreak = 'L';
+      newHistory.streakCount = 1;
+    } else {
+      newHistory.totalDraws++;
+      if (newHistory.currentStreak !== 'D') {
+        newHistory.currentStreak = 'D';
+        newHistory.streakCount = 1;
+      } else {
+        newHistory.streakCount++;
+      }
+    }
+
+    set({ managerHistory: newHistory });
+
+    const repDelta = userScore > opponentScore ? 1 : userScore < opponentScore ? -1 : 0;
+    const newRep = Math.max(1, Math.min(100, get().managerReputation + repDelta));
+    set({ managerReputation: newRep });
+  },
+
+  trackTitle: (title) => {
+    const { managerHistory } = get();
+    const newHistory = { ...managerHistory };
+    newHistory.titles = [title, ...newHistory.titles];
+    const newRep = Math.min(100, get().managerReputation + 5);
+    set({ managerHistory: newHistory, managerReputation: newRep });
+  },
 
   initSeasonFixtures: (startFrom, clubId) => {
     const allFixtures: Fixture[] = [];
@@ -143,83 +201,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     );
     set({ nextFixture: next || null });
     return next || null;
-  },
-
-  advanceTime: (currentDate, userClubId) => {
-    const { fixtures } = get();
-    let hasSeniorMatch = false;
-
-    if (userClubId) {
-      const hasUserSeniorMatchToday = fixtures.some(f =>
-        !f.played &&
-        f.date.toDateString() === currentDate.toDateString() &&
-        (f.homeTeamId === userClubId || f.awayTeamId === userClubId) &&
-        f.squadType === 'SENIOR'
-      );
-
-      if (!hasUserSeniorMatchToday) {
-        const dayFixtures = fixtures.filter(f =>
-          f.date.toDateString() === currentDate.toDateString() &&
-          !f.played
-        );
-        dayFixtures.forEach(f => {
-          const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-          f.played = true;
-          f.homeScore = homeScore;
-          f.awayScore = awayScore;
-          const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-          const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
-          MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-          LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId);
-          MatchSimulator.processMatchInjuries(stats);
-        });
-      }
-    }
-
-    const nextDay = new Date(currentDate);
-    nextDay.setDate(currentDate.getDate() + 1);
-
-    LifecycleManager.checkBirthdays(nextDay);
-    LifecycleManager.recoverDailyFitness();
-    world.checkRenewalTriggers(nextDay, userClubId);
-    world.processTransferDecisions(nextDay);
-    world.processAIActivity(nextDay);
-    world.processDailyContracts(nextDay, userClubId);
-    world.processDailyScouting(nextDay, userClubId);
-
-    const newCupFixtures = LifecycleManager.processCompetitionProgress(fixtures, nextDay);
-    if (newCupFixtures.length > 0) {
-      const updatedFixtures = [...fixtures, ...newCupFixtures];
-      set({ fixtures: updatedFixtures });
-    }
-
-    if (userClubId) {
-      get().updateNextFixture(newCupFixtures.length > 0 ? [...fixtures, ...newCupFixtures] : fixtures, nextDay, userClubId);
-    }
-
-    return { newDate: nextDay, hasSeniorMatch };
-  },
-
-  simulateDay: (day, fixtures) => {
-    const dayFixtures = fixtures.filter(f =>
-      f.date.toDateString() === day.toDateString() &&
-      !f.played
-    );
-    if (dayFixtures.length === 0) return fixtures;
-
-    dayFixtures.forEach(f => {
-      const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-      f.played = true;
-      f.homeScore = homeScore;
-      f.awayScore = awayScore;
-      const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-      const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
-      MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-      LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId);
-      MatchSimulator.processMatchInjuries(stats);
-    });
-
-    return [...fixtures];
   },
 
   finishSeason: (fixtures, userClubId, dateOverride) => {

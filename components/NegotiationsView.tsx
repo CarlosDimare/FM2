@@ -105,6 +105,10 @@ export const NegotiationsView: React.FC<NegotiationsViewProps> = ({ userClubId, 
                 <UserCheck size={14} /> FIRMAR JUGADOR
               </button>
             )}
+
+            {offer.status === 'PENDING' && (
+              <span className="text-[9px] text-slate-500 italic font-bold">Esperando respuesta del club...</span>
+            )}
           </div>
         </div>
         
@@ -113,10 +117,15 @@ export const NegotiationsView: React.FC<NegotiationsViewProps> = ({ userClubId, 
               <Clock size={12} /> Iniciada: {offer.date.toLocaleDateString()}
            </div>
            {offer.status === 'ACCEPTED' && isBuying && (
-              <span className="text-[9px] text-green-600 font-black uppercase tracking-widest">
-                 ¡Acuerdo alcanzado! Haz clic en Firmar para incorporarlo.
-              </span>
-           )}
+               <span className="text-[9px] text-green-600 font-black uppercase tracking-widest">
+                  ¡Acuerdo alcanzado! Haz clic en Firmar para incorporarlo.
+               </span>
+            )}
+            {offer.status === 'PENDING' && (
+               <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                  Pendiente de respuesta del club vendedor
+               </span>
+            )}
         </div>
       </div>
     );

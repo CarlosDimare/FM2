@@ -48,6 +48,7 @@ const App: React.FC = () => {
     setSeasonSummary, setUserWonLeague, setViewLeagueId, setViewSquadType,
     setCurrentDate, setSeasonEndDate, setHasSave,
     setIsSaveModalOpen, setSaveNameInput, setIsLoadModalOpen, setAvailableSaves,
+    isAutoSaveEnabled, setIsAutoSaveEnabled,
   } = useUIStore();
 
   const { fixtures, nextFixture, setFixtures, setNextFixture, initSeasonFixtures, updateNextFixture } = useGameStore();
@@ -115,20 +116,75 @@ const App: React.FC = () => {
     if (nextFixture) setView('MATCH');
   };
 
-  const advanceTime = () => {
+  const performAutoSave = async () => {
+    if (!isAutoSaveEnabled || !userClub) return;
+    try {
+      const id = `autosave_${currentDate.toISOString().slice(0, 10)}`;
+      const saveData = {
+        id, label: `Auto: ${currentDate.toLocaleDateString()}`, lastPlayed: new Date(),
+        metaTeamName: userClub.name,
+        metaManagerName: `${userName} ${userSurname}`,
+        gameState: { currentDate, userName, userSurname, userClubId: userClub.id, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation },
+        worldState: {
+          players: world.players, clubs: world.clubs, competitions: world.competitions,
+          staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
+          scoutingReports: world.scoutingReports
+        }
+      };
+      await saveGame(saveData);
+      setHasSave(true);
+    } catch (e) {
+      console.error('Auto-save failed:', e);
+    }
+  };
+
+  const advanceTime = async () => {
     if (currentView === 'PRE_MATCH') {
       handleStartMatch();
       return;
+    }
+
+    if (currentView === 'SENIOR_TACTICS' && userClub) {
+      const isMatchToday = fixtures.some(f =>
+        !f.played &&
+        f.date.toDateString() === currentDate.toDateString() &&
+        (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) &&
+        f.squadType === 'SENIOR'
+      );
+      if (isMatchToday) {
+        setView('PRESS_CONFERENCE_PRE');
+        return;
+      }
     }
 
     if (currentDate >= seasonEndDate) {
       const result = useGameStore.getState().finishSeason(fixtures, userClub?.id);
       setSeasonSummary(result.summaries);
       setUserWonLeague(result.userWonLeague);
+      const gs = useGameStore.getState();
+      gs.setManagerHistory({ ...gs.managerHistory, seasonsCompleted: gs.managerHistory.seasonsCompleted + 1 });
+      if (result.userWonLeague) gs.trackTitle('Liga');
+      const wonCups = result.summaries.filter((s: any) => s.championId === userClub?.id && s.compType !== 'LEAGUE');
+      wonCups.forEach((s: any) => gs.trackTitle(s.compName));
+      if (userClub) {
+        const leagueTable = world.getLeagueTable(userClub.leagueId, result.newFixtures.length > 0 ? result.newFixtures : fixtures, 'SENIOR');
+        const leaguePos = leagueTable.findIndex(e => e.clubId === userClub.id) + 1;
+        const leagueTotal = leagueTable.length;
+        const leagueSummary = result.summaries.find((s: any) => s.compType === 'LEAGUE');
+        const cupWinnerId = result.summaries.find((s: any) => s.compType !== 'LEAGUE' && s.championId)?.championId;
+        const wonCup = cupWinnerId === userClub.id;
+        const cupSemi = result.summaries.find((s: any) => s.compType !== 'LEAGUE')?.championId ? false : false;
+        const changes = world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, cupSemi);
+        if (changes <= -30) {
+          world.addInboxMessage('SQUAD', 'Confianza de la directiva baja', `La directiva no está satisfecha con los resultados de esta temporada. Se esperan mejoras significativas.`, currentDate);
+        }
+      }
       setView('HOME');
       notify();
       return;
     }
+
+    await performAutoSave();
 
     if (userClub) {
       const hasUserSeniorMatchToday = fixtures.some(f =>
@@ -166,6 +222,7 @@ const App: React.FC = () => {
     world.processTransferDecisions(nextDay);
     world.processAIActivity(nextDay);
     world.processDailyContracts(nextDay, userClub?.id);
+    world.processDailyScouting(nextDay, userClub?.id);
 
     const newCupFixtures = LifecycleManager.processCompetitionProgress(fixtures, nextDay);
     let allFixtures = fixtures;
@@ -239,6 +296,19 @@ const App: React.FC = () => {
         const result = useGameStore.getState().finishSeason(localFixtures, userClub?.id);
         setSeasonSummary(result.summaries);
         setUserWonLeague(result.userWonLeague);
+        const gs = useGameStore.getState();
+        gs.setManagerHistory({ ...gs.managerHistory, seasonsCompleted: gs.managerHistory.seasonsCompleted + 1 });
+        if (result.userWonLeague) gs.trackTitle('Liga');
+        const wonCups = result.summaries.filter((s: any) => s.championId === userClub?.id && s.compType !== 'LEAGUE');
+        wonCups.forEach((s: any) => gs.trackTitle(s.compName));
+        if (userClub) {
+          const leagueTable = world.getLeagueTable(userClub.leagueId, localFixtures, 'SENIOR');
+          const leaguePos = leagueTable.findIndex(e => e.clubId === userClub.id) + 1;
+          const leagueTotal = leagueTable.length;
+          const cupWinnerId = result.summaries.find((s: any) => s.compType !== 'LEAGUE' && s.championId)?.championId;
+          const wonCup = cupWinnerId === userClub.id;
+          world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, false);
+        }
         setIsSimulating(false);
         setIsVacationModalOpen(false);
         setCurrentDate(tempDate);
@@ -262,6 +332,101 @@ const App: React.FC = () => {
     notify();
   };
 
+  const simulateToNextMatch = async () => {
+    if (!userClub) return;
+    setIsSimulating(true);
+
+    let tempDate = new Date(currentDate);
+    let localFixtures = [...fixtures];
+    const maxDays = 120;
+    let daysSimmed = 0;
+
+    while (daysSimmed < maxDays) {
+      tempDate.setDate(tempDate.getDate() + 1);
+      daysSimmed++;
+
+      if (tempDate >= seasonEndDate) {
+        setFixtures(localFixtures);
+        const result = useGameStore.getState().finishSeason(localFixtures, userClub.id);
+        setSeasonSummary(result.summaries);
+        setUserWonLeague(result.userWonLeague);
+        const gs = useGameStore.getState();
+        gs.setManagerHistory({ ...gs.managerHistory, seasonsCompleted: gs.managerHistory.seasonsCompleted + 1 });
+        if (result.userWonLeague) gs.trackTitle('Liga');
+        const wonCups = result.summaries.filter((s: any) => s.championId === userClub.id && s.compType !== 'LEAGUE');
+        wonCups.forEach((s: any) => gs.trackTitle(s.compName));
+        if (userClub) {
+          const leagueTable = world.getLeagueTable(userClub.leagueId, localFixtures, 'SENIOR');
+          const leaguePos = leagueTable.findIndex(e => e.clubId === userClub.id) + 1;
+          const leagueTotal = leagueTable.length;
+          const cupWinnerId = result.summaries.find((s: any) => s.compType !== 'LEAGUE' && s.championId)?.championId;
+          const wonCup = cupWinnerId === userClub.id;
+          world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, false);
+        }
+        setIsSimulating(false);
+        setCurrentDate(tempDate);
+        notify();
+        return;
+      }
+
+      const hasUserMatch = localFixtures.some(f =>
+        !f.played &&
+        f.date.toDateString() === tempDate.toDateString() &&
+        (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) &&
+        f.squadType === 'SENIOR'
+      );
+
+      const dayFixtures = localFixtures.filter(f =>
+        f.date.toDateString() === tempDate.toDateString() && !f.played
+      );
+      dayFixtures.forEach(f => {
+        const isUserMatch = userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id);
+        if (isUserMatch) return;
+        const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+        f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
+        const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
+        const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+        MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
+        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId);
+      });
+
+      LifecycleManager.checkBirthdays(tempDate);
+      LifecycleManager.recoverDailyFitness();
+      world.checkRenewalTriggers(tempDate, userClub.id);
+      world.processTransferDecisions(tempDate);
+      world.processAIActivity(tempDate);
+      world.processDailyContracts(tempDate, userClub.id);
+      world.processDailyScouting(tempDate, userClub.id);
+
+      const newCupFixtures = LifecycleManager.processCompetitionProgress(localFixtures, tempDate);
+      if (newCupFixtures.length > 0) {
+        localFixtures = [...localFixtures, ...newCupFixtures];
+      }
+
+      if (daysSimmed % 7 === 0) {
+        setCurrentDate(new Date(tempDate));
+        await new Promise(r => setTimeout(r, 5));
+      }
+
+      if (hasUserMatch) {
+        setFixtures(localFixtures);
+        setCurrentDate(new Date(tempDate));
+        if (userClub) updateNextFixture(localFixtures, tempDate, userClub.id);
+        setIsSimulating(false);
+        setView('PRE_MATCH');
+        notify();
+        return;
+      }
+    }
+
+    setFixtures(localFixtures);
+    setCurrentDate(new Date(tempDate));
+    if (userClub) updateNextFixture(localFixtures, tempDate, userClub.id);
+    setIsSimulating(false);
+    setView('HOME');
+    notify();
+  };
+
   const handleOpenSaveModal = () => {
     setSaveNameInput(`${userClub?.shortName} - ${currentDate.toLocaleDateString()}`);
     setIsSaveModalOpen(true);
@@ -275,10 +440,11 @@ const App: React.FC = () => {
         id, label: saveNameInput, lastPlayed: new Date(),
         metaTeamName: userClub.name,
         metaManagerName: `${userName} ${userSurname}`,
-        gameState: { currentDate, userName, userSurname, userClubId: userClub.id, fixtures, seasonEndDate },
+        gameState: { currentDate, userName, userSurname, userClubId: userClub.id, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation },
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
-          staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox
+          staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
+          scoutingReports: world.scoutingReports
         }
       };
       await saveGame(saveData);
@@ -309,6 +475,7 @@ const App: React.FC = () => {
       world.tactics = data.worldState.tactics;
       world.offers = data.worldState.offers;
       world.inbox = data.worldState.inbox;
+      if (data.worldState.scoutingReports) world.scoutingReports = data.worldState.scoutingReports;
 
       setCurrentDate(data.gameState.currentDate);
       setUserName(data.gameState.userName);
@@ -318,6 +485,13 @@ const App: React.FC = () => {
       setUserClub(club || null);
       setFixtures(data.gameState.fixtures);
       setSeasonEndDate(data.gameState.seasonEndDate);
+
+      if (data.gameState.managerHistory) {
+        useGameStore.getState().setManagerHistory(data.gameState.managerHistory);
+      }
+      if (data.gameState.managerReputation) {
+        useGameStore.getState().setManagerReputation(data.gameState.managerReputation);
+      }
 
       if (club) {
         updateNextFixture(data.gameState.fixtures, data.gameState.currentDate, club.id);
@@ -387,6 +561,27 @@ const App: React.FC = () => {
                 </div>
               </div>
             </div>
+            {useGameStore.getState().managerHistory.totalGames > 0 && (
+            <div className="bg-slate-200 p-3 rounded-sm border border-slate-400 shadow-sm">
+              <h3 className="text-slate-950 font-black uppercase text-[10px] tracking-wider mb-2 border-b border-slate-400 pb-1 flex items-center gap-1.5"><User size={12} /> Mi Historíal · Reputación: {useGameStore.getState().managerReputation}/100 · {useGameStore.getState().managerReputation >= 90 ? 'Leyenda' : useGameStore.getState().managerReputation >= 75 ? 'Estrella' : useGameStore.getState().managerReputation >= 60 ? 'Respetado' : useGameStore.getState().managerReputation >= 40 ? 'Promedio' : useGameStore.getState().managerReputation >= 25 ? 'Novato' : 'Desconocido'}</h3>
+              <div className="flex gap-4 text-[10px] font-bold uppercase text-slate-700">
+                <span>PJ: {useGameStore.getState().managerHistory.totalGames}</span>
+                <span className="text-green-700">G: {useGameStore.getState().managerHistory.totalWins}</span>
+                <span className="text-slate-500">E: {useGameStore.getState().managerHistory.totalDraws}</span>
+                <span className="text-red-700">P: {useGameStore.getState().managerHistory.totalLosses}</span>
+                <span>GF: {useGameStore.getState().managerHistory.goalsFor}</span>
+                <span>GC: {useGameStore.getState().managerHistory.goalsAgainst}</span>
+                {useGameStore.getState().managerHistory.currentStreak && (
+                  <span className={`${useGameStore.getState().managerHistory.currentStreak === 'W' ? 'text-green-600' : useGameStore.getState().managerHistory.currentStreak === 'L' ? 'text-red-600' : 'text-slate-500'}`}>
+                    {useGameStore.getState().managerHistory.currentStreak === 'W' ? 'Racha: ' : useGameStore.getState().managerHistory.currentStreak === 'L' ? 'Racha: ' : 'Racha: '}{useGameStore.getState().managerHistory.streakCount}
+                  </span>
+                )}
+                {useGameStore.getState().managerHistory.titles.length > 0 && (
+                  <span className="text-yellow-600">Títulos: {useGameStore.getState().managerHistory.titles.length}</span>
+                )}
+              </div>
+            </div>
+            )}
             <div className="bg-slate-100 p-4 rounded-sm border border-slate-300 shadow-sm">
               <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-4 border-b border-slate-300 pb-1 flex items-center justify-between">
                 <div className="flex items-center gap-2"><Mail size={14} /> Últimas Noticias</div>
@@ -498,15 +693,18 @@ const App: React.FC = () => {
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
           return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats) => {
-            nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
-            MatchSimulator.finalizeSeasonStats(
-              world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),
-              world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, h, a, nextFixture.competitionId
-            );
-            LifecycleManager.processPostMatchSuspensions(nextFixture.homeTeamId, nextFixture.awayTeamId);
-            MatchSimulator.processMatchInjuries(stats);
-            setView('PRESS_CONFERENCE_POST');
-            notify();
+             nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
+             MatchSimulator.finalizeSeasonStats(
+               world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),
+               world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, h, a, nextFixture.competitionId
+             );
+             LifecycleManager.processPostMatchSuspensions(nextFixture.homeTeamId, nextFixture.awayTeamId);
+             MatchSimulator.processMatchInjuries(stats);
+             const userScore = homeClub.id === userClub.id ? h : a;
+             const oppScore = homeClub.id === userClub.id ? a : h;
+             useGameStore.getState().trackMatchResult(userScore, oppScore);
+             setView('PRESS_CONFERENCE_POST');
+             notify();
           }} />;
         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
@@ -717,6 +915,14 @@ const App: React.FC = () => {
               {currentDate.toLocaleDateString()}
             </div>
             <div id="header-actions" className="flex items-center gap-2">
+              {!isPreMatchView && (
+                <FMButton variant="secondary" onClick={simulateToNextMatch} disabled={isSimulating} title="Simular hasta próximo partido">
+                  <RefreshCw size={10} /> Próximo
+                </FMButton>
+              )}
+              <button onClick={() => setIsAutoSaveEnabled(!isAutoSaveEnabled)} className={`p-1.5 rounded-sm border transition-colors ${isAutoSaveEnabled ? 'bg-slate-800 text-green-400 border-green-600' : 'bg-slate-700 text-slate-400 border-slate-600'}`} title={isAutoSaveEnabled ? 'Auto-guardado activado' : 'Auto-guardado desactivado'}>
+                <Save size={12} />
+              </button>
               <FMButton variant={isPreMatchView ? "primary" : "primary"} onClick={advanceTime} className={userClub ? (isPreMatchView ? "bg-slate-950 text-white animate-pulse border-white/40" : "bg-slate-900 text-white border-white/30 shadow-lg") : ""}>
                 {isPreMatchView ? (
                   <><Zap size={10} fill="currentColor" /> Jugar Partido</>

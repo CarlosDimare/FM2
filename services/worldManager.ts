@@ -54,21 +54,23 @@ export class WorldManager {
            country: def.country,
            primaryColor: def.pCol,
            secondaryColor: def.sCol,
-           finances: {
-              balance: def.rep * 2500,
-              transferBudget: def.rep * 800,
-              wageBudget: def.rep * 80,
-              monthlyIncome: def.rep * 200,
-              monthlyExpenses: 0
-           },
-           reputation: def.rep,
-           stadium: def.stadium,
-           honours: this.generateRandomHonours(),
-            trainingFacilities: Math.min(20, Math.floor(def.rep / 500) + randomInt(-2, 2)),
-            youthFacilities: Math.min(20, Math.floor(def.rep / 550) + randomInt(-3, 3)),
-            boardConfidence: 65 + randomInt(0, 25),
-            seasonObjective: def.rep > 4000 ? 'TOP_4' : def.rep > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION'
-         };
+            finances: {
+               balance: def.rep * 2500,
+               transferBudget: def.rep * 800,
+               wageBudget: def.rep * 80,
+               monthlyIncome: def.rep * 200,
+               monthlyExpenses: 0,
+               scoutingBudget: def.rep * 100
+            },
+            reputation: def.rep,
+            stadium: def.stadium,
+            honours: this.generateRandomHonours(),
+             trainingFacilities: Math.min(20, Math.floor(def.rep / 500) + randomInt(-2, 2)),
+             youthFacilities: Math.min(20, Math.floor(def.rep / 550) + randomInt(-3, 3)),
+             boardConfidence: 65 + randomInt(0, 25),
+             seasonObjective: def.rep > 4000 ? 'TOP_4' : def.rep > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION',
+             shortlistedPlayerIds: []
+          };
         this.clubs.push(club);
         this.injectRealPlayers(club);
         this.generateSquadsForClub(club.id);
@@ -114,7 +116,7 @@ export class WorldManager {
      const posMap: Record<string, Position> = {
         'GK': Position.GK, 'DC': Position.DC, 'DL': Position.DL, 'DR': Position.DR,
         'DM': Position.DM, 'MC': Position.MC, 'ML': Position.ML, 'MR': Position.MR,
-        'AMC': Position.AMC, 'AML': Position.AML, 'AMR': Position.AMR, 'ST': Position.ST,
+        'AMC': Position.AM, 'AML': Position.AML, 'AMR': Position.AMR, 'ST': Position.ST,
         'WD': Position.STR, 'WI': Position.STL, 'P': Position.GK, 'DFC': Position.DC,
         'LD': Position.DR, 'LI': Position.DL
      };
@@ -173,7 +175,8 @@ export class WorldManager {
         reputation: def.ca * 45, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR',
         value: Math.round(def.ca * def.ca * 2500), salary: Math.round(def.ca * 2500 / 10) * 10,
         transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty,
-        negotiationAttempts: 0, isUnhappyWithContract: false, developmentTrend: 'STABLE', yellowCardsAccumulated: 0
+        negotiationAttempts: 0, isUnhappyWithContract: false, developmentTrend: 'STABLE', yellowCardsAccumulated: 0,
+        formRatings: [], isTransferListed: false
      };
   }
 
@@ -203,12 +206,12 @@ export class WorldManager {
   }
 
   generateStaffForClub(clubId: string) {
-    const roles: StaffRole[] = ['HEAD_COACH', 'ASSISTANT_MANAGER', 'PHYSIO', 'FITNESS_COACH', 'RESERVE_MANAGER', 'YOUTH_MANAGER'];
+    const roles: StaffRole[] = ['HEAD_COACH', 'ASSISTANT_MANAGER', 'PHYSIO', 'FITNESS_COACH', 'RESERVE_MANAGER', 'YOUTH_MANAGER', 'SCOUT'];
     roles.forEach(role => {
       const s: Staff = {
         id: generateUUID(), name: `${STAFF_NAMES.names[randomInt(0, STAFF_NAMES.names.length-1)]} ${STAFF_NAMES.surnames[randomInt(0, STAFF_NAMES.surnames.length-1)]}`,
         age: randomInt(35, 65), nationality: "Argentina", role: role, clubId: clubId,
-        attributes: { coaching: weightedRandom(8, 20), judgingAbility: weightedRandom(8, 20), judgingPotential: weightedRandom(8, 20), tacticalKnowledge: weightedRandom(10, 20), adaptability: weightedRandom(5, 20), medical: role === 'PHYSIO' ? 18 : 5, physiotherapy: role === 'PHYSIO' ? 18 : 5, motivation: weightedRandom(8, 20), manManagement: weightedRandom(8, 20) },
+        attributes: { coaching: weightedRandom(8, 20), judgingAbility: role === 'SCOUT' ? weightedRandom(12, 20) : weightedRandom(8, 20), judgingPotential: role === 'SCOUT' ? weightedRandom(12, 20) : weightedRandom(8, 20), tacticalKnowledge: weightedRandom(10, 20), adaptability: weightedRandom(5, 20), medical: role === 'PHYSIO' ? 18 : 5, physiotherapy: role === 'PHYSIO' ? 18 : 5, motivation: weightedRandom(8, 20), manManagement: weightedRandom(8, 20) },
         salary: randomInt(3000, 15000), contractExpiry: new Date(2010, 5, 30), history: []
       };
       this.staff.push(s);
@@ -245,7 +248,7 @@ export class WorldManager {
     }
 
     return {
-        id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, yellowCardsAccumulated: 0
+        id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false
     };
   }
 
@@ -310,7 +313,7 @@ export class WorldManager {
             if (metadata.line === 'DM') return primaryPos === Position.DM || primaryPos === Position.DML || primaryPos === Position.DMR;
             if (metadata.line === 'MID') return primaryPos === Position.MC || primaryPos === Position.MR || primaryPos === Position.ML;
             // Fix: Comparison between narrowed enum type and specific member caused overlap error due to duplicate string values in Position enum. Casting primaryPos to any to skip overlap check.
-            if (metadata.line === 'AM') return (primaryPos as any) === Position.AM || primaryPos === Position.AMC || primaryPos === Position.AMR || primaryPos === Position.AML;
+            if (metadata.line === 'AM') return (primaryPos as any) === Position.AM || primaryPos === Position.AMR || primaryPos === Position.AML;
             if (metadata.line === 'ATT') return primaryPos === Position.ST || primaryPos === Position.STR || primaryPos === Position.STL;
             return false;
         });
@@ -334,7 +337,7 @@ export class WorldManager {
   }
 
   makeTransferOffer(playerId: string, fromClubId: string, amount: number, type: 'PURCHASE' | 'LOAN', date: Date, wageShare = 100) {
-    const offer: TransferOffer = { id: generateUUID(), playerId, fromClubId, toClubId: this.players.find(p => p.id === playerId)!.clubId, amount, wageShare, type, status: 'ACCEPTED', date, responseDate: date, isViewed: false };
+    const offer: TransferOffer = { id: generateUUID(), playerId, fromClubId, toClubId: this.players.find(p => p.id === playerId)!.clubId, amount, wageShare, type, status: 'PENDING', date, responseDate: date, isViewed: false };
     this.offers.push(offer);
   }
 
@@ -348,15 +351,27 @@ export class WorldManager {
     if (p) {
         const oldClub = this.getClub(p.clubId); const newClub = this.getClub(offer.fromClubId);
         if (oldClub && offer.type === 'PURCHASE') oldClub.finances.balance += offer.amount;
-        if (newClub && offer.type === 'PURCHASE') newClub.finances.balance -= offer.amount;
+        if (newClub && offer.type === 'PURCHASE') {
+          newClub.finances.balance -= offer.amount;
+          newClub.finances.transferBudget -= offer.amount;
+        }
         p.clubId = offer.fromClubId; p.isStarter = false; p.tacticalPosition = undefined;
+        p.isTransferListed = false;
+        if (newClub) {
+          const salaryFactor = 0.8 + Math.random() * 0.6;
+          p.salary = Math.round(p.salary * salaryFactor);
+          p.contractExpiry = new Date(offer.date.getFullYear() + 3 + Math.floor(Math.random() * 2), 5, 30);
+        }
+        p.isUnhappyWithContract = false;
+        p.requestedSalary = undefined;
         offer.status = 'COMPLETED';
+        this.addInboxMessage('MARKET', `Traspaso completado: ${p.name}`, `${p.name} se ha unido a ${newClub?.name || 'nuevo club'} por $${offer.amount.toLocaleString()}.`, offer.date, p.id);
     }
   }
 
   rescindContract(playerId: string, date: Date) {
     const p = this.players.find(player => player.id === playerId);
-    if (p) { p.clubId = 'FREE_AGENT'; p.isStarter = false; p.tacticalPosition = undefined; }
+    if (p) { p.clubId = 'FREE_AGENT'; p.isStarter = false; p.tacticalPosition = undefined; p.isTransferListed = false; }
   }
 
   createHumanManager(clubId: string, name: string) {
@@ -365,12 +380,257 @@ export class WorldManager {
     this.staff.unshift(manager);
   }
 
-  getRequestedSalary(player: Player, club: Club) { return Math.round(player.salary * 1.2); }
-  submitContractOffer(player: Player, salary: number, years: number, date: Date) { return 'ACCEPTED'; }
-  processAIActivity(date: Date) {}
-  processDailyContracts(date: Date, userClubId?: string) {}
-  processTransferDecisions(date: Date) {}
-  checkRenewalTriggers(date: Date, userClubId?: string) {}
+  getRequestedSalary(player: Player, club: Club) {
+    const base = player.salary;
+    const repFactor = (10000 + club.reputation) / 10000;
+    const abilityFactor = player.currentAbility / 100;
+    return Math.round(base * 1.3 * repFactor * abilityFactor / 100) * 100;
+  }
+
+  submitContractOffer(player: Player, salary: number, years: number, date: Date) {
+    const requested = this.getRequestedSalary(player, this.getClub(player.clubId)!);
+    if (salary >= requested * 0.9) {
+      player.salary = salary;
+      player.contractExpiry = new Date(date.getFullYear() + years, date.getMonth(), date.getDate());
+      player.isUnhappyWithContract = false;
+      player.requestedSalary = undefined;
+      return 'ACCEPTED';
+    }
+    return 'REJECTED';
+  }
+
+  processAIActivity(date: Date) {
+    this.processPendingOffers(date);
+    if (Math.random() > 0.1) return;
+    const allClubs = this.clubs;
+
+    // AI sell phase: list surplus players
+    allClubs.forEach(club => {
+      const seniorPlayers = this.getPlayersByClub(club.id).filter(p => p.squad === 'SENIOR');
+      const surplus: Player[] = [];
+      const gkList = seniorPlayers.filter(p => p.positions.includes(Position.GK));
+      if (gkList.length > 2) surplus.push(...gkList.slice(2));
+      const defList = seniorPlayers.filter(p => ['SW','DC','DR','DL'].some(pos => p.positions.includes(pos as Position)));
+      if (defList.length > 6) surplus.push(...defList.slice(6));
+      const midList = seniorPlayers.filter(p => ['DM','MC','ML','MR','AM'].some(pos => p.positions.includes(pos as Position)));
+      if (midList.length > 6) surplus.push(...midList.slice(6));
+      const fwdList = seniorPlayers.filter(p => p.positions.includes(Position.ST));
+      if (fwdList.length > 3) surplus.push(...fwdList.slice(3));
+      surplus.forEach(p => { p.isTransferListed = true; });
+    });
+
+    // AI buy phase
+    allClubs.forEach(club => {
+      if (club.finances.transferBudget < 5000) return;
+      const needPositions = this.getPlayersByClub(club.id).filter(p => p.squad === 'SENIOR' && !p.injury);
+      const weakPositions: Position[] = [];
+      const gkCount = needPositions.filter(p => p.positions.includes(Position.GK)).length;
+      if (gkCount < 2) weakPositions.push(Position.GK);
+      const defCount = needPositions.filter(p => ['SW','DC','DR','DL'].some(pos => p.positions.includes(pos as Position))).length;
+      if (defCount < 5) { weakPositions.push(Position.DC); weakPositions.push(Position.DR); }
+      const midCount = needPositions.filter(p => ['DM','MC','ML','MR','AM'].some(pos => p.positions.includes(pos as Position))).length;
+      if (midCount < 4) weakPositions.push(Position.MC);
+      const fwdCount = needPositions.filter(p => p.positions.includes(Position.ST)).length;
+      if (fwdCount < 2) weakPositions.push(Position.ST);
+      if (weakPositions.length === 0) return;
+      const targetPos = weakPositions[randomInt(0, weakPositions.length - 1)];
+      const candidates = this.players.filter(p =>
+        p.clubId !== club.id && p.clubId !== 'FREE_AGENT' &&
+        p.squad === 'SENIOR' && p.positions.includes(targetPos) &&
+        Math.abs(p.currentAbility - club.reputation / 100) < 20
+      );
+      if (candidates.length === 0) return;
+      const target = candidates[randomInt(0, candidates.length - 1)];
+      const maxOffer = Math.min(target.value, club.finances.transferBudget);
+      if (maxOffer < 1000) return;
+      const amount = Math.round(maxOffer * (0.5 + Math.random() * 0.4));
+      const offer: TransferOffer = {
+        id: generateUUID(), playerId: target.id,
+        fromClubId: club.id, toClubId: target.clubId,
+        amount, wageShare: 100, type: 'PURCHASE',
+        status: 'PENDING', date, responseDate: date, isViewed: false
+      };
+      this.offers.push(offer);
+    });
+  }
+
+  processDailyContracts(date: Date, userClubId?: string) {
+    if (userClubId) {
+      const userPlayers = this.getPlayersByClub(userClubId);
+      userPlayers.forEach(p => {
+        if (p.contractExpiry < date && !p.isUnhappyWithContract) {
+          p.isUnhappyWithContract = true;
+          p.requestedSalary = this.getRequestedSalary(p, this.getClub(userClubId)!);
+          this.addInboxMessage('SQUAD', `${p.name} — Contrato por vencer`, `A ${p.name} le queda menos de un año de contrato. Solicita $${p.requestedSalary.toLocaleString()}/sem. Renovalo o podría buscar otros horizontes.`, date, p.id);
+        }
+        if (p.injury && p.injury.daysLeft === 1) {
+          this.addInboxMessage('SQUAD', `${p.name} — Próximo a recuperarse`, `${p.name} se recuperará de su lesión mañana y estará disponible para la próxima convocatoria.`, date, p.id);
+        }
+      });
+      const injuredPlayers = userPlayers.filter(p => p.injury && p.injury.daysLeft > 0);
+      if (injuredPlayers.length > 0 && Math.random() < 0.3) {
+        const worst = injuredPlayers.reduce((a, b) => (a.injury!.daysLeft > b.injury!.daysLeft ? a : b));
+        this.addInboxMessage('SQUAD', `Parte médico: ${worst.name}`, `${worst.name} continúa recuperándose de ${worst.injury!.type}. Regreso estimado en ${worst.injury!.daysLeft} días.`, date, worst.id);
+      }
+    }
+  }
+
+  processTransferDecisions(date: Date) {
+    this.processPendingOffers(date);
+    const completedToday = this.offers.filter(o => o.status === 'COMPLETED' && o.date.toDateString() === date.toDateString());
+    completedToday.forEach(offer => {
+      const buyer = this.getClub(offer.fromClubId);
+      const seller = this.getClub(offer.toClubId);
+      if (buyer && seller) {
+        this.addInboxMessage('MARKET', `Traspaso: ${this.players.find(p => p.id === offer.playerId)?.name || 'Jugador'}`, `${buyer.name} ha fichado a un jugador de ${seller.name} por $${offer.amount.toLocaleString()}.`, date);
+      }
+    });
+  }
+
+  checkRenewalTriggers(date: Date, userClubId?: string) {
+    if (Math.random() > 0.05) return;
+    this.players.forEach(p => {
+      if (p.contractExpiry < date && p.clubId !== 'FREE_AGENT') {
+        const club = this.getClub(p.clubId);
+        if (!club) return;
+        const renewChance = 0.3 + (p.currentAbility / 200) * 0.3 + (club.reputation / 10000) * 0.2;
+        if (Math.random() < renewChance) {
+          p.contractExpiry = new Date(date.getFullYear() + 2, 5, 30);
+        } else if (Math.random() < 0.3) {
+          p.clubId = 'FREE_AGENT';
+          const availableBudget = club.finances.wageBudget - this.getPlayersByClub(club.id).reduce((s, pl) => s + pl.salary, 0);
+          if (availableBudget > 0) {
+            const newSalary = Math.round(p.salary * (0.8 + Math.random() * 0.5));
+            if (newSalary <= availableBudget) {
+              p.salary = newSalary;
+              p.contractExpiry = new Date(date.getFullYear() + 1, 5, 30);
+              p.clubId = club.id;
+            }
+          }
+        }
+      }
+    });
+  }
+
+  processPendingOffers(date: Date) {
+    const pending = this.offers.filter(o => o.status === 'PENDING');
+    pending.forEach(offer => {
+      const player = this.players.find(p => p.id === offer.playerId);
+      const sellerClub = this.getClub(offer.toClubId);
+      if (!player || !sellerClub) { offer.status = 'REJECTED'; return; }
+      const valueRatio = offer.amount / Math.max(1, player.value);
+      const repFactor = sellerClub.reputation / 5000;
+      const acceptChance = Math.min(0.95, valueRatio * 1.5 - 0.3 + repFactor * 0.2);
+      if (Math.random() < acceptChance) {
+        offer.status = 'ACCEPTED';
+        offer.responseDate = date;
+      } else if (Math.random() < 0.3) {
+        const counterAmount = Math.round(player.value * (0.8 + Math.random() * 0.6));
+        offer.status = 'COUNTER_OFFER';
+        offer.counterAmount = counterAmount;
+        offer.responseDate = date;
+      } else {
+        offer.status = 'REJECTED';
+        offer.responseDate = date;
+      }
+    });
+  }
+
+  evaluateBoardConfidence(clubId: string, leaguePosition: number, totalTeams: number, wonCup: boolean, cupSemis: boolean): number {
+    const club = this.getClub(clubId);
+    if (!club) return 0;
+    const obj = club.seasonObjective;
+    let confidenceChange = 0;
+    switch (obj) {
+      case 'WIN_LEAGUE':
+        confidenceChange = leaguePosition === 1 ? 15 : leaguePosition <= 4 ? -5 : leaguePosition <= 10 ? -20 : -40;
+        break;
+      case 'TOP_4':
+        confidenceChange = leaguePosition <= 4 ? 12 : leaguePosition <= 8 ? -3 : leaguePosition <= 12 ? -15 : -30;
+        break;
+      case 'TOP_HALF':
+        confidenceChange = leaguePosition <= totalTeams / 2 ? 10 : leaguePosition <= totalTeams * 0.75 ? -8 : -20;
+        break;
+      case 'AVOID_RELEGATION':
+        confidenceChange = leaguePosition > totalTeams - 3 ? 15 : leaguePosition > totalTeams * 0.75 ? 5 : leaguePosition > totalTeams / 2 ? -5 : -15;
+        break;
+      case 'WIN_CUP':
+        confidenceChange = wonCup ? 20 : cupSemis ? 5 : -15;
+        break;
+      default:
+        confidenceChange = leaguePosition <= totalTeams / 2 ? 5 : -5;
+    }
+    if (wonCup && obj !== 'WIN_CUP') confidenceChange += 10;
+    club.boardConfidence = Math.max(0, Math.min(100, club.boardConfidence + confidenceChange));
+    if (club.boardConfidence <= 0) {
+      this.addInboxMessage('SQUAD', '¡DIRECTIVA HARTA!',
+        `La directiva de ${club.name} ha perdido toda la confianza en el entrenador tras los malos resultados.`,
+        new Date());
+    }
+    return confidenceChange;
+  }
+
+  requestFacilityUpgrade(clubId: string, facility: 'training' | 'youth', date: Date): { success: boolean; cost: number; message: string } {
+    const club = this.getClub(clubId);
+    if (!club) return { success: false, cost: 0, message: 'Club no encontrado' };
+    const currentLevel = facility === 'training' ? club.trainingFacilities : club.youthFacilities;
+    if (currentLevel >= 20) return { success: false, cost: 0, message: 'Las instalaciones ya están al máximo nivel' };
+    const targetLevel = currentLevel + 1;
+    const cost = Math.round(targetLevel * targetLevel * 50000);
+    if (club.finances.balance < cost) return { success: false, cost, message: `Fondos insuficientes. Necesitas $${cost.toLocaleString()}` };
+    const acceptChance = (club.boardConfidence / 100) * 0.7 + (club.reputation / 10000) * 0.3;
+    if (Math.random() > acceptChance) {
+      club.boardConfidence = Math.max(0, club.boardConfidence - 5);
+      this.addInboxMessage('FINANCE',
+        `Directiva rechaza mejora de ${facility === 'training' ? 'entrenamiento' : 'juveniles'}`,
+        `La directiva ha rechazado la solicitud de mejora. Consideran que no es el momento adecuado.`,
+        date);
+      return { success: false, cost: 0, message: 'La directiva ha rechazado la solicitud' };
+    }
+    club.finances.balance -= cost;
+    if (facility === 'training') {
+      club.trainingFacilities = targetLevel;
+      this.addInboxMessage('FINANCE', 'Mejora de instalaciones de entrenamiento',
+        `La directiva aprobó la mejora. Nivel de entrenamiento: ${targetLevel}/20. Costo: $${cost.toLocaleString()}`, date);
+    } else {
+      club.youthFacilities = targetLevel;
+      this.addInboxMessage('FINANCE', 'Mejora de instalaciones juveniles',
+        `La directiva aprobó la mejora. Nivel juvenil: ${targetLevel}/20. Costo: $${cost.toLocaleString()}`, date);
+    }
+    return { success: true, cost, message: `Mejora aprobada. Nivel ${targetLevel}.` };
+  }
+
+  requestBudgetIncrease(clubId: string, date: Date): { success: boolean; amount: number; message: string } {
+    const club = this.getClub(clubId);
+    if (!club) return { success: false, amount: 0, message: 'Club no encontrado' };
+    const requestedAmount = Math.round(club.finances.transferBudget * 0.3);
+    const grantChance = (club.boardConfidence / 100) * 0.6 + (club.reputation / 10000) * 0.4;
+    if (Math.random() > grantChance) {
+      club.boardConfidence = Math.max(0, club.boardConfidence - 3);
+      this.addInboxMessage('FINANCE', 'Directiva rechaza aumento de presupuesto',
+        `La directiva no considera prudente aumentar el presupuesto de fichajes en este momento.`, date);
+      return { success: false, amount: 0, message: 'Rechazado' };
+    }
+    club.finances.transferBudget += requestedAmount;
+    this.addInboxMessage('FINANCE', 'Aumento de presupuesto de fichajes',
+      `La directiva aprobó un aumento de $${requestedAmount.toLocaleString()} en el presupuesto de fichajes.`, date);
+    return { success: true, amount: requestedAmount, message: `Aprobado: +$${requestedAmount.toLocaleString()}` };
+  }
+
+  checkManagerJobOffers(date: Date, userClubId: string, managerReputation: number): void {
+    if (managerReputation < 60) return;
+    if (Math.random() > 0.05) return;
+    const userClub = this.getClub(userClubId);
+    if (!userClub) return;
+    const candidateClubs = this.clubs
+      .filter(c => c.id !== userClubId && c.reputation > userClub.reputation * 1.2 && c.reputation <= userClub.reputation * 2.5)
+      .slice(0, 5);
+    if (candidateClubs.length === 0) return;
+    const target = candidateClubs[randomInt(0, candidateClubs.length - 1)];
+    this.addInboxMessage('STATEMENTS', `Oferta de trabajo: ${target.name}`,
+      `El club ${target.name} está interesado en contratarte como entrenador. Tu reputación y resultados han llamado su atención.`,
+      date, target.id);
+  }
 
   addInboxMessage(category: MessageCategory, subject: string, body: string, date: Date, relatedId?: string) {
     this.inbox.unshift({ id: generateUUID(), date: new Date(date), category, subject, body, isRead: false, relatedId });
@@ -446,11 +706,14 @@ export class WorldManager {
 
   processDailyScouting(date: Date, userClubId?: string) {
     if (!userClubId) return;
-    if (Math.random() > 0.3) return;
+    const club = this.getClub(userClubId);
+    if (!club) return;
+    if (club.finances.scoutingBudget <= 0) return;
 
-    const scouts = this.getStaffByClub(userClubId).filter(s => s.role === 'HEAD_COACH' || s.role === 'ASSISTANT_MANAGER');
+    const scouts = this.getStaffByClub(userClubId).filter(s => s.role === 'SCOUT' || s.role === 'HEAD_COACH' || s.role === 'ASSISTANT_MANAGER');
     const scoutCount = Math.max(1, scouts.length);
-    const reportsToday = Math.min(3, scoutCount);
+    const dailyBudget = Math.round(club.finances.scoutingBudget / 365);
+    const reportsToday = Math.min(scoutCount * 2, Math.max(1, Math.floor(dailyBudget / 200)));
 
     for (let i = 0; i < reportsToday; i++) {
       const alreadyReported = new Set(this.scoutingReports.filter(r => r.clubId === userClubId).map(r => r.playerId));
@@ -459,9 +722,9 @@ export class WorldManager {
         !alreadyReported.has(p.id) &&
         p.age > 16
       );
-
       if (candidates.length === 0) break;
       const target = candidates[randomInt(0, candidates.length - 1)];
+      club.finances.scoutingBudget = Math.max(0, club.finances.scoutingBudget - 150);
       this.generateScoutingReport(target.id, userClubId, date);
     }
   }
@@ -470,6 +733,29 @@ export class WorldManager {
     return this.scoutingReports
       .filter(r => r.clubId === clubId)
       .slice(0, limit);
+  }
+
+  generateYouthIntake(year: number) {
+    const INTAKE_DATE = `${year}-08-01`;
+    this.clubs.forEach(club => {
+      const youthCount = 3 + randomInt(0, Math.min(3, Math.floor(club.youthFacilities / 5)));
+      for (let i = 0; i < youthCount; i++) {
+        const posPool = [Position.GK, Position.DC, Position.DL, Position.DR, Position.DM, Position.MC, Position.ML, Position.MR, Position.AM, Position.AML, Position.AMR, Position.ST, Position.STR, Position.STL];
+        const pos = posPool[randomInt(0, posPool.length - 1)];
+        const age = 15 + randomInt(0, 3);
+        const youthBonus = club.youthFacilities / 20;
+        const repBonus = club.reputation / 1000;
+        const ca = randomInt(30, Math.round(60 + youthBonus * 20 + repBonus * 15));
+        const pa = Math.min(200, ca + randomInt(10, 60 + Math.round(youthBonus * 30)));
+        const player = this.createRandomPlayer(club.id, pos, age, age, year);
+        player.currentAbility = ca;
+        player.potentialAbility = pa;
+        player.squad = 'U20';
+        player.value = Math.round(ca * pa * 10);
+        player.salary = Math.round(ca * 200 / 12);
+        this.players.push(player);
+      }
+    });
   }
 }
 

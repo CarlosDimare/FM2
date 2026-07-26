@@ -143,9 +143,9 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
        if (line === 'GK') return pos === Position.GK;
        if (line === 'SW') return pos === Position.SW;
        if (line === 'DEF') return [Position.DC, Position.DL, Position.DR].includes(pos);
-       if (line === 'DM') return [Position.DM, Position.DMC, Position.DMR, Position.DML].includes(pos);
-       if (line === 'MID') return [Position.MC, Position.ML, Position.MR, Position.MCL, Position.MCR].includes(pos);
-       if (line === 'AM') return [Position.AM, Position.AML, Position.AMR, Position.AMC].includes(pos);
+        if (line === 'DM') return [Position.DM, Position.DMR, Position.DML].includes(pos);
+        if (line === 'MID') return [Position.MC, Position.ML, Position.MR].includes(pos);
+        if (line === 'AM') return [Position.AM, Position.AML, Position.AMR].includes(pos);
        if (line === 'ATT') return [Position.ST, Position.STR, Position.STL].includes(pos);
        return false;
    };

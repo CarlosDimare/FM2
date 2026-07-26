@@ -35,7 +35,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
           if (mobileFields[index]) handleSort(mobileFields[index]);
       } else {
           const desktopFields: SortField[] = ['POS', 'NAME', 'AGE', 'TREND', 'SAL', 'FIT', 'MOR', 'VAL'];
-          if (desktopFields[index]) handleSort(desktopFields[index]);
+          if (desktopFields[index - (index >= 4 ? 1 : 0)]) handleSort(desktopFields[index - (index >= 4 ? 1 : 0)]);
       }
   };
 
@@ -80,6 +80,23 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
     return <Minus size={12} className="text-slate-300 mx-auto" />;
   };
 
+  const renderFormDots = (ratings: number[]) => {
+    if (ratings.length === 0) return null;
+    return (
+      <div className="flex gap-[2px] items-center justify-center">
+        {ratings.map((r, i) => {
+          let color = 'bg-slate-300';
+          if (r >= 8) color = 'bg-green-500';
+          else if (r >= 7) color = 'bg-green-400';
+          else if (r >= 6) color = 'bg-amber-400';
+          else if (r >= 5) color = 'bg-orange-500';
+          else color = 'bg-red-500';
+          return <div key={i} className={`w-[6px] h-[6px] rounded-full ${color}`} title={`${r.toFixed(1)}`} />;
+        })}
+      </div>
+    );
+  };
+
   const getStatusIcons = (player: Player) => {
      const icons = [];
      if (player.transferStatus !== 'NONE') {
@@ -97,9 +114,9 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
      return icons.length > 0 ? <div className="flex gap-1.5 items-center ml-2 shrink-0">{icons}</div> : null;
   };
 
-  const desktopHeaders = ['Pos', 'Nombre', 'Edad', 'Prog', 'Sueldo', 'Fis', 'Mor', 'Valor'];
+  const desktopHeaders = ['Pos', 'Nombre', 'Edad', 'Prog', 'Forma', 'Sueldo', 'Fis', 'Mor', 'Valor'];
   const mobileHeaders = ['Pos', 'Nombre', 'Edad', 'Fis', 'Valor'];
-  const desktopWidths = ['45px', 'auto', '35px', '35px', '75px', '40px', '40px', '85px'];
+  const desktopWidths = ['45px', 'auto', '35px', '35px', '60px', '75px', '40px', '40px', '85px'];
   const mobileWidths = ['45px', 'auto', '35px', '40px', '80px'];
 
   return (
@@ -134,6 +151,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                     </FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>{player.age}</FMTableCell>
                     <FMTableCell className="text-center">{renderTrend(player.developmentTrend)}</FMTableCell>
+                    <FMTableCell className="text-center">{renderFormDots(player.formRatings)}</FMTableCell>
                     <FMTableCell className="text-right font-bold" isNumber>£{(player.salary / 1000).toFixed(0)}k</FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>
                         <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-700'}>{Math.round(player.fitness)}%</span>

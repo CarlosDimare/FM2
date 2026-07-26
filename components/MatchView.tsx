@@ -4,7 +4,7 @@ import { Club, Player, MatchState, MatchEvent, PlayerMatchStats, Position, Tacti
 import { MatchSimulator } from '../services/engine';
 import { GAME_SPEED_MS } from '../constants';
 import { world } from '../services/worldManager';
-import { Play, Pause, List, BarChart3, Users, Zap, Table, FastForward, SkipForward, Copy, Terminal, Check, UserPlus, ArrowRightFromLine } from 'lucide-react';
+import { Play, Pause, List, BarChart3, Users, Zap, Table, FastForward, SkipForward, Copy, Terminal, Check, UserPlus, ArrowRightFromLine, MessageCircle, Shield, ShieldAlert, Heart } from 'lucide-react';
 import { MatchStatsTable } from './MatchStatsTable';
 import { FMBox, FMButton } from './FMUI';
 
@@ -34,7 +34,16 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
   const prevScore = useRef({ home: 0, away: 0 });
   const [showSubModal, setShowSubModal] = useState(false);
   const [subTarget, setSubTarget] = useState<string | null>(null);
+  const [showHalfTimeTalk, setShowHalfTimeTalk] = useState(false);
+  const halfTimeTalkDone = useRef(false);
   const isUserHome = userClubId === homeTeam.id;
+
+  const matchTactics = useMemo(() => {
+    const userTactic = world.getTactics()[0]?.settings;
+    const homeTact = isUserHome ? userTactic : undefined;
+    const awayTact = !isUserHome ? userTactic : undefined;
+    return { homeTactic: homeTact, awayTactic: awayTact };
+  }, [isUserHome]);
 
   useEffect(() => {
     const h = matchState.homeScore;
@@ -62,6 +71,13 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
     if (techScrollRef.current) techScrollRef.current.scrollTop = techScrollRef.current.scrollHeight;
   }, [matchState.events, activeTab]);
 
+  useEffect(() => {
+    if (matchState.minute >= 45 && matchState.halftimeTriggered && !matchState.isPlaying && !halfTimeTalkDone.current) {
+      halfTimeTalkDone.current = true;
+      setShowHalfTimeTalk(true);
+    }
+  }, [matchState.minute, matchState.halftimeTriggered, matchState.isPlaying]);
+
   const isMountedRef = useRef(true);
   useEffect(() => {
     isMountedRef.current = true;
@@ -80,7 +96,8 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
       const prev = matchStateRef.current;
       if (!prev.isPlaying || prev.minute >= 90) return;
       const { nextState, slowMotion } = MatchSimulator.simulateStep(
-          prev, homeTeam, awayTeam, homePlayers, awayPlayers
+          prev, homeTeam, awayTeam, homePlayers, awayPlayers,
+          matchTactics.homeTactic, matchTactics.awayTactic
       );
       matchStateRef.current = nextState;
       const newDur = slowMotion ? 900 : GAME_SPEED_MS / 10;
@@ -104,7 +121,8 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
       let current = { ...prev };
       while (current.minute < targetMin && current.minute < 90) {
         const { nextState } = MatchSimulator.simulateStep(
-          current, homeTeam, awayTeam, homePlayers, awayPlayers
+          current, homeTeam, awayTeam, homePlayers, awayPlayers,
+          matchTactics.homeTactic, matchTactics.awayTactic
         );
         current = nextState;
       }
@@ -473,6 +491,50 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                   <button onClick={() => setSubTarget(null)} className="w-full py-2 text-[10px] font-bold text-slate-500 hover:bg-slate-100 rounded-sm transition-colors">← Volver</button>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHalfTimeTalk && (
+        <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in">
+          <div className="bg-white w-full max-w-md rounded-sm shadow-2xl border-2 border-slate-500 overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-slate-800 text-white p-4 text-center">
+              <span className="text-lg font-black uppercase tracking-wider flex items-center justify-center gap-2"><MessageCircle size={20} /> CHARLA TÉCNICA</span>
+              <span className="text-[10px] text-slate-400 block mt-1">Descanso — {matchState.homeScore} - {matchState.awayScore}</span>
+            </div>
+            <div className="p-4 space-y-3">
+              <p className="text-xs text-slate-600 text-center">Elegí cómo motivar al equipo para el segundo tiempo:</p>
+              <button onClick={() => {
+                const userPlayers = isUserHome ? homePlayers : awayPlayers;
+                userPlayers.forEach(p => { p.morale = Math.min(100, p.morale + 15); });
+                setShowHalfTimeTalk(false);
+                setMatchState(p => ({ ...p, isPlaying: true }));
+              }} className="w-full flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-sm transition-colors text-left">
+                <Heart size={20} className="text-green-600 shrink-0" />
+                <div><div className="font-bold text-xs text-slate-900">Motivar ({Math.round(matchState.homeScore)}-{Math.round(matchState.awayScore)})</div>
+                <div className="text-[9px] text-slate-500">"Vamos, aún podemos ganar este partido" +15 moral</div></div>
+              </button>
+              <button onClick={() => {
+                const userPlayers = isUserHome ? homePlayers : awayPlayers;
+                userPlayers.forEach(p => { p.morale = Math.max(1, p.morale - 5); });
+                setShowHalfTimeTalk(false);
+                setMatchState(p => ({ ...p, isPlaying: true }));
+              }} className="w-full flex items-center gap-3 p-3 bg-red-50 hover:bg-red-100 border border-red-200 rounded-sm transition-colors text-left">
+                <ShieldAlert size={20} className="text-red-600 shrink-0" />
+                <div><div className="font-bold text-xs text-slate-900">Exigir más</div>
+                <div className="text-[9px] text-slate-500">"Esto es inaceptable, tienen que dar más" -5 moral</div></div>
+              </button>
+              <button onClick={() => {
+                const userPlayers = isUserHome ? homePlayers : awayPlayers;
+                userPlayers.forEach(p => { p.morale = Math.min(100, p.morale + 5); });
+                setShowHalfTimeTalk(false);
+                setMatchState(p => ({ ...p, isPlaying: true }));
+              }} className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-sm transition-colors text-left">
+                <Shield size={20} className="text-blue-600 shrink-0" />
+                <div><div className="font-bold text-xs text-slate-900">Mantener la calma</div>
+                <div className="text-[9px] text-slate-500">"Concéntrense y sigan el plan" +5 moral</div></div>
+              </button>
             </div>
           </div>
         </div>
