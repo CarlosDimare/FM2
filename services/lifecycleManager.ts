@@ -48,6 +48,40 @@ export class LifecycleManager {
      });
   }
 
+  static processMonthlyFinances(currentDate: Date) {
+     const month = currentDate.getMonth();
+     const day = currentDate.getDate();
+     if (day !== 1) return;
+
+     world.clubs.forEach(club => {
+        const playerSalaries = world.getPlayersByClub(club.id).reduce((s, p) => s + p.salary, 0);
+        const staffSalaries = world.getStaffByClub(club.id).reduce((s, st) => s + st.salary, 0);
+        const totalSalaries = playerSalaries + staffSalaries;
+        const operational = Math.round(club.reputation * 10);
+
+        const sponsorships = Math.round(club.reputation * 80);
+        const seasonTicket = Math.round(club.stadiumCapacity * 0.35 * 12 * 0.45);
+        const merchandising = Math.round(club.reputation * 25);
+        const baseIncome = sponsorships + seasonTicket + merchandising;
+
+        club.finances.monthlyIncome = baseIncome + Math.max(0, club.finances.monthlyIncome);
+        club.finances.monthlyExpenses = totalSalaries + operational;
+
+        const lastMonthIncome = club.finances.monthlyIncome;
+        const lastMonthExpenses = club.finances.monthlyExpenses;
+
+        club.finances.balance += lastMonthIncome;
+        club.finances.balance -= lastMonthExpenses;
+
+        club.finances.monthlyIncome = 0;
+        club.finances.transferBudget += Math.round(lastMonthIncome * 0.05);
+        if (club.id === (world as any).userClubId && month === 6) {
+          // No-op, evitar warning
+        }
+        void month;
+     });
+  }
+
   // New: Decrement suspensions for clubs that just played
   static processPostMatchSuspensions(homeTeamId: string, awayTeamId: string, homeRedCards = 0, awayRedCards = 0) {
      const FINE_PER_RED = 5000;

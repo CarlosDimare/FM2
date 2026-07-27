@@ -73,6 +73,7 @@
 - ✅ Código muerto — eliminados `advanceTime`/`simulateDay` no utilizados de gameStore.ts
 - ✅ Bugfix: `simulateToNextMatch` — ya no simula el partido del usuario
 - ✅ Bugfix: `advanceTime` desde SENIOR_TACTICS — navega a PRESS_CONFERENCE_PRE en día de partido
+- ✅ Bugfix: categoría inválida `'DISCIPLINARY'` en `lifecycleManager.ts` — corregida a `'COMPETITION'` (no existía en `MessageCategory`)
 
 ### Varios
 - **Auto-save** — Toggle en el encabezado, guarda antes de cada avance
@@ -105,13 +106,13 @@
 
 ### Lesiones
 - **Parte médico visual** — Panel rojo en SquadView con jugadores lesionados: nombre, tipo de lesión, días restantes
-- **Lesiones graves** — Lesiones >30 días con evento especial
-- **Historial de lesiones** — Registrar lesiones pasadas, propensión a lesiones
+- **Lesiones graves** — Lesiones >30 días con evento especial y mensaje al inbox (SQUAD)
+- **Historial de lesiones** — `injuryHistory[]` con tipo/días/fecha, `injuryProneness` recalculado tras cada lesión e influye en la probabilidad de lesionarse en partido
 
 ### Contratos (Profundización)
 - **Cláusula de rescisión** — `releaseClause` en Player (3x valor), `makeTransferOffer` acepta automáticamente si ≥ cláusula, IA usa cláusulas
 - **Agentes** — Representantes con exigencias de comisión
-- **Primas de fichaje** — Bono por firmar, primas por objetivos
+- **Primas de fichaje** — Bono de firma = 8% del traspaso + CA×200, deducido del balance comprador y notificado al inbox
 - **Cesiones con opción de compra** — Tipo de oferta LOAN_TO_BUY (implementadas cesiones básicas)
 
 ### Competiciones (Profundización)
@@ -135,9 +136,9 @@
 - [ ] **Guardado en rasgo (profile)** — Guardar por perfil de manager
 
 ### Economía
-- [ ] **Ingresos mensuales** — Abonos, patrocinios, merchandising
-- [ ] **Gastos mensuales** — Sueldos del staff, mantenimiento
-- [ ] **Presupuesto dinámico** — Ajustes de presupuesto según rendimiento financiero
+- [x] **Ingresos mensuales** — Abonos, patrocinios, merchandising aplicados al balance cada día 1 del mes, desglose visible en EconomyView
+- [x] **Gastos mensuales** — Sueldos del staff y mantenimiento operativo, aplicados junto con ingresos
+- **Presupuesto dinámico** — Ajustes de presupuesto según rendimiento financiero
 
 ### Red Social / Multijugador
 - [ ] **Clasificaciones online** — Comparar logros con otros managers

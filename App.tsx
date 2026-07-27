@@ -235,6 +235,7 @@ const App: React.FC = () => {
 
     LifecycleManager.checkBirthdays(nextDay);
     LifecycleManager.recoverDailyFitness();
+    LifecycleManager.processMonthlyFinances(nextDay);
     world.checkRenewalTriggers(nextDay, userClub?.id);
     world.processTransferDecisions(nextDay);
     world.processAIActivity(nextDay);
@@ -290,6 +291,7 @@ const App: React.FC = () => {
 
       LifecycleManager.checkBirthdays(tempDate);
       LifecycleManager.recoverDailyFitness();
+      LifecycleManager.processMonthlyFinances(tempDate);
       world.checkRenewalTriggers(tempDate, userClub?.id);
       world.processTransferDecisions(tempDate);
       world.processAIActivity(tempDate);
@@ -426,6 +428,7 @@ const App: React.FC = () => {
 
       LifecycleManager.checkBirthdays(tempDate);
       LifecycleManager.recoverDailyFitness();
+      LifecycleManager.processMonthlyFinances(tempDate);
       world.checkRenewalTriggers(tempDate, userClub.id);
       world.processTransferDecisions(tempDate);
       world.processAIActivity(tempDate);

@@ -369,6 +369,13 @@ export class WorldManager {
         if (newClub && offer.type === 'PURCHASE') {
           newClub.finances.balance -= offer.amount;
           newClub.finances.transferBudget -= offer.amount;
+          const signingBonus = Math.round(offer.amount * 0.08 + (p.currentAbility * 200));
+          newClub.finances.balance -= signingBonus;
+          newClub.finances.monthlyExpenses += signingBonus;
+          this.addInboxMessage('FINANCE',
+            `Prima de fichaje: ${p.name}`,
+            `Se ha pagado una prima de fichaje de $${signingBonus.toLocaleString()} por la incorporación de ${p.name}.`,
+            offer.date, p.id);
         }
         p.clubId = offer.fromClubId; p.isStarter = false; p.tacticalPosition = undefined;
         p.isTransferListed = false;

@@ -653,15 +653,24 @@ export class MatchSimulator {
     minute: number, second: number, tacklerClub: Club
   ) {
     const bravery = this.getEffectiveAttribute(ballCarrier, state.playerStats, 'mental', 'bravery');
-    const injuryProne = (20 - ballCarrier.stats.physical.naturalFitness) * 0.04;
-    const injuryChance = Math.max(0.01, 0.08 - bravery * 0.004 + injuryProne);
+    const injuryProne = ballCarrier.injuryProneness || 0;
+    const injuryChance = Math.max(0.005, 0.06 - bravery * 0.003 + injuryProne);
 
     if (Math.random() < injuryChance) {
-      const days = randomInt(3, Math.round(7 + (20 - bravery) * 0.5));
-      const injuryTypes = ["Distensión muscular", "Esguince de tobillo", "Golpe", "Sobrecarga", "Contractura"];
+      let days = randomInt(3, Math.round(7 + (20 - bravery) * 0.5));
+      let injuryTypes = ["Distensión muscular", "Esguince de tobillo", "Golpe", "Sobrecarga", "Contractura"];
+      const severeRoll = Math.random();
+      if (severeRoll < 0.06) {
+        days = randomInt(35, 90);
+        injuryTypes = ["Rotura de ligamentos", "Fractura", "Rotura fibrilar grave", "Lesión grave de rodilla"];
+      } else if (severeRoll < 0.18) {
+        days = randomInt(20, 35);
+        injuryTypes = ["Rotura fibrilar", "Esguince grave", "Lesión muscular"];
+      }
       const injuryType = injuryTypes[randomInt(0, injuryTypes.length - 1)];
-      
+
       state.playerStats[ballCarrier.id].sustainedInjury = { type: injuryType, days };
+      state.playerStats[ballCarrier.id].severe = days > 30;
       state.events.push({
         minute, second, type: 'INJURY',
         text: `Se lesiona ${this.getPlayerLabel(ballCarrier, tacklerClub)}. ${injuryType}. Estará ${days} días de baja.`,
@@ -677,6 +686,29 @@ export class MatchSimulator {
         const player = world.players.find(p => p.id === playerId);
         if (player) {
           player.injury = { type: stat.sustainedInjury.type, daysLeft: stat.sustainedInjury.days };
+          player.injuryHistory = player.injuryHistory || [];
+          player.injuryHistory.push({
+            type: stat.sustainedInjury.type,
+            days: stat.sustainedInjury.days,
+            date: new Date()
+          });
+          if (player.injuryHistory.length > 20) player.injuryHistory.shift();
+          const recentCount = player.injuryHistory.length;
+          const natFit = player.stats.physical.naturalFitness;
+          player.injuryProneness = Math.max(0.005, Math.min(0.2, (recentCount * 0.015) + ((20 - natFit) * 0.015)));
+
+          if (stat.sustainedInjury.days > 30) {
+            const club = world.getClub(player.clubId);
+            if (club && club.id) {
+              world.addInboxMessage(
+                'SQUAD',
+                `Lesión grave: ${player.name}`,
+                `Malas noticias: ${player.name} sufre ${stat.sustainedInjury.type} y estará de baja ${stat.sustainedInjury.days} días. Se perderá gran parte de la temporada.`,
+                new Date(),
+                player.id
+              );
+            }
+          }
         }
       }
       if (stat.card === 'RED') {

@@ -35,12 +35,17 @@ const FinanceRow = ({ label, value, type }: { label: string, value: number, type
 
 export const EconomyView: React.FC<EconomyViewProps> = ({ club }) => {
   const { balance, transferBudget, wageBudget, monthlyIncome, monthlyExpenses } = club.finances;
-  const currentSalaries = world.getPlayersByClub(club.id).reduce((s, p) => s + p.salary, 0) + 
+  const currentSalaries = world.getPlayersByClub(club.id).reduce((s, p) => s + p.salary, 0) +
                           world.getStaffByClub(club.id).reduce((s, st) => s + st.salary, 0);
-  
-  // Real net balance should include the current actual salaries, not just the static expenses
+
   const actualMonthlyExpenses = currentSalaries + (club.reputation * 10);
   const netProfit = monthlyIncome - actualMonthlyExpenses;
+
+  const sponsorships = Math.round(club.reputation * 80);
+  const seasonTicket = Math.round(club.stadiumCapacity * 0.35 * 12 * 0.45);
+  const merchandising = Math.round(club.reputation * 25);
+  const operational = Math.round(club.reputation * 10);
+  const baseIncome = sponsorships + seasonTicket + merchandising;
 
   return (
     <div className="p-2 md:p-4 flex flex-col gap-4 h-full overflow-hidden bg-[#d4dcd4]">
@@ -86,9 +91,14 @@ export const EconomyView: React.FC<EconomyViewProps> = ({ club }) => {
           }
         >
           <div className="p-2 space-y-1 bg-white flex-1 overflow-y-auto custom-scroll">
-            <FinanceRow label="Ingresos (Entradas/Sponsors)" value={monthlyIncome} type="INCOME" />
+            <div className="px-2 py-1 text-[8px] font-black text-emerald-700 uppercase tracking-widest border-b border-emerald-200">Ingresos</div>
+            <FinanceRow label="Abonos de temporada" value={seasonTicket} type="INCOME" />
+            <FinanceRow label="Patrocinios" value={sponsorships} type="INCOME" />
+            <FinanceRow label="Merchandising" value={merchandising} type="INCOME" />
+            <FinanceRow label="Taquilla partidos" value={monthlyIncome} type="INCOME" />
+            <div className="px-2 py-1 mt-2 text-[8px] font-black text-red-700 uppercase tracking-widest border-b border-red-200">Gastos</div>
             <FinanceRow label="Sueldos (Plantel/Staff)" value={currentSalaries} type="EXPENSE" />
-            <FinanceRow label="Gastos Operativos" value={club.reputation * 10} type="EXPENSE" />
+            <FinanceRow label="Gastos Operativos" value={operational} type="EXPENSE" />
             
             <div className="mt-8 px-2 py-6 bg-[#f0f4f0] border-t border-[#a0b0a0] rounded-b-sm flex justify-between items-center shadow-inner">
               <span className="font-black text-slate-500 text-[11px] uppercase tracking-tighter" style={{ fontFamily: 'Verdana, sans-serif' }}>Balance Mensual Neto</span>
