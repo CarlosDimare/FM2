@@ -53,6 +53,9 @@ export default defineConfig(({ mode }) => {
                 expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
               }
             }]
+          },
+          pushNotification: {
+            publicKey: ''
           }
         })
       ],

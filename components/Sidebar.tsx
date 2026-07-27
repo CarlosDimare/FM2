@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Inbox, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings } from 'lucide-react';
+import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Inbox, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper } from 'lucide-react';
 import { Club, SquadType, Competition } from '../types';
 import { world } from '../services/worldManager';
 import { SettingsModal } from './SettingsModal';
@@ -119,6 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
            <NavItem id="PEOPLE_HUB" label="Personas" icon={Users} active={currentView === 'PEOPLE_HUB'} onClick={() => setView('PEOPLE_HUB')} />
            <NavItem id="TRAINING" label="Entrenamiento" icon={Dumbbell} active={currentView === 'TRAINING'} onClick={() => setView('TRAINING')} />
            <NavItem id="CLUB_REPORT" label="Información Club" icon={Info} active={currentView === 'CLUB_REPORT'} onClick={() => setView('CLUB_REPORT')} />
+            <NavItem id="MEDIA" label="Prensa" icon={Newspaper} active={currentView === 'MEDIA'} onClick={() => setView('MEDIA')} />
 
           <div className="mt-auto pt-6 px-4 pb-4 space-y-2">
              <button onClick={onVacation} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 rounded border border-slate-300 shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">

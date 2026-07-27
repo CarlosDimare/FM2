@@ -1,10 +1,11 @@
 
-import { Player, Club, Competition, Position, PlayerStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff } from "../types";
+import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff } from "../types";
 import { generateUUID, randomInt, weightedRandom } from "./utils";
 import { NATIONS } from "../constants";
 import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, RealClubDef } from "../data/static";
 import { REAL_PLAYERS_DB, RealPlayerDef } from "../data/realPlayers";
 import { SLOT_CONFIG } from "./engine";
+import { sendTransferNotification, sendInboxNotification } from "./notifications";
 
 export class WorldManager {
   players: Player[] = [];
@@ -14,6 +15,7 @@ export class WorldManager {
   tactics: Tactic[] = TACTIC_PRESETS.map(t => ({ ...t, settings: { ...t.settings } }));
   offers: TransferOffer[] = [];
   inbox: InboxMessage[] = [];
+  mediaNews: MediaNews[] = [];
   matchSettings: MatchSettings = {
      pauseAtHalftime: true
   };
@@ -124,8 +126,9 @@ export class WorldManager {
             stadiumCapacity: def.rep >= 8000 ? 50000 : def.rep >= 7000 ? 30000 : def.rep >= 6000 ? 20000 : def.rep >= 5000 ? 12000 : 8000,
             honours: this.generateRandomHonours(),
              trainingFacilities: Math.min(20, Math.floor(def.rep / 500) + randomInt(-2, 2)),
-             youthFacilities: Math.min(20, Math.floor(def.rep / 550) + randomInt(-3, 3)),
-              scoutingRegion: ["ARG", "BRA", "URU", "CHL", "COL", "ECU", "PAR", "PER", "URY", "VEN", "BOL", "GLO"][randomInt(0, 11)] as const,
+             youthFacilities: Math.min(20, Math.floor(def.rep / 55) + randomInt(-3, 3)),
+             youthRecruitment: Math.min(20, Math.floor(def.rep / 60) + randomInt(-2, 2)),
+              scoutingRegion: (["ARG", "BRA", "URU", "CHL", "COL", "ECU", "PAR", "PER", "URY", "VEN", "BOL", "GLO"] as const)[randomInt(0, 11)],
              boardConfidence: 65 + randomInt(0, 25),
               seasonObjective: def.rep > 4000 ? 'TOP_4' : def.rep > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION',
               shortlistedPlayerIds: [],
@@ -361,9 +364,9 @@ export class WorldManager {
         stats.goalkeeping = { aerialReach: weightedRandom(caBase-4, caBase+4), commandOfArea: weightedRandom(caBase-4, caBase+4), communication: weightedRandom(caBase-4, caBase+4), eccentricity: randomInt(1, 20), handling: weightedRandom(caBase-4, caBase+4), kicking: weightedRandom(caBase-4, caBase+4), oneOnOnes: weightedRandom(caBase-4, caBase+4), reflexes: weightedRandom(caBase-4, caBase+4), rushingOut: weightedRandom(caBase-4, caBase+4), punching: weightedRandom(caBase-4, caBase+4), throwing: weightedRandom(caBase-4, caBase+4) };
     }
 
-    return {
-        id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, releaseClause: Math.round(ca * ca * 2000 * 3), yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false, injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02), relationships: {}
-    };
+return {
+         id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, releaseClause: Math.round(ca * ca * 2000 * 3), yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false, injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02), relationships: {}, agent: randomInt(minAge, maxAge) >= 22 && Math.random() < 0.15 ? { name: `Agente ${lastName}`, commission: Math.round(5 + Math.random() * 10) } : undefined
+     };
   }
 
   getLeagueTable(compId: string, fixtures: Fixture[], squadType: SquadType, groupId?: number): TableEntry[] {
@@ -450,7 +453,7 @@ export class WorldManager {
     this.tactics.push({ id: generateUUID(), name, positions, settings, arrows: {}, individualSettings: {} });
   }
 
-  makeTransferOffer(playerId: string, fromClubId: string, amount: number, type: 'PURCHASE' | 'LOAN', date: Date, wageShare = 100) {
+  makeTransferOffer(playerId: string, fromClubId: string, amount: number, type: 'PURCHASE' | 'LOAN' | 'LOAN_TO_BUY', date: Date, wageShare = 100) {
     const player = this.players.find(p => p.id === playerId);
     if (!player) return;
     if (player.releaseClause && amount >= player.releaseClause) {
@@ -458,6 +461,11 @@ export class WorldManager {
       this.offers.push(offer);
       this.addInboxMessage('MARKET', `Cláusula activada: ${player.name}`, `${this.getClub(fromClubId)?.name} ha pagado la cláusula de rescisión de ${player.name}: $${amount.toLocaleString()}.`, date, playerId);
       return;
+    }
+    if (player.agent && Math.random() < 0.4) {
+      const commission = Math.round(amount * player.agent.commission / 100);
+      amount += commission;
+      this.addInboxMessage('FINANCE', `Comisión del agente: ${player.name}`, `El agente ${player.agent.name} exige una comisión del ${player.agent.commission}% ($${commission.toLocaleString()}) sobre el traspaso.`, date, playerId);
     }
     const offer: TransferOffer = { id: generateUUID(), playerId, fromClubId, toClubId: player.clubId, amount, wageShare, type, status: 'PENDING', date, responseDate: date, isViewed: false };
     this.offers.push(offer);
@@ -471,7 +479,7 @@ export class WorldManager {
   completeTransfer(offer: TransferOffer) {
     const p = this.players.find(player => player.id === offer.playerId);
     if (p) {
-        if (offer.type === 'LOAN') {
+        if (offer.type === 'LOAN' || offer.type === 'LOAN_TO_BUY') {
           this.completeLoan(offer);
           return;
         }
@@ -499,6 +507,7 @@ export class WorldManager {
         p.requestedSalary = undefined;
         offer.status = 'COMPLETED';
         this.addInboxMessage('MARKET', `Traspaso completado: ${p.name}`, `${p.name} se ha unido a ${newClub?.name || 'nuevo club'} por $${offer.amount.toLocaleString()}.`, offer.date, p.id);
+        sendTransferNotification(p.name, newClub?.name || 'nuevo club');
     }
   }
 
@@ -822,18 +831,18 @@ export class WorldManager {
       const sellerClub = this.getClub(offer.toClubId);
       if (!player || !sellerClub) { offer.status = 'REJECTED'; return; }
 
-      if (offer.type === 'LOAN') {
-        const hasDepth = this.getPlayersByClub(sellerClub.id).filter(p => p.positions.some(pos => player.positions.includes(pos))).length > 3;
-        const acceptChance = hasDepth ? 0.6 : 0.3;
-        if (Math.random() < acceptChance) {
-          offer.status = 'ACCEPTED';
-          offer.responseDate = date;
-        } else {
-          offer.status = 'REJECTED';
-          offer.responseDate = date;
-        }
-        return;
-      }
+if (offer.type === 'LOAN' || offer.type === 'LOAN_TO_BUY') {
+         const hasDepth = this.getPlayersByClub(sellerClub.id).filter(p => p.positions.some(pos => player.positions.includes(pos))).length > 3;
+         const acceptChance = offer.type === 'LOAN_TO_BUY' ? (hasDepth ? 0.5 : 0.2) : (hasDepth ? 0.6 : 0.3);
+         if (Math.random() < acceptChance) {
+           offer.status = 'ACCEPTED';
+           offer.responseDate = date;
+         } else {
+           offer.status = 'REJECTED';
+           offer.responseDate = date;
+         }
+         return;
+       }
 
       const valueRatio = offer.amount / Math.max(1, player.value);
       const repFactor = sellerClub.reputation / 5000;
@@ -856,14 +865,15 @@ export class WorldManager {
   completeLoan(offer: TransferOffer) {
     const p = this.players.find(player => player.id === offer.playerId);
     if (!p) return;
-    p.loanDetails = { originalClubId: p.clubId, wageShare: offer.wageShare };
+    const isLoanToBuy = offer.type === 'LOAN_TO_BUY';
+    p.loanDetails = { originalClubId: p.clubId, wageShare: offer.wageShare, loanToBuy: isLoanToBuy };
     p.clubId = offer.fromClubId;
     p.isStarter = false;
     p.isTransferListed = false;
     p.transferStatus = 'NONE';
     offer.status = 'COMPLETED';
     const newClub = this.getClub(offer.fromClubId);
-    this.addInboxMessage('MARKET', `Cedido: ${p.name}`, `${p.name} se marcha cedido a ${newClub?.name || 'nuevo club'} hasta final de temporada.`, offer.date, p.id);
+    this.addInboxMessage('MARKET', `Cedido: ${p.name}`, `${p.name} se marcha cedido a ${newClub?.name || 'nuevo club'}${isLoanToBuy ? ' (con opción de compra)' : ''} hasta final de temporada.`, offer.date, p.id);
   }
 
   processLoanReturns(date: Date) {
@@ -871,9 +881,16 @@ export class WorldManager {
     if (date.getMonth() !== seasonEndMonth || date.getDate() > 7) return;
     this.players.forEach(p => {
       if (p.loanDetails) {
+        const wasLoanToBuy = p.loanDetails.loanToBuy;
         p.clubId = p.loanDetails.originalClubId;
         p.loanDetails = undefined;
         p.isStarter = false;
+        if (wasLoanToBuy) {
+          const buyingClub = this.getClub(p.clubId);
+          if (buyingClub && buyingClub.id) {
+            this.addInboxMessage('MARKET', `Opción de compra: ${p.name}`, `El préstamo de ${p.name} ha finalizado. ${buyingClub.name} puede ejercer la opción de compra pagando su valor de mercado.`, date, p.id);
+          }
+        }
       }
     });
   }
@@ -974,9 +991,12 @@ export class WorldManager {
       date, target.id);
   }
 
-  addInboxMessage(category: MessageCategory, subject: string, body: string, date: Date, relatedId?: string) {
-    this.inbox.unshift({ id: generateUUID(), date: new Date(date), category, subject, body, isRead: false, relatedId });
-  }
+addInboxMessage(category: MessageCategory, subject: string, body: string, date: Date, relatedId?: string) {
+     this.inbox.unshift({ id: generateUUID(), date: new Date(date), category, subject, body, isRead: false, relatedId });
+     if (category === 'SQUAD' || category === 'MARKET' || category === 'FINANCE') {
+       sendInboxNotification(subject);
+     }
+   }
 
   checkSquadRegistration(clubId: string, competitionId: string, date: Date): string[] {
     const comp = this.competitions.find(c => c.id === competitionId);
@@ -1188,7 +1208,7 @@ generateYouthIntake(year: number) {
               break;
           }
           
-          const youthBonus = club.youthFacilities / 20;
+          const youthBonus = (club.youthFacilities + club.youthRecruitment) / 40;
           const repBonus = club.reputation / 1000;
           const ca = randomInt(30, Math.round(60 + youthBonus * 20 + repBonus * 15));
           const pa = Math.min(200, ca + randomInt(10, 60 + Math.round(youthBonus * 30)));
@@ -1204,4 +1224,116 @@ generateYouthIntake(year: number) {
       });
     }
 }
- export const world = new WorldManager();
+
+  // --- MEDIA NEWS SYSTEM ---
+
+  generateMatchNews(fixture: Fixture, homeScore: number, awayScore: number, date: Date) {
+    const homeClub = this.getClub(fixture.homeTeamId);
+    const awayClub = this.getClub(fixture.awayTeamId);
+    if (!homeClub || !awayClub) return;
+    const isUserMatch = homeClub.id === this.getUserClub()?.id || awayClub.id === this.getUserClub()?.id;
+    const userClub = this.getUserClub();
+
+    if (homeScore > awayScore) {
+      this.addMediaNews({
+        id: generateUUID(), date, type: 'HEADLINE', category: 'MATCH',
+        headline: `${homeClub.shortName} se impone al ${awayClub.shortName}`,
+        subheadline: `${homeScore} - ${awayScore}`,
+        body: `${homeClub.name} logró una victoria importante ante ${awayClub.name} por ${homeScore}-${awayScore}. El equipo mostró solidez tanto en ataque como en defensa.`,
+        clubId: homeClub.id, competitionId: fixture.competitionId,
+        isUserClubNews: userClub && (homeClub.id === userClub.id || awayClub.id === userClub.id),
+        read: false,
+      });
+    } else if (awayScore > homeScore) {
+      this.addMediaNews({
+        id: generateUUID(), date, type: 'HEADLINE', category: 'MATCH',
+        headline: `${awayClub.shortName} derrota a ${homeClub.shortName}`,
+        subheadline: `${awayScore} - ${homeScore}`,
+        body: `${awayClub.name} se llevó los tres puntos ante ${homeClub.name} con un contundente ${awayScore}-${homeScore}.`,
+        clubId: awayClub.id, competitionId: fixture.competitionId,
+        isUserClubNews: userClub && (homeClub.id === userClub.id || awayClub.id === userClub.id),
+        read: false,
+      });
+    } else {
+      this.addMediaNews({
+        id: generateUUID(), date, type: 'FEATURE', category: 'MATCH',
+        headline: `${homeClub.shortName} y ${awayClub.shortName} empatan`,
+        subheadline: `${homeScore} - ${awayScore}`,
+        body: `Un vibrante empate ${homeScore}-${awayScore} entre ${homeClub.name} y ${awayClub.name} deja la tabla más pareja que nunca.`,
+        clubId: homeClub.id, competitionId: fixture.competitionId,
+        isUserClubNews: userClub && (homeClub.id === userClub.id || awayClub.id === userClub.id),
+        read: false,
+      });
+    }
+  }
+
+  generateTransferNews(player: Player, fromClub: Club, toClub: Club, amount: number, date: Date) {
+    const userClub = this.getUserClub();
+    this.addMediaNews({
+      id: generateUUID(), date, type: 'HEADLINE', category: 'TRANSFER',
+      headline: `${player.name} ficha por ${toClub.shortName}`,
+      subheadline: `Traspaso: $${amount.toLocaleString()}`,
+      body: `El jugador ${player.name} deja ${fromClub.name} para unirse a ${toClub.name} en un movimiento que sacude el mercado.`,
+      clubId: toClub.id, playerId: player.id,
+      isUserClubNews: userClub && (fromClub.id === userClub.id || toClub.id === userClub.id),
+      read: false,
+    });
+  }
+
+  generateInjuryNews(player: Player, club: Club, date: Date) {
+    const userClub = this.getUserClub();
+    this.addMediaNews({
+      id: generateUUID(), date, type: 'CRITICISM', category: 'INJURY',
+      headline: `Duro golpe para ${club.shortName}: ${player.name} lesionado`,
+      subheadline: `Fuera de los terrenos de juego`,
+      body: `${player.name} sufre una lesión que lo dejará fuera de las canchas por varias semanas. Un golpe duro para las aspiraciones de ${club.name}.`,
+      clubId: club.id, playerId: player.id,
+      isUserClubNews: userClub && club.id === userClub.id,
+      read: false,
+    });
+  }
+
+  generateGeneralNews(date: Date) {
+    const userClub = this.getUserClub();
+    const headlines = [
+      { headline: 'La liga se pone más emocionante que nunca', subheadline: 'Las posiciones se estrechan en la parte alta', type: 'FEATURE' as const, category: 'GENERAL' as const, isUserClub: false },
+      { headline: 'El mercado de pases no para: nuevas incorporaciones sorprenden', subheadline: 'Varios clubes apuestan por jóvenes promesas', type: 'HEADLINE' as const, category: 'TRANSFER' as const, isUserClub: false },
+      { headline: 'Lesiones preocupantes en la zona media de la tabla', subheadline: 'Varios jugadores clave fuera por lesión', type: 'CRITICISM' as const, category: 'INJURY' as const, isUserClub: false },
+      { headline: 'La afición responde: llenos históricos en los estadios', subheadline: 'La liga bate récord de asistencia', type: 'PRAISE' as const, category: 'GENERAL' as const, isUserClub: false },
+      { headline: 'El entrenador del año: ¿quién se lleva el galardón?', subheadline: 'Las votaciones están muy reñidas', type: 'FEATURE' as const, category: 'BOARD' as const, isUserClub: false },
+      { headline: 'Cantera: los jóvenes que están dando la campanada', subheadline: 'Varios juveniles llamados a la selección', type: 'PRAISE' as const, category: 'GENERAL' as const, isUserClub: false },
+      { headline: 'El VAR sigue generando polémica en la liga', subheadline: 'Varias decisiones polémicas alteran resultados', type: 'CRITICISM' as const, category: 'GENERAL' as const, isUserClub: false },
+      { headline: 'Negociaciones contractuales tensas en varios clubes', subheadline: 'Jugadores importantes piden renovaciones', type: 'RUMOR' as const, category: 'BOARD' as const, isUserClub: false },
+    ];
+    const pick = headlines[randomInt(0, headlines.length - 1)];
+    this.addMediaNews({
+      id: generateUUID(), date, type: pick.type, category: pick.category,
+      headline: pick.headline, subheadline: pick.subheadline,
+      body: `Noticia de interés general en el mundo del fútbol. ${pick.subheadline}.`,
+      isUserClubNews: userClub && Math.random() < 0.3,
+      read: false,
+    });
+  }
+
+  addMediaNews(news: MediaNews) {
+    this.mediaNews.unshift(news);
+    if (this.mediaNews.length > 100) this.mediaNews.pop();
+  }
+
+  getUserClubNews(limit = 20): MediaNews[] {
+    const userClub = this.getUserClub();
+    if (!userClub) return this.mediaNews.slice(0, limit);
+    return this.mediaNews.filter(n => n.isUserClubNews || n.clubId === userClub.id).slice(0, limit);
+  }
+
+  getAllNews(limit = 50): MediaNews[] {
+    return this.mediaNews.slice(0, limit);
+  }
+
+  getUserClub() {
+    const userClubId = useGameStore.getState().userClubId;
+    return userClubId ? this.getClub(userClubId) : undefined;
+  }
+}
+
+export const world = new WorldManager();

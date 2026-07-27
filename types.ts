@@ -167,7 +167,8 @@ export interface Player {
   injuryHistory: { type: string; days: number; date: Date }[];
   injuryProneness: number;
   suspension?: { matchesLeft: number };
-  loanDetails?: { originalClubId: string; wageShare: number };
+  loanDetails?: { originalClubId: string; wageShare: number; loanToBuy?: boolean };
+  agent?: { name: string; commission: number };
   lastMotiveInteraction?: Date;
   trainingSchedule?: TrainingSchedule;
   formRatings: number[];
@@ -197,6 +198,7 @@ export interface Club {
   honours: { name: string; year: number }[];
   trainingFacilities: number;
   youthFacilities: number;
+  youthRecruitment: number;
    scoutingRegion: 'ARG' | 'BRA' | 'URU' | 'CHL' | 'COL' | 'ECU' | 'PAR' | 'PER' | 'URY' | 'VEN' | 'BOL' | 'GLO';
   qualifiedFor?: string | null;
   trainingDelegatedTo?: string;
@@ -479,7 +481,7 @@ export interface TransferOffer {
   toClubId: string;
   amount: number;
   wageShare: number;
-  type: 'PURCHASE' | 'LOAN';
+  type: 'PURCHASE' | 'LOAN' | 'LOAN_TO_BUY';
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COUNTER_OFFER' | 'COMPLETED';
   date: Date;
   responseDate: Date;
@@ -620,18 +622,33 @@ export type DialogueTone = 'MILD' | 'MODERATE' | 'AGGRESSIVE';
 export type InteractionChannel = 'COACH_PLAYER' | 'COACH_STAFF' | 'COACH_MANAGER' | 'COACH_PRESS' | 'COACH_BOARD';
 
 export interface InteractionLogEntry {
-  id: string;
-  date: Date;
-  channel: InteractionChannel;
-  actorId: string;
-  targetId: string;
-  type: DialogueType;
-  tone: DialogueTone;
-  result: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
-  moraleChange: number;
-  tensionChange: number;
-  description: string;
-}
+   id: string;
+   date: Date;
+   channel: InteractionChannel;
+   actorId: string;
+   targetId: string;
+   type: DialogueType;
+   tone: DialogueTone;
+   result: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+   moraleChange: number;
+   tensionChange: number;
+   description: string;
+ }
+ 
+ export interface MediaNews {
+   id: string;
+   date: Date;
+   type: 'HEADLINE' | 'FEATURE' | 'RUMOR' | 'CRITICISM' | 'PRAISE';
+   category: 'MATCH' | 'TRANSFER' | 'INJURY' | 'BOARD' | 'GENERAL';
+   headline: string;
+   subheadline: string;
+   body: string;
+   clubId?: string;
+   competitionId?: string;
+   playerId?: string;
+   isUserClubNews: boolean;
+   read: boolean;
+ }
 
 export interface ReputationalBuff {
   id: string;

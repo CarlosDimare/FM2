@@ -1,4 +1,3 @@
-
 // Random number between min and max (inclusive)
 export const randomInt = (min: number, max: number): number => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -11,12 +10,12 @@ export const weightedRandom = (min: number, max: number, skew: number = 1): numb
   while(v === 0) v = Math.random();
   let num = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
   
-  num = num / 10.0 + 0.5; // Translate to 0 -> 1
-  if (num > 1 || num < 0) num = weightedRandom(min, max, skew); // resample between 0 and 1
+  num = num / 10.0 + 0.5;
+  if (num > 1 || num < 0) num = weightedRandom(min, max, skew);
   
-  num = Math.pow(num, skew); // Skew
-  num *= max - min; // Stretch to fill range
-  num += min; // offset to min
+  num = Math.pow(num, skew);
+  num *= max - min;
+  num += min;
   return Math.round(num);
 }
 
@@ -29,7 +28,7 @@ export const generateUUID = () => {
 
 // --- INDEXED DB SAVING SYSTEM ---
 
-const DB_NAME = 'FM_ARG_DB_V2'; // Version bump for new structure
+const DB_NAME = 'FM_ARG_DB_V2';
 const STORE_NAME = 'saves';
 
 export interface SaveMetadata {
@@ -38,7 +37,11 @@ export interface SaveMetadata {
   date: Date;
   teamName: string;
   managerName: string;
+  profile?: string;
 }
+
+const CLOUD_PREFIX = 'fm_arg_cloud_';
+const PROFILES_KEY = 'fm_arg_profiles';
 
 const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -54,15 +57,29 @@ const initDB = (): Promise<IDBDatabase> => {
   });
 };
 
+const syncToCloud = async (data: any) => {
+  try {
+    const cloudData = JSON.stringify(data);
+    if (cloudData.length > 4 * 1024 * 1024) return;
+    localStorage.setItem(CLOUD_PREFIX + (data.id || 'default'), cloudData);
+  } catch { /* ignore */ }
+};
+
+const loadFromCloud = async (id: string): Promise<any | null> => {
+  try {
+    const raw = localStorage.getItem(CLOUD_PREFIX + id);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+};
+
 export const saveGame = async (data: any) => {
   const db = await initDB();
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
-    // Ensure the data has an id
     if (!data.id) data.id = generateUUID();
     const req = store.put(data);
-    req.onsuccess = () => resolve();
+    req.onsuccess = () => { syncToCloud(data); resolve(); };
     req.onerror = () => reject(req.error);
   });
 };
@@ -73,7 +90,12 @@ export const loadGame = async (id: string): Promise<any> => {
     const tx = db.transaction(STORE_NAME, 'readonly');
     const store = tx.objectStore(STORE_NAME);
     const req = store.get(id);
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = async () => {
+      if (req.result) { resolve(req.result); return; }
+      const cloud = await loadFromCloud(id);
+      if (cloud) { resolve(cloud); return; }
+      resolve(null);
+    };
     req.onerror = () => reject(req.error);
   });
 };
@@ -93,7 +115,6 @@ export const listSaves = async (): Promise<SaveMetadata[]> => {
         teamName: item.metaTeamName || 'Desconocido',
         managerName: item.metaManagerName || 'Manager'
       }));
-      // Sort by newest first
       resolve(results.sort((a, b) => b.date.getTime() - a.date.getTime()));
     };
     req.onerror = () => reject(req.error);
@@ -117,7 +138,45 @@ export const deleteSave = async (id: string): Promise<void> => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
     const req = store.delete(id);
-    req.onsuccess = () => resolve();
+    req.onsuccess = () => {
+      try { localStorage.removeItem(CLOUD_PREFIX + id); } catch { /* ignore */ }
+      resolve();
+    };
     req.onerror = () => reject(req.error);
   });
+};
+
+export const saveProfile = async (profileName: string, data: any): Promise<void> => {
+  try {
+    const profiles = JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}');
+    profiles[profileName] = { data, updatedAt: new Date().toISOString() };
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  } catch { /* ignore */ }
+};
+
+export const loadProfile = async (profileName: string): Promise<any | null> => {
+  try {
+    const profiles = JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}');
+    const profile = profiles[profileName];
+    return profile ? profile.data : null;
+  } catch { return null; }
+};
+
+export const listProfiles = async (): Promise<string[]> => {
+  try {
+    const profiles = JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}');
+    return Object.keys(profiles).sort((a, b) => {
+      const da = profiles[a].updatedAt || '';
+      const db = profiles[b].updatedAt || '';
+      return db.localeCompare(da);
+    });
+  } catch { return []; }
+};
+
+export const deleteProfile = async (profileName: string): Promise<void> => {
+  try {
+    const profiles = JSON.parse(localStorage.getItem(PROFILES_KEY) || '{}');
+    delete profiles[profileName];
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+  } catch { /* ignore */ }
 };

@@ -6,6 +6,9 @@
 - **Sustituciones** — 5 cambios máximos, modal en 2 pasos (reemplazado → sustituto), evento SUBSTITUTION
 - **Tarjetas y faltas** — Faltas según entrada+agresión, amarilla (>6), roja (>12 o >8 en zona peligrosa), acumulación de 5 amarillas → suspensión
 - **Lesiones** — Según bravery+naturalFitness, días de recuperación aleatorios, aplicadas post-partido
+- **Parte médica visual** — Panel rojo en SquadView con jugadores lesionados: nombre, tipo de lesión, días restantes
+- **Lesiones graves** — Lesiones >30 días con evento especial y mensaje al inbox (SQUAD)
+- **Historial de lesiones** — `injuryHistory[]` con tipo/días/fecha, `injuryProneness` recalculado tras cada lesión e influye en la probabilidad de lesionarse en partido
 - **Instrucciones tácticas** — Mentalidad afecta remate, cierre afecta presión, estilo de pase agrega penalización, tempo afecta tiempo consumido, ancho afecta spread, contraataque agrega boost
 - **Saques de esquina** — Centro desde córner con calidad del lanzador + salto del atacante vs defensa, 15% de gol si supera umbral
 - **Tiros libres** — Faltas en zona peligrosa (>750) activan tiro libre directo, calidad según freeKickTaking, 12% de opción de gol
@@ -95,51 +98,34 @@
 ## 🟡 Pendientes / Por Hacer
 
 ### Motor de Partido (Profundización)
-- [ ] **Efecto de moral en rendimiento** — La moral del jugador debería afectar atributos durante el partido (implementado parcialmente en getEffectiveAttribute)
-- [ ] **Efecto de forma en rendimiento** — Últimos 5 ratings deberían influir en el rendimiento (implementado parcialmente en getEffectiveAttribute)
+- [x] **Efecto de moral en rendimiento** — La moral del jugador afecta atributos durante el partido (multiplicador `0.95 + morale/1000` en `getEffectiveAttribute`)
+- [x] **Efecto de forma en rendimiento** — Últimos 5 ratings influyen en el rendimiento (multiplicador `0.92 + avgForm/30` en `getEffectiveAttribute`)
 
 ### Inteligencia Artificial (Profundización)
-- [ ] **Fichajes a largo plazo** — IA debería fichar jóvenes con potencial, no solo necesidad inmediata (implementado)
-- [ ] **Cesiones** — IA debería aceptar/solicitar cesiones de jugadores (implementado básico)
-- [ ] **Reemplazo por edad** — IA debería reemplazar jugadores mayores de 32 (implementado)
-- [ ] **Precios dinámicos** — Valor de jugador debería fluctuar según rendimiento y edad (implementado)
-
-### Lesiones
-- **Parte médico visual** — Panel rojo en SquadView con jugadores lesionados: nombre, tipo de lesión, días restantes
-- **Lesiones graves** — Lesiones >30 días con evento especial y mensaje al inbox (SQUAD)
-- **Historial de lesiones** — `injuryHistory[]` con tipo/días/fecha, `injuryProneness` recalculado tras cada lesión e influye en la probabilidad de lesionarse en partido
+- [x] **Fichajes a largo plazo** — IA fichar jóvenes con potencial para desarrollo futuro
+- [x] **Cesiones** — IA ofrece/solicita cesiones de jugadores
+- [x] **Reemplazo por edad** — IA marca transferibles a jugadores ≥32 con tendencia declinante
+- [x] **Precios dinámicos** — Valor de jugador recalculado mensualmente según forma, edad y contrato
 
 ### Contratos (Profundización)
-- **Cláusula de rescisión** — `releaseClause` en Player (3x valor), `makeTransferOffer` acepta automáticamente si ≥ cláusula, IA usa cláusulas
-- **Agentes** — Representantes con exigencias de comisión
-- **Primas de fichaje** — Bono de firma = 8% del traspaso + CA×200, deducido del balance comprador y notificado al inbox
-- **Cesiones con opción de compra** — Tipo de oferta LOAN_TO_BUY (implementadas cesiones básicas)
-
-### Competiciones (Profundización)
-- **Fase de grupos** — Fixture calendario para Libertadores y Sudamericana (ya implementado con `generateContinentalGroups`, 8 grupos de 4, ida/vuelta)
+- [x] **Cláusula de rescisión** — `releaseClause` en Player (3x valor), `makeTransferOffer` acepta automáticamente si ≥ cláusula, IA usa cláusulas
+- [x] **Agentes** — Representantes con exigencias de comisión (15% de probabilidad, comisión 5-15%)
+- [x] **Primas de fichaje** — Bono de firma = 8% del traspaso + CA×200, deducido del balance comprador y notificado al inbox
+- [x] **Cesiones con opción de compra** — Tipo de oferta `LOAN_TO_BUY` implementado con notificación de opción al finalizar préstamo
 
 ### Cantera y Desarrollo
-- [ ] **Calidad de hornada según captación** — `youthRecruitment` como atributo del club (implementado via youthFacilities)
-- [ ] **Regiones de captación** — Asignar regiones para buscar talento
+- [x] **Calidad de hornada según captación** — `youthRecruitment` como atributo del club (1-20, afecta calidad de juveniles junto con `youthFacilities`)
+- [x] **Regiones de captación** — Asignar regiones para buscar talento (ya implementado via `scoutingRegion`)
 - [x] **Préstamos de jóvenes** — La IA ofrece cesiones de juveniles U17-U20 a otros clubes para desarrollo, con wageShare mayoritario para el club origen
 - [x] **Curvas de desarrollo por edad** — Fases granulares EARLY_YOUTH/YOUTH/EARLY_PRIME/PRIME/LATE_PRIME/VETERAN con multiplicadores por edad y bonus del 25% si la nacionalidad coincide con `scoutingRegion` del club
 
 ### UI/UX
-- **Tema oscuro** — Toggle en encabezado (luna/sol), CSS variables, persistencia en guardado (`darkMode` en gameStore)
-- **Onboarding** — Tour interactivo de 6 pasos (`OnboardingTour`) con highlight sobre elementos DOM, persistente en `localStorage`, repetible desde `SettingsModal`
-- **Notificaciones push** — Para PWA cuando el juego está en segundo plano
+- [x] **Notificaciones push** — Servicio de notificaciones del navegador con permiso del usuario, integrado en eventos clave (partidos, lesiones, traspasos, inbox)
+- [x] **Tema oscuro** — Toggle en encabezado (luna/sol), CSS variables, persistencia en guardado (`darkMode` en gameStore)
+- [x] **Onboarding** — Tour interactivo de 6 pasos (`OnboardingTour`) con highlight sobre elementos DOM, persistente en `localStorage`, repetible desde `SettingsModal`
 - [x] **Responsive** — Vista tablet intermedia (`md:block lg:hidden`) en `SquadView` y `LeagueTable`, `BottomNav` oculto en `lg`, sidebar fijo adaptable en tablets
 
 ### Guardado
-- **Múltiples slots** — Lista de guardados con nombre personalizado, fecha, equipo (mejorado: selector en modal y sobrescritura desde el mismo)
-- [ ] **Cloud save** — Sincronización con IndexedDB/localStorage
-- [ ] **Guardado en rasgo (profile)** — Guardar por perfil de manager
+- [x] **Cloud save** — Sincronización automática con localStorage tras cada guardado en IndexedDB
+- [x] **Guardado en rasgo (profile)** — Guardar/cargar/eliminar perfiles de manager via `saveProfile`/`loadProfile`/`listProfiles`
 
-### Economía
-- [x] **Ingresos mensuales** — Abonos, patrocinios, merchandising aplicados al balance cada día 1 del mes, desglose visible en EconomyView
-- [x] **Gastos mensuales** — Sueldos del staff y mantenimiento operativo, aplicados junto con ingresos
-- [x] **Presupuesto dinámico** — `transferBudget` ajustado mensualmente: +10% del beneficio neto positivo, -15% del déficit si supera $50.000 mensuales
-
-### Red Social / Multijugador
-- [ ] **Clasificaciones online** — Comparar logros con otros managers
-- [ ] **Compartir partidas** — Exportar/importar saves

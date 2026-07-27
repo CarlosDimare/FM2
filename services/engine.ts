@@ -2,6 +2,7 @@
 import { Player, Club, MatchEvent, PlayerMatchStats, Zone, Position, TacticalReport, TacticSettings, TransitionPhase, MatchState, BallState } from '../types';
 import { randomInt } from './utils';
 import { world } from './worldManager';
+import { sendInjuryNotification } from './notifications';
 
 export const SLOT_CONFIG: Record<number, { line: 'GK' | 'SW' | 'DEF' | 'DM' | 'MID' | 'AM' | 'ATT', side?: 'LEFT' | 'RIGHT' | 'CENTER', abbr: string }> = {
   0: { line: 'GK', side: 'CENTER', abbr: 'POR' },
@@ -698,18 +699,19 @@ export class MatchSimulator {
           const natFit = player.stats.physical.naturalFitness;
           player.injuryProneness = Math.max(0.005, Math.min(0.2, (recentCount * 0.015) + ((20 - natFit) * 0.015)));
 
-          if (stat.sustainedInjury.days > 30) {
-            const club = world.getClub(player.clubId);
-            if (club && club.id) {
-              world.addInboxMessage(
-                'SQUAD',
-                `Lesión grave: ${player.name}`,
-                `Malas noticias: ${player.name} sufre ${stat.sustainedInjury.type} y estará de baja ${stat.sustainedInjury.days} días. Se perderá gran parte de la temporada.`,
-                new Date(),
-                player.id
-              );
-            }
-          }
+if (stat.sustainedInjury.days > 30) {
+             const club = world.getClub(player.clubId);
+             if (club && club.id) {
+               world.addInboxMessage(
+                 'SQUAD',
+                 `Lesión grave: ${player.name}`,
+                 `Malas noticias: ${player.name} sufre ${stat.sustainedInjury.type} y estará de baja ${stat.sustainedInjury.days} días. Se perderá gran parte de la temporada.`,
+                 new Date(),
+                 player.id
+               );
+               sendInjuryNotification(player.name, stat.sustainedInjury.type, stat.sustainedInjury.days);
+             }
+           }
         }
       }
       if (stat.card === 'RED') {

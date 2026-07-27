@@ -19,6 +19,7 @@ import { EconomyView } from './components/EconomyView';
 import { NegotiationsView } from './components/NegotiationsView';
 import { InboxView } from './components/InboxView';
 import { SeasonSummaryModal } from './components/SeasonSummaryModal';
+import { MediaView } from './components/MediaView';
 import { PlayerContextMenu } from './components/PlayerContextMenu';
 import { TournamentHub } from './components/TournamentHub';
 import { ClubsListView } from './components/ClubsListView';
@@ -28,6 +29,7 @@ import { LifecycleManager } from './services/lifecycleManager';
 import { Club, Player, Fixture, SquadType } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID } from './services/utils';
 import { MatchSimulator } from './services/engine';
+import { requestNotificationPermission, sendMatchNotification, sendInjuryNotification, sendTransferNotification, sendInboxNotification } from './services/notifications';
 import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
 import { OnboardingTour, isOnboarded } from './components/OnboardingTour';
 import { FMButton } from './components/FMUI';
@@ -45,6 +47,10 @@ const App: React.FC = () => {
       const t = setTimeout(() => setShowOnboarding(true), 1200);
       return () => clearTimeout(t);
     }
+  }, []);
+
+  useEffect(() => {
+    requestNotificationPermission();
   }, []);
 
   useEffect(() => {
@@ -182,9 +188,10 @@ const App: React.FC = () => {
       setUserWonLeague(result.userWonLeague);
       const gs = useGameStore.getState();
       gs.setManagerHistory({ ...gs.managerHistory, seasonsCompleted: gs.managerHistory.seasonsCompleted + 1 });
-      if (result.userWonLeague) gs.trackTitle('Liga');
-      const wonCups = result.summaries.filter((s: any) => s.championId === userClub?.id && s.compType !== 'LEAGUE');
-      wonCups.forEach((s: any) => gs.trackTitle(s.compName));
+if (result.userWonLeague) gs.trackTitle('Liga');
+       const wonCups = result.summaries.filter((s: any) => s.championId === userClub?.id && s.compType !== 'LEAGUE');
+       wonCups.forEach((s: any) => gs.trackTitle(s.compName));
+       sendMatchNotification('Temporada finalizada — revisa el resumen');
       if (userClub) {
         const leagueTable = world.getLeagueTable(userClub.leagueId, result.newFixtures.length > 0 ? result.newFixtures : fixtures, 'SENIOR');
         const leaguePos = leagueTable.findIndex(e => e.clubId === userClub.id) + 1;
@@ -236,6 +243,7 @@ const App: React.FC = () => {
         world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
         world.trackU21Minutes(f.homeTeamId, hSquad, stats, currentDate);
         world.trackU21Minutes(f.awayTeamId, aSquad, stats, currentDate);
+        world.generateMatchNews(f, homeScore, awayScore, currentDate);
       });
     }
 
@@ -251,6 +259,7 @@ const App: React.FC = () => {
     world.processAIActivity(nextDay);
     world.processDailyContracts(nextDay, userClub?.id);
     world.processDailyScouting(nextDay, userClub?.id);
+      world.generateGeneralNews(nextDay);
     if (nextDay.getMonth() === 7 && nextDay.getDate() === 1) {
       world.generateYouthIntake(nextDay.getFullYear());
       if (userClub) world.addInboxMessage('SQUAD', 'Cosecha de cantera', `Los juveniles de ${userClub.name} se han incorporado al club. Revisa los nuevos talentos en el equipo sub-20.`, nextDay);
@@ -311,19 +320,20 @@ const App: React.FC = () => {
       const dayFixtures = localFixtures.filter(f =>
         f.date.toDateString() === tempDate.toDateString() && !f.played
       );
-      dayFixtures.forEach(f => {
-        const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-        f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
-        const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-        const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
-        MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-        const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
-        const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-        world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-        world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-        world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
-      });
+dayFixtures.forEach(f => {
+         const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+         f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
+         const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
+         const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+         MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
+         const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
+         const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
+         LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+         world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+         world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+         world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+         world.generateMatchNews(f, homeScore, awayScore, tempDate);
+       });
 
       const newCupFixtures = LifecycleManager.processCompetitionProgress(localFixtures, tempDate);
       if (newCupFixtures.length > 0) {
@@ -420,21 +430,25 @@ const App: React.FC = () => {
       const dayFixtures = localFixtures.filter(f =>
         f.date.toDateString() === tempDate.toDateString() && !f.played
       );
-      dayFixtures.forEach(f => {
-        const isUserMatch = userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id);
-        if (isUserMatch) return;
-        const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-        f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
-        const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-        const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
-        MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-        const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
-        const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-        world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-        world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-        world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
-      });
+dayFixtures.forEach(f => {
+         const isUserMatch = userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id);
+         if (isUserMatch) return;
+         const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+         f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
+         const hName = world.getClub(f.homeTeamId)?.name || 'Equipo';
+         const aName = world.getClub(f.awayTeamId)?.name || 'Equipo';
+         sendMatchNotification(`${hName} ${homeScore} - ${awayScore} ${aName}`);
+         const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
+         const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+         MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
+         const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
+         const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
+         LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+         world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+         world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+         world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+         world.generateMatchNews(f, homeScore, awayScore, tempDate);
+       });
 
       LifecycleManager.checkBirthdays(tempDate);
       LifecycleManager.recoverDailyFitness();
@@ -444,6 +458,7 @@ const App: React.FC = () => {
       world.processAIActivity(tempDate);
       world.processDailyContracts(tempDate, userClub.id);
       world.processDailyScouting(tempDate, userClub.id);
+         world.generateGeneralNews(tempDate);
 
       const newCupFixtures = LifecycleManager.processCompetitionProgress(localFixtures, tempDate);
       if (newCupFixtures.length > 0) {
@@ -684,6 +699,8 @@ const App: React.FC = () => {
         );
       case 'INBOX':
         return <InboxView setView={setView} />;
+      case 'MEDIA':
+        return <MediaView onBack={() => setView('HOME')} />;
       case 'TABLE':
         return (
           <div className="p-2 h-full flex flex-col">
@@ -755,13 +772,19 @@ const App: React.FC = () => {
         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
       }
-      case 'PRESS_CONFERENCE_POST': {
-        const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
-        const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
-        if (nextFixture && homeClub && awayClub) {
-          const opponent = homeClub.id === userClub.id ? awayClub : homeClub;
-          return <PressConferenceView club={userClub} opponent={opponent} context="POST_MATCH" homeScore={nextFixture.homeScore} awayScore={nextFixture.awayScore} onFinish={() => { setView('HOME'); updateNextFixture(fixtures, currentDate, userClub.id); }} />;
-        }
+case 'PRESS_CONFERENCE_POST': {
+         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
+         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
+         if (nextFixture && homeClub && awayClub) {
+           const hName = homeClub.name;
+           const aName = awayClub.name;
+           const hScore = nextFixture.homeScore ?? 0;
+           const aScore = nextFixture.awayScore ?? 0;
+           const result = hScore > aScore ? 'Victoria' : hScore < aScore ? 'Derrota' : 'Empate';
+           sendMatchNotification(`${result}: ${hName} ${hScore} - ${aScore} ${aName}`);
+           const opponent = homeClub.id === userClub.id ? awayClub : homeClub;
+           return <PressConferenceView club={userClub} opponent={opponent} context="POST_MATCH" homeScore={nextFixture.homeScore} awayScore={nextFixture.awayScore} onFinish={() => { setView('HOME'); updateNextFixture(fixtures, currentDate, userClub.id); }} />;
+         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
       }
       case 'PRE_MATCH': {

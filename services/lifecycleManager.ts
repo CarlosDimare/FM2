@@ -124,12 +124,13 @@ export class LifecycleManager {
         f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
         const hEleven = world.selectBestEleven(f.homeTeamId, 'SENIOR');
         const aEleven = world.selectBestEleven(f.awayTeamId, 'SENIOR');
-        MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore, f.competitionId);
-        MatchSimulator.processMatchInjuries(stats);
-        this.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length);
-        world.processMatchDayIncome(f.homeTeamId, f.competitionId, new Date());
-        world.trackU21Minutes(f.homeTeamId, hEleven, stats, new Date());
-        world.trackU21Minutes(f.awayTeamId, aEleven, stats, new Date());
+MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore, f.competitionId);
+                     MatchSimulator.processMatchInjuries(stats);
+                     this.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length);
+                     world.processMatchDayIncome(f.homeTeamId, f.competitionId, new Date());
+                     world.trackU21Minutes(f.homeTeamId, hEleven, stats, new Date());
+                     world.trackU21Minutes(f.awayTeamId, aEleven, stats, new Date());
+                     world.generateMatchNews(f, homeScore, awayScore, new Date());
     });
 
     // 3. Generate Summaries
