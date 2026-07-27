@@ -63,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
   return (
     <>
       {isSidebarOpen && <div className="fixed inset-0 bg-slate-900/40 z-[90] lg:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />}
-      <div className={`fixed lg:static top-0 lg:top-0 left-0 bottom-0 z-[100] w-64 bg-slate-100 border-r border-slate-300 h-full flex flex-col transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <div id="main-sidebar" className={`fixed lg:static top-0 lg:top-0 left-0 bottom-0 z-[100] w-64 bg-slate-100 border-r border-slate-300 h-full flex flex-col transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="lg:hidden p-4 border-b border-slate-300 flex justify-between items-center shrink-0">
           <span className="font-bold text-slate-900 text-sm">Menú</span>
           <button onClick={() => setIsSidebarOpen(false)} className="text-slate-600"><X size={20} /></button>

@@ -28,6 +28,7 @@ import { Club, Player, Fixture, SquadType } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID } from './services/utils';
 import { MatchSimulator } from './services/engine';
 import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
+import { OnboardingTour, isOnboarded } from './components/OnboardingTour';
 import { FMButton } from './components/FMUI';
 import { useWorldStore } from './stores/worldStore';
 import { useUIStore } from './stores/uiStore';
@@ -36,6 +37,14 @@ import { useGameStore } from './stores/gameStore';
 const App: React.FC = () => {
   const darkMode = useGameStore(s => s.darkMode);
   const setDarkMode = useGameStore(s => s.setDarkMode);
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isOnboarded()) {
+      const t = setTimeout(() => setShowOnboarding(true), 1200);
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -567,7 +576,7 @@ const App: React.FC = () => {
         return (
           <div className="p-4 space-y-4 overflow-y-auto pb-14">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 bg-slate-200 p-6 rounded-sm border border-slate-500 shadow-sm relative overflow-hidden">
+              <div id="home-next-match" className="lg:col-span-2 bg-slate-200 p-6 rounded-sm border border-slate-500 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 text-slate-900"><Globe size={120} /></div>
                 <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-4 border-b border-slate-400 pb-1">Próximo Encuentro</h3>
                 {nextFixture ? (
@@ -624,11 +633,11 @@ const App: React.FC = () => {
               </div>
             </div>
             )}
-            <div className="bg-slate-100 p-4 rounded-sm border border-slate-300 shadow-sm">
+            <div id="header-inbox" className="bg-slate-100 p-4 rounded-sm border border-slate-300 shadow-sm">
               <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-4 border-b border-slate-300 pb-1 flex items-center justify-between">
                 <div className="flex items-center gap-2"><Mail size={14} /> Últimas Noticias</div>
-                <button onClick={() => setView('INBOX')} className="text-[9px] text-blue-600 hover:underline flex items-center">Ver todo <ChevronRight size={10} /></button>
-              </h3>
+                <button onClick={() => setView('INBOX')} className="text-[9px] text-blue-600 hover:underline flex items-center">Ver todo <ChevronRight size={10}</button>
+             </h3>
               <div className="space-y-2">
                 {world.inbox.slice(0, 3).map((msg) => (
                   <div key={msg.id} className="p-3 bg-slate-200 border-l-4 border-slate-400 hover:bg-slate-300 transition-colors cursor-pointer" onClick={() => setView('INBOX')}>
@@ -804,6 +813,8 @@ const App: React.FC = () => {
   };
 
   if (gameState === 'LOADING') return <div className="h-screen w-screen bg-slate-400 flex items-center justify-center text-slate-950"><div className="animate-pulse flex flex-col items-center"><RefreshCw className="w-10 h-10 animate-spin mb-4 text-slate-900" /><h1 className="text-2xl font-black italic tracking-widest uppercase">FM Argentina</h1></div></div>;
+
+  const onboardingActive = showOnboarding && gameState === 'PLAYING';
 
   if (gameState === 'SETUP_USER') return (
     <div className="h-screen w-screen bg-slate-400 flex items-center justify-center p-4 relative overflow-hidden">
