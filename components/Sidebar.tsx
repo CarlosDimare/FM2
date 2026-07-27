@@ -114,10 +114,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
 
           <div className="h-px bg-slate-300 mx-4 my-2"></div>
 
-          <NavItem id="ECONOMY" label="Economía" icon={Wallet} active={currentView === 'ECONOMY'} onClick={() => setView('ECONOMY')} />
-          <NavItem id="STAFF" label="Empleados" icon={Briefcase} active={currentView === 'STAFF'} onClick={() => setView('STAFF')} />
-          <NavItem id="TRAINING" label="Entrenamiento" icon={Dumbbell} active={currentView === 'TRAINING'} onClick={() => setView('TRAINING')} />
-          <NavItem id="CLUB_REPORT" label="Información Club" icon={Info} active={currentView === 'CLUB_REPORT'} onClick={() => setView('CLUB_REPORT')} />
+           <NavItem id="ECONOMY" label="Economía" icon={Wallet} active={currentView === 'ECONOMY'} onClick={() => setView('ECONOMY')} />
+           <NavItem id="STAFF" label="Empleados" icon={Briefcase} active={currentView === 'STAFF'} onClick={() => setView('STAFF')} />
+           <NavItem id="PEOPLE_HUB" label="Personas" icon={Users} active={currentView === 'PEOPLE_HUB'} onClick={() => setView('PEOPLE_HUB')} />
+           <NavItem id="TRAINING" label="Entrenamiento" icon={Dumbbell} active={currentView === 'TRAINING'} onClick={() => setView('TRAINING')} />
+           <NavItem id="CLUB_REPORT" label="Información Club" icon={Info} active={currentView === 'CLUB_REPORT'} onClick={() => setView('CLUB_REPORT')} />
 
           <div className="mt-auto pt-6 px-4 pb-4 space-y-2">
              <button onClick={onVacation} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 rounded border border-slate-300 shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">

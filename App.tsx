@@ -10,6 +10,7 @@ import { StaffView } from './components/StaffView';
 import { TrainingView } from './components/TrainingView';
 import { ScoutingView } from './components/ScoutingView';
 import { BoardView } from './components/BoardView';
+import { PeopleHub } from './components/PeopleHub';
 import { PressConferenceView } from './components/PressConferenceView';
 import { PreMatchView } from './components/PreMatchView';
 import { MarketView } from './components/MarketView';
@@ -525,6 +526,33 @@ const App: React.FC = () => {
       world.inbox = data.worldState.inbox;
       if (data.worldState.scoutingReports) world.scoutingReports = data.worldState.scoutingReports;
 
+      world.players.forEach(p => {
+        if (!p.relationships) p.relationships = {};
+        if (!p.injuryHistory) p.injuryHistory = [];
+      });
+      world.staff.forEach(s => {
+        if (!(s as any).relationships) (s as any).relationships = {};
+        if ((s as any).personality === undefined) (s as any).personality = ['LEADER', 'PASSIONATE', 'CALM', 'DISCIPLINARIAN', 'VISIONARY'][Math.floor(Math.random() * 5)];
+        if ((s as any).morale === undefined) (s as any).morale = 70;
+        if ((s as any).reputation === undefined) (s as any).reputation = 50;
+        if ((s as any).pressReputation === undefined) (s as any).pressReputation = 50;
+        if ((s as any).boardRelationship === undefined) (s as any).boardRelationship = 60;
+      });
+      world.competitions.forEach(c => {
+        if ((c as any).continent === undefined) (c as any).continent = 'América del Sur';
+        if ((c as any).confederation === undefined) (c as any).confederation = 'CONMEBOL';
+        if ((c as any).defaultPrizePool === undefined) (c as any).defaultPrizePool = 1000000;
+        if ((c as any).continentalSlots === undefined) (c as any).continentalSlots = 4;
+      });
+      if (!world.interactionLog) world.interactionLog = [];
+      if (!world.activeReputationalBuffs) world.activeReputationalBuffs = [];
+      if (!world.relationshipWeb) world.relationshipWeb = {};
+
+      if (!useGameStore.getState().deepSimLeagues?.length) {
+        const userLeague = world.getClub(data.gameState.userClubId)?.leagueId;
+        useGameStore.getState().setDeepSimLeagues(userLeague ? [userLeague] : []);
+      }
+
       setCurrentDate(data.gameState.currentDate);
       setUserName(data.gameState.userName);
       setUserSurname(data.gameState.userSurname);
@@ -686,6 +714,8 @@ const App: React.FC = () => {
         return <ScoutingView clubId={userClub.id} onSelectPlayer={setSelectedPlayer} />;
       case 'BOARD':
         return <BoardView userClub={userClub} />;
+      case 'PEOPLE_HUB':
+        return <PeopleHub userClub={userClub} currentDate={currentDate} />;
       case 'CLUBS_LIST':
         return <ClubsListView onSelectClub={(c) => { setViewExternalClub(c); setView('EXTERNAL_CLUB'); }} />;
       case 'EXTERNAL_CLUB':

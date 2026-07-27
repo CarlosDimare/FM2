@@ -3,6 +3,7 @@ import { Fixture, ManagerHistory } from '../types';
 import { world } from '../services/worldManager';
 import { Scheduler } from '../services/scheduler';
 import { LifecycleManager } from '../services/lifecycleManager';
+import { LeagueEngine } from '../services/leagueEngine';
 
 interface GameStore {
   fixtures: Fixture[];
@@ -12,6 +13,7 @@ interface GameStore {
   managerHistory: ManagerHistory;
   managerReputation: number;
   darkMode: boolean;
+  deepSimLeagues: string[];
 
   setFixtures: (fixtures: Fixture[]) => void;
   setNextFixture: (f: Fixture | null) => void;
@@ -20,6 +22,7 @@ interface GameStore {
   setManagerHistory: (h: ManagerHistory) => void;
   setManagerReputation: (r: number) => void;
   setDarkMode: (d: boolean) => void;
+  setDeepSimLeagues: (leagues: string[]) => void;
   trackMatchResult: (userScore: number, opponentScore: number) => void;
   trackTitle: (title: string) => void;
 
@@ -46,6 +49,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   managerReputation: 50,
   darkMode: false,
+  deepSimLeagues: [],
 
   setFixtures: (fixtures) => set({ fixtures }),
   setNextFixture: (nextFixture) => set({ nextFixture }),
@@ -54,6 +58,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setManagerHistory: (managerHistory) => set({ managerHistory }),
   setManagerReputation: (managerReputation) => set({ managerReputation }),
   setDarkMode: (darkMode) => set({ darkMode }),
+  setDeepSimLeagues: (deepSimLeagues) => set({ deepSimLeagues }),
 
   trackMatchResult: (userScore, opponentScore) => {
     const { managerHistory } = get();
@@ -104,11 +109,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   initSeasonFixtures: (startFrom, clubId) => {
     const allFixtures: Fixture[] = [];
-
+    const clubsByLeague: Record<string, any[]> = {};
     world.competitions.filter(c => c.type === 'LEAGUE').forEach(l => {
       const clubs = world.getClubsByLeague(l.id);
-      (['SENIOR', 'RESERVE', 'U20'] as any[]).forEach((st: any) => {
-        allFixtures.push(...Scheduler.generateSeasonFixtures(l.id, clubs, startFrom, st));
+      clubsByLeague[l.id] = clubs;
+    });
+
+    world.competitions.filter(c => c.type === 'LEAGUE').forEach(l => {
+      const clubs = clubsByLeague[l.id] || [];
+      const squads = (['SENIOR', 'RESERVE', 'U20'] as any[]);
+      const depth = get().deepSimLeagues.includes(l.id) ? 'DEEP' : 'LIGHT';
+      const squadTypes = depth === 'DEEP' ? squads : ['SENIOR'];
+      squadTypes.forEach((st: any) => {
+        allFixtures.push(...LeagueEngine.generateFixturesForLeague(world.clubs, l.id, startFrom, st, clubsByLeague));
       });
     });
 
@@ -135,7 +148,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       sudArg = allArgTeams.slice(6, 12);
     }
 
-    const allContTeams = world.getClubsByLeague('L_SAM_OTHER').sort((a, b) => b.reputation - a.reputation);
+    const allUserLeagueTeams = clubId ? (clubsByLeague[world.getClub(clubId)?.leagueId || ''] || []) : [];
+    const allContTeams = world.clubs.filter(c => c.qualifiedFor || c.leagueId !== (world.getClub(clubId)?.leagueId || ''));
     const allArgTeams = world.getClubsByLeague('L_ARG_1').sort((a, b) => b.reputation - a.reputation);
     const targetSize = 32;
 
@@ -181,9 +195,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const cwc = world.competitions.find(c => c.id === 'W_CLUB');
     if (cwc) {
       const decDate = new Date(startFrom.getFullYear(), 11, 15);
-      const bossTeams = world.getClubsByLeague('L_EUR_ELITE').slice(0, 1);
+      const bossTeams = world.getClubsByLeague('L_EUR_ELITE') || world.clubs.filter(c => c.leagueId === 'L_EUR_ELITE').slice(0, 1);
       const libTeams = world.getClubsByLeague('L_ARG_1').slice(0, 1);
-      const others = world.getClubsByLeague('L_SAM_OTHER').slice(0, 2);
+      const others = (world.getClubsByLeague('L_SAM_OTHER') || []).slice(0, 2);
       const cwcPool = [...bossTeams, ...libTeams, ...others];
       allFixtures.push(...Scheduler.generateCupRound(cwc.id, cwcPool, decDate, 'SEMI_FINAL'));
     }

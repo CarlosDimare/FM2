@@ -1,8 +1,8 @@
 
-import { Player, Club, Competition, Position, PlayerStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport } from "../types";
+import { Player, Club, Competition, Position, PlayerStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff } from "../types";
 import { generateUUID, randomInt, weightedRandom } from "./utils";
 import { NATIONS } from "../constants";
-import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, RealClubDef } from "../data/static";
+import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, RealClubDef } from "../data/static";
 import { REAL_PLAYERS_DB, RealPlayerDef } from "../data/realPlayers";
 import { SLOT_CONFIG } from "./engine";
 
@@ -18,31 +18,88 @@ export class WorldManager {
      pauseAtHalftime: true
   };
   scoutingReports: ScoutingReport[] = [];
+  interactionLog: InteractionLogEntry[] = [];
+  activeReputationalBuffs: ReputationalBuff[] = [];
+  relationshipWeb: Record<string, Record<string, { trust: number; respect: number; tension: number }>> = {};
 
   constructor() { this.initWorld(); }
 
-  initWorld() {
-    this.competitions = [
-      { id: "L_ARG_1", name: "Liga Profesional", country: "Argentina", type: 'LEAGUE', tier: 1, squadRegistrationLimit: 28, u21Requirement: 4 },
-      { id: "L_ARG_2", name: "Primera Nacional", country: "Argentina", type: 'LEAGUE', tier: 2, squadRegistrationLimit: 28, u21Requirement: 4 },
-      { id: "C_ARG", name: "Copa Argentina", country: "Argentina", type: 'CUP', tier: 1 },
-      { id: "CONT_LIB", name: "Copa Libertadores", country: "Sudamérica", type: 'CONTINENTAL_ELITE', tier: 1 },
-      { id: "CONT_SUD", name: "Copa Sudamericana", country: "Sudamérica", type: 'CONTINENTAL_SMALL', tier: 2 },
-      { id: "W_CLUB", name: "Mundial de Clubes", country: "Global", type: 'GLOBAL', tier: 1 },
-    ];
+   initWorld() {
+     this.competitions = [
+       { id: "L_ARG_1", name: "Liga Profesional", country: "Argentina", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 5000000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_ARG_2", name: "Primera Nacional", country: "Argentina", type: 'LEAGUE', tier: 2, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 1000000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_BRA_1", name: "Brasileirao Serie A", country: "Brasil", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 6000000, squadRegistrationLimit: 30, u21Requirement: 5 },
+       { id: "L_BRA_2", name: "Brasileirao Serie B", country: "Brasil", type: 'LEAGUE', tier: 2, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 2000000, squadRegistrationLimit: 30, u21Requirement: 5 },
+       { id: "L_CHI_1", name: "Primera División", country: "Chile", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 2500000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_COL_1", name: "Liga BetPlay", country: "Colombia", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 2500000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_URY_1", name: "Primera División", country: "Uruguay", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 2000000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_ECU_1", name: "Liga Pro", country: "Ecuador", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 2000000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_PRY_1", name: "División Profesional", country: "Paraguay", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 1800000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_BOL_1", name: "División Profesional", country: "Bolivia", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 1200000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_VEN_1", name: "Liga FUTVE", country: "Venezuela", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 1200000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_PER_1", name: "Liga 1", country: "Perú", type: 'LEAGUE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 1500000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_ESP_1", name: "LaLiga EA Sports", country: "España", type: 'LEAGUE', tier: 1, continent: "Europa", confederation: "UEFA", defaultPrizePool: 12000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_ITA_1", name: "Serie A", country: "Italia", type: 'LEAGUE', tier: 1, continent: "Europa", confederation: "UEFA", defaultPrizePool: 11000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_DEU_1", name: "Bundesliga", country: "Alemania", type: 'LEAGUE', tier: 1, continent: "Europa", confederation: "UEFA", defaultPrizePool: 10000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_FRA_1", name: "Ligue 1", country: "Francia", type: 'LEAGUE', tier: 1, continent: "Europa", confederation: "UEFA", defaultPrizePool: 8000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_PRT_1", name: "Liga Portugal", country: "Portugal", type: 'LEAGUE', tier: 1, continent: "Europa", confederation: "UEFA", defaultPrizePool: 7000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_NLD_1", name: "Eredivisie", country: "Países Bajos", type: 'LEAGUE', tier: 1, continent: "Europa", confederation: "UEFA", defaultPrizePool: 5000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_ENG_1", name: "Premier League", country: "Inglaterra", type: 'LEAGUE', tier: 1, continent: "Europa", confederation: "UEFA", defaultPrizePool: 14000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_MEX_1", name: "Liga MX", country: "México", type: 'LEAGUE', tier: 1, continent: "América del Norte", confederation: "CONCACAF", defaultPrizePool: 4000000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_USA_1", name: "MLS", country: "USA", type: 'LEAGUE', tier: 1, continent: "América del Norte", confederation: "CONCACAF", defaultPrizePool: 5000000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_JPN_1", name: "J1 League", country: "Japón", type: 'LEAGUE', tier: 1, continent: "Asia", confederation: "AFC", defaultPrizePool: 5000000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_ESP_2", name: "LaLiga Hypermotion", country: "España", type: 'LEAGUE', tier: 2, continent: "Europa", confederation: "UEFA", defaultPrizePool: 2000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_ITA_2", name: "Serie B", country: "Italia", type: 'LEAGUE', tier: 2, continent: "Europa", confederation: "UEFA", defaultPrizePool: 1500000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_DEU_2", name: "2. Bundesliga", country: "Alemania", type: 'LEAGUE', tier: 2, continent: "Europa", confederation: "UEFA", defaultPrizePool: 1200000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_FRA_2", name: "Ligue 2", country: "Francia", type: 'LEAGUE', tier: 2, continent: "Europa", confederation: "UEFA", defaultPrizePool: 1000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_ENG_2", name: "Championship", country: "Inglaterra", type: 'LEAGUE', tier: 2, continent: "Europa", confederation: "UEFA", defaultPrizePool: 5000000, squadRegistrationLimit: 25, u21Requirement: 3 },
+       { id: "L_JPN_2", name: "J2 League", country: "Japón", type: 'LEAGUE', tier: 2, continent: "Asia", confederation: "AFC", defaultPrizePool: 2000000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "L_PRY_2", name: "División Intermedia", country: "Paraguay", type: 'LEAGUE', tier: 2, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 800000, squadRegistrationLimit: 28, u21Requirement: 4 },
+       { id: "C_ARG", name: "Copa Argentina", country: "Argentina", type: 'CUP', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 2000000 },
+       { id: "CONT_LIB", name: "Copa Libertadores", country: "Sudamérica", type: 'CONTINENTAL_ELITE', tier: 1, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 8000000 },
+       { id: "CONT_SUD", name: "Copa Sudamericana", country: "Sudamérica", type: 'CONTINENTAL_SMALL', tier: 2, continent: "América del Sur", confederation: "CONMEBOL", defaultPrizePool: 3000000 },
+       { id: "W_CLUB", name: "Mundial de Clubes", country: "Global", type: 'GLOBAL', tier: 1, continent: "Global", confederation: "FIFA", defaultPrizePool: 5000000 },
+     ];
 
-    this.loadRealClubs(ARG_PRIMERA, "L_ARG_1");
-    this.loadRealClubs(ARG_NACIONAL, "L_ARG_2");
-    this.loadRealClubs([...CONT_CLUBS, ...CONT_CLUBS_TIER2], "L_SAM_OTHER");
-    this.loadRealClubs(WORLD_BOSSES, "L_EUR_ELITE");
+     this.loadRealClubs(ARG_PRIMERA, "L_ARG_1");
+     this.loadRealClubs(ARG_NACIONAL, "L_ARG_2");
+     this.loadRealClubs([...CONT_CLUBS, ...CONT_CLUBS_TIER2], "L_SAM_OTHER");
+     this.loadRealClubs(BRA_SERIE_A, "L_BRA_1");
+     this.loadRealClubs(BRA_SERIE_B, "L_BRA_2");
+     this.loadRealClubs(ESP_LA_LIGA, "L_ESP_1");
+     this.loadRealClubs(ITA_SERIE_A, "L_ITA_1");
+     this.loadRealClubs(DEU_BUNDESLIGA, "L_DEU_1");
+     this.loadRealClubs(FRA_LIGUE_1, "L_FRA_1");
+     this.loadRealClubs(PRT_LIGA, "L_PRT_1");
+     this.loadRealClubs(NLD_EREDIVISIE, "L_NLD_1");
+     this.loadRealClubs(ENG_PREMIER, "L_ENG_1");
+     this.loadRealClubs(MEX_LIGA_MX, "L_MEX_1");
+     this.loadRealClubs(USA_MLS, "L_USA_1");
+     this.loadRealClubs(JPN_J1, "L_JPN_1");
+     this.loadRealClubs(CHI_PRIMERA, "L_CHI_1");
+     this.loadRealClubs(COL_LIGA, "L_COL_1");
+     this.loadRealClubs(URY_PRIMERA, "L_URY_1");
+     this.loadRealClubs(ECU_LIGA_PRO, "L_ECU_1");
+     this.loadRealClubs(PRY_DIVISION, "L_PRY_1");
+     this.loadRealClubs(BOL_DIVISION, "L_BOL_1");
+     this.loadRealClubs(VEN_LIGA, "L_VEN_1");
+     this.loadRealClubs(PER_LIGA1, "L_PER_1");
+     this.loadRealClubs(PRY_DIVISION_B, "L_PRY_2");
+     this.loadRealClubs(ENG_CHAMPIONSHIP, "L_ENG_2");
+     this.loadRealClubs(DEU_2_BUNDESLIGA, "L_DEU_2");
+     this.loadRealClubs(FRA_LIGUE_2, "L_FRA_2");
+     this.loadRealClubs(ITA_SERIE_B, "L_ITA_2");
+     this.loadRealClubs(JPN_J2, "L_JPN_2");
+     this.loadRealClubs(WORLD_BOSSES, "L_EUR_ELITE");
 
-    this.players.forEach(p => {
-       if (Math.random() < 0.08) {
-          if (p.age < 22 && p.currentAbility < 120 && p.potentialAbility > 140) p.transferStatus = 'LOANABLE';
-          else if (p.age > 28) p.transferStatus = 'TRANSFERABLE';
-       }
-    });
-  }
+     this.players.forEach(p => {
+        if (!p.relationships) p.relationships = {};
+        if (Math.random() < 0.08) {
+           if (p.age < 22 && p.currentAbility < 120 && p.potentialAbility > 140) p.transferStatus = 'LOANABLE';
+           else if (p.age > 28) p.transferStatus = 'TRANSFERABLE';
+        }
+     });
+   }
 
   loadRealClubs(definitions: RealClubDef[], leagueId: string) {
      definitions.forEach(def => {
@@ -68,6 +125,7 @@ export class WorldManager {
             honours: this.generateRandomHonours(),
              trainingFacilities: Math.min(20, Math.floor(def.rep / 500) + randomInt(-2, 2)),
              youthFacilities: Math.min(20, Math.floor(def.rep / 550) + randomInt(-3, 3)),
+              scoutingRegion: ["ARG", "BRA", "URU", "CHL", "COL", "ECU", "PAR", "PER", "URY", "VEN", "BOL", "GLO"][randomInt(0, 11)] as const,
              boardConfidence: 65 + randomInt(0, 25),
               seasonObjective: def.rep > 4000 ? 'TOP_4' : def.rep > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION',
               shortlistedPlayerIds: [],
@@ -81,11 +139,57 @@ export class WorldManager {
      });
   }
 
-  getClub(id: string) { return this.clubs.find(c => c.id === id); }
-  getPlayersByClub(clubId: string) { return this.players.filter(p => p.clubId === clubId); }
-  getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === clubId); }
-  getLeagues() { return this.competitions.filter(c => c.type === 'LEAGUE'); }
-  getTactics() { return this.tactics; }
+   getClub(id: string) { return this.clubs.find(c => c.id === id); }
+   getPlayer(id: string) { return this.players.find(p => p.id === id); }
+   getPlayersByClub(clubId: string) { return this.players.filter(p => p.clubId === clubId); }
+   getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === clubId); }
+   getLeagues() { return this.competitions.filter(c => c.type === 'LEAGUE'); }
+   getTactics() { return this.tactics; }
+
+   ensureRelationship(personA: string, personB: string) {
+     if (!this.relationshipWeb[personA]) this.relationshipWeb[personA] = {};
+     if (!this.relationshipWeb[personB]) this.relationshipWeb[personB] = {};
+     if (!this.relationshipWeb[personA][personB]) this.relationshipWeb[personA][personB] = { trust: 50, respect: 50, tension: 0 };
+     if (!this.relationshipWeb[personB][personA]) this.relationshipWeb[personB][personA] = { trust: 50, respect: 50, tension: 0 };
+   }
+
+   adjustRelationship(personA: string, personB: string, trust = 0, respect = 0, tension = 0) {
+     this.ensureRelationship(personA, personB);
+     const rel = this.relationshipWeb[personA][personB];
+     rel.trust = Math.max(0, Math.min(100, rel.trust + trust));
+     rel.respect = Math.max(0, Math.min(100, rel.respect + respect));
+     rel.tension = Math.max(0, Math.min(100, rel.tension + tension));
+   }
+
+   getRelationship(personA: string, personB: string) {
+     this.ensureRelationship(personA, personB);
+     return this.relationshipWeb[personA][personB];
+   }
+
+   recordInteraction(entry: InteractionLogEntry) {
+     this.interactionLog.push(entry);
+     if (this.interactionLog.length > 300) this.interactionLog.shift();
+   }
+
+   addReputationalBuff(source: string, type: string, value: number, days = 30, date = new Date()) {
+     this.activeReputationalBuffs.push({ id: generateUUID(), source, type, value, expiresAt: new Date(date.getTime() + days * 24 * 60 * 60 * 1000) });
+   }
+
+   getActiveBuffsFor(entityId: string) {
+     const now = new Date();
+     return this.activeReputationalBuffs.filter(b => b.source === entityId && b.expiresAt >= now);
+   }
+
+   decayRelationships() {
+     Object.keys(this.relationshipWeb).forEach(a => {
+       Object.keys(this.relationshipWeb[a]).forEach(b => {
+         const rel = this.relationshipWeb[a][b];
+         rel.trust = Math.max(0, rel.trust - 0.1);
+         rel.respect = Math.max(0, rel.respect - 0.05);
+         rel.tension = Math.max(0, rel.tension - 0.15);
+       });
+     });
+   }
 
   updateClubMonthlyExpenses(clubId: string) {
     const club = this.getClub(clubId);
@@ -169,17 +273,18 @@ export class WorldManager {
         };
      }
 
-     return {
-        id: generateUUID(), name: def.name, photo: def.photo, age: age, birthDate,
-        height: 180, weight: 75, nationality: def.nationality, positions: [primaryPos], secondaryPositions: [],
-        stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 },
-        statsByCompetition: {}, history: [], currentAbility: def.ca, potentialAbility: def.pa,
-        reputation: def.ca * 45, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR',
-        value: Math.round(def.ca * def.ca * 2500), salary: Math.round(def.ca * 2500 / 10) * 10,
-        transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty,
-        negotiationAttempts: 0, isUnhappyWithContract: false, developmentTrend: 'STABLE', yellowCardsAccumulated: 0,
-        formRatings: [], isTransferListed: false,
-        injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02)
+      return {
+         id: generateUUID(), name: def.name, photo: def.photo, age: age, birthDate,
+         height: 180, weight: 75, nationality: def.nationality, positions: [primaryPos], secondaryPositions: [],
+         stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 },
+         statsByCompetition: {}, history: [], currentAbility: def.ca, potentialAbility: def.pa,
+         reputation: def.ca * 45, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR',
+         value: Math.round(def.ca * def.ca * 2500), salary: Math.round(def.ca * 2500 / 10) * 10,
+         transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty,
+         negotiationAttempts: 0, isUnhappyWithContract: false, developmentTrend: 'STABLE', yellowCardsAccumulated: 0,
+         formRatings: [], isTransferListed: false,
+         injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02),
+         relationships: {}
       };
    }
 
@@ -215,7 +320,13 @@ export class WorldManager {
         id: generateUUID(), name: `${STAFF_NAMES.names[randomInt(0, STAFF_NAMES.names.length-1)]} ${STAFF_NAMES.surnames[randomInt(0, STAFF_NAMES.surnames.length-1)]}`,
         age: randomInt(35, 65), nationality: "Argentina", role: role, clubId: clubId,
         attributes: { coaching: weightedRandom(8, 20), judgingAbility: role === 'SCOUT' ? weightedRandom(12, 20) : weightedRandom(8, 20), judgingPotential: role === 'SCOUT' ? weightedRandom(12, 20) : weightedRandom(8, 20), tacticalKnowledge: weightedRandom(10, 20), adaptability: weightedRandom(5, 20), medical: role === 'PHYSIO' ? 18 : 5, physiotherapy: role === 'PHYSIO' ? 18 : 5, motivation: weightedRandom(8, 20), manManagement: weightedRandom(8, 20) },
-        salary: randomInt(3000, 15000), contractExpiry: new Date(2010, 5, 30), history: []
+        salary: randomInt(3000, 15000), contractExpiry: new Date(2010, 5, 30), history: [],
+        personality: ['LEADER', 'PASSIONATE', 'CALM', 'DISCIPLINARIAN', 'VISIONARY'][randomInt(0, 4)],
+        morale: 70,
+        reputation: 50,
+        relationships: {},
+        pressReputation: 50,
+        boardRelationship: 60
       };
       this.staff.push(s);
     });
@@ -251,7 +362,7 @@ export class WorldManager {
     }
 
     return {
-        id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, releaseClause: Math.round(ca * ca * 2000 * 3), yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false, injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02)
+        id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, releaseClause: Math.round(ca * ca * 2000 * 3), yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false, injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02), relationships: {}
     };
   }
 
@@ -426,7 +537,7 @@ export class WorldManager {
   }
 
   createHumanManager(clubId: string, name: string) {
-    const manager: Staff = { id: generateUUID(), name, age: 35, nationality: "Argentina", role: 'HEAD_COACH', clubId, attributes: { coaching: 12, judgingAbility: 12, judgingPotential: 11, tacticalKnowledge: 10, adaptability: 10, medical: 2, physiotherapy: 2, motivation: 14, manManagement: 13 }, salary: 12000, contractExpiry: new Date(2009, 5, 30), history: [] };
+    const manager: Staff = { id: generateUUID(), name, age: 35, nationality: "Argentina", role: 'HEAD_COACH', clubId, attributes: { coaching: 12, judgingAbility: 12, judgingPotential: 11, tacticalKnowledge: 10, adaptability: 10, medical: 2, physiotherapy: 2, motivation: 14, manManagement: 13 }, salary: 12000, contractExpiry: new Date(2009, 5, 30), history: [], personality: 'LEADER', morale: 100, reputation: 55, relationships: {}, pressReputation: 50, boardRelationship: 65 };
     this.staff = this.staff.filter(s => s.clubId !== clubId || s.role !== 'HEAD_COACH');
     this.staff.unshift(manager);
   }
@@ -609,6 +720,37 @@ export class WorldManager {
         fromClubId: club.id, toClubId: target.clubId,
         amount: 0, wageShare: 50, type: 'LOAN',
         status: 'PENDING', date, responseDate: date, isViewed: false
+      };
+      this.offers.push(offer);
+    });
+
+    // AI Youth Loan System: loan out promising U20 players for development
+    allClubs.forEach(club => {
+      const candidates = this.getPlayersByClub(club.id).filter(p =>
+        p.squad === 'U20' &&
+        p.age >= 17 &&
+        p.age <= 20 &&
+        !p.injury &&
+        !p.loanDetails &&
+        (p.currentAbility >= 80 || p.potentialAbility >= 120)
+      );
+      if (candidates.length === 0) return;
+      const target = candidates[Math.floor(Math.random() * candidates.length)];
+      const destinations = allClubs.filter(c => c.id !== club.id && this.getPlayersByClub(c.id).filter(pp => pp.squad === 'U20').length < 5);
+      if (destinations.length === 0) return;
+      const toClub = destinations[Math.floor(Math.random() * destinations.length)];
+      const offer: TransferOffer = {
+        id: generateUUID(),
+        playerId: target.id,
+        fromClubId: club.id,
+        toClubId: toClub.id,
+        amount: 0,
+        wageShare: 70,
+        type: 'LOAN',
+        status: 'PENDING',
+        date,
+        responseDate: date,
+        isViewed: false
       };
       this.offers.push(offer);
     });
@@ -974,27 +1116,6 @@ export class WorldManager {
     return comps;
   }
 
-  generateYouthIntake(year: number) {
-    this.clubs.forEach(club => {
-      const youthCount = 3 + randomInt(0, Math.min(3, Math.floor(club.youthFacilities / 5)));
-      for (let i = 0; i < youthCount; i++) {
-        const posPool = [Position.GK, Position.DC, Position.DL, Position.DR, Position.DM, Position.MC, Position.ML, Position.MR, Position.AM, Position.AML, Position.AMR, Position.ST, Position.STR, Position.STL];
-        const pos = posPool[randomInt(0, posPool.length - 1)];
-        const age = 15 + randomInt(0, 3);
-        const youthBonus = club.youthFacilities / 20;
-        const repBonus = club.reputation / 1000;
-        const ca = randomInt(30, Math.round(60 + youthBonus * 20 + repBonus * 15));
-        const pa = Math.min(200, ca + randomInt(10, 60 + Math.round(youthBonus * 30)));
-        const player = this.createRandomPlayer(club.id, pos, age, age, year);
-        player.currentAbility = ca;
-        player.potentialAbility = pa;
-        player.squad = 'U20';
-        player.value = Math.round(ca * pa * 10);
-        player.salary = Math.round(ca * 200 / 12);
-        this.players.push(player);
-      }
-    });
-  }
 
   recalculatePlayerValue(p: Player): number {
     const base = Math.round(p.currentAbility * p.currentAbility * 2000);
@@ -1011,11 +1132,76 @@ export class WorldManager {
     return Math.round(base * formMult * ageMult * contractMult);
   }
 
-  recalculateAllPlayerValues() {
-    for (const p of this.players) {
-      p.value = this.recalculatePlayerValue(p);
-    }
-  }
-}
+recalculateAllPlayerValues() {
+     for (const p of this.players) {
+       p.value = this.recalculatePlayerValue(p);
+     }
+   }
 
-export const world = new WorldManager();
+generateYouthIntake(year: number) {
+      this.clubs.forEach(club => {
+        const youthCount = 3 + randomInt(0, Math.min(3, Math.floor(club.youthFacilities / 5)));
+        for (let i = 0; i < youthCount; i++) {
+          const posPool = [Position.GK, Position.DC, Position.DL, Position.DR, Position.DM, Position.MC, Position.ML, Position.MR, Position.AM, Position.AML, Position.AMR, Position.ST, Position.STR, Position.STL];
+          const pos = posPool[randomInt(0, posPool.length - 1)];
+          const age = 15 + randomInt(0, 3);
+          
+          // Determine nationality based on scouting region
+          let nationality: string;
+          switch (club.scoutingRegion) {
+            case 'ARG':
+              nationality = 'Argentina';
+              break;
+            case 'BRA':
+              nationality = 'Brasil';
+              break;
+            case 'URU':
+              nationality = 'Uruguay';
+              break;
+            case 'CHL':
+              nationality = 'Chile';
+              break;
+            case 'COL':
+              nationality = 'Colombia';
+              break;
+            case 'ECU':
+              nationality = 'Ecuador';
+              break;
+            case 'PAR':
+              nationality = 'Paraguay';
+              break;
+            case 'PER':
+              nationality = 'Perú';
+              break;
+            case 'VEN':
+              nationality = 'Venezuela';
+              break;
+            case 'BOL':
+              nationality = 'Bolivia';
+              break;
+            default:
+              // GLO or other regions - mostly Argentine with some neighbors
+              if (Math.random() < 0.1) nationality = 'Uruguay';
+              else if (Math.random() < 0.05) nationality = 'Chile';
+              else if (Math.random() < 0.05) nationality = 'Brasil';
+              else nationality = 'Argentina';
+              break;
+          }
+          
+          const youthBonus = club.youthFacilities / 20;
+          const repBonus = club.reputation / 1000;
+          const ca = randomInt(30, Math.round(60 + youthBonus * 20 + repBonus * 15));
+          const pa = Math.min(200, ca + randomInt(10, 60 + Math.round(youthBonus * 30)));
+          const player = this.createRandomPlayer(club.id, pos, age, age, year);
+          player.nationality = nationality; // Override the nationality based on scouting region
+          player.currentAbility = ca;
+          player.potentialAbility = pa;
+          player.squad = 'U20';
+          player.value = Math.round(ca * pa * 10);
+          player.salary = Math.round(ca * 200 / 12);
+          this.players.push(player);
+        }
+      });
+    }
+}
+ export const world = new WorldManager();

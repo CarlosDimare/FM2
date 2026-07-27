@@ -121,14 +121,14 @@
 ### Cantera y Desarrollo
 - [ ] **Calidad de hornada según captación** — `youthRecruitment` como atributo del club (implementado via youthFacilities)
 - [ ] **Regiones de captación** — Asignar regiones para buscar talento
-- [ ] **Préstamos de jóvenes** — Enviar a juveniles a préstamo para desarrollo
-- [ ] **Curvas de desarrollo por edad** — Refinar curvas existentes para YOUNG/PRIME/VETERAN
+- [x] **Préstamos de jóvenes** — La IA ofrece cesiones de juveniles U17-U20 a otros clubes para desarrollo, con wageShare mayoritario para el club origen
+- [x] **Curvas de desarrollo por edad** — Fases granulares EARLY_YOUTH/YOUTH/EARLY_PRIME/PRIME/LATE_PRIME/VETERAN con multiplicadores por edad y bonus del 25% si la nacionalidad coincide con `scoutingRegion` del club
 
 ### UI/UX
 - **Tema oscuro** — Toggle en encabezado (luna/sol), CSS variables, persistencia en guardado (`darkMode` en gameStore)
-- **Onboarding** — Tutorial interactivo para nuevos jugadores
+- **Onboarding** — Tour interactivo de 6 pasos (`OnboardingTour`) con highlight sobre elementos DOM, persistente en `localStorage`, repetible desde `SettingsModal`
 - **Notificaciones push** — Para PWA cuando el juego está en segundo plano
-- [ ] **Responsive** — Probar y ajustar para tablets
+- [x] **Responsive** — Vista tablet intermedia (`md:block lg:hidden`) en `SquadView` y `LeagueTable`, `BottomNav` oculto en `lg`, sidebar fijo adaptable en tablets
 
 ### Guardado
 - **Múltiples slots** — Lista de guardados con nombre personalizado, fecha, equipo (mejorado: selector en modal y sobrescritura desde el mismo)
@@ -138,7 +138,7 @@
 ### Economía
 - [x] **Ingresos mensuales** — Abonos, patrocinios, merchandising aplicados al balance cada día 1 del mes, desglose visible en EconomyView
 - [x] **Gastos mensuales** — Sueldos del staff y mantenimiento operativo, aplicados junto con ingresos
-- **Presupuesto dinámico** — Ajustes de presupuesto según rendimiento financiero
+- [x] **Presupuesto dinámico** — `transferBudget` ajustado mensualmente: +10% del beneficio neto positivo, -15% del déficit si supera $50.000 mensuales
 
 ### Red Social / Multijugador
 - [ ] **Clasificaciones online** — Comparar logros con otros managers

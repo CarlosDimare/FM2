@@ -75,12 +75,15 @@ export class LifecycleManager {
 
         club.finances.monthlyIncome = 0;
         club.finances.transferBudget += Math.round(lastMonthIncome * 0.05);
-        if (club.id === (world as any).userClubId && month === 6) {
-          // No-op, evitar warning
+
+        const monthlyNet = lastMonthIncome - lastMonthExpenses;
+        if (monthlyNet > 0) {
+          club.finances.transferBudget += Math.round(monthlyNet * 0.1);
+        } else if (monthlyNet < -50000) {
+          club.finances.transferBudget = Math.max(0, club.finances.transferBudget + Math.round(monthlyNet * 0.15));
         }
-        void month;
-     });
-  }
+      });
+   }
 
   // New: Decrement suspensions for clubs that just played
   static processPostMatchSuspensions(homeTeamId: string, awayTeamId: string, homeRedCards = 0, awayRedCards = 0) {
@@ -546,11 +549,45 @@ export class LifecycleManager {
      const totalIntensity = Object.values(schedule).reduce((a, b) => a + b, 0);
      const intensityFactor = Math.min(2, totalIntensity / 56);
 
-     let phase: 'YOUNG' | 'PRIME' | 'VETERAN' = 'PRIME';
-     if (p.age < 24) phase = 'YOUNG';
-     else if (p.age > 30) phase = 'VETERAN';
+      let phase: 'EARLY_YOUTH' | 'YOUTH' | 'EARLY_PRIME' | 'PRIME' | 'LATE_PRIME' | 'VETERAN' = 'PRIME';
+      if (p.age <= 17) phase = 'EARLY_YOUTH';
+      else if (p.age <= 21) phase = 'YOUTH';
+      else if (p.age <= 25) phase = 'EARLY_PRIME';
+      else if (p.age <= 29) phase = 'PRIME';
+      else if (p.age <= 32) phase = 'LATE_PRIME';
+      else phase = 'VETERAN';
 
-     let totalChange = 0;
+      let phaseMultiplier = 1.0;
+      switch (phase) {
+        case 'EARLY_YOUTH': phaseMultiplier = 1.2; break;
+        case 'YOUTH': phaseMultiplier = 1.1; break;
+        case 'EARLY_PRIME': phaseMultiplier = 1.0; break;
+        case 'PRIME': phaseMultiplier = 0.95; break;
+        case 'LATE_PRIME': phaseMultiplier = 0.85; break;
+        case 'VETERAN': phaseMultiplier = 0.6; break;
+      }
+
+      const club = world.getClub(p.clubId);
+      const scoutingBonus = (() => {
+        if (!club || phase !== 'YOUTH' && phase !== 'EARLY_YOUTH') return 1.0;
+        const regionMap: Record<string, string[]> = {
+          ARG: ['Argentina'],
+          BRA: ['Brasil'],
+          URU: ['Uruguay'],
+          CHL: ['Chile'],
+          COL: ['Colombia'],
+          ECU: ['Ecuador'],
+          PAR: ['Paraguay'],
+          PER: ['Perú'],
+          VEN: ['Venezuela'],
+          BOL: ['Bolivia'],
+        };
+        const targets = regionMap[club.scoutingRegion];
+        if (!targets || !targets.includes(p.nationality)) return 1.0;
+        return targets.includes(p.nationality) ? 1.25 : 1.0;
+      })();
+
+      const finalGrowthFactor = growthFactor * phaseMultiplier * scoutingBonus;
 
      const getTrainingBias = (attrGroup: string, attrKey: string): number => {
        const trainingMap: Record<string, Record<string, string[]>> = {
@@ -589,56 +626,63 @@ export class LifecycleManager {
        return Math.max(0.3, bias);
      };
 
-     if (phase === 'YOUNG') {
-        if (p.currentAbility < p.potentialAbility) {
-           const chance = 0.4 * growthFactor * intensityFactor;
-           Object.keys(technical).forEach(k => {
-             if ((technical as any)[k] < 20 && Math.random() < chance * getTrainingBias('technical', k)) { (technical as any)[k]++; totalChange++; }
-           });
-           Object.keys(physical).forEach(k => {
-             if ((physical as any)[k] < 20 && Math.random() < (chance * 0.7) * getTrainingBias('physical', k)) { (physical as any)[k]++; totalChange++; }
-           });
-           Object.keys(mental).forEach(k => {
-             if ((mental as any)[k] < 20 && Math.random() < (chance * 0.3) * getTrainingBias('mental', k)) { (mental as any)[k]++; totalChange++; }
-           });
-        }
-     } 
-     else if (phase === 'PRIME') {
-        const mentalChance = 0.3 * growthFactor * intensityFactor;
-        Object.keys(mental).forEach(k => {
-          if ((mental as any)[k] < 20 && Math.random() < mentalChance * getTrainingBias('mental', k)) { (mental as any)[k]++; totalChange++; }
-        });
-        if (avgRating > 7.2 && p.currentAbility < p.potentialAbility) {
-           const keys = Object.keys(technical);
-           const weights = keys.map(k => getTrainingBias('technical', k));
-           const totalW = weights.reduce((a, b) => a + b, 0);
-           let r = Math.random() * totalW;
-           for (let i = 0; i < keys.length; i++) {
-             r -= weights[i];
-             if (r <= 0) {
-               if ((technical as any)[keys[i]] < 20) { (technical as any)[keys[i]]++; totalChange++; }
-               break;
-             }
-           }
-        }
-     }
-     else {
-        const declineBase = (p.age - 30) * 0.15;
-        const trainingMitigation = intensityFactor * 0.1;
-        const mitigation = (p.stats.physical.naturalFitness / 40) + (growthFactor * 0.2) + trainingMitigation;
-        const declineChance = Math.max(0.05, declineBase - mitigation);
-        Object.keys(physical).forEach(k => {
-          if ((physical as any)[k] > 1 && Math.random() < declineChance) { (physical as any)[k]--; totalChange--; }
-        });
-        Object.keys(technical).forEach(k => {
-          if ((technical as any)[k] > 1 && Math.random() < (declineChance * 0.5)) { (technical as any)[k]--; totalChange--; }
-        });
-        if (Math.random() < 0.3) {
-            const mKeys = ['decisions', 'positioning', 'anticipation', 'leadership', 'composure'];
-            const k = mKeys[randomInt(0, mKeys.length - 1)];
-            if ((mental as any)[k] < 20) { (mental as any)[k]++; totalChange++; }
-        }
-     }
+      if (phase === 'EARLY_YOUTH' || phase === 'YOUTH') {
+         if (p.currentAbility < p.potentialAbility) {
+            const baseChance = phase === 'EARLY_YOUTH' ? 0.45 : 0.35;
+            const chance = baseChance * finalGrowthFactor * intensityFactor;
+            Object.keys(technical).forEach(k => {
+              if ((technical as any)[k] < 20 && Math.random() < chance * getTrainingBias('technical', k)) { (technical as any)[k]++; totalChange++; }
+            });
+            Object.keys(physical).forEach(k => {
+              if ((physical as any)[k] < 20 && Math.random() < (chance * 0.75) * getTrainingBias('physical', k)) { (physical as any)[k]++; totalChange++; }
+            });
+            Object.keys(mental).forEach(k => {
+              if ((mental as any)[k] < 20 && Math.random() < (chance * 0.3) * getTrainingBias('mental', k)) { (mental as any)[k]++; totalChange++; }
+            });
+         }
+      }
+      else if (phase === 'EARLY_PRIME' || phase === 'PRIME') {
+         const mentalChance = 0.3 * finalGrowthFactor * intensityFactor;
+         Object.keys(mental).forEach(k => {
+           if ((mental as any)[k] < 20 && Math.random() < mentalChance * getTrainingBias('mental', k)) { (mental as any)[k]++; totalChange++; }
+         });
+         if (avgRating > 7.2 && p.currentAbility < p.potentialAbility) {
+            const keys = Object.keys(technical);
+            const weights = keys.map(k => getTrainingBias('technical', k));
+            const totalW = weights.reduce((a, b) => a + b, 0);
+            let r = Math.random() * totalW;
+            for (let i = 0; i < keys.length; i++) {
+              r -= weights[i];
+              if (r <= 0) {
+                if ((technical as any)[keys[i]] < 20) { (technical as any)[keys[i]]++; totalChange++; }
+                break;
+              }
+            }
+         }
+      }
+      else if (phase === 'LATE_PRIME') {
+         const mentalChance = 0.25 * finalGrowthFactor * intensityFactor;
+         Object.keys(mental).forEach(k => {
+           if ((mental as any)[k] < 20 && Math.random() < mentalChance * getTrainingBias('mental', k)) { (mental as any)[k]++; totalChange++; }
+         });
+      }
+      else {
+         const declineBase = (p.age - 30) * 0.15;
+         const trainingMitigation = intensityFactor * 0.1;
+         const mitigation = (p.stats.physical.naturalFitness / 40) + (finalGrowthFactor * 0.2) + trainingMitigation;
+         const declineChance = Math.max(0.05, declineBase - mitigation);
+         Object.keys(physical).forEach(k => {
+           if ((physical as any)[k] > 1 && Math.random() < declineChance) { (physical as any)[k]--; totalChange--; }
+         });
+         Object.keys(technical).forEach(k => {
+           if ((physical as any)[k] > 1 && Math.random() < (declineChance * 0.5)) { (technical as any)[k]--; totalChange--; }
+         });
+         if (Math.random() < 0.3) {
+             const mKeys = ['decisions', 'positioning', 'anticipation', 'leadership', 'composure'];
+             const k = mKeys[randomInt(0, mKeys.length - 1)];
+             if ((mental as any)[k] < 20) { (mental as any)[k]++; totalChange++; }
+         }
+      }
 
      // Added type casting to resolve arithmetic operation errors on unknown values
      const avgTech = (Object.values(technical) as number[]).reduce((a,b) => a+b, 0) / Object.values(technical).length;

@@ -117,8 +117,10 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
   };
 
   const desktopHeaders = ['Pos', 'Nombre', 'Edad', 'Prog', 'Forma', 'Sueldo', 'Fis', 'Mor', 'Valor'];
+  const tabletHeaders = ['Pos', 'Nombre', 'Edad', 'Prog', 'Forma', 'Sueldo', 'Fis', 'Valor'];
   const mobileHeaders = ['Pos', 'Nombre', 'Edad', 'Fis', 'Valor'];
   const desktopWidths = ['45px', 'auto', '35px', '35px', '60px', '75px', '40px', '40px', '85px'];
+  const tabletWidths = ['45px', 'auto', '35px', '35px', '60px', '75px', '40px', '85px'];
   const mobileWidths = ['45px', 'auto', '35px', '40px', '80px'];
 
   return (
@@ -157,9 +159,49 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
         )}
       </div>
       <FMBox title={customTitle || `Plantilla (${players.length})`} className="flex-1" noPadding>
+        {/* Tablet Table View */}
+        <div className="hidden md:block lg:hidden h-full overflow-hidden">
+            <FMTable
+                headers={tabletHeaders}
+                colWidths={tabletWidths}
+                onHeaderClick={handleHeaderClick}
+            >
+                {sortedPlayers.map((player, idx) => (
+                    <tr
+                    key={player.id}
+                    onClick={() => onSelectPlayer(player)}
+                    onContextMenu={(e) => onContextMenu && onContextMenu(e, player)}
+                    className={`
+                        cursor-pointer transition-colors border-b border-[#e0e0e0]
+                        ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
+                        hover:bg-[#ccd9cc]
+                        ${player.isStarter ? 'font-bold' : ''}
+                    `}
+                    >
+                    <FMTableCell className="text-center text-slate-700 font-bold">{player.positions[0]}</FMTableCell>
+                    <FMTableCell className="text-slate-900">
+                        <div className="flex items-center min-w-0">
+                            <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-slate-300" />
+                            <span className="truncate">{player.name}</span>
+                            {getStatusIcons(player)}
+                        </div>
+                    </FMTableCell>
+                    <FMTableCell className="text-center font-bold" isNumber>{player.age}</FMTableCell>
+                    <FMTableCell className="text-center">{renderTrend(player.developmentTrend)}</FMTableCell>
+                    <FMTableCell className="text-center">{renderFormDots(player.formRatings)}</FMTableCell>
+                    <FMTableCell className="text-right font-bold" isNumber>£{(player.salary / 1000).toFixed(0)}k</FMTableCell>
+                    <FMTableCell className="text-center font-bold" isNumber>
+                        <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-700'}>{Math.round(player.fitness)}%</span>
+                    </FMTableCell>
+                    <FMTableCell className="text-right font-black" isNumber>£{(player.value / 1000000).toFixed(1)}M</FMTableCell>
+                    </tr>
+                ))}
+            </FMTable>
+        </div>
+
         {/* Desktop Table View */}
-        <div className="hidden md:block h-full overflow-hidden">
-            <FMTable 
+        <div className="hidden lg:block h-full overflow-hidden">
+            <FMTable
                 headers={desktopHeaders}
                 colWidths={desktopWidths}
                 onHeaderClick={handleHeaderClick}

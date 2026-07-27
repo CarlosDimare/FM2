@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 
@@ -16,42 +15,42 @@ export interface OnboardingStep {
 export const DEFAULT_STEPS: OnboardingStep[] = [
   {
     id: 'welcome',
-    title: '¡Bienvenido a FM Argentina!',
-    body: 'Te convertirás en el director técnico de un club argentino. Esta guía rápida te mostrará las funciones clave de la interfaz.',
+    title: 'Bienvenido a FM Argentina',
+    body: 'Te convertiras en el director tecnico de un club argentino. Esta guia rapida te mostrara las funciones clave.',
     position: 'center'
   },
   {
     id: 'next_match',
     targetId: 'home-next-match',
     viewRequired: 'HOME',
-    title: 'Próximo Encuentro',
-    body: 'Aquí ves tu próximo partido. Puedes iniciar el encuentro con la barra espaciadora o haciendo clic en "Jugar".',
+    title: 'Proximo Encuentro',
+    body: 'Aqui ves tu proximo partido. Inicia el encuentro con la barra espaciadora o clic en Jugar.',
     position: 'bottom'
   },
   {
     id: 'sidebar',
     targetId: 'main-sidebar',
-    title: 'Menú Principal',
-    body: 'El menú lateral te da acceso a Plantel, Tácticas, Mercado, Calendario, Economía y Directiva.',
+    title: 'Menu Principal',
+    body: 'El menu lateral da acceso a Plantel, Tacticas, Mercado, Calendario, Economia y Directiva.',
     position: 'right'
   },
   {
     id: 'header_actions',
     targetId: 'header-actions',
-    title: 'Avanzar tiempo y guardar',
-    body: 'Usa la barra espaciadora para avanzar al siguiente día. También puedes guardar y abrir el buzón desde aquí.',
+    title: 'Avanzar y guardar',
+    body: 'Usa la barra espaciadora para avanzar al siguiente dia. Tambien puedes guardar y abrir el buzon aqui.',
     position: 'bottom'
   },
   {
     id: 'inbox',
     targetId: 'header-inbox',
-    title: 'Buzón de noticias',
-    body: 'Toda la información relevante (fichajes, lesiones, sanciones, ofertas) llega a tu buzón.',
+    title: 'Buzon de noticias',
+    body: 'Fichajes, lesiones, sanciones y ofertas de trabajo llegan a tu buzon.',
     position: 'bottom'
   },
   {
     id: 'finish',
-    title: '¡Listo para empezar!',
+    title: 'Listo para empezar',
     body: 'Pulsa la barra espaciadora para avanzar al primer partido. Mucha suerte en tu carrera.',
     position: 'center'
   }
@@ -82,12 +81,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ active, currentV
       return;
     }
     const el = document.getElementById(step.targetId);
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      setTargetRect(rect);
-    } else {
-      setTargetRect(null);
-    }
+    if (el) setTargetRect(el.getBoundingClientRect());
+    else setTargetRect(null);
   }, [stepIdx, active, currentView, steps]);
 
   if (!active) return null;
@@ -103,16 +98,14 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ active, currentV
     if (stepIdx > 0) setStepIdx(stepIdx - 1);
   };
   const finish = () => {
-    try { localStorage.setItem(STORAGE_KEY, '1'); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) { void e; }
     onComplete();
   };
 
   const isCenter = step.position === 'center' || !step.targetId;
-  const tooltipStyle: React.CSSProperties = isCenter
+  const tooltipStyle: React.CSSProperties = isCenter || !targetRect
     ? { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }
-    : targetRect
-      ? computeTooltipStyle(targetRect, step.position || 'bottom')
-      : { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
+    : computeTooltipStyle(targetRect, step.position || 'bottom');
 
   return (
     <div className="fixed inset-0 z-[300] pointer-events-none">
@@ -144,19 +137,19 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ active, currentV
             <X size={16} />
          </button>
        </div>
-        <h3 className="font-black text-slate-900 text-sm uppercase italic mb-2">{step.title</h3>
-        <p className="text-[11px] text-slate-700 leading-snug mb-3">{step.body</p>
+        <h3 className="font-black text-slate-900 text-sm uppercase italic mb-2">{step.title}</h3>
+        <p className="text-[11px] text-slate-700 leading-snug mb-3">{step.body}</p>
         <div className="flex justify-between items-center">
           <button
             onClick={handlePrev}
             disabled={stepIdx === 0}
             className="text-[10px] font-bold uppercase flex items-center gap-1 text-slate-500 hover:text-slate-800 disabled:opacity-30"
           >
-            <ChevronLeft size={12} /> Atrás
+            <ChevronLeft size={12} /> Atras
          </button>
           <div className="flex gap-1">
             {steps.map((_, i) => (
-              <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === stepIdx ? 'bg-slate-700' : 'bg-slate-300'}`} />
+              <div key={i} className={'w-1.5 h-1.5 rounded-full ' + (i === stepIdx ? 'bg-slate-700' : 'bg-slate-300')} />
             ))}
          </div>
           <button
@@ -184,22 +177,22 @@ function computeTooltipStyle(rect: DOMRect, pos: 'top' | 'bottom' | 'left' | 'ri
     case 'bottom':
       return {
         left: Math.max(8, Math.min(vw - TOOLTIP_W - 8, centerX - TOOLTIP_W / 2)),
-        top: rect.bottom + margin,
+        top: rect.bottom + margin
       };
     case 'top':
       return {
         left: Math.max(8, Math.min(vw - TOOLTIP_W - 8, centerX - TOOLTIP_W / 2)),
-        top: Math.max(8, rect.top - TOOLTIP_H - margin),
+        top: Math.max(8, rect.top - TOOLTIP_H - margin)
       };
     case 'right':
       return {
         left: Math.min(vw - TOOLTIP_W - 8, rect.right + margin),
-        top: Math.max(8, Math.min(vh - TOOLTIP_H - 8, centerY - TOOLTIP_H / 2)),
+        top: Math.max(8, Math.min(vh - TOOLTIP_H - 8, centerY - TOOLTIP_H / 2))
       };
     case 'left':
       return {
         left: Math.max(8, rect.left - TOOLTIP_W - margin),
-        top: Math.max(8, Math.min(vh - TOOLTIP_H - 8, centerY - TOOLTIP_H / 2)),
+        top: Math.max(8, Math.min(vh - TOOLTIP_H - 8, centerY - TOOLTIP_H / 2))
       };
     default:
       return { left: centerX - TOOLTIP_W / 2, top: rect.bottom + margin };
@@ -207,9 +200,9 @@ function computeTooltipStyle(rect: DOMRect, pos: 'top' | 'bottom' | 'left' | 'ri
 }
 
 export function isOnboarded(): boolean {
-  try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch { return false; }
+  try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch (e) { void e; return false; }
 }
 
 export function resetOnboarding() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) { void e; }
 }

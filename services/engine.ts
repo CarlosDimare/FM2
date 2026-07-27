@@ -60,8 +60,9 @@ export class ProfileNarrativeEngine {
 export class MatchSimulator {
   private static buildupPhase: Record<string, number> = {};
 
-  private static getEffectiveAttribute(p: Player, stats: Record<string, PlayerMatchStats>, category: 'mental' | 'technical' | 'physical', attr: string): number {
-    const base = (p.stats as any)[category][attr] || 10;
+  private static getEffectiveAttribute(p: Player, stats: Record<string, PlayerMatchStats>, category: 'mental' | 'technical' | 'physical' | 'goalkeeping', attr: string): number {
+    const group = (p.stats as any)[category];
+    const base = group && group[attr] !== undefined ? group[attr] : 10;
     const condition = stats[p.id]?.condition || 100;
     const moraleMult = 0.95 + (p.morale / 1000); 
     const fatigueMult = 1 - ((100 - condition) / 100 * 0.2);
@@ -372,7 +373,7 @@ export class MatchSimulator {
         const fkSkill = this.getEffectiveAttribute(kickTaker, newState.playerStats, 'technical', 'freeKickTaking');
         const technique = this.getEffectiveAttribute(kickTaker, newState.playerStats, 'technical', 'technique');
         const gk = fkDefPlayers.find(p => p.positions.includes(Position.GK)) || fkDefPlayers[0];
-        const reflexes = this.getEffectiveAttribute(gk, newState.playerStats, 'goalkeeping' as any, 'reflexes');
+        const reflexes = this.getEffectiveAttribute(gk, newState.playerStats, 'goalkeeping', 'reflexes');
 
         const fkQuality = (fkSkill * 0.7 + technique * 0.3) + (Math.random() * 8 - 4);
         const saveQuality = reflexes * (0.8 + Math.random() * 0.4);
@@ -446,7 +447,7 @@ export class MatchSimulator {
                 const shootingQuality = (finishing * 0.7 + technique * 0.3) - (pressurePenalty * 2.2) + (Math.random() * 8 - 4) + shootBonus;
                 
                 const gk = defPlayers.find(p => p.positions.includes(Position.GK)) || defPlayers[0];
-                const reflexes = this.getEffectiveAttribute(gk, newState.playerStats, 'goalkeeping' as any, 'reflexes');
+                const reflexes = this.getEffectiveAttribute(gk, newState.playerStats, 'goalkeeping', 'reflexes');
                 const positionGk = this.getEffectiveAttribute(gk, newState.playerStats, 'mental', 'positioning');
                 const saveQuality = (reflexes * 0.8 + positionGk * 0.2) * (0.9 + Math.random() * 0.4);
 

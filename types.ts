@@ -165,13 +165,14 @@ export interface Player {
   yellowCardsAccumulated: number;
   injury?: { type: string; daysLeft: number };
   injuryHistory: { type: string; days: number; date: Date }[];
-  injuryProneness: number; // 0-1, derivado del historial y naturalFitness
+  injuryProneness: number;
   suspension?: { matchesLeft: number };
   loanDetails?: { originalClubId: string; wageShare: number };
   lastMotiveInteraction?: Date;
   trainingSchedule?: TrainingSchedule;
   formRatings: number[];
   isTransferListed: boolean;
+  relationships: Record<string, { trust: number; respect: number; tension: number }>;
 }
 
 export interface Club {
@@ -196,6 +197,7 @@ export interface Club {
   honours: { name: string; year: number }[];
   trainingFacilities: number;
   youthFacilities: number;
+   scoutingRegion: 'ARG' | 'BRA' | 'URU' | 'CHL' | 'COL' | 'ECU' | 'PAR' | 'PER' | 'URY' | 'VEN' | 'BOL' | 'GLO';
   qualifiedFor?: string | null;
   trainingDelegatedTo?: string;
   boardConfidence: number;
@@ -212,8 +214,12 @@ export interface Competition {
   country: string;
   type: CompetitionType;
   tier: number;
+  continent: string;
+  confederation: string;
+  defaultPrizePool: number;
   squadRegistrationLimit?: number;
   u21Requirement?: number;
+  continentalSlots?: number;
 }
 
 export type MatchStage = 'REGULAR' | 'GROUP' | 'ROUND_OF_32' | 'ROUND_OF_16' | 'QUARTER_FINAL' | 'SEMI_FINAL' | 'FINAL';
@@ -432,9 +438,15 @@ export interface Staff {
   salary: number;
   contractExpiry: Date;
   history: StaffHistoryEntry[];
+  personality?: string;
+  morale?: number;
+  reputation?: number;
+  relationships?: Record<string, { trust: number; respect: number; tension: number }>;
+  pressReputation?: number;
+  boardRelationship?: number;
 }
 
-export type MessageCategory = 'MARKET' | 'SQUAD' | 'STATEMENTS' | 'FINANCE' | 'COMPETITION' | 'SCOUTING';
+export type MessageCategory = 'MARKET' | 'SQUAD' | 'STATEMENTS' | 'FINANCE' | 'COMPETITION' | 'SCOUTING' | 'PEOPLE';
 
 export interface ScoutingReport {
   id: string;
@@ -600,3 +612,31 @@ export const POSITION_FULL_NAMES: Record<string, string> = {
 export const POSITION_ORDER: Record<string, number> = {
   'P': 0, 'LIB': 1, 'DFC': 2, 'LD': 3, 'LI': 4, 'CD': 6, 'CI': 7, 'MCD': 5, 'MC': 8, 'MD': 9, 'MI': 10, 'MPC': 11, 'ED': 12, 'EI': 13, 'DC': 14, 'WD': 15, 'WI': 16
 };
+
+export type DialogueType = 'PRAISE_FORM' | 'CRITICIZE_FORM' | 'PRAISE_TRAINING' | 'DEMAND_MORE' | 'WARN_CONDUCT' | 'SET_CAPTAIN' | 'CHANGE_POSITION' | 'INDIVIDUAL_TRAINING_FOCUS' | 'THREATEN_TRANSFER' | 'GRANT_CAPTANCY' | 'ASSIGN_TRAINING' | 'DELEGATE_MATCH' | 'REPRIMAND' | 'PROMISE_RESOURCES' | 'SCOUTING_FOCUS';
+
+export type DialogueTone = 'MILD' | 'MODERATE' | 'AGGRESSIVE';
+
+export type InteractionChannel = 'COACH_PLAYER' | 'COACH_STAFF' | 'COACH_MANAGER' | 'COACH_PRESS' | 'COACH_BOARD';
+
+export interface InteractionLogEntry {
+  id: string;
+  date: Date;
+  channel: InteractionChannel;
+  actorId: string;
+  targetId: string;
+  type: DialogueType;
+  tone: DialogueTone;
+  result: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+  moraleChange: number;
+  tensionChange: number;
+  description: string;
+}
+
+export interface ReputationalBuff {
+  id: string;
+  source: string;
+  type: string;
+  value: number;
+  expiresAt: Date;
+}
