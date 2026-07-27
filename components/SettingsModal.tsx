@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
 import { world } from '../services/worldManager';
-import { X, Settings, PauseCircle, PlayCircle, Save } from 'lucide-react';
+import { X, Settings, PauseCircle, PlayCircle, Save, HelpCircle } from 'lucide-react';
 import { FMButton } from './FMUI';
+import { resetOnboarding } from './OnboardingTour';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -14,6 +15,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   const handleSave = () => {
     world.matchSettings.pauseAtHalftime = pauseAtHalftime;
     onClose();
+  };
+
+  const handleReplayTutorial = () => {
+    resetOnboarding();
+    onClose();
+    setTimeout(() => window.location.reload(), 100);
   };
 
   return (
@@ -66,8 +73,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
            <FMButton onClick={handleSave} className="w-full py-3">
               <Save size={14} /> Guardar Cambios
-           </FMButton>
-        </div>
+          </FMButton>
+           <FMButton onClick={handleReplayTutorial} variant="secondary" className="w-full py-2">
+              <HelpCircle size={14} /> Repetir Tutorial
+          </FMButton>
+       </div>
       </div>
     </div>
   );

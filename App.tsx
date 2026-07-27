@@ -636,7 +636,7 @@ const App: React.FC = () => {
             <div id="header-inbox" className="bg-slate-100 p-4 rounded-sm border border-slate-300 shadow-sm">
               <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-4 border-b border-slate-300 pb-1 flex items-center justify-between">
                 <div className="flex items-center gap-2"><Mail size={14} /> Últimas Noticias</div>
-                <button onClick={() => setView('INBOX')} className="text-[9px] text-blue-600 hover:underline flex items-center">Ver todo <ChevronRight size={10}</button>
+                <button onClick={() => setView('INBOX')} className="text-[9px] text-blue-600 hover:underline flex items-center">Ver todo <ChevronRight size={10} /> </button>
              </h3>
               <div className="space-y-2">
                 {world.inbox.slice(0, 3).map((msg) => (
@@ -1028,6 +1028,7 @@ const App: React.FC = () => {
         <main className="flex-1 flex flex-col min-w-0 bg-[#94a3b8] relative overflow-hidden pb-14 lg:pb-0">
           {renderCurrentView()}
         </main>
+        {onboardingActive && <OnboardingTour active={onboardingActive} currentView={currentView} onComplete={() => setShowOnboarding(false)} />}
       </div>
 
       {isVacationModalOpen && (
