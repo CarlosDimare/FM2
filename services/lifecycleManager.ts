@@ -213,7 +213,7 @@ export class LifecycleManager {
         const deficit = MIN_U21_MINUTES - (club.u21MinutesThisSeason || 0);
         const penaltyPoints = Math.min(6, Math.ceil(deficit / 200));
         entry.points = Math.max(0, entry.points - penaltyPoints);
-        if (currentDate) world.addInboxMessage('DISCIPLINARY', `Sanción sub-21: ${club.name}`, `${club.name} pierde ${penaltyPoints} puntos por no cumplir el mínimo de ${MIN_U21_MINUTES} minutos para jugadores sub-21 (total: ${Math.round(club.u21MinutesThisSeason || 0)}).`, currentDate, club.id);
+        if (currentDate) world.addInboxMessage('COMPETITION', `Sanción sub-21: ${club.name}`, `${club.name} pierde ${penaltyPoints} puntos por no cumplir el mínimo de ${MIN_U21_MINUTES} minutos para jugadores sub-21 (total: ${Math.round(club.u21MinutesThisSeason || 0)}).`, currentDate, club.id);
       });
     });
     world.clubs.forEach(c => c.u21MinutesThisSeason = 0);

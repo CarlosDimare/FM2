@@ -164,6 +164,8 @@ export interface Player {
   developmentTrend?: 'RISING' | 'DECLINING' | 'STABLE';
   yellowCardsAccumulated: number;
   injury?: { type: string; daysLeft: number };
+  injuryHistory: { type: string; days: number; date: Date }[];
+  injuryProneness: number; // 0-1, derivado del historial y naturalFitness
   suspension?: { matchesLeft: number };
   loanDetails?: { originalClubId: string; wageShare: number };
   lastMotiveInteraction?: Date;

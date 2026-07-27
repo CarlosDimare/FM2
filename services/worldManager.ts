@@ -178,11 +178,12 @@ export class WorldManager {
         value: Math.round(def.ca * def.ca * 2500), salary: Math.round(def.ca * 2500 / 10) * 10,
         transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty,
         negotiationAttempts: 0, isUnhappyWithContract: false, developmentTrend: 'STABLE', yellowCardsAccumulated: 0,
-        formRatings: [], isTransferListed: false
-     };
-  }
+        formRatings: [], isTransferListed: false,
+        injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02)
+      };
+   }
 
-  generateSquadsForClub(clubId: string) {
+   generateSquadsForClub(clubId: string) {
     const squads: SquadType[] = ['SENIOR', 'RESERVE', 'U20'];
     squads.forEach(squadType => {
       const size = squadType === 'SENIOR' ? 24 : squadType === 'RESERVE' ? 20 : 18;
@@ -250,7 +251,7 @@ export class WorldManager {
     }
 
     return {
-        id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, releaseClause: Math.round(ca * ca * 2000 * 3), yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false
+        id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, releaseClause: Math.round(ca * ca * 2000 * 3), yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false, injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02)
     };
   }
 
