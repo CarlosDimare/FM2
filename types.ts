@@ -160,6 +160,7 @@ export interface Player {
   lastNegotiationDate?: Date;
   requestedSalary?: number;
   isUnhappyWithContract: boolean;
+  releaseClause?: number;
   developmentTrend?: 'RISING' | 'DECLINING' | 'STABLE';
   yellowCardsAccumulated: number;
   injury?: { type: string; daysLeft: number };
@@ -189,6 +190,7 @@ export interface Club {
   };
   reputation: number;
   stadium: string;
+  stadiumCapacity: number;
   honours: { name: string; year: number }[];
   trainingFacilities: number;
   youthFacilities: number;
@@ -197,6 +199,7 @@ export interface Club {
   boardConfidence: number;
   seasonObjective?: 'WIN_LEAGUE' | 'TOP_4' | 'TOP_HALF' | 'AVOID_RELEGATION' | 'WIN_CUP' | 'CUP_SEMIS';
   shortlistedPlayerIds: string[];
+  u21MinutesThisSeason: number;
 }
 
 export type CompetitionType = 'LEAGUE' | 'CUP' | 'CONTINENTAL_ELITE' | 'CONTINENTAL_SMALL' | 'GLOBAL';
@@ -207,6 +210,8 @@ export interface Competition {
   country: string;
   type: CompetitionType;
   tier: number;
+  squadRegistrationLimit?: number;
+  u21Requirement?: number;
 }
 
 export type MatchStage = 'REGULAR' | 'GROUP' | 'ROUND_OF_32' | 'ROUND_OF_16' | 'QUARTER_FINAL' | 'SEMI_FINAL' | 'FINAL';
@@ -389,6 +394,7 @@ export interface TeamMatchStats {
   shotsOnTarget: number;
   fouls: number;
   corners: number;
+  freeKicks: number;
   yellowCards: number;
   redCards: number;
 }

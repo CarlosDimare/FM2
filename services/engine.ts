@@ -65,7 +65,12 @@ export class MatchSimulator {
     const condition = stats[p.id]?.condition || 100;
     const moraleMult = 0.95 + (p.morale / 1000); 
     const fatigueMult = 1 - ((100 - condition) / 100 * 0.2);
-    return Math.max(1, base * moraleMult * fatigueMult);
+    let formMult = 1;
+    if (p.formRatings.length > 0) {
+      const avgForm = p.formRatings.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, p.formRatings.length);
+      formMult = 0.92 + (avgForm / 30);
+    }
+    return Math.max(1, Math.round(base * moraleMult * fatigueMult * formMult));
   }
 
   private static calculatePressure(actor: Player, defPlayers: Player[], ballX: number, ballY: number, actorStats: Record<string, PlayerMatchStats>, isHomeActor: boolean, closingDown: number = 10): number {
@@ -171,8 +176,8 @@ export class MatchSimulator {
       homeScore: 0, awayScore: 0,
       events: [],
       homeTeamId, awayTeamId,
-      homeStats: { possession: 50, possessionTime: 0, shots: 0, shotsOnTarget: 0, fouls: 0, corners: 0, yellowCards: 0, redCards: 0 },
-      awayStats: { possession: 50, possessionTime: 0, shots: 0, shotsOnTarget: 0, fouls: 0, corners: 0, yellowCards: 0, redCards: 0 },
+      homeStats: { possession: 50, possessionTime: 0, shots: 0, shotsOnTarget: 0, fouls: 0, corners: 0, freeKicks: 0, yellowCards: 0, redCards: 0 },
+      awayStats: { possession: 50, possessionTime: 0, shots: 0, shotsOnTarget: 0, fouls: 0, corners: 0, freeKicks: 0, yellowCards: 0, redCards: 0 },
       playerStats: MatchSimulator.initMatchStats([...homePlayers, ...awayPlayers]),
       halftimeTriggered: false,
       ballState: 'KICKOFF',
@@ -327,6 +332,66 @@ export class MatchSimulator {
         if (target) newState.possessorId = target.id;
         timeConsumed = 20;
     }
+    else if (newState.ballState === 'CORNER') {
+        slowMotion = true;
+        const cornerAttTeamId = newState.possessionTeamId || actorClub.id;
+        const cornerOffTeam = cornerAttTeamId === homeTeam.id ? homeTeam : awayTeam;
+        const cornerDefTeam = cornerAttTeamId === homeTeam.id ? awayTeam : homeTeam;
+        const cornerAttPlayers = cornerAttTeamId === homeTeam.id ? activeHome : activeAway;
+        const cornerDefPlayers = cornerAttTeamId === homeTeam.id ? activeAway : activeHome;
+        const cornerTeamStats = cornerAttTeamId === homeTeam.id ? newState.homeStats : newState.awayStats;
+        cornerTeamStats.corners++;
+        const cornerTaker = cornerAttPlayers.filter(p => p.stats.technical.corners >= 10).sort((a,b) => b.stats.technical.corners - a.stats.technical.corners)[0] || cornerAttPlayers[0];
+        const headingTargets = cornerAttPlayers.filter(p => p.stats.technical.heading >= 10).sort((a,b) => (b.stats.technical.heading + b.stats.physical.jumpingReach) - (a.stats.technical.heading + a.stats.physical.jumpingReach));
+        const attacker = headingTargets.length > 0 ? headingTargets[randomInt(0, Math.min(2, headingTargets.length-1))] : cornerAttPlayers[0];
+        const defHeader = cornerDefPlayers.filter(p => p.stats.technical.heading >= 10).sort((a,b) => b.stats.technical.heading - a.stats.technical.heading)[0] || cornerDefPlayers[0];
+
+        const cornerQuality = this.getEffectiveAttribute(cornerTaker, newState.playerStats, 'technical', 'corners') + (Math.random() * 6 - 3);
+        const attackHeader = this.getEffectiveAttribute(attacker, newState.playerStats, 'technical', 'heading') + this.getEffectiveAttribute(attacker, newState.playerStats, 'physical', 'jumpingReach') * 0.5;
+        const defHeaderQuality = this.getEffectiveAttribute(defHeader, newState.playerStats, 'technical', 'heading') + this.getEffectiveAttribute(defHeader, newState.playerStats, 'mental', 'positioning') * 0.4;
+
+        if (cornerQuality + attackHeader > defHeaderQuality + 8 && Math.random() < 0.15) {
+            const gk = cornerDefPlayers.find(p => p.positions.includes(Position.GK)) || cornerDefPlayers[0];
+            this.scoreGoal(newState, attacker, gk, newState.possessionTeamId === homeTeam.id, "Gol de cabeza", `${this.getPlayerLabel(attacker, cornerOffTeam)} gana en el salto y bate al portero de cabeza.`, cornerOffTeam);
+        } else {
+            newState.events.push({ minute: state.minute, second: state.second, type: 'CORNER', text: `${this.getPlayerLabel(cornerTaker, cornerOffTeam)} lanza el córner. ${cornerQuality > 10 ? 'Buen centro al área.' : 'El centro no encuentra destinatario.'}`, teamId: cornerOffTeam.id, importance: 'MEDIUM', intensity: 2 });
+            newState.ballState = 'IN_PLAY';
+            const clearTarget = cornerDefPlayers.filter(p => SLOT_CONFIG[p.tacticalPosition || 0]?.line !== 'GK');
+            if (clearTarget.length > 0) newState.possessorId = clearTarget[randomInt(0, clearTarget.length-1)];
+            else newState.possessorId = cornerDefPlayers[0]?.id || null;
+        }
+        timeConsumed = 20;
+    }
+    else if (newState.ballState === 'FREE_KICK') {
+        slowMotion = true;
+        const fkOffTeam = newState.possessionTeamId === homeTeam.id ? homeTeam : awayTeam;
+        const fkDefTeam = newState.possessionTeamId === homeTeam.id ? awayTeam : homeTeam;
+        const fkAttPlayers = newState.possessionTeamId === homeTeam.id ? activeHome : activeAway;
+        const fkDefPlayers = newState.possessionTeamId === homeTeam.id ? activeAway : activeHome;
+        const kickTaker = fkAttPlayers.filter(p => p.stats.technical.freeKickTaking >= 10).sort((a,b) => b.stats.technical.freeKickTaking - a.stats.technical.freeKickTaking)[0] || fkAttPlayers[0];
+        const fkSkill = this.getEffectiveAttribute(kickTaker, newState.playerStats, 'technical', 'freeKickTaking');
+        const technique = this.getEffectiveAttribute(kickTaker, newState.playerStats, 'technical', 'technique');
+        const gk = fkDefPlayers.find(p => p.positions.includes(Position.GK)) || fkDefPlayers[0];
+        const reflexes = this.getEffectiveAttribute(gk, newState.playerStats, 'goalkeeping' as any, 'reflexes');
+
+        const fkQuality = (fkSkill * 0.7 + technique * 0.3) + (Math.random() * 8 - 4);
+        const saveQuality = reflexes * (0.8 + Math.random() * 0.4);
+
+        if (fkQuality > saveQuality + 5 && Math.random() < 0.12) {
+            this.scoreGoal(newState, kickTaker, gk, newState.possessionTeamId === homeTeam.id, "Gol de tiro libre", `${this.getPlayerLabel(kickTaker, fkOffTeam)} clava la falta en la escuadra. ¡Golazo!`, fkOffTeam);
+        } else if (fkQuality > saveQuality - 1) {
+            newState.playerStats[gk.id].saves++;
+            newState.events.push({ minute: state.minute, second: state.second, type: 'SAVE', text: `${this.getPlayerLabel(gk, fkDefTeam)} desvía el tiro libre de ${this.getPlayerLabel(kickTaker, fkOffTeam)}.`, teamId: gk.clubId, importance: 'HIGH', intensity: 4 });
+            newState.possessorId = gk.id;
+            newState.ballState = 'IN_PLAY';
+        } else {
+            const missTexts = ["Tiro libre directo desviado", "La barrera despeja", "Se fue por encima del larguero"];
+            newState.events.push({ minute: state.minute, second: state.second, type: 'FREE_KICK', text: `${missTexts[randomInt(0, 2)]} de ${this.getPlayerLabel(kickTaker, fkOffTeam)}.`, teamId: fkOffTeam.id, importance: 'MEDIUM', intensity: 2 });
+            newState.ballState = 'OUT_OF_BOUNDS';
+            newState.possessorId = null;
+        }
+        timeConsumed = 25;
+    }
     else if (newState.ballState === 'IN_PLAY') {
         if (!actor) {
             const available = activeOnPitch.filter(Boolean);
@@ -400,7 +465,13 @@ export class MatchSimulator {
                 } else {
                     const missTexts = ["Disparo desviado", "Se le fue a las nubes", "Remate fuera", "Impactó en el lateral de la red"];
                     newState.events.push({ minute: state.minute, second: state.second, type: 'MISS', text: `${missTexts[randomInt(0, missTexts.length-1)]} de ${this.getPlayerLabel(actor, actorClub)}.`, teamId: actor.clubId, importance: 'MEDIUM', intensity: 2 });
-                    newState.ballState = 'OUT_OF_BOUNDS'; newState.possessorId = null;
+                    if (isBallInAttackingThird && Math.random() < 0.7) {
+                      newState.ballState = 'CORNER';
+                      newState.possessionTeamId = actor.clubId;
+                      newState.possessorId = null;
+                    } else {
+                      newState.ballState = 'OUT_OF_BOUNDS'; newState.possessorId = null;
+                    }
                 }
                 timeConsumed = 30;
             } 
@@ -535,6 +606,7 @@ export class MatchSimulator {
       state.events.push({ minute, second, type: 'RED_CARD', text: cardText, teamId: fouler.clubId, playerId: fouler.id, importance: 'HIGH', intensity: 5 });
       state.playerStats[fouler.id].card = 'RED';
       state.playerStats[fouler.id].rating -= 2;
+      fouler.suspension = { matchesLeft: 2 + (fouler.yellowCardsAccumulated >= 10 ? 1 : 0) };
       const teamStat = state[fouler.clubId === state.homeTeamId ? 'homeStats' : 'awayStats'];
       teamStat.redCards++;
     } else if (severity > 6 || (severity > 4 && isDangerZone)) {
@@ -569,8 +641,11 @@ export class MatchSimulator {
       });
     }
 
-    state.ballState = 'OUT_OF_BOUNDS';
+    state.ballState = (isDangerZone && ballX > 750) ? 'FREE_KICK' : 'OUT_OF_BOUNDS';
     state.possessorId = null;
+    if (state.ballState === 'FREE_KICK') {
+      state.possessionTeamId = fouledClub.id === state.homeTeamId ? state.homeTeamId : state.awayTeamId;
+    }
   }
 
   private static checkInjury(

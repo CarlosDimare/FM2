@@ -11,6 +11,7 @@ interface GameStore {
   seasonEndDate: Date;
   managerHistory: ManagerHistory;
   managerReputation: number;
+  darkMode: boolean;
 
   setFixtures: (fixtures: Fixture[]) => void;
   setNextFixture: (f: Fixture | null) => void;
@@ -18,6 +19,7 @@ interface GameStore {
   setSeasonEndDate: (d: Date) => void;
   setManagerHistory: (h: ManagerHistory) => void;
   setManagerReputation: (r: number) => void;
+  setDarkMode: (d: boolean) => void;
   trackMatchResult: (userScore: number, opponentScore: number) => void;
   trackTitle: (title: string) => void;
 
@@ -43,6 +45,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     longestWinStreak: 0, titles: [], seasonsCompleted: 0
   },
   managerReputation: 50,
+  darkMode: false,
 
   setFixtures: (fixtures) => set({ fixtures }),
   setNextFixture: (nextFixture) => set({ nextFixture }),
@@ -50,6 +53,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setSeasonEndDate: (seasonEndDate) => set({ seasonEndDate }),
   setManagerHistory: (managerHistory) => set({ managerHistory }),
   setManagerReputation: (managerReputation) => set({ managerReputation }),
+  setDarkMode: (darkMode) => set({ darkMode }),
 
   trackMatchResult: (userScore, opponentScore) => {
     const { managerHistory } = get();

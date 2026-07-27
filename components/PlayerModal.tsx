@@ -256,6 +256,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                          <div className="flex justify-between border-b pb-1"><span className="text-[10px] font-black text-slate-500 uppercase">Sueldo Mensual</span><span className="text-xs font-black text-blue-900">£{player.salary.toLocaleString()}</span></div>
                          <div className="flex justify-between border-b pb-1"><span className="text-[10px] font-black text-slate-500 uppercase">Vencimiento</span><span className="text-xs font-bold">{player.contractExpiry.toLocaleDateString()}</span></div>
                          <div className="flex justify-between border-b pb-1"><span className="text-[10px] font-black text-slate-500 uppercase">Valor Estimado</span><span className="text-xs font-black text-green-700">£{player.value.toLocaleString()}</span></div>
+                        {player.releaseClause && <div className="flex justify-between border-b pb-1"><span className="text-[10px] font-black text-slate-500 uppercase">Cláusula</span><span className="text-xs font-black text-amber-700">£{player.releaseClause.toLocaleString()}</span></div>}
                       </div>
                    </FMBox>
                 </div>

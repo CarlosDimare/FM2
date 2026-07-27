@@ -23,8 +23,8 @@ export class WorldManager {
 
   initWorld() {
     this.competitions = [
-      { id: "L_ARG_1", name: "Liga Profesional", country: "Argentina", type: 'LEAGUE', tier: 1 },
-      { id: "L_ARG_2", name: "Primera Nacional", country: "Argentina", type: 'LEAGUE', tier: 2 },
+      { id: "L_ARG_1", name: "Liga Profesional", country: "Argentina", type: 'LEAGUE', tier: 1, squadRegistrationLimit: 28, u21Requirement: 4 },
+      { id: "L_ARG_2", name: "Primera Nacional", country: "Argentina", type: 'LEAGUE', tier: 2, squadRegistrationLimit: 28, u21Requirement: 4 },
       { id: "C_ARG", name: "Copa Argentina", country: "Argentina", type: 'CUP', tier: 1 },
       { id: "CONT_LIB", name: "Copa Libertadores", country: "Sudamérica", type: 'CONTINENTAL_ELITE', tier: 1 },
       { id: "CONT_SUD", name: "Copa Sudamericana", country: "Sudamérica", type: 'CONTINENTAL_SMALL', tier: 2 },
@@ -64,12 +64,14 @@ export class WorldManager {
             },
             reputation: def.rep,
             stadium: def.stadium,
+            stadiumCapacity: def.rep >= 8000 ? 50000 : def.rep >= 7000 ? 30000 : def.rep >= 6000 ? 20000 : def.rep >= 5000 ? 12000 : 8000,
             honours: this.generateRandomHonours(),
              trainingFacilities: Math.min(20, Math.floor(def.rep / 500) + randomInt(-2, 2)),
              youthFacilities: Math.min(20, Math.floor(def.rep / 550) + randomInt(-3, 3)),
              boardConfidence: 65 + randomInt(0, 25),
-             seasonObjective: def.rep > 4000 ? 'TOP_4' : def.rep > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION',
-             shortlistedPlayerIds: []
+              seasonObjective: def.rep > 4000 ? 'TOP_4' : def.rep > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION',
+              shortlistedPlayerIds: [],
+              u21MinutesThisSeason: 0
           };
         this.clubs.push(club);
         this.injectRealPlayers(club);
@@ -248,7 +250,7 @@ export class WorldManager {
     }
 
     return {
-        id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false
+        id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, releaseClause: Math.round(ca * ca * 2000 * 3), yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false
     };
   }
 
@@ -337,7 +339,15 @@ export class WorldManager {
   }
 
   makeTransferOffer(playerId: string, fromClubId: string, amount: number, type: 'PURCHASE' | 'LOAN', date: Date, wageShare = 100) {
-    const offer: TransferOffer = { id: generateUUID(), playerId, fromClubId, toClubId: this.players.find(p => p.id === playerId)!.clubId, amount, wageShare, type, status: 'PENDING', date, responseDate: date, isViewed: false };
+    const player = this.players.find(p => p.id === playerId);
+    if (!player) return;
+    if (player.releaseClause && amount >= player.releaseClause) {
+      const offer: TransferOffer = { id: generateUUID(), playerId, fromClubId, toClubId: player.clubId, amount, wageShare, type, status: 'ACCEPTED', date, responseDate: date, isViewed: false };
+      this.offers.push(offer);
+      this.addInboxMessage('MARKET', `Cláusula activada: ${player.name}`, `${this.getClub(fromClubId)?.name} ha pagado la cláusula de rescisión de ${player.name}: $${amount.toLocaleString()}.`, date, playerId);
+      return;
+    }
+    const offer: TransferOffer = { id: generateUUID(), playerId, fromClubId, toClubId: player.clubId, amount, wageShare, type, status: 'PENDING', date, responseDate: date, isViewed: false };
     this.offers.push(offer);
   }
 
@@ -349,6 +359,10 @@ export class WorldManager {
   completeTransfer(offer: TransferOffer) {
     const p = this.players.find(player => player.id === offer.playerId);
     if (p) {
+        if (offer.type === 'LOAN') {
+          this.completeLoan(offer);
+          return;
+        }
         const oldClub = this.getClub(p.clubId); const newClub = this.getClub(offer.fromClubId);
         if (oldClub && offer.type === 'PURCHASE') oldClub.finances.balance += offer.amount;
         if (newClub && offer.type === 'PURCHASE') {
@@ -367,6 +381,35 @@ export class WorldManager {
         offer.status = 'COMPLETED';
         this.addInboxMessage('MARKET', `Traspaso completado: ${p.name}`, `${p.name} se ha unido a ${newClub?.name || 'nuevo club'} por $${offer.amount.toLocaleString()}.`, offer.date, p.id);
     }
+  }
+
+  processMatchDayIncome(homeClubId: string, competitionId: string, date: Date) {
+    const club = this.getClub(homeClubId);
+    if (!club) return;
+    const comp = this.competitions.find(c => c.id === competitionId);
+    const attendance = Math.round(club.stadiumCapacity * (0.5 + (club.reputation / 10000) * 0.4 + Math.random() * 0.1));
+    let ticketPrice = 15;
+    if (comp?.type === 'CONTINENTAL_ELITE') ticketPrice = 40;
+    else if (comp?.type === 'CONTINENTAL_SMALL') ticketPrice = 25;
+    else if (comp?.type === 'CUP') ticketPrice = 20;
+    const income = Math.round(attendance * ticketPrice);
+    club.finances.balance += income;
+    club.finances.monthlyIncome += income;
+  }
+
+  trackU21Minutes(clubId: string, squad: Player[], stats: Record<string, PlayerMatchStats>, currentDate: Date) {
+    const club = this.getClub(clubId);
+    if (!club) return;
+    squad.forEach(p => {
+      const s = stats[p.id];
+      if (!s || s.minutesPlayed <= 0.1) return;
+      const ageMs = currentDate.getTime() - p.birthDate.getTime();
+      const ageYears = ageMs / (365.25 * 24 * 60 * 60 * 1000);
+      if (ageYears < 21) {
+        if (!club.u21MinutesThisSeason) club.u21MinutesThisSeason = 0;
+        club.u21MinutesThisSeason += s.minutesPlayed;
+      }
+    });
   }
 
   rescindContract(playerId: string, date: Date) {
@@ -389,12 +432,29 @@ export class WorldManager {
 
   submitContractOffer(player: Player, salary: number, years: number, date: Date) {
     const requested = this.getRequestedSalary(player, this.getClub(player.clubId)!);
-    if (salary >= requested * 0.9) {
+    player.negotiationAttempts++;
+    if (salary >= requested) {
       player.salary = salary;
       player.contractExpiry = new Date(date.getFullYear() + years, date.getMonth(), date.getDate());
       player.isUnhappyWithContract = false;
       player.requestedSalary = undefined;
+      player.negotiationAttempts = 0;
       return 'ACCEPTED';
+    }
+    if (salary >= requested * 0.85) {
+      const acceptChance = player.loyalty / 20 + 0.1;
+      if (Math.random() < acceptChance) {
+        player.salary = salary;
+        player.contractExpiry = new Date(date.getFullYear() + years, date.getMonth(), date.getDate());
+        player.isUnhappyWithContract = false;
+        player.requestedSalary = undefined;
+        player.negotiationAttempts = 0;
+        return 'ACCEPTED';
+      }
+    }
+    if (player.negotiationAttempts >= 3) {
+      player.negotiationAttempts = 0;
+      return 'BROKEN';
     }
     return 'REJECTED';
   }
@@ -443,11 +503,103 @@ export class WorldManager {
       const target = candidates[randomInt(0, candidates.length - 1)];
       const maxOffer = Math.min(target.value, club.finances.transferBudget);
       if (maxOffer < 1000) return;
-      const amount = Math.round(maxOffer * (0.5 + Math.random() * 0.4));
+      if (target.releaseClause && target.releaseClause <= club.finances.transferBudget && Math.random() < 0.4) {
+        const offer: TransferOffer = {
+          id: generateUUID(), playerId: target.id,
+          fromClubId: club.id, toClubId: target.clubId,
+          amount: target.releaseClause, wageShare: 100, type: 'PURCHASE',
+          status: 'ACCEPTED', date, responseDate: date, isViewed: false
+        };
+        this.offers.push(offer);
+      } else {
+        const amount = Math.round(maxOffer * (0.5 + Math.random() * 0.4));
+        const offer: TransferOffer = {
+          id: generateUUID(), playerId: target.id,
+          fromClubId: club.id, toClubId: target.clubId,
+          amount, wageShare: 100, type: 'PURCHASE',
+          status: 'PENDING', date, responseDate: date, isViewed: false
+        };
+        this.offers.push(offer);
+      }
+    });
+
+    // AI long-term buy phase: sign young talents with high potential
+    allClubs.filter(c => c.finances.transferBudget >= 10000).forEach(club => {
+      if (Math.random() > 0.15) return;
+      const youngTalents = this.players.filter(p =>
+        p.clubId !== club.id && p.clubId !== 'FREE_AGENT' &&
+        p.age >= 16 && p.age <= 22 &&
+        p.potentialAbility >= 140 &&
+        p.currentAbility < club.reputation / 80 &&
+        p.squad === 'SENIOR'
+      );
+      if (youngTalents.length === 0) return;
+      const target = youngTalents[randomInt(0, Math.min(4, youngTalents.length - 1))];
+      const maxOffer = Math.min(target.value * 1.5, club.finances.transferBudget);
+      if (maxOffer < 5000) return;
+      const amount = Math.round(maxOffer * (0.6 + Math.random() * 0.3));
       const offer: TransferOffer = {
         id: generateUUID(), playerId: target.id,
         fromClubId: club.id, toClubId: target.clubId,
         amount, wageShare: 100, type: 'PURCHASE',
+        status: 'PENDING', date, responseDate: date, isViewed: false
+      };
+      this.offers.push(offer);
+    });
+
+    // AI sell old players phase: transfer-list players over 32 with declining trend
+    allClubs.forEach(club => {
+      const oldPlayers = this.getPlayersByClub(club.id).filter(p =>
+        p.age >= 32 && p.developmentTrend === 'DECLINING' && !p.isTransferListed
+      );
+      oldPlayers.forEach(p => { p.isTransferListed = true; });
+    });
+
+    // AI loan phase: clubs loan out surplus young players
+    allClubs.forEach(club => {
+      const youngSurplus = this.getPlayersByClub(club.id).filter(p =>
+        p.age < 23 && p.squad === 'SENIOR' && p.currentAbility < 130 &&
+        !p.isTransferListed && !p.loanDetails && p.transferStatus !== 'NONE'
+      );
+      youngSurplus.slice(0, 2).forEach(p => {
+        const loanCandidates = this.clubs.filter(c =>
+          c.id !== club.id &&
+          !this.getPlayersByClub(c.id).some(sp => sp.positions.some(pos => p.positions.includes(pos)))
+        );
+        if (loanCandidates.length > 0 && Math.random() < 0.3) {
+          const toClub = loanCandidates[randomInt(0, loanCandidates.length - 1)];
+          const offer: TransferOffer = {
+            id: generateUUID(), playerId: p.id,
+            fromClubId: toClub.id, toClubId: club.id,
+            amount: 0, wageShare: 50, type: 'LOAN',
+            status: 'PENDING', date, responseDate: date, isViewed: false
+          };
+          this.offers.push(offer);
+        }
+      });
+    });
+
+    // AI loan request for weak positions
+    allClubs.forEach(club => {
+      const needPositions = this.getPlayersByClub(club.id).filter(p => p.squad === 'SENIOR' && !p.injury);
+      const weakPositions: Position[] = [];
+      if (needPositions.filter(p => p.positions.includes(Position.GK)).length < 2) weakPositions.push(Position.GK);
+      if (needPositions.filter(p => ['DC','DR','DL'].some(pos => p.positions.includes(pos as Position))).length < 4) weakPositions.push(Position.DC);
+      if (needPositions.filter(p => ['DM','MC','ML','MR','AM'].some(pos => p.positions.includes(pos as Position))).length < 3) weakPositions.push(Position.MC);
+      if (needPositions.filter(p => p.positions.includes(Position.ST)).length < 2) weakPositions.push(Position.ST);
+      if (weakPositions.length === 0 || club.finances.transferBudget < 2000) return;
+      const targetPos = weakPositions[randomInt(0, weakPositions.length - 1)];
+      const loanCandidates = this.players.filter(p =>
+        p.clubId !== club.id && p.positions.includes(targetPos) &&
+        p.age < 25 && p.currentAbility < 140 && !p.loanDetails &&
+        (p.transferStatus === 'LOANABLE' || p.isTransferListed)
+      );
+      if (loanCandidates.length === 0) return;
+      const target = loanCandidates[randomInt(0, loanCandidates.length - 1)];
+      const offer: TransferOffer = {
+        id: generateUUID(), playerId: target.id,
+        fromClubId: club.id, toClubId: target.clubId,
+        amount: 0, wageShare: 50, type: 'LOAN',
         status: 'PENDING', date, responseDate: date, isViewed: false
       };
       this.offers.push(offer);
@@ -479,6 +631,7 @@ export class WorldManager {
     this.processPendingOffers(date);
     const completedToday = this.offers.filter(o => o.status === 'COMPLETED' && o.date.toDateString() === date.toDateString());
     completedToday.forEach(offer => {
+      if (offer.type === 'LOAN') return;
       const buyer = this.getClub(offer.fromClubId);
       const seller = this.getClub(offer.toClubId);
       if (buyer && seller) {
@@ -518,6 +671,20 @@ export class WorldManager {
       const player = this.players.find(p => p.id === offer.playerId);
       const sellerClub = this.getClub(offer.toClubId);
       if (!player || !sellerClub) { offer.status = 'REJECTED'; return; }
+
+      if (offer.type === 'LOAN') {
+        const hasDepth = this.getPlayersByClub(sellerClub.id).filter(p => p.positions.some(pos => player.positions.includes(pos))).length > 3;
+        const acceptChance = hasDepth ? 0.6 : 0.3;
+        if (Math.random() < acceptChance) {
+          offer.status = 'ACCEPTED';
+          offer.responseDate = date;
+        } else {
+          offer.status = 'REJECTED';
+          offer.responseDate = date;
+        }
+        return;
+      }
+
       const valueRatio = offer.amount / Math.max(1, player.value);
       const repFactor = sellerClub.reputation / 5000;
       const acceptChance = Math.min(0.95, valueRatio * 1.5 - 0.3 + repFactor * 0.2);
@@ -532,6 +699,31 @@ export class WorldManager {
       } else {
         offer.status = 'REJECTED';
         offer.responseDate = date;
+      }
+    });
+  }
+
+  completeLoan(offer: TransferOffer) {
+    const p = this.players.find(player => player.id === offer.playerId);
+    if (!p) return;
+    p.loanDetails = { originalClubId: p.clubId, wageShare: offer.wageShare };
+    p.clubId = offer.fromClubId;
+    p.isStarter = false;
+    p.isTransferListed = false;
+    p.transferStatus = 'NONE';
+    offer.status = 'COMPLETED';
+    const newClub = this.getClub(offer.fromClubId);
+    this.addInboxMessage('MARKET', `Cedido: ${p.name}`, `${p.name} se marcha cedido a ${newClub?.name || 'nuevo club'} hasta final de temporada.`, offer.date, p.id);
+  }
+
+  processLoanReturns(date: Date) {
+    const seasonEndMonth = 6;
+    if (date.getMonth() !== seasonEndMonth || date.getDate() > 7) return;
+    this.players.forEach(p => {
+      if (p.loanDetails) {
+        p.clubId = p.loanDetails.originalClubId;
+        p.loanDetails = undefined;
+        p.isStarter = false;
       }
     });
   }
@@ -636,6 +828,27 @@ export class WorldManager {
     this.inbox.unshift({ id: generateUUID(), date: new Date(date), category, subject, body, isRead: false, relatedId });
   }
 
+  checkSquadRegistration(clubId: string, competitionId: string, date: Date): string[] {
+    const comp = this.competitions.find(c => c.id === competitionId);
+    if (!comp || !comp.squadRegistrationLimit) return [];
+    const seniorPlayers = this.getPlayersByClub(clubId).filter(p => p.squad === 'SENIOR');
+    const warnings: string[] = [];
+    if (seniorPlayers.length > comp.squadRegistrationLimit) {
+      warnings.push(`Plantilla excede el límite de ${comp.squadRegistrationLimit} jugadores. Necesitas liberar ${seniorPlayers.length - comp.squadRegistrationLimit} jugadores.`);
+    }
+    if (comp.u21Requirement) {
+      const u21Count = seniorPlayers.filter(p => p.age < 21).length;
+      if (u21Count < comp.u21Requirement) {
+        warnings.push(`Necesitas al menos ${comp.u21Requirement} jugadores sub-21 en la plantilla (actual: ${u21Count}).`);
+      }
+    }
+    if (warnings.length > 0) {
+      this.addInboxMessage('COMPETITION', `Registro de plantilla - ${comp.name}`,
+        warnings.join(' '), date, clubId);
+    }
+    return warnings;
+  }
+
   generateScoutingReport(playerId: string, clubId: string, date: Date, userClubId?: string) {
     const player = this.players.find(p => p.id === playerId);
     if (!player) return null;
@@ -735,8 +948,25 @@ export class WorldManager {
       .slice(0, limit);
   }
 
+  getClubCompetitions(clubId: string): Competition[] {
+    const club = this.getClub(clubId);
+    if (!club) return [];
+    const comps: Competition[] = [];
+    const league = this.competitions.find(c => c.id === club.leagueId);
+    if (league) comps.push(league);
+    if (club.qualifiedFor === 'CONT_LIB') {
+      const lib = this.competitions.find(c => c.id === 'CONT_LIB');
+      if (lib) comps.push(lib);
+    } else if (club.qualifiedFor === 'CONT_SUD') {
+      const sud = this.competitions.find(c => c.id === 'CONT_SUD');
+      if (sud) comps.push(sud);
+    }
+    const cup = this.competitions.find(c => c.id === 'C_ARG');
+    if (cup) comps.push(cup);
+    return comps;
+  }
+
   generateYouthIntake(year: number) {
-    const INTAKE_DATE = `${year}-08-01`;
     this.clubs.forEach(club => {
       const youthCount = 3 + randomInt(0, Math.min(3, Math.floor(club.youthFacilities / 5)));
       for (let i = 0; i < youthCount; i++) {
@@ -756,6 +986,27 @@ export class WorldManager {
         this.players.push(player);
       }
     });
+  }
+
+  recalculatePlayerValue(p: Player): number {
+    const base = Math.round(p.currentAbility * p.currentAbility * 2000);
+    const avgForm = p.formRatings.length > 0
+      ? p.formRatings.reduce((a, b) => a + b, 0) / p.formRatings.length
+      : 6.5;
+    const formMult = 0.7 + (avgForm / 10) * 0.6;
+    const agePeak = Math.max(0, 1 - Math.abs(p.age - 26) / 20);
+    const ageMult = 0.6 + agePeak * 0.8;
+    const monthsLeft = p.contractExpiry
+      ? Math.max(0, (p.contractExpiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30))
+      : 12;
+    const contractMult = 0.85 + Math.min(monthsLeft, 36) / 200;
+    return Math.round(base * formMult * ageMult * contractMult);
+  }
+
+  recalculateAllPlayerValues() {
+    for (const p of this.players) {
+      p.value = this.recalculatePlayerValue(p);
+    }
   }
 }
 

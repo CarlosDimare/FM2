@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do SOURCE="$(readlink "$SOURCE")"; done
+DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+bun run --cwd "$DIR/packages/opencode" --conditions=browser src/index.ts "$@"

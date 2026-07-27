@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Player, POSITION_ORDER } from '../types';
+import { Club, Player, POSITION_ORDER } from '../types';
 import { FMBox, FMTable, FMTableCell } from './FMUI';
 import { TrendingUp, TrendingDown, Minus, X, MessageSquare } from 'lucide-react';
 import { getFlagUrl } from '../data/static';
@@ -8,17 +8,19 @@ import { DialogueSystem } from '../services/dialogueSystem';
 
 interface SquadViewProps {
   players: Player[];
-  onSelectPlayer: (player: Player) => void;
-  onContextMenu?: (e: React.MouseEvent, player: Player) => void;
+  onSelectPlayer: (p: Player) => void;
+  onContextMenu?: (e: React.MouseEvent, p: Player) => void;
   customTitle?: string;
   currentDate: Date;
+  club?: Club;
 }
 
-type SortField = 'STATUS' | 'POS' | 'NAME' | 'AGE' | 'TREND' | 'SAL' | 'FIT' | 'MOR' | 'VAL';
-
-export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, onContextMenu, customTitle, currentDate }) => {
+export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, onContextMenu, customTitle, currentDate, club }) => {
   const [sortField, setSortField] = useState<SortField>('POS');
   const [sortDesc, setSortDesc] = useState(false);
+  const [showInjuries, setShowInjuries] = useState(true);
+
+  const injuredPlayers = useMemo(() => players.filter(p => p.injury), [players]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) setSortDesc(!sortDesc);
@@ -121,6 +123,39 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
 
   return (
     <div className="p-2 h-full flex flex-col gap-2 bg-[#d4dcd4]">
+      {injuredPlayers.length > 0 && showInjuries && (
+        <div className="shrink-0 bg-red-50 border border-red-300 rounded-sm p-2">
+          <div className="flex justify-between items-center mb-1">
+            <h4 className="text-[10px] font-black text-red-800 uppercase tracking-wider flex items-center gap-1">
+              <X size={12} className="text-red-600" /> Parte médico ({injuredPlayers.length})
+            </h4>
+            <button onClick={() => setShowInjuries(false)} className="text-[9px] text-slate-500 hover:text-slate-700 uppercase font-bold">Cerrar</button>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {injuredPlayers.map(p => (
+              <div key={p.id} className="flex items-center gap-1.5 bg-white border border-red-200 rounded-sm px-2 py-1 text-[10px] cursor-pointer hover:bg-red-50" onClick={() => onSelectPlayer(p)}>
+                <span className="font-bold text-slate-900 truncate max-w-[100px]">{p.name}</span>
+                <span className="text-red-700">·</span>
+                <span className="text-red-700 font-medium">{p.injury!.type}</span>
+                <span className="text-red-600 font-black">{p.injury!.daysLeft}d</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="shrink-0 bg-blue-50 border border-blue-200 rounded-sm p-2 flex items-center gap-3">
+        <span className="text-[10px] font-black text-blue-800 uppercase tracking-wider">Min. Sub-21</span>
+        <span className="text-xs font-bold text-blue-900">{Math.round(club?.u21MinutesThisSeason || 0)}</span>
+        <span className="text-[9px] text-blue-600">/ 600 mínimos</span>
+        <div className="flex-1 h-2 bg-blue-100 rounded-full overflow-hidden">
+          <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${Math.min(100, ((club?.u21MinutesThisSeason || 0) / 600) * 100)}%` }}></div>
+        </div>
+        {(club?.u21MinutesThisSeason || 0) >= 600 ? (
+          <span className="text-[9px] font-bold text-green-700">✓</span>
+        ) : (
+          <span className="text-[9px] font-bold text-amber-600">⚠</span>
+        )}
+      </div>
       <FMBox title={customTitle || `Plantilla (${players.length})`} className="flex-1" noPadding>
         {/* Desktop Table View */}
         <div className="hidden md:block h-full overflow-hidden">

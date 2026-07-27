@@ -49,8 +49,16 @@ export class LifecycleManager {
   }
 
   // New: Decrement suspensions for clubs that just played
-  static processPostMatchSuspensions(homeTeamId: string, awayTeamId: string) {
-     const processTeam = (clubId: string) => {
+  static processPostMatchSuspensions(homeTeamId: string, awayTeamId: string, homeRedCards = 0, awayRedCards = 0) {
+     const FINE_PER_RED = 5000;
+     const processTeam = (clubId: string, redCards: number) => {
+        if (redCards > 0) {
+           const club = world.getClub(clubId);
+           if (club) {
+              club.finances.balance -= redCards * FINE_PER_RED;
+              club.finances.monthlyExpenses += redCards * FINE_PER_RED;
+           }
+        }
         const suspendedPlayers = world.getPlayersByClub(clubId).filter(p => p.suspension && p.suspension.matchesLeft > 0);
         suspendedPlayers.forEach(p => {
            if (p.suspension) {
@@ -61,8 +69,8 @@ export class LifecycleManager {
            }
         });
      };
-     processTeam(homeTeamId);
-     processTeam(awayTeamId);
+     processTeam(homeTeamId, homeRedCards);
+     processTeam(awayTeamId, awayRedCards);
   }
   
   static processEndOfSeason(fixtures: Fixture[], userClubId?: string, currentDate?: Date): CompetitionSummary[] {
@@ -81,6 +89,10 @@ export class LifecycleManager {
         const aEleven = world.selectBestEleven(f.awayTeamId, 'SENIOR');
         MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore, f.competitionId);
         MatchSimulator.processMatchInjuries(stats);
+        this.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length);
+        world.processMatchDayIncome(f.homeTeamId, f.competitionId, new Date());
+        world.trackU21Minutes(f.homeTeamId, hEleven, stats, new Date());
+        world.trackU21Minutes(f.awayTeamId, aEleven, stats, new Date());
     });
 
     // 3. Generate Summaries
@@ -156,6 +168,56 @@ export class LifecycleManager {
     // 4. Process Promotions, Relegations and Qualification
     this.handleLeagueMovements(fixtures, currentDate, userClubId);
 
+    // 4b. Prize Money distribution
+    const prizePool: Record<string, number> = {
+      'L_ARG_1': 5000000,
+      'L_ARG_2': 1000000,
+      'CONT_LIB': 8000000,
+      'CONT_SUD': 3000000,
+      'C_ARG': 2000000,
+      'W_CLUB': 5000000,
+    };
+    summaries.forEach(summary => {
+      const pool = prizePool[summary.compId] || 0;
+      if (pool <= 0) return;
+      if (summary.compType === 'LEAGUE') {
+        const table = world.getLeagueTable(summary.compId, fixtures, 'SENIOR');
+        table.forEach((entry, idx) => {
+          const club = world.getClub(entry.clubId);
+          if (!club) return;
+          const pos = idx + 1;
+          const total = table.length;
+          const share = pos <= total * 0.25 ? 0.25 : pos <= total * 0.5 ? 0.15 : pos <= total * 0.75 ? 0.08 : 0.03;
+          const amount = Math.round(pool * share);
+          club.finances.balance += amount;
+          club.finances.transferBudget += Math.round(amount * 0.3);
+        });
+      } else {
+        const champ = world.getClub(summary.championId);
+        if (champ) {
+          const amount = Math.round(pool * 0.5);
+          champ.finances.balance += amount;
+          champ.finances.transferBudget += Math.round(amount * 0.3);
+          if (currentDate) world.addInboxMessage('FINANCE', `Premio: ${summary.compName}`, `${champ.name} ha recibido $${amount.toLocaleString()} por ganar la ${summary.compName}.`, currentDate);
+        }
+      }
+    });
+
+    // 4. U21 Minutes Compliance Check
+    const MIN_U21_MINUTES = 600;
+    world.competitions.filter(c => c.type === 'LEAGUE').forEach(comp => {
+      const table = world.getLeagueTable(comp.id, fixtures, 'SENIOR');
+      table.forEach(entry => {
+        const club = world.getClub(entry.clubId);
+        if (!club || (club.u21MinutesThisSeason || 0) >= MIN_U21_MINUTES) return;
+        const deficit = MIN_U21_MINUTES - (club.u21MinutesThisSeason || 0);
+        const penaltyPoints = Math.min(6, Math.ceil(deficit / 200));
+        entry.points = Math.max(0, entry.points - penaltyPoints);
+        if (currentDate) world.addInboxMessage('DISCIPLINARY', `Sanción sub-21: ${club.name}`, `${club.name} pierde ${penaltyPoints} puntos por no cumplir el mínimo de ${MIN_U21_MINUTES} minutos para jugadores sub-21 (total: ${Math.round(club.u21MinutesThisSeason || 0)}).`, currentDate, club.id);
+      });
+    });
+    world.clubs.forEach(c => c.u21MinutesThisSeason = 0);
+
     const seasonYear = currentDate ? currentDate.getFullYear() : 2008;
 
     // 5. Development & History
@@ -218,7 +280,10 @@ export class LifecycleManager {
                   const aEleven = world.selectBestEleven(f.awayTeamId, 'SENIOR');
                     MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore, f.competitionId);
                     MatchSimulator.processMatchInjuries(stats);
-                    this.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId);
+                    this.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length);
+                    world.processMatchDayIncome(f.homeTeamId, f.competitionId, new Date());
+                    world.trackU21Minutes(f.homeTeamId, hEleven, stats, new Date());
+                    world.trackU21Minutes(f.awayTeamId, aEleven, stats, new Date());
               });
           }
 

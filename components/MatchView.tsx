@@ -35,6 +35,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
   const [showSubModal, setShowSubModal] = useState(false);
   const [subTarget, setSubTarget] = useState<string | null>(null);
   const [showHalfTimeTalk, setShowHalfTimeTalk] = useState(false);
+  const [showPostMatch, setShowPostMatch] = useState(false);
   const halfTimeTalkDone = useRef(false);
   const isUserHome = userClubId === homeTeam.id;
 
@@ -77,6 +78,12 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
       setShowHalfTimeTalk(true);
     }
   }, [matchState.minute, matchState.halftimeTriggered, matchState.isPlaying]);
+
+  useEffect(() => {
+    if (matchState.minute >= 90 && !matchState.isPlaying && !halfTimeTalkDone.current) {
+      setShowPostMatch(true);
+    }
+  }, [matchState.minute, matchState.isPlaying]);
 
   const isMountedRef = useRef(true);
   useEffect(() => {
@@ -534,6 +541,66 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                 <Shield size={20} className="text-blue-600 shrink-0" />
                 <div><div className="font-bold text-xs text-slate-900">Mantener la calma</div>
                 <div className="text-[9px] text-slate-500">"Concéntrense y sigan el plan" +5 moral</div></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPostMatch && (
+        <div className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-slate-500 overflow-hidden flex flex-col">
+            <div className="bg-slate-900 text-white p-4 text-center">
+              <span className="text-lg font-black uppercase tracking-wider">RESULTADO FINAL</span>
+              <div className="text-4xl font-black mt-2">
+                <span className={matchState.homeScore > matchState.awayScore ? 'text-green-400' : 'text-slate-300'}>{matchState.homeScore}</span>
+                <span className="text-slate-500 mx-3">-</span>
+                <span className={matchState.awayScore > matchState.homeScore ? 'text-green-400' : 'text-slate-300'}>{matchState.awayScore}</span>
+              </div>
+              <div className="text-[10px] text-slate-400 mt-1">{homeTeam.shortName} vs {awayTeam.shortName}</div>
+            </div>
+            {(() => {
+              const sorted = Object.entries(matchState.playerStats)
+                .filter(([_, s]) => s.minutesPlayed > 0.1)
+                .sort(([, a], [, b]) => b.rating - a.rating)
+                .slice(0, 10);
+              const mvpEntry = sorted[0];
+              const mvpPlayer = mvpEntry ? [...homePlayers, ...awayPlayers].find(pl => pl.id === mvpEntry[0]) : null;
+              return (
+                <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                  {mvpPlayer && (
+                    <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded-sm border-2 border-yellow-400">
+                      <span className="text-lg">👑</span>
+                      <div className="w-7 h-7 rounded-full bg-yellow-300 flex items-center justify-center font-black text-[9px] shrink-0">{mvpPlayer.positions[0]}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-bold text-yellow-900 truncate">{mvpPlayer.name}</div>
+                        <div className="text-[8px] text-yellow-700">MVP · {mvpEntry![1].rating.toFixed(1)} de puntuación</div>
+                      </div>
+                    </div>
+                  )}
+                  {sorted.map(([id, s]) => {
+                    const p = [...homePlayers, ...awayPlayers].find(pl => pl.id === id);
+                    if (!p) return null;
+                    const isUser = isUserHome ? homePlayers.includes(p) : awayPlayers.includes(p);
+                    return (
+                      <div key={id} className={`flex items-center gap-2 p-2 rounded-sm border ${id === mvpEntry?.[0] ? 'bg-yellow-50/50 border-yellow-300' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="w-7 h-7 rounded-full bg-slate-300 flex items-center justify-center font-black text-[9px] shrink-0">{p.positions[0]}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] font-bold truncate">{p.name}</div>
+                          <div className="text-[8px] text-slate-500">{s.goals > 0 ? `${s.goals} gol${s.goals > 1 ? 'es' : ''}` : ''} {s.assists > 0 ? `${s.assists} asist.` : ''}</div>
+                        </div>
+                        <div className={`text-sm font-black ${s.rating >= 8 ? 'text-green-600' : s.rating >= 7 ? 'text-blue-600' : s.rating >= 6 ? 'text-amber-600' : 'text-red-600'}`}>
+                          {s.rating.toFixed(1)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+            <div className="p-3 border-t border-slate-200">
+              <button onClick={() => setShowPostMatch(false)} className="w-full py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-sm font-black uppercase text-[10px]">
+                Cerrar resumen
               </button>
             </div>
           </div>

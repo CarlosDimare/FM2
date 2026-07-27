@@ -9,6 +9,7 @@ import { SquadView } from './components/SquadView';
 import { StaffView } from './components/StaffView';
 import { TrainingView } from './components/TrainingView';
 import { ScoutingView } from './components/ScoutingView';
+import { BoardView } from './components/BoardView';
 import { PressConferenceView } from './components/PressConferenceView';
 import { PreMatchView } from './components/PreMatchView';
 import { MarketView } from './components/MarketView';
@@ -26,13 +27,20 @@ import { LifecycleManager } from './services/lifecycleManager';
 import { Club, Player, Fixture, SquadType } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID } from './services/utils';
 import { MatchSimulator } from './services/engine';
-import { RefreshCw, Globe, Play, Sun, Menu, Zap, Mail, Trophy, ChevronRight, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
+import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
 import { FMButton } from './components/FMUI';
 import { useWorldStore } from './stores/worldStore';
 import { useUIStore } from './stores/uiStore';
 import { useGameStore } from './stores/gameStore';
 
 const App: React.FC = () => {
+  const darkMode = useGameStore(s => s.darkMode);
+  const setDarkMode = useGameStore(s => s.setDarkMode);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+  }, [darkMode]);
+
   const notify = useWorldStore(s => s.notify);
 
   const {
@@ -124,7 +132,7 @@ const App: React.FC = () => {
         id, label: `Auto: ${currentDate.toLocaleDateString()}`, lastPlayed: new Date(),
         metaTeamName: userClub.name,
         metaManagerName: `${userName} ${userSurname}`,
-        gameState: { currentDate, userName, userSurname, userClubId: userClub.id, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation },
+        gameState: { currentDate, userName, userSurname, userClubId: userClub.id, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
@@ -158,6 +166,7 @@ const App: React.FC = () => {
     }
 
     if (currentDate >= seasonEndDate) {
+      world.processLoanReturns(currentDate);
       const result = useGameStore.getState().finishSeason(fixtures, userClub?.id);
       setSeasonSummary(result.summaries);
       setUserWonLeague(result.userWonLeague);
@@ -178,6 +187,9 @@ const App: React.FC = () => {
         if (changes <= -30) {
           world.addInboxMessage('SQUAD', 'Confianza de la directiva baja', `La directiva no está satisfecha con los resultados de esta temporada. Se esperan mejoras significativas.`, currentDate);
         }
+        world.checkManagerJobOffers(currentDate, userClub.id, useGameStore.getState().managerReputation);
+        const comps = world.getClubCompetitions(userClub.id);
+        comps.forEach(c => world.checkSquadRegistration(userClub.id, c.id, currentDate));
       }
       setView('HOME');
       notify();
@@ -208,7 +220,12 @@ const App: React.FC = () => {
         const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
         const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
         MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId);
+        const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
+        const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
+        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+        world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
+        world.trackU21Minutes(f.homeTeamId, hSquad, stats, currentDate);
+        world.trackU21Minutes(f.awayTeamId, aSquad, stats, currentDate);
       });
     }
 
@@ -223,6 +240,11 @@ const App: React.FC = () => {
     world.processAIActivity(nextDay);
     world.processDailyContracts(nextDay, userClub?.id);
     world.processDailyScouting(nextDay, userClub?.id);
+    if (nextDay.getMonth() === 7 && nextDay.getDate() === 1) {
+      world.generateYouthIntake(nextDay.getFullYear());
+      if (userClub) world.addInboxMessage('SQUAD', 'Cosecha de cantera', `Los juveniles de ${userClub.name} se han incorporado al club. Revisa los nuevos talentos en el equipo sub-20.`, nextDay);
+    }
+    if (nextDay.getDate() === 1) world.recalculateAllPlayerValues();
 
     const newCupFixtures = LifecycleManager.processCompetitionProgress(fixtures, nextDay);
     let allFixtures = fixtures;
@@ -283,7 +305,12 @@ const App: React.FC = () => {
         const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
         const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
         MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId);
+        const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
+        const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
+        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+        world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+        world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+        world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
       });
 
       const newCupFixtures = LifecycleManager.processCompetitionProgress(localFixtures, tempDate);
@@ -308,6 +335,7 @@ const App: React.FC = () => {
           const cupWinnerId = result.summaries.find((s: any) => s.compType !== 'LEAGUE' && s.championId)?.championId;
           const wonCup = cupWinnerId === userClub.id;
           world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, false);
+          world.checkManagerJobOffers(currentDate, userClub.id, useGameStore.getState().managerReputation);
         }
         setIsSimulating(false);
         setIsVacationModalOpen(false);
@@ -362,6 +390,7 @@ const App: React.FC = () => {
           const cupWinnerId = result.summaries.find((s: any) => s.compType !== 'LEAGUE' && s.championId)?.championId;
           const wonCup = cupWinnerId === userClub.id;
           world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, false);
+          world.checkManagerJobOffers(tempDate, userClub.id, useGameStore.getState().managerReputation);
         }
         setIsSimulating(false);
         setCurrentDate(tempDate);
@@ -387,7 +416,12 @@ const App: React.FC = () => {
         const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
         const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
         MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId);
+        const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
+        const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
+        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+        world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+        world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+        world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
       });
 
       LifecycleManager.checkBirthdays(tempDate);
@@ -427,8 +461,10 @@ const App: React.FC = () => {
     notify();
   };
 
-  const handleOpenSaveModal = () => {
+  const handleOpenSaveModal = async () => {
     setSaveNameInput(`${userClub?.shortName} - ${currentDate.toLocaleDateString()}`);
+    const saves = await listSaves();
+    setAvailableSaves(saves);
     setIsSaveModalOpen(true);
   };
 
@@ -440,7 +476,7 @@ const App: React.FC = () => {
         id, label: saveNameInput, lastPlayed: new Date(),
         metaTeamName: userClub.name,
         metaManagerName: `${userName} ${userSurname}`,
-        gameState: { currentDate, userName, userSurname, userClubId: userClub.id, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation },
+        gameState: { currentDate, userName, userSurname, userClubId: userClub.id, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
@@ -491,6 +527,9 @@ const App: React.FC = () => {
       }
       if (data.gameState.managerReputation) {
         useGameStore.getState().setManagerReputation(data.gameState.managerReputation);
+      }
+      if (data.gameState.darkMode !== undefined) {
+        useGameStore.getState().setDarkMode(data.gameState.darkMode);
       }
 
       if (club) {
@@ -633,6 +672,8 @@ const App: React.FC = () => {
         return <TrainingView club={userClub} players={world.getPlayersByClub(userClub.id)} staff={world.getStaffByClub(userClub.id)} />;
       case 'SCOUTING':
         return <ScoutingView clubId={userClub.id} onSelectPlayer={setSelectedPlayer} />;
+      case 'BOARD':
+        return <BoardView userClub={userClub} />;
       case 'CLUBS_LIST':
         return <ClubsListView onSelectClub={(c) => { setViewExternalClub(c); setView('EXTERNAL_CLUB'); }} />;
       case 'EXTERNAL_CLUB':
@@ -656,6 +697,7 @@ const App: React.FC = () => {
                   onSelectPlayer={setSelectedPlayer}
                   customTitle={`PLANTILLA - ${viewExternalClub.name}`}
                   currentDate={currentDate}
+                  club={viewExternalClub}
                 />
               </div>
             </div>
@@ -692,27 +734,30 @@ const App: React.FC = () => {
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
-          return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats) => {
-             nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
-             MatchSimulator.finalizeSeasonStats(
-               world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),
-               world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, h, a, nextFixture.competitionId
-             );
-             LifecycleManager.processPostMatchSuspensions(nextFixture.homeTeamId, nextFixture.awayTeamId);
-             MatchSimulator.processMatchInjuries(stats);
-             const userScore = homeClub.id === userClub.id ? h : a;
-             const oppScore = homeClub.id === userClub.id ? a : h;
-             useGameStore.getState().trackMatchResult(userScore, oppScore);
-             setView('PRESS_CONFERENCE_POST');
-             notify();
-          }} />;
+           return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats) => {
+              nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
+              MatchSimulator.finalizeSeasonStats(
+                world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),
+                world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, h, a, nextFixture.competitionId
+              );
+               LifecycleManager.processPostMatchSuspensions(nextFixture.homeTeamId, nextFixture.awayTeamId, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === nextFixture.homeTeamId).length, Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === nextFixture.awayTeamId).length);
+               MatchSimulator.processMatchInjuries(stats);
+               world.processMatchDayIncome(nextFixture.homeTeamId, nextFixture.competitionId, currentDate);
+               world.trackU21Minutes(nextFixture.homeTeamId, world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'), stats, currentDate);
+               world.trackU21Minutes(nextFixture.awayTeamId, world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, currentDate);
+              const userScore = homeClub.id === userClub.id ? h : a;
+              const oppScore = homeClub.id === userClub.id ? a : h;
+              useGameStore.getState().trackMatchResult(userScore, oppScore);
+              setView('PRESS_CONFERENCE_POST');
+              notify();
+           }} />;
         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
       }
       default:
         if (currentView.endsWith('_SQUAD')) {
           const type = currentView.split('_')[0] as SquadType;
-          return <SquadView players={world.getPlayersByClub(userClub.id).filter(p => p.squad === type)} onSelectPlayer={setSelectedPlayer} onContextMenu={handlePlayerContextMenu} currentDate={currentDate} />;
+          return <SquadView players={world.getPlayersByClub(userClub.id).filter(p => p.squad === type)} onSelectPlayer={setSelectedPlayer} onContextMenu={handlePlayerContextMenu} currentDate={currentDate} club={userClub} />;
         }
         if (currentView.endsWith('_TACTICS')) {
           const type = currentView.split('_')[0] as SquadType;
@@ -876,18 +921,42 @@ const App: React.FC = () => {
   const dateText = userClub ? userClub.primaryColor.replace('bg-', 'text-') : 'text-slate-700';
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-400 text-slate-950 overflow-hidden font-sans relative text-sm">
+    <div className="flex flex-col h-screen w-screen bg-slate-400 text-slate-950 overflow-hidden font-sans relative text-sm dark:bg-gray-900 dark:text-gray-100">
       <div className={`h-1 w-full ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-slate-800'}`}></div>
 
       {isSaveModalOpen && (
         <div className="fixed inset-0 z-[500] bg-slate-900/80 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in">
-          <div className="bg-slate-200 w-full max-sm rounded-sm border-2 border-slate-500 shadow-2xl p-6">
+          <div className="bg-slate-200 w-full max-lg rounded-sm border-2 border-slate-500 shadow-2xl p-6">
             <h3 className="text-lg font-black text-slate-900 uppercase italic mb-4 border-b border-slate-400 pb-2">Guardar Partida</h3>
             <div className="space-y-4">
               <div>
                 <label className="text-[10px] font-black text-slate-600 uppercase block mb-1">Nombre del Archivo</label>
-                <input type="text" autoFocus className="w-full bg-white border border-slate-400 rounded-sm px-3 py-2 text-slate-900 font-bold text-sm focus:border-slate-800 outline-none" value={saveNameInput} onChange={(e) => setSaveNameInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && confirmSaveGame()} />
+                <div className="flex gap-2">
+                  <input type="text" autoFocus className="flex-1 bg-white border border-slate-400 rounded-sm px-3 py-2 text-slate-900 font-bold text-sm focus:border-slate-800 outline-none" value={saveNameInput} onChange={(e) => setSaveNameInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && confirmSaveGame()} />
+                  <button onClick={async () => {
+                    const saves = await listSaves();
+                    setAvailableSaves(saves);
+                  }} className="p-2 bg-slate-300 border border-slate-400 rounded-sm hover:bg-slate-400 transition-colors" title="Actualizar lista"><RefreshCw size={14} /></button>
+                </div>
               </div>
+              {availableSaves.length > 0 && (
+                <div>
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">Sobrescribir un guardado existente</label>
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {availableSaves.map(save => (
+                      <div key={save.id} className="flex items-center gap-2 p-2 bg-white border border-slate-300 rounded-sm hover:border-amber-500 transition-all cursor-pointer" onClick={() => {
+                        setSaveNameInput(save.label);
+                      }}>
+                        <Trash2 size={12} className="text-slate-400 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[10px] font-bold text-slate-900 truncate block">{save.label}</span>
+                          <span className="text-[8px] text-slate-500">{save.teamName} · {new Date(save.date).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex gap-2">
                 <FMButton variant="secondary" onClick={() => setIsSaveModalOpen(false)} className="flex-1">Cancelar</FMButton>
                 <FMButton variant="primary" onClick={confirmSaveGame} className="flex-1">Guardar</FMButton>
@@ -923,6 +992,9 @@ const App: React.FC = () => {
               <button onClick={() => setIsAutoSaveEnabled(!isAutoSaveEnabled)} className={`p-1.5 rounded-sm border transition-colors ${isAutoSaveEnabled ? 'bg-slate-800 text-green-400 border-green-600' : 'bg-slate-700 text-slate-400 border-slate-600'}`} title={isAutoSaveEnabled ? 'Auto-guardado activado' : 'Auto-guardado desactivado'}>
                 <Save size={12} />
               </button>
+              <button onClick={() => setDarkMode(!darkMode)} className="p-1.5 rounded-sm border border-slate-600 bg-slate-700 text-yellow-300 hover:bg-slate-600 transition-colors" title={darkMode ? 'Modo claro' : 'Modo oscuro'}>
+                {darkMode ? <Sun size={12} /> : <Moon size={12} />}
+              </button>
               <FMButton variant={isPreMatchView ? "primary" : "primary"} onClick={advanceTime} className={userClub ? (isPreMatchView ? "bg-slate-950 text-white animate-pulse border-white/40" : "bg-slate-900 text-white border-white/30 shadow-lg") : ""}>
                 {isPreMatchView ? (
                   <><Zap size={10} fill="currentColor" /> Jugar Partido</>
@@ -948,10 +1020,22 @@ const App: React.FC = () => {
         <div className="fixed inset-0 bg-slate-900/80 z-[500] flex items-center justify-center p-6 backdrop-blur-md">
           <div className="bg-slate-200 w-full max-sm rounded-sm border border-slate-600 p-8 text-center shadow-2xl">
             {isSimulating ? (
-              <div className="space-y-6">
-                <RefreshCw size={48} className="text-slate-950 animate-spin mx-auto" />
-                <h2 className="text-xl font-black text-slate-950 uppercase italic">Simulando...</h2>
-                <p className="text-slate-600 font-mono font-bold text-lg">{currentDate.toLocaleDateString()}</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <RefreshCw size={20} className="text-slate-950 animate-spin" />
+                  <h2 className="text-xl font-black text-slate-950 uppercase italic">Simulando...</h2>
+                </div>
+                <div className="text-center">
+                  <p className="text-slate-600 font-mono font-bold text-sm">{currentDate.toLocaleDateString()}</p>
+                </div>
+                <div className="animate-pulse space-y-2 mt-4">
+                  <div className="h-3 bg-slate-300 rounded-sm w-3/4 mx-auto"></div>
+                  <div className="h-3 bg-slate-300 rounded-sm w-1/2 mx-auto"></div>
+                  <div className="h-3 bg-slate-300 rounded-sm w-2/3 mx-auto"></div>
+                  <div className="h-8 bg-slate-300 rounded-sm w-full mt-3"></div>
+                  <div className="h-8 bg-slate-300 rounded-sm w-full"></div>
+                </div>
+                <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold mt-2">Procesando jornadas...</p>
               </div>
             ) : (
               <>

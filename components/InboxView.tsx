@@ -4,7 +4,7 @@ import { world } from '../services/worldManager';
 import { InboxMessage, MessageCategory } from '../types';
 import { notifyInbox } from '../stores/worldStore';
 import { useUIStore } from '../stores/uiStore';
-import { Mail, ShoppingBag, Users, MessageSquare, Wallet, Trash2, Clock, ChevronRight, Inbox, Trophy, ArrowLeft, ChevronLeft, Binoculars } from 'lucide-react';
+import { Mail, ShoppingBag, Users, MessageSquare, Wallet, Trash2, Clock, ChevronRight, Inbox, Trophy, ArrowLeft, ChevronLeft, Binoculars, Briefcase } from 'lucide-react';
 import { FMButton } from './FMUI';
 
 interface InboxViewProps {
@@ -61,6 +61,13 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
     if (selectedMessage.category === 'MARKET') setView('NEGOTIATIONS');
     else if (selectedMessage.category === 'SQUAD') setView('SENIOR_SQUAD');
     else if (selectedMessage.category === 'COMPETITION') setView('TABLE');
+    else if (selectedMessage.category === 'STATEMENTS' && selectedMessage.relatedId) {
+      const club = world.getClub(selectedMessage.relatedId);
+      if (club) {
+        useUIStore.getState().setViewExternalClub(club);
+        setView('EXTERNAL_CLUB');
+      }
+    }
   };
 
   return (
@@ -185,7 +192,7 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
                     {selectedMessage.body}
                   </p>
                   
-                  {(selectedMessage.category === 'MARKET' || selectedMessage.category === 'SQUAD' || selectedMessage.category === 'COMPETITION') && (
+                  {(selectedMessage.category === 'MARKET' || selectedMessage.category === 'SQUAD' || selectedMessage.category === 'COMPETITION' || (selectedMessage.category === 'STATEMENTS' && selectedMessage.relatedId)) && (
                     <button 
                       onClick={handleActionRequired}
                       className="mt-10 w-full p-4 md:p-6 bg-[#f0f4f0] border border-[#a0b0a0] rounded-sm flex items-center justify-between shadow-inner hover:bg-[#ccd9cc] transition-all group"
@@ -193,13 +200,15 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
                        <div className="flex items-center gap-4">
                           <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-900 rounded-sm flex items-center justify-center text-white shadow-md">
                              {selectedMessage.category === 'MARKET' ? <ShoppingBag size={20}/> : 
-                              selectedMessage.category === 'COMPETITION' ? <Trophy size={20}/> : <Users size={20}/>}
+                              selectedMessage.category === 'COMPETITION' ? <Trophy size={20}/> : 
+                              selectedMessage.category === 'STATEMENTS' ? <Briefcase size={20}/> : <Users size={20}/>}
                           </div>
                           <div className="text-left">
                              <p className="text-[9px] md:text-xs font-black text-slate-500 uppercase tracking-[0.2em]">Acción Requerida</p>
                              <p className="text-sm md:text-base text-slate-900 font-black italic">
                                 {selectedMessage.category === 'MARKET' ? 'Ir al Centro de Fichajes' : 
-                                 selectedMessage.category === 'COMPETITION' ? 'Ver Competición' : 'Gestionar Plantel'}
+                                 selectedMessage.category === 'COMPETITION' ? 'Ver Competición' : 
+                                 selectedMessage.category === 'STATEMENTS' ? 'Ver Club' : 'Gestionar Plantel'}
                              </p>
                           </div>
                        </div>

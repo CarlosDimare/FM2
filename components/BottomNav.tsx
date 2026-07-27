@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Users, Clipboard, Play, MoreHorizontal, Trophy, ShoppingBag, Wallet, Briefcase, Dumbbell, Binoculars } from 'lucide-react';
+import { Home, Users, Clipboard, Play, MoreHorizontal, Trophy, ShoppingBag, Wallet, Briefcase, Dumbbell, Binoculars, Award } from 'lucide-react';
 import { useUIStore } from '../stores/uiStore';
 
 const tabs = [
@@ -17,6 +17,7 @@ const moreItems = [
   { id: 'STAFF', label: 'Staff', icon: Briefcase },
   { id: 'TRAINING', label: 'Entreno', icon: Dumbbell },
   { id: 'SCOUTING', label: 'Scouting', icon: Binoculars },
+  { id: 'BOARD', label: 'Directiva', icon: Award },
 ];
 
 export const BottomNav: React.FC = () => {

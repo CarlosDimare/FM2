@@ -14,6 +14,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
   const [posFilter, setPosFilter] = useState<string>('ALL');
   const [minAge, setMinAge] = useState<number>(15);
   const [maxAge, setMaxAge] = useState<number>(45);
+  const [minAbility, setMinAbility] = useState<number>(0);
 
   const results = useMemo(() => {
     if (search.length < 3 && posFilter === 'ALL') return [];
@@ -21,9 +22,15 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
       const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
       const matchesPos = posFilter === 'ALL' || p.positions.some(pos => pos.includes(posFilter));
       const matchesAge = p.age >= minAge && p.age <= maxAge;
-      return matchesSearch && matchesPos && matchesAge;
+      const matchesAbility = p.currentAbility >= minAbility;
+      return matchesSearch && matchesPos && matchesAge && matchesAbility;
     }).sort((a,b) => b.currentAbility - a.currentAbility).slice(0, 200);
-  }, [search, posFilter, minAge, maxAge]);
+  }, [search, posFilter, minAge, maxAge, minAbility]);
+
+  const avgForm = (p: Player): number => {
+    if (!p.formRatings || p.formRatings.length === 0) return 0;
+    return p.formRatings.reduce((a,b) => a+b, 0) / p.formRatings.length;
+  };
 
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -59,24 +66,44 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
                   value={posFilter}
                   onChange={(e) => setPosFilter(e.target.value)}
                >
-                  <option value="ALL">Cualquiera</option>
-                  <option value="GK">Portero</option>
-                  <option value="DC">Defensa Central</option>
-                  <option value="MC">Centrocampista</option>
-                  <option value="AM">Mediapunta</option>
-                  <option value="ST">Delantero</option>
+                   <option value="ALL">Cualquiera</option>
+                   <option value="GK">Portero</option>
+                   <option value="DC">Defensa Central</option>
+                   <option value="DL">Lateral Izquierdo</option>
+                   <option value="DR">Lateral Derecho</option>
+                   <option value="DM">Mediocentro Def.</option>
+                   <option value="MC">Centrocampista</option>
+                   <option value="MR">Interior Der.</option>
+                   <option value="ML">Interior Izq.</option>
+                   <option value="AM">Mediapunta</option>
+                   <option value="AML">Extremo Izq.</option>
+                   <option value="AMR">Extremo Der.</option>
+                   <option value="ST">Delantero</option>
                </select>
             </div>
-            <div className="flex gap-2">
-               <div className="flex-1">
-                  <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Edad Min</label>
-                  <input type="number" value={minAge} onChange={(e) => setMinAge(Number(e.target.value))} className="w-full bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[11px] font-bold text-slate-900 outline-none" />
-               </div>
-               <div className="flex-1">
-                  <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Edad Max</label>
-                  <input type="number" value={maxAge} onChange={(e) => setMaxAge(Number(e.target.value))} className="w-full bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[11px] font-bold text-slate-900 outline-none" />
-               </div>
-            </div>
+             <div className="flex gap-2">
+                <div className="flex-1">
+                   <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Edad Min</label>
+                   <input type="number" value={minAge} onChange={(e) => setMinAge(Number(e.target.value))} className="w-full bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[11px] font-bold text-slate-900 outline-none" />
+                </div>
+                <div className="flex-1">
+                   <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Edad Max</label>
+                   <input type="number" value={maxAge} onChange={(e) => setMaxAge(Number(e.target.value))} className="w-full bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[11px] font-bold text-slate-900 outline-none" />
+                </div>
+             </div>
+             <div>
+                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">CA Mínimo</label>
+                <select className="w-full bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[11px] font-bold text-slate-900 outline-none cursor-pointer" value={minAbility} onChange={e => setMinAbility(Number(e.target.value))}>
+                  <option value="0">Cualquiera</option>
+                  <option value="50">≥ 50</option>
+                  <option value="80">≥ 80</option>
+                  <option value="100">≥ 100</option>
+                  <option value="120">≥ 120</option>
+                  <option value="140">≥ 140</option>
+                  <option value="160">≥ 160</option>
+                  <option value="180">≥ 180</option>
+                </select>
+             </div>
          </div>
       </FMBox>
 
@@ -86,6 +113,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
             <div className="flex-1">Jugador</div>
             <div className="w-[120px]">Club</div>
             <div className="w-[40px] text-center">Edad</div>
+            <div className="w-[50px] text-right">Forma</div>
             <div className="w-[80px] text-right">Valor</div>
           </div>
           <div ref={parentRef} className="flex-1 overflow-y-auto custom-scroll">
@@ -109,6 +137,15 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
                       {world.getClub(p.clubId)?.name || 'Agente Libre'}
                     </div>
                     <div className="w-[40px] text-center font-bold">{p.age}</div>
+                    <div className="w-[50px] text-right font-bold text-[10px]">
+                      {avgForm(p) > 0 ? (
+                        <span className={avgForm(p) >= 7.5 ? 'text-green-600' : avgForm(p) >= 6.5 ? 'text-blue-600' : avgForm(p) >= 5 ? 'text-amber-600' : 'text-red-600'}>
+                          {avgForm(p).toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">-</span>
+                      )}
+                    </div>
                     <div className="w-[80px] text-right font-bold text-slate-900">
                       £{(p.value / 1000000).toFixed(1)}M
                     </div>
