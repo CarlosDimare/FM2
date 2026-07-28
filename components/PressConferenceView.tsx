@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
-import { Club } from '../types';
+import React, { useState, useMemo } from 'react';
+import { Club, Player } from '../types';
 import { world } from '../services/worldManager';
 import { notifyPlayers, notifyClubs } from '../stores/worldStore';
 import { FMButton, FMBox } from './FMUI';
-import { Mic, Newspaper, ThumbsUp, ThumbsDown, Minus } from 'lucide-react';
+import { Mic, Newspaper, ThumbsUp, ThumbsDown, Minus, Star, AlertTriangle, Target } from 'lucide-react';
 
 interface PressConferenceViewProps {
   club: Club;
@@ -47,11 +47,29 @@ const PRE_MATCH_QUESTIONS: PressQuestion[] = [
   },
   {
     id: 'q3',
-    question: `${'¿Qué objetivos tiene el club esta temporada?'}`,
+    question: '¿Qué objetivos tiene el club esta temporada?',
     options: [
       { text: "Vamos a pelear por el título. Para eso estamos aquí.", moraleEffect: 5, confidenceEffect: 5, reaction: 'POSITIVE' },
       { text: "Partido a partido. Sin obsesionarnos con el objetivo final.", moraleEffect: 1, confidenceEffect: 2, reaction: 'NEUTRAL' },
       { text: "La permanencia es lo prioritario. Iremos paso a paso.", moraleEffect: -2, confidenceEffect: -3, reaction: 'NEGATIVE' },
+    ],
+  },
+  {
+    id: 'q4',
+    question: '¿Cómo valoras la preparación física del equipo?',
+    options: [
+      { text: "Estamos en óptimas condiciones. El trabajo en preseason fue excelente.", moraleEffect: 4, confidenceEffect: 3, reaction: 'POSITIVE' },
+      { text: "HaySome fatiga acumulada, pero estamos listos.", moraleEffect: 1, confidenceEffect: 1, reaction: 'NEUTRAL' },
+      { text: "Algunos jugadores llegan con cargas. Será un factor.", moraleEffect: -2, confidenceEffect: -3, reaction: 'NEGATIVE' },
+    ],
+  },
+  {
+    id: 'q5',
+    question: 'El rival ha fichado refuerzos importantes. ¿Te preocupa?',
+    options: [
+      { text: "No me preocupan los fichajes ajenos. Confío en mi plantilla.", moraleEffect: 3, confidenceEffect: 2, reaction: 'POSITIVE' },
+      { text: "Son equipos más potentes, pero el fútbol se juega en el campo.", moraleEffect: 1, confidenceEffect: 1, reaction: 'NEUTRAL' },
+      { text: "La diferencia de presupuesto se nota. Será complicado.", moraleEffect: -4, confidenceEffect: -4, reaction: 'NEGATIVE' },
     ],
   },
 ];
@@ -75,6 +93,36 @@ const POST_MATCH_QUESTIONS: PressQuestion[] = [
       { text: "Entiendo su frustración. Nosotros también estamos dolidos.", moraleEffect: -2, confidenceEffect: -2, reaction: 'NEGATIVE' },
     ],
   },
+  {
+    id: 'pq3',
+    question: '¿Qué pasó con la defensa hoy?',
+    options: [
+      { text: "La defensa estuvo sólida. Los goles fueron por errores puntuales.", moraleEffect: 2, confidenceEffect: 2, reaction: 'POSITIVE' },
+      { text: "Hay que trabajar más en la colocación. Los goles fueron evitables.", moraleEffect: -1, confidenceEffect: -1, reaction: 'NEUTRAL' },
+      { text: "Fue un desastre defensivo. Necesitamos cambios urgentes.", moraleEffect: -6, confidenceEffect: -5, reaction: 'NEGATIVE' },
+    ],
+  },
+  {
+    id: 'pq4',
+    question: '¿Cómo afecta este resultado a los objetivos de la temporada?',
+    options: [
+      { text: "Es un golpe, pero tenemos tiempo para reaccionar.", moraleEffect: 2, confidenceEffect: 1, reaction: 'POSITIVE' },
+      { text: "No cambia nada. Seguimos con nuestro plan.", moraleEffect: 1, confidenceEffect: 0, reaction: 'NEUTRAL' },
+      { text: "Es un revés severo. Tendremos que replantearnos metas.", moraleEffect: -4, confidenceEffect: -6, reaction: 'NEGATIVE' },
+    ],
+  },
+];
+
+const DERBY_QUESTIONS: PressQuestion[] = [
+  {
+    id: 'd1',
+    question: '¿Cómo está el ambiente para el clásico?',
+    options: [
+      { text: "La afición está encendida. Vamos a darles la alegría.", moraleEffect: 6, confidenceEffect: 4, reaction: 'POSITIVE' },
+      { text: "Es otro partido. No nos dejamos llevar por la euforia.", moraleEffect: 2, confidenceEffect: 2, reaction: 'NEUTRAL' },
+      { text: "La presión es enorme. Espero que no nos pese.", moraleEffect: -3, confidenceEffect: -3, reaction: 'NEGATIVE' },
+    ],
+  },
 ];
 
 export const PressConferenceView: React.FC<PressConferenceViewProps> = ({ club, opponent, context, homeScore, awayScore, onFinish }) => {
@@ -82,7 +130,48 @@ export const PressConferenceView: React.FC<PressConferenceViewProps> = ({ club, 
   const [answers, setAnswers] = useState<number[]>([]);
   const [finished, setFinished] = useState(false);
 
-  const questions = context === 'PRE_MATCH' ? PRE_MATCH_QUESTIONS : POST_MATCH_QUESTIONS;
+  // Check if it's a derby
+  const isDerby = useMemo(() => {
+    return club.country === opponent.country;
+  }, [club, opponent]);
+
+  // Get star player question if available
+  const starPlayerQuestion = useMemo(() => {
+    if (context === 'POST_MATCH') return null;
+    const topScorer = world.players
+      .filter(p => p.clubId === club.id && p.goals > 0)
+      .sort((a, b) => b.goals - a.goals)[0];
+    
+    if (topScorer && topScorer.goals >= 5) {
+      return {
+        id: 'star1',
+        question: `${topScorer.name} lleva ${topScorer.goals} goles esta temporada. ¿Es el jugador clave del equipo?`,
+        options: [
+          { text: `Sin duda. ${topScorer.name} es fundamental para nuestro juego.`, moraleEffect: 4, confidenceEffect: 2, reaction: 'POSITIVE' as const },
+          { text: "Todos los jugadores son importantes. No dependemos de uno solo.", moraleEffect: 1, confidenceEffect: 1, reaction: 'NEUTRAL' as const },
+          { text: "El equipo está por encima de cualquier individualidad.", moraleEffect: 0, confidenceEffect: 0, reaction: 'NEUTRAL' as const },
+        ],
+      };
+    }
+    return null;
+  }, [club, context]);
+
+  // Build question pool based on context
+  const questions = useMemo(() => {
+    let pool = context === 'PRE_MATCH' ? [...PRE_MATCH_QUESTIONS] : [...POST_MATCH_QUESTIONS];
+    
+    // Add derby question if applicable
+    if (isDerby && context === 'PRE_MATCH') {
+      pool = [...DERBY_QUESTIONS, ...pool];
+    }
+    
+    // Add star player question if available
+    if (starPlayerQuestion) {
+      pool.splice(1, 0, starPlayerQuestion);
+    }
+    
+    return pool;
+  }, [context, isDerby, starPlayerQuestion]);
 
   const handleAnswer = (optionIdx: number) => {
     const newAnswers = [...answers, optionIdx];

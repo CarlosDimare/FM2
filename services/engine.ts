@@ -786,18 +786,45 @@ if (stat.sustainedInjury.days > 30) {
       s.rating = Math.max(1, Math.min(10, score));
   }
 
-  static simulateQuickMatch(homeId: string, awayId: string, squadType: string): { homeScore: number, awayScore: number, stats: Record<string, PlayerMatchStats> } {
-      const hS = world.getPlayersByClub(homeId).filter(p => p.squad === squadType);
-      const aS = world.getPlayersByClub(awayId).filter(p => p.squad === squadType);
-      const hRep = world.getClub(homeId)?.reputation || 5000;
-      const aRep = world.getClub(awayId)?.reputation || 5000;
-      let hScore = 0, aScore = 0;
-      const bias = (hRep - aRep) / 2500; 
-      for(let i=0; i<3; i++) { 
-        if (Math.random() + (bias * 0.05) > 0.93) hScore++; 
-        if (Math.random() - (bias * 0.05) > 0.94) aScore++; 
-      }
-      const stats = this.initMatchStats([...hS, ...aS]);
-      return { homeScore: hScore, awayScore: aScore, stats };
-  }
+   static simulateQuickMatch(homeId: string, awayId: string, squadType: string): { homeScore: number, awayScore: number, stats: Record<string, PlayerMatchStats> } {
+       const hS = world.getPlayersByClub(homeId).filter(p => p.squad === squadType);
+       const aS = world.getPlayersByClub(awayId).filter(p => p.squad === squadType);
+       const hRep = world.getClub(homeId)?.reputation || 5000;
+       const aRep = world.getClub(awayId)?.reputation || 5000;
+       let hScore = 0, aScore = 0;
+       const bias = (hRep - aRep) / 2500; 
+       for(let i=0; i<3; i++) { 
+         if (Math.random() + (bias * 0.05) > 0.93) hScore++; 
+         if (Math.random() - (bias * 0.05) > 0.94) aScore++; 
+       }
+       const stats = this.initMatchStats([...hS, ...aS]);
+       return { homeScore: hScore, awayScore: aScore, stats };
+   }
+
+   static simulateNationalTeamMatch(homeTeamId: string, awayTeamId: string): { homeScore: number, awayScore: number } {
+       const homePlayers = world.getPlayersByNationalTeam(homeTeamId);
+       const awayPlayers = world.getPlayersByNationalTeam(awayTeamId);
+
+       const homeRep = world.nationalTeamManager?.nationalTeams.find((t: any) => t.id === homeTeamId)?.reputation || 7000;
+       const awayRep = world.nationalTeamManager?.nationalTeams.find((t: any) => t.id === awayTeamId)?.reputation || 7000;
+
+       const homeAvg = homePlayers.length > 0
+          ? homePlayers.reduce((sum, p) => sum + p.currentAbility, 0) / homePlayers.length
+          : 100;
+       const awayAvg = awayPlayers.length > 0
+          ? awayPlayers.reduce((sum, p) => sum + p.currentAbility, 0) / awayPlayers.length
+          : 100;
+
+       let homeScore = 0, awayScore = 0;
+       const repBias = (homeRep - awayRep) / 2000;
+       const abilityBias = (homeAvg - awayAvg) / 50;
+
+       // Simulate ~90 minutes (3 phases)
+       for (let i = 0; i < 3; i++) {
+          if (Math.random() + repBias * 0.03 + abilityBias * 0.02 > 0.92) homeScore++;
+          if (Math.random() - repBias * 0.03 - abilityBias * 0.02 > 0.93) awayScore++;
+       }
+
+       return { homeScore, awayScore };
+   }
 }

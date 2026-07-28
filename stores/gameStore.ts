@@ -4,6 +4,8 @@ import { world } from '../services/worldManager';
 import { Scheduler } from '../services/scheduler';
 import { LifecycleManager } from '../services/lifecycleManager';
 import { LeagueEngine } from '../services/leagueEngine';
+import { ChampionsLeagueManager } from '../services/championsLeague';
+import { NationalTeamManager } from '../services/nationalTeamManager';
 
 interface GameStore {
   fixtures: Fixture[];
@@ -40,8 +42,8 @@ interface GameStore {
 export const useGameStore = create<GameStore>((set, get) => ({
   fixtures: [],
   nextFixture: null,
-  currentDate: new Date(2008, 7, 16),
-  seasonEndDate: new Date(2009, 6, 10),
+  currentDate: new Date(2026, 7, 1),
+  seasonEndDate: new Date(2027, 5, 30),
   managerHistory: {
     totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
     goalsFor: 0, goalsAgainst: 0, currentStreak: null, streakCount: 0,
@@ -200,6 +202,107 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const others = (world.getClubsByLeague('L_SAM_OTHER') || []).slice(0, 2);
       const cwcPool = [...bossTeams, ...libTeams, ...others];
       allFixtures.push(...Scheduler.generateCupRound(cwc.id, cwcPool, decDate, 'SEMI_FINAL'));
+    }
+
+    // ─── UEFA Champions League ─────────────────────────────────────────────
+    const uclStart = new Date(startFrom);
+    uclStart.setMonth(uclStart.getMonth() + 1); // September
+    while (uclStart.getDay() !== 2 && uclStart.getDay() !== 3) uclStart.setDate(uclStart.getDate() + 1);
+
+    // Get top clubs from European leagues for UCL
+    const europeanLeagueIds = ['L_ESP_1', 'L_ESP_2', 'L_ITA_1', 'L_ITA_2', 'L_DEU_1', 'L_FRA_1', 'L_FRA_2', 'L_NLD_1', 'L_BEL_1', 'L_PRT_1', 'L_TUR_1'];
+    const uclPool: any[] = [];
+    for (const lid of europeanLeagueIds) {
+      const clubs = world.getClubsByLeague(lid).sort((a, b) => b.reputation - a.reputation);
+      uclPool.push(...clubs.slice(0, 4));
+    }
+    if (uclPool.length >= 32) {
+      const uclClubs = uclPool.slice(0, 32).map(c => ({
+        clubId: c.id, clubName: c.name, country: c.country, seed: 0,
+      }));
+      allFixtures.push(...ChampionsLeagueManager.generateLeaguePhase(uclClubs, uclStart));
+    }
+
+    // ─── UEFA Europa League ────────────────────────────────────────────────
+    const uelStart = new Date(startFrom);
+    uelStart.setMonth(uelStart.getMonth() + 1);
+    while (uelStart.getDay() !== 3) uelStart.setDate(uelStart.getDate() + 1);
+    const uelPool: any[] = [];
+    for (const lid of europeanLeagueIds) {
+      const clubs = world.getClubsByLeague(lid).sort((a, b) => b.reputation - a.reputation);
+      uelPool.push(...clubs.slice(4, 6));
+    }
+    if (uelPool.length >= 32) {
+      const uelClubs = uelPool.slice(0, 32).map(c => ({
+        clubId: c.id, clubName: c.name, country: c.country, seed: 0,
+      }));
+      allFixtures.push(...Scheduler.generateContinentalGroups('UEL', uelClubs.map(c => world.getClub(c.clubId)).filter(Boolean) as any[], uelStart));
+    }
+
+    // ─── Domestic Cups ─────────────────────────────────────────────────────
+    const domesticCupDate = new Date(startFrom);
+    domesticCupDate.setMonth(startFrom.getMonth() + 3);
+    while (domesticCupDate.getDay() !== 3) domesticCupDate.setDate(domesticCupDate.getDate() + 1);
+
+    // Copa del Rey (all Spanish clubs)
+    const copaRey = world.competitions.find(c => c.id === 'COPA_REY');
+    if (copaRey) {
+      const espClubs = [...world.getClubsByLeague('L_ESP_1'), ...world.getClubsByLeague('L_ESP_2')];
+      if (espClubs.length >= 32) {
+        allFixtures.push(...Scheduler.generateCupRound(copaRey.id, espClubs.slice(0, 32), domesticCupDate, 'ROUND_OF_32'));
+      }
+    }
+
+    // FA Cup (all English clubs)
+    const faCup = world.competitions.find(c => c.id === 'FA_CUP');
+    if (faCup) {
+      const engClubs = [...world.getClubsByLeague('L_ENG_1'), ...world.getClubsByLeague('L_ENG_2')];
+      if (engClubs.length >= 32) {
+        allFixtures.push(...Scheduler.generateCupRound(faCup.id, engClubs.slice(0, 32), domesticCupDate, 'ROUND_OF_32'));
+      }
+    }
+
+    // DFB Pokal (all German clubs)
+    const dfbPokal = world.competitions.find(c => c.id === 'DFB_POKAL');
+    if (dfbPokal) {
+      const deuClubs = [...world.getClubsByLeague('L_DEU_1')];
+      if (deuClubs.length >= 32) {
+        allFixtures.push(...Scheduler.generateCupRound(dfbPokal.id, deuClubs.slice(0, 32), domesticCupDate, 'ROUND_OF_32'));
+      }
+    }
+
+    // Coppa Italia (all Italian clubs)
+    const coppaItalia = world.competitions.find(c => c.id === 'COPA_ITALIA');
+    if (coppaItalia) {
+      const itaClubs = [...world.getClubsByLeague('L_ITA_1'), ...world.getClubsByLeague('L_ITA_2')];
+      if (itaClubs.length >= 32) {
+        allFixtures.push(...Scheduler.generateCupRound(coppaItalia.id, itaClubs.slice(0, 32), domesticCupDate, 'ROUND_OF_32'));
+      }
+    }
+
+    // Coupe de France (all French clubs)
+    const coupeDeFrance = world.competitions.find(c => c.id === 'COPA_FRANCE');
+    if (coupeDeFrance) {
+      const fraClubs = [...world.getClubsByLeague('L_FRA_1'), ...world.getClubsByLeague('L_FRA_2')];
+      if (fraClubs.length >= 32) {
+        allFixtures.push(...Scheduler.generateCupRound(coupeDeFrance.id, fraClubs.slice(0, 32), domesticCupDate, 'ROUND_OF_32'));
+      }
+    }
+
+    // ─── National Team Fixtures ────────────────────────────────────────────
+    const wcqDate = new Date(startFrom);
+    wcqDate.setMonth(wcqDate.getMonth() + 2); // October for WC qualifiers
+    if (world.nationalTeamManager) {
+      allFixtures.push(...world.nationalTeamManager.generateWorldCupQualifiers(startFrom.getFullYear(), 'CONMEBOL'));
+      allFixtures.push(...world.nationalTeamManager.generateWorldCupQualifiers(startFrom.getFullYear(), 'UEFA'));
+
+      // World Cup final tournament (after qualifiers, in June of next year)
+      const wcYear = startFrom.getFullYear() + 2;
+      const qualifiedTeams = [
+        'ARG', 'BRA', 'FRA', 'ESP', 'ENG', 'DEU', 'ITA', 'NLD',
+        'COL', 'URU', 'BEL', 'PRT', 'HRV', 'CHE', 'DNK', 'MAR',
+      ];
+      allFixtures.push(...world.nationalTeamManager.generateWorldCupFinalTournament(qualifiedTeams, wcYear));
     }
 
     set({ fixtures: allFixtures });

@@ -414,45 +414,204 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
     });
   }
 
-  static processCompetitionProgress(fixtures: Fixture[], currentDate: Date): Fixture[] {
-      const newFixtures: Fixture[] = [];
-      const cups = world.competitions.filter(c => c.type === 'CUP' || c.type.startsWith('CONTINENTAL') || c.type === 'GLOBAL');
-      
-      cups.forEach(cup => {
-         const cupFixtures = fixtures.filter(f => f.competitionId === cup.id);
-         
-         if (cup.type.startsWith('CONTINENTAL')) {
-            const groupMatches = cupFixtures.filter(f => f.stage === 'GROUP');
-            const hasRound16 = cupFixtures.some(f => f.stage === 'ROUND_OF_16');
-            
-            if (groupMatches.length > 0 && groupMatches.every(f => f.played) && !hasRound16) {
-               const pot1: Club[] = [];
-               const pot2: Club[] = [];
-               
-               for(let g=0; g<8; g++) {
-                  const groupTable = world.getLeagueTable(cup.id, fixtures, 'SENIOR', g);
-                  if (groupTable.length >= 2) {
-                     const first = world.getClub(groupTable[0].clubId);
-                     const second = world.getClub(groupTable[1].clubId);
-                     if (first) pot1.push(first);
-                     if (second) pot2.push(second);
-                  }
-               }
-               
-               if (pot1.length === 8 && pot2.length === 8) {
-                  const nextDate = this.findNextCupDate(currentDate);
-                  newFixtures.push(...Scheduler.generateKnockoutDraw(cup.id, pot1, pot2, nextDate, 'ROUND_OF_16'));
-                  world.addInboxMessage('COMPETITION', `Sorteo ${cup.name}`, `Finalizada la fase de grupos. Se han sorteado los cruces de Octavos.`, currentDate, cup.id);
-               }
-            } else {
-               this.processKnockoutStage(cup, cupFixtures, currentDate, newFixtures);
-            }
-         } else {
-            this.processKnockoutStage(cup, cupFixtures, currentDate, newFixtures);
-         }
-      });
-      return newFixtures;
-  }
+   static processCompetitionProgress(fixtures: Fixture[], currentDate: Date): Fixture[] {
+       const newFixtures: Fixture[] = [];
+       const cups = world.competitions.filter(c => c.type === 'CUP' || c.type.startsWith('CONTINENTAL') || c.type === 'GLOBAL');
+       
+       cups.forEach(cup => {
+          const cupFixtures = fixtures.filter(f => f.competitionId === cup.id);
+          
+          if (cup.id === 'UCL') {
+             // UCL Swiss format: league phase → playoff → R16 → QF → SF → F
+             const leaguePhaseMatches = cupFixtures.filter(f => f.stage === 'GROUP');
+             const hasPlayoff = cupFixtures.some(f => f.stage === 'QUARTER_FINAL' && f.homeTeamId.startsWith('ucl_'));
+             const hasR16 = cupFixtures.some(f => f.stage === 'ROUND_OF_16');
+             
+             if (leaguePhaseMatches.length > 0 && leaguePhaseMatches.every(f => f.played) && !hasPlayoff && !hasR16) {
+                // League phase complete, generate playoff round (9th-24th)
+                  const allClubIds = [...new Set(leaguePhaseMatches.flatMap(f => [f.homeTeamId, f.awayTeamId]))];
+                const standings = this.calculateUCLStandings(leaguePhaseMatches, allClubIds);
+                
+                const playoffTeams = standings.filter(s => s.position >= 9 && s.position <= 24);
+                const directQualifiers = standings.filter(s => s.position <= 8);
+                
+                if (playoffTeams.length >= 2) {
+                   const nextDate = this.findNextCupDate(currentDate);
+                   // Playoff: 9th vs 24th, 10th vs 23rd, etc.
+                   for (let i = 0; i < playoffTeams.length / 2; i++) {
+                      const home = world.getClub(playoffTeams[i].clubId);
+                      const away = world.getClub(playoffTeams[playoffTeams.length - 1 - i].clubId);
+                      if (home && away) {
+                         newFixtures.push({
+                            id: generateUUID(), competitionId: 'UCL', homeTeamId: home.id,
+                            awayTeamId: away.id, date: new Date(nextDate), played: false,
+                            squadType: 'SENIOR', stage: 'QUARTER_FINAL',
+                         });
+                      }
+                   }
+                   world.addInboxMessage('COMPETITION', 'UCL Playoff', `Clasificados al playoff de la Champions League.`, currentDate, 'UCL');
+                }
+                
+                // If no playoffs needed (all direct), go to R16
+                if (playoffTeams.length === 0 && directQualifiers.length >= 16) {
+                   const nextDate = this.findNextCupDate(currentDate);
+                   const seeds = directQualifiers.slice(0, 8);
+                   const nonSeeds = directQualifiers.slice(8, 16);
+                   for (let i = 0; i < 8; i++) {
+                      const home = world.getClub(nonSeeds[i].clubId);
+                      const away = world.getClub(seeds[i].clubId);
+                      if (home && away) {
+                         newFixtures.push({
+                            id: generateUUID(), competitionId: 'UCL', homeTeamId: home.id,
+                            awayTeamId: away.id, date: new Date(nextDate), played: false,
+                            squadType: 'SENIOR', stage: 'ROUND_OF_16',
+                         });
+                      }
+                   }
+                }
+             } else if (hasPlayoff && !hasR16) {
+                // Check if playoff is done, generate R16
+                const playoffMatches = cupFixtures.filter(f => f.stage === 'QUARTER_FINAL' && f.homeTeamId.startsWith('ucl_'));
+                if (playoffMatches.length > 0 && playoffMatches.every(f => f.played)) {
+                   const winners: Club[] = [];
+                   playoffMatches.forEach(f => {
+                      const winnerId = f.homeScore! > f.awayScore! ? f.homeTeamId : f.awayTeamId;
+                      const w = world.getClub(winnerId);
+                      if (w) winners.push(w);
+                   });
+                   
+                   const directQualifiers = standings.filter(s => s.position <= 8);
+                   const r16Teams = [...directQualifiers.slice(0, 8), ...winners.map(c => ({ clubId: c.id, position: 0 }))];
+                   
+                   if (r16Teams.length >= 16) {
+                      const nextDate = this.findNextCupDate(currentDate);
+                      const seeds = r16Teams.slice(0, 8);
+                      const nonSeeds = r16Teams.slice(8, 16);
+                      for (let i = 0; i < 8; i++) {
+                         const home = world.getClub(nonSeeds[i].clubId);
+                         const away = world.getClub(seeds[i].clubId);
+                         if (home && away) {
+                            newFixtures.push({
+                               id: generateUUID(), competitionId: 'UCL', homeTeamId: home.id,
+                               awayTeamId: away.id, date: new Date(nextDate), played: false,
+                               squadType: 'SENIOR', stage: 'ROUND_OF_16',
+                            });
+                         }
+                      }
+                   }
+                }
+             } else {
+                this.processKnockoutStage(cup, cupFixtures, currentDate, newFixtures);
+             }
+          } else if (['COPA', 'EURO', 'AFCON', 'WC_FINAL'].includes(cup.id)) {
+             // National team tournament: group stage → knockout
+             const groupMatches = cupFixtures.filter(f => f.stage === 'GROUP');
+             const hasKnockout = cupFixtures.some(f => 
+                ['ROUND_OF_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'FINAL'].includes(f.stage)
+             );
+             
+             if (groupMatches.length > 0 && groupMatches.every(f => f.played) && !hasKnockout) {
+                const groupCount = cup.id === 'WC_FINAL' ? 8 : cup.id === 'COPA' || cup.id === 'EURO' ? 8 : 2;
+                const winners: Club[] = [];
+                const runnersUp: Club[] = [];
+                
+                for (let g = 0; g < groupCount; g++) {
+                   const groupTable = world.getLeagueTable(cup.id, fixtures, 'SENIOR', g);
+                   if (groupTable.length >= 2) {
+                      const first = world.getClub(groupTable[0].clubId);
+                      const second = world.getClub(groupTable[1].clubId);
+                      if (first) winners.push(first);
+                      if (second) runnersUp.push(second);
+                   }
+                }
+                
+                if (winners.length >= 8 && runnersUp.length >= 8) {
+                   const nextDate = this.findNextCupDate(currentDate);
+                   for (let i = 0; i < 8; i++) {
+                      const home = runnersUp[i];
+                      const away = winners[(i + 1) % 8];
+                      if (home && away) {
+                         newFixtures.push({
+                            id: generateUUID(), competitionId: cup.id, homeTeamId: home.id,
+                            awayTeamId: away.id, date: new Date(nextDate), played: false,
+                            squadType: 'SENIOR', stage: 'QUARTER_FINAL',
+                         });
+                      }
+                   }
+                   world.addInboxMessage('COMPETITION', `${cup.name} - Eliminatorias`, `Finalizada la fase de grupos. Se han definido los Cuartos de Final.`, currentDate, cup.id);
+                } else if (winners.length >= 4) {
+                   const nextDate = this.findNextCupDate(currentDate);
+                   for (let i = 0; i < winners.length; i += 2) {
+                      if (winners[i] && winners[i+1]) {
+                         newFixtures.push({
+                            id: generateUUID(), competitionId: cup.id, homeTeamId: winners[i].id,
+                            awayTeamId: winners[i+1].id, date: new Date(nextDate), played: false,
+                            squadType: 'SENIOR', stage: 'QUARTER_FINAL',
+                         });
+                      }
+                   }
+                }
+             } else {
+                this.processKnockoutStage(cup, cupFixtures, currentDate, newFixtures);
+             }
+          } else if (cup.type.startsWith('CONTINENTAL')) {
+             const groupMatches = cupFixtures.filter(f => f.stage === 'GROUP');
+             const hasRound16 = cupFixtures.some(f => f.stage === 'ROUND_OF_16');
+             
+             if (groupMatches.length > 0 && groupMatches.every(f => f.played) && !hasRound16) {
+                const pot1: Club[] = [];
+                const pot2: Club[] = [];
+                
+                for(let g=0; g<8; g++) {
+                   const groupTable = world.getLeagueTable(cup.id, fixtures, 'SENIOR', g);
+                   if (groupTable.length >= 2) {
+                      const first = world.getClub(groupTable[0].clubId);
+                      const second = world.getClub(groupTable[1].clubId);
+                      if (first) pot1.push(first);
+                      if (second) pot2.push(second);
+                   }
+                }
+                
+                if (pot1.length === 8 && pot2.length === 8) {
+                   const nextDate = this.findNextCupDate(currentDate);
+                   newFixtures.push(...Scheduler.generateKnockoutDraw(cup.id, pot1, pot2, nextDate, 'ROUND_OF_16'));
+                   world.addInboxMessage('COMPETITION', `Sorteo ${cup.name}`, `Finalizada la fase de grupos. Se han sorteado los cruces de Octavos.`, currentDate, cup.id);
+                }
+             } else {
+                this.processKnockoutStage(cup, cupFixtures, currentDate, newFixtures);
+             }
+          } else {
+             this.processKnockoutStage(cup, cupFixtures, currentDate, newFixtures);
+          }
+       });
+       return newFixtures;
+    }
+
+    private static calculateUCLStandings(fixtures: Fixture[], clubIds: string[]): { clubId: string; position: number; points: number; gd: number }[] {
+       const table: Record<string, { played: number; won: number; drawn: number; lost: number; gf: number; ga: number; points: number }> = {};
+       
+       clubIds.forEach(id => {
+          table[id] = { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0 };
+       });
+
+       fixtures.filter(f => f.played).forEach(f => {
+          const home = table[f.homeTeamId];
+          const away = table[f.awayTeamId];
+          if (home && away && f.homeScore !== undefined && f.awayScore !== undefined) {
+             home.played++; away.played++;
+             home.gf += f.homeScore; home.ga += f.awayScore;
+             away.gf += f.awayScore; away.ga += f.homeScore;
+             if (f.homeScore > f.awayScore) { home.won++; home.points += 3; away.lost++; }
+             else if (f.homeScore < f.awayScore) { away.won++; away.points += 3; home.lost++; }
+             else { home.drawn++; away.drawn++; home.points++; away.points++; }
+          }
+       });
+
+       return Object.entries(table)
+          .map(([clubId, s]) => ({ clubId, position: 0, points: s.points, gd: s.gf - s.ga }))
+          .sort((a, b) => b.points - a.points || b.gd - a.gd)
+          .map((s, i) => ({ ...s, position: i + 1 }));
+    }
 
   private static findNextCupDate(fromDate: Date): Date {
      const d = new Date(fromDate);

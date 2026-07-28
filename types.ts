@@ -170,6 +170,46 @@ export interface Club {
 
 export type CompetitionType = 'LEAGUE' | 'CUP' | 'CONTINENTAL_ELITE' | 'CONTINENTAL_SMALL' | 'GLOBAL';
 
+export interface LeagueStanding {
+  clubId: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+  form: string[];
+  position: number;
+}
+
+export interface NationalTeam {
+  id: string;
+  name: string;
+  country: string;
+  confederation: 'CONMEBOL' | 'UEFA' | 'CAF' | 'CONCACAF' | 'AFC' | 'OFC';
+  reputation: number;
+  playerIds: string[];
+  captainId?: string;
+  formation: string;
+}
+
+export interface NationalTeamGroup {
+  id: string;
+  name: string;
+  teams: string[];
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+  position: number;
+}
+
 export interface Competition {
   id: string;
   name: string;
@@ -555,4 +595,18 @@ export interface ReputationalBuff {
   type: string;
   value: number;
   expiresAt: Date;
+}
+
+export type ChronicleType = 'MATCH' | 'MONTHLY' | 'CAREER';
+
+export interface Chronicle {
+  id: string;
+  type: ChronicleType;
+  date: Date;
+  title: string;
+  body: string;
+  fixtureId?: string;
+  clubId?: string;
+  month?: number;
+  year?: number;
 }

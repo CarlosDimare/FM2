@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Inbox, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper } from 'lucide-react';
+import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Inbox, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag } from 'lucide-react';
 import { Club, SquadType, Competition } from '../types';
 import { world } from '../services/worldManager';
 import { SettingsModal } from './SettingsModal';
@@ -96,6 +96,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
               </div>
             )}
           </div>
+
+          {world.nationalTeamManager && (
+            <div className="mb-1">
+              <button onClick={() => toggleMenu('NATIONAL')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+                <div className="flex items-center gap-2"><Flag size={14} /> Selecciones</div>
+                {openMenus['NATIONAL'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
+              {openMenus['NATIONAL'] && (
+                <div className="mt-1 ml-4 space-y-1 border-l border-slate-300">
+                  {world.nationalTeamManager.nationalTeams.slice(0, 10).map((team: any) => (
+                    <SubNavItem key={team.id} id={`NT_${team.id}`} label={`${team.name}`} icon={Flag} active={currentView === `NT_${team.id}`} onClick={() => setView(`NT_${team.id}`)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="mb-1">
             <button onClick={() => toggleMenu('MARKET')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">

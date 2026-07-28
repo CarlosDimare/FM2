@@ -44,7 +44,8 @@ export default defineConfig(({ mode }) => {
             ]
           },
           workbox: {
-            globPatterns: ['**/*.{js,css,html,svg,png,ico,json}'],
+            globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+            maximumFileSizeToCacheInBytes: 25 * 1024 * 1024,
             runtimeCaching: [{
               urlPattern: /^https:\/\/flagcdn\.com\/.*/i,
               handler: 'CacheFirst',
@@ -54,9 +55,6 @@ export default defineConfig(({ mode }) => {
               }
             }]
           },
-          pushNotification: {
-            publicKey: ''
-          }
         })
       ],
       define: {

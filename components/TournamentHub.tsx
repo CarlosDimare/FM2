@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Competition, Fixture, Club, Player, SquadType } from '../types';
 import { world } from '../services/worldManager';
@@ -12,6 +11,24 @@ interface TournamentHubProps {
   userClubId: string;
 }
 
+const NATIONAL_TEAM_NAMES: Record<string, string> = {
+  'ARG': 'Argentina', 'BRA': 'Brazil', 'URU': 'Uruguay', 'COL': 'Colombia', 'CHL': 'Chile',
+  'ECU': 'Ecuador', 'PAR': 'Paraguay', 'PER': 'Peru', 'BOL': 'Bolivia', 'VEN': 'Venezuela',
+  'FRA': 'France', 'ESP': 'Spain', 'ENG': 'England', 'DEU': 'Germany', 'ITA': 'Italy',
+  'NLD': 'Netherlands', 'BEL': 'Belgium', 'PRT': 'Portugal', 'HRV': 'Croatia', 'CHE': 'Switzerland',
+  'AUT': 'Austria', 'DNK': 'Denmark', 'SWE': 'Sweden', 'NOR': 'Norway', 'POL': 'Poland',
+  'UKR': 'Ukraine', 'SRB': 'Serbia', 'TUR': 'Turkey', 'RUS': 'Russia',
+  'MEX': 'Mexico', 'USA': 'USA', 'CAN': 'Canada',
+  'JPN': 'Japan', 'KOR': 'South Korea', 'AUS': 'Australia', 'SAU': 'Saudi Arabia',
+  'MAR': 'Morocco', 'SEN': 'Senegal', 'NGA': 'Nigeria', 'EGY': 'Egypt', 'GHA': 'Ghana',
+  'CMR': 'Cameroon', 'CIV': 'Ivory Coast', 'TUN': 'Tunisia',
+};
+
+const getTeamName = (id: string): string => {
+  if (NATIONAL_TEAM_NAMES[id]) return NATIONAL_TEAM_NAMES[id];
+  return world.getClub(id)?.name || id;
+};
+
 export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtures, userClubId }) => {
   const [activeTab, setActiveTab] = useState<'TABLE' | 'CALENDAR' | 'STATS'>('TABLE');
   const [selectedGroup, setSelectedGroup] = useState(0);
@@ -23,6 +40,8 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
 
   const isCup = competition.type === 'CUP';
   const isContinental = competition.type.startsWith('CONTINENTAL');
+  const isNationalTeam = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(competition.id);
+  const hasGroupStage = isContinental || ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(competition.id);
 
   // Stats Logic
   const getCompStats = (p: Player) => p.statsByCompetition[competition.id] || { goals: 0, assists: 0, totalRating: 0, appearances: 0 };
@@ -41,6 +60,9 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
   const topScorers = useMemo(() => [...statsPlayers].sort((a,b) => getCompStats(b).goals - getCompStats(a).goals).slice(0, 15), [statsPlayers]);
   const topAssisters = useMemo(() => [...statsPlayers].sort((a,b) => getCompStats(b).assists - getCompStats(a).assists).slice(0, 15), [statsPlayers]);
   const topRated = useMemo(() => [...statsPlayers].filter(p => getCompStats(p).appearances >= 2).sort((a,b) => (getCompStats(b).totalRating/getCompStats(b).appearances) - (getCompStats(a).totalRating/getCompStats(a).appearances)).slice(0, 15), [statsPlayers]);
+
+  // National team group display
+  const groupCount = isNationalTeam ? (competition.id === 'WC_FINAL' || competition.id === 'COPA' || competition.id === 'EURO' ? 8 : 6) : 8;
 
   return (
     <div className="p-2 md:p-4 h-full flex flex-col gap-3 bg-[#d4dcd4] overflow-hidden">
@@ -76,9 +98,9 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
       <div className="flex-1 overflow-hidden min-h-0">
         {activeTab === 'TABLE' && (
            <div className="h-full flex flex-col gap-2">
-              {isContinental && (
+              {hasGroupStage && (
                  <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] overflow-x-auto scrollbar-hide shrink-0 shadow-sm">
-                    {[0,1,2,3,4,5,6,7].map(g => (
+                    {Array.from({ length: groupCount }, (_, g) => (
                        <button 
                           key={g}
                           onClick={() => setSelectedGroup(g)}
@@ -91,7 +113,7 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
                  </div>
               )}
 
-              {isCup ? (
+              {isCup && !hasGroupStage ? (
                  <div className="bg-[#e8ece8] rounded-sm border border-[#a0b0a0] p-12 h-full flex flex-col items-center justify-center text-center shadow-md">
                     <Trophy size={64} className="text-[#a0b0a0] mb-4 opacity-50" />
                     <h3 className="text-xl font-black text-slate-700 uppercase tracking-tighter italic" style={{ fontFamily: 'Verdana, sans-serif' }}>Formato Eliminatorio</h3>
@@ -99,7 +121,7 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
                  </div>
               ) : (
                 <LeagueTable 
-                   entries={world.getLeagueTable(competition.id, fixtures, 'SENIOR', isContinental ? selectedGroup : undefined)} 
+                   entries={world.getLeagueTable(competition.id, fixtures, 'SENIOR', hasGroupStage ? selectedGroup : undefined)} 
                    userClubId={userClubId}
                    currentLeagueId={competition.id}
                 />
@@ -110,48 +132,48 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
         {activeTab === 'CALENDAR' && (
            <FMBox title="Resultados y Calendario" className="h-full" noPadding>
               <div className="h-full overflow-y-auto custom-scroll bg-white">
-                {competitionFixtures.length === 0 ? (
-                   <div className="p-20 text-slate-400 text-center italic text-[10px] uppercase font-bold tracking-widest">No hay partidos programados para este torneo.</div>
-                ) : (
-                   <table className="w-full border-collapse">
-                      <tbody className="text-[11px] text-[#1a1a1a]" style={{ fontFamily: 'Verdana, sans-serif' }}>
-                        {competitionFixtures.map((f, idx) => {
-                           const home = world.getClub(f.homeTeamId);
-                           const away = world.getClub(f.awayTeamId);
-                           const isPenalty = f.penaltyHome !== undefined;
-                           const isUserMatch = f.homeTeamId === userClubId || f.awayTeamId === userClubId;
-                           
-                           return (
-                              <tr key={f.id} className={`border-b border-[#e0e0e0] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
-                                 <FMTableCell className="w-20 md:w-32 text-slate-500 font-mono text-[10px]">
-                                    <div className="flex flex-col">
-                                       <span>{f.date.toLocaleDateString()}</span>
-                                       {f.stage !== 'REGULAR' && <span className="text-blue-700 font-black text-[8px] uppercase tracking-tighter">{f.stage}</span>}
-                                       {f.groupId !== undefined && <span className="text-slate-600 font-bold text-[8px] uppercase">Gr. {String.fromCharCode(65 + f.groupId)}</span>}
-                                    </div>
-                                 </FMTableCell>
-                                 
-                                 <FMTableCell className="text-right">
-                                    <span className={`font-bold truncate max-w-[80px] md:max-w-none inline-block ${f.homeTeamId === userClubId ? 'text-blue-800' : ''}`}>{home?.name}</span>
-                                 </FMTableCell>
-                                 
-                                 <FMTableCell className="w-16 md:w-20 text-center">
-                                    <div className="bg-[#bcc8bc] border border-[#a0b0a0] rounded-sm py-1 font-black text-[10px] shadow-inner text-[#1a1a1a]">
-                                       {f.played ? (
-                                          isPenalty ? `${f.homeScore}-${f.awayScore}*` : `${f.homeScore} - ${f.awayScore}`
-                                       ) : 'VS'}
-                                    </div>
-                                 </FMTableCell>
-                                 
-                                 <FMTableCell className="text-left">
-                                    <span className={`font-bold truncate max-w-[80px] md:max-w-none inline-block ${f.awayTeamId === userClubId ? 'text-blue-800' : ''}`}>{away?.name}</span>
-                                 </FMTableCell>
-                              </tr>
-                           );
-                        })}
-                      </tbody>
-                   </table>
-                )}
+                 {competitionFixtures.length === 0 ? (
+                    <div className="p-20 text-slate-400 text-center italic text-[10px] uppercase font-bold tracking-widest">No hay partidos programados para este torneo.</div>
+                 ) : (
+                    <table className="w-full border-collapse">
+                       <tbody className="text-[11px] text-[#1a1a1a]" style={{ fontFamily: 'Verdana, sans-serif' }}>
+                         {competitionFixtures.map((f, idx) => {
+                            const homeName = getTeamName(f.homeTeamId);
+                            const awayName = getTeamName(f.awayTeamId);
+                            const isPenalty = f.penaltyHome !== undefined;
+                            const isUserMatch = f.homeTeamId === userClubId || f.awayTeamId === userClubId;
+                            
+                            return (
+                               <tr key={f.id} className={`border-b border-[#e0e0e0] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
+                                  <FMTableCell className="w-20 md:w-32 text-slate-500 font-mono text-[10px]">
+                                     <div className="flex flex-col">
+                                        <span>{f.date.toLocaleDateString()}</span>
+                                        {f.stage !== 'REGULAR' && <span className="text-blue-700 font-black text-[8px] uppercase tracking-tighter">{f.stage}</span>}
+                                        {f.groupId !== undefined && <span className="text-slate-600 font-bold text-[8px] uppercase">Gr. {String.fromCharCode(65 + f.groupId)}</span>}
+                                     </div>
+                                  </FMTableCell>
+                                  
+                                  <FMTableCell className="text-right">
+                                     <span className={`font-bold truncate max-w-[80px] md:max-w-none inline-block ${f.homeTeamId === userClubId ? 'text-blue-800' : ''}`}>{homeName}</span>
+                                  </FMTableCell>
+                                  
+                                  <FMTableCell className="w-16 md:w-20 text-center">
+                                     <div className="bg-[#bcc8bc] border border-[#a0b0a0] rounded-sm py-1 font-black text-[10px] shadow-inner text-[#1a1a1a]">
+                                        {f.played ? (
+                                           isPenalty ? `${f.homeScore}-${f.awayScore}*` : `${f.homeScore} - ${f.awayScore}`
+                                        ) : 'VS'}
+                                     </div>
+                                  </FMTableCell>
+                                  
+                                  <FMTableCell className="text-left">
+                                     <span className={`font-bold truncate max-w-[80px] md:max-w-none inline-block ${f.awayTeamId === userClubId ? 'text-blue-800' : ''}`}>{awayName}</span>
+                                  </FMTableCell>
+                               </tr>
+                            );
+                         })}
+                       </tbody>
+                    </table>
+                 )}
               </div>
            </FMBox>
         )}

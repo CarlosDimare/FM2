@@ -22,6 +22,7 @@ import { SeasonSummaryModal } from './components/SeasonSummaryModal';
 import { MediaView } from './components/MediaView';
 import { PlayerContextMenu } from './components/PlayerContextMenu';
 import { TournamentHub } from './components/TournamentHub';
+import { NationalTeamView } from './components/NationalTeamView';
 import { ClubsListView } from './components/ClubsListView';
 import { BottomNav } from './components/BottomNav';
 import { world } from './services/worldManager';
@@ -230,20 +231,31 @@ if (result.userWonLeague) gs.trackTitle('Liga');
         f.date.toDateString() === currentDate.toDateString() && !f.played
       );
       dayFixtures.forEach(f => {
-        const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-        f.played = true;
-        f.homeScore = homeScore;
-        f.awayScore = awayScore;
-        const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-        const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
-        MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-        const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
-        const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-        LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-        world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
-        world.trackU21Minutes(f.homeTeamId, hSquad, stats, currentDate);
-        world.trackU21Minutes(f.awayTeamId, aSquad, stats, currentDate);
-        world.generateMatchNews(f, homeScore, awayScore, currentDate);
+        const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
+        
+        if (isNationalTeamMatch) {
+          // National team match simulation
+          const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId);
+          f.played = true;
+          f.homeScore = result.homeScore;
+          f.awayScore = result.awayScore;
+        } else {
+          // Club match simulation
+          const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+          f.played = true;
+          f.homeScore = homeScore;
+          f.awayScore = awayScore;
+          const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
+          const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+          MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
+          const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
+          const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
+          LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+          world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
+          world.trackU21Minutes(f.homeTeamId, hSquad, stats, currentDate);
+          world.trackU21Minutes(f.awayTeamId, aSquad, stats, currentDate);
+        }
+        world.generateMatchNews(f, f.homeScore!, f.awayScore!, currentDate);
       });
     }
 
@@ -265,6 +277,14 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       if (userClub) world.addInboxMessage('SQUAD', 'Cosecha de cantera', `Los juveniles de ${userClub.name} se han incorporado al club. Revisa los nuevos talentos en el equipo sub-20.`, nextDay);
     }
     if (nextDay.getDate() === 1) world.recalculateAllPlayerValues();
+
+    // Transfer deadline day mechanics
+    world.processDeadlineWeekActivity(nextDay);
+    world.processDeadlineDay(nextDay);
+
+    // Youth development pipeline
+    world.developYouthPlayers(nextDay);
+    world.autoPromoteYouthPlayers(nextDay);
 
     const newCupFixtures = LifecycleManager.processCompetitionProgress(fixtures, nextDay);
     let allFixtures = fixtures;
@@ -317,22 +337,37 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       world.processDailyContracts(tempDate, userClub?.id);
       world.processDailyScouting(tempDate, userClub?.id);
 
+      // Transfer deadline day mechanics
+      world.processDeadlineWeekActivity(tempDate);
+      world.processDeadlineDay(tempDate);
+
+      // Youth development pipeline
+      world.developYouthPlayers(tempDate);
+      world.autoPromoteYouthPlayers(tempDate);
+
       const dayFixtures = localFixtures.filter(f =>
         f.date.toDateString() === tempDate.toDateString() && !f.played
       );
 dayFixtures.forEach(f => {
-         const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-         f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
-         const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-         const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
-         MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-         const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
-         const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-         LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-         world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-         world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-         world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
-         world.generateMatchNews(f, homeScore, awayScore, tempDate);
+         const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
+         
+         if (isNationalTeamMatch) {
+           const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId);
+           f.played = true; f.homeScore = result.homeScore; f.awayScore = result.awayScore;
+         } else {
+           const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+           f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
+           const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
+           const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+           MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
+           const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
+           const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
+           LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+           world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+           world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+           world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+         }
+         world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
        });
 
       const newCupFixtures = LifecycleManager.processCompetitionProgress(localFixtures, tempDate);
@@ -433,21 +468,32 @@ dayFixtures.forEach(f => {
 dayFixtures.forEach(f => {
          const isUserMatch = userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id);
          if (isUserMatch) return;
-         const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-         f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
-         const hName = world.getClub(f.homeTeamId)?.name || 'Equipo';
-         const aName = world.getClub(f.awayTeamId)?.name || 'Equipo';
-         sendMatchNotification(`${hName} ${homeScore} - ${awayScore} ${aName}`);
-         const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-         const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
-         MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-         const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
-         const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-         LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-         world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-         world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-         world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
-         world.generateMatchNews(f, homeScore, awayScore, tempDate);
+         
+         const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
+         
+         if (isNationalTeamMatch) {
+           const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId);
+           f.played = true; f.homeScore = result.homeScore; f.awayScore = result.awayScore;
+           const hName = world.nationalTeamManager?.nationalTeams?.find((t: any) => t.id === f.homeTeamId)?.name || f.homeTeamId;
+           const aName = world.nationalTeamManager?.nationalTeams?.find((t: any) => t.id === f.awayTeamId)?.name || f.awayTeamId;
+           sendMatchNotification(`${hName} ${result.homeScore} - ${result.awayScore} ${aName}`);
+         } else {
+           const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+           f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
+           const hName = world.getClub(f.homeTeamId)?.name || 'Equipo';
+           const aName = world.getClub(f.awayTeamId)?.name || 'Equipo';
+           sendMatchNotification(`${hName} ${homeScore} - ${awayScore} ${aName}`);
+           const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
+           const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+           MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
+           const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
+           const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
+           LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+           world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+           world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+           world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+         }
+         world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
        });
 
       LifecycleManager.checkBirthdays(tempDate);
@@ -459,6 +505,14 @@ dayFixtures.forEach(f => {
       world.processDailyContracts(tempDate, userClub.id);
       world.processDailyScouting(tempDate, userClub.id);
          world.generateGeneralNews(tempDate);
+
+      // Transfer deadline day mechanics
+      world.processDeadlineWeekActivity(tempDate);
+      world.processDeadlineDay(tempDate);
+
+      // Youth development pipeline
+      world.developYouthPlayers(tempDate);
+      world.autoPromoteYouthPlayers(tempDate);
 
       const newCupFixtures = LifecycleManager.processCompetitionProgress(localFixtures, tempDate);
       if (newCupFixtures.length > 0) {
@@ -861,6 +915,10 @@ case 'PRESS_CONFERENCE_POST': {
           const competition = world.competitions.find(c => c.id === currentView.replace('COMP_', ''));
           return competition ? <TournamentHub competition={competition} fixtures={fixtures} userClubId={userClub.id} /> : null;
         }
+        if (currentView.startsWith('NT_')) {
+          const teamId = currentView.replace('NT_', '');
+          return <NationalTeamView teamId={teamId} />;
+        }
         return null;
     }
   };
@@ -925,61 +983,55 @@ case 'PRESS_CONFERENCE_POST': {
 
   if (gameState === 'SETUP_LEAGUE') return (
     <div className="h-screen w-screen bg-slate-400 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full bg-slate-200 rounded-sm p-10 border border-slate-600 text-center shadow-2xl">
+      <div className="max-w-4xl w-full bg-slate-200 rounded-sm p-10 border border-slate-600 text-center shadow-2xl max-h-[90vh] overflow-y-auto">
         <h1 className="text-5xl font-black text-slate-950 mb-10 tracking-tighter italic uppercase">FM</h1>
-        <button onClick={() => { setSelectedLeague(world.competitions[0]); setGameState('SETUP_TEAM'); }} className="p-8 bg-slate-300 border border-slate-500 hover:bg-slate-400 rounded-sm text-left transition-all group shadow-md flex flex-col items-center text-center">
-          <h3 className="text-2xl font-black text-slate-950 mb-1 italic uppercase">Liga Argentina</h3>
-          <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em]">Primera y Segunda División</p>
-        </button>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {world.competitions.filter(c => c.type === 'LEAGUE').map(league => {
+            const clubCount = world.getClubsByLeague(league.id).length;
+            return (
+              <button key={league.id} onClick={() => { setSelectedLeague(league); setGameState('SETUP_TEAM'); }} className="p-6 bg-slate-300 border border-slate-500 hover:bg-slate-400 rounded-sm text-left transition-all group shadow-md flex flex-col">
+                <h3 className="text-lg font-black text-slate-950 mb-1 italic uppercase truncate">{league.name}</h3>
+                <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em]">{league.country}</p>
+                <p className="text-[10px] text-slate-500 mt-2">{clubCount} equipos</p>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 
-  if (gameState === 'SETUP_TEAM') return (
+  if (gameState === 'SETUP_TEAM') {
+    const leagueClubs = world.getClubsByLeague(selectedLeague.id);
+    return (
     <div className="h-screen w-screen bg-slate-400 flex items-center justify-center p-4">
       <div className="max-w-6xl w-full bg-slate-200 rounded-sm p-10 border border-slate-600 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <h1 className="text-3xl font-black text-slate-950 mb-8 italic uppercase border-b-4 border-slate-950 pb-2">Elige tu Equipo</h1>
+        <button onClick={() => setGameState('SETUP_LEAGUE')} className="text-sm text-slate-500 hover:text-slate-950 mb-4 flex items-center gap-1">
+          <span>←</span> Volver a selección de liga
+        </button>
+        <h1 className="text-3xl font-black text-slate-950 mb-8 italic uppercase border-b-4 border-slate-950 pb-2">{selectedLeague.name}</h1>
         <div className="space-y-8">
-          <div>
-            <h3 className="text-slate-950 font-black mb-4 uppercase text-[12px] tracking-widest bg-slate-300 p-2 rounded-sm border-l-8 border-slate-950">Liga Profesional</h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {world.getClubsByLeague('L_ARG_1').map(c => (
-                <button key={c.id} onClick={() => {
-                  setUserClub(c);
-                  world.createHumanManager(c.id, `${userName} ${userSurname}`);
-                  const allFix = initSeasonFixtures(currentDate, c.id);
-                  updateNextFixture(allFix, currentDate, c.id);
-                  setGameState('PLAYING');
-                  notify();
-                }} className="p-4 bg-slate-100 hover:bg-slate-300 border border-slate-500 rounded-sm text-left transition-all shadow-sm group border-l-4 hover:border-l-blue-600">
-                  <div className={`w-3 h-3 rounded-full mb-3 ${c.primaryColor} border border-slate-500`}></div>
-                  <p className="font-black text-slate-950 truncate text-[11px] uppercase group-hover:text-blue-700">{c.name}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-slate-950 font-black mb-4 uppercase text-[12px] tracking-widest bg-slate-300 p-2 rounded-sm border-l-8 border-slate-950">Primera Nacional</h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {world.getClubsByLeague('L_ARG_2').map(c => (
-                <button key={c.id} onClick={() => {
-                  setUserClub(c);
-                  world.createHumanManager(c.id, `${userName} ${userSurname}`);
-                  const allFix = initSeasonFixtures(currentDate, c.id);
-                  updateNextFixture(allFix, currentDate, c.id);
-                  setGameState('PLAYING');
-                  notify();
-                }} className="p-4 bg-slate-100 hover:bg-slate-300 border border-slate-500 rounded-sm text-left transition-all shadow-sm group border-l-4 hover:border-l-blue-600">
-                  <div className={`w-3 h-3 rounded-full mb-3 ${c.primaryColor} border border-slate-500`}></div>
-                  <p className="font-black text-slate-950 truncate text-[11px] uppercase group-hover:text-blue-700">{c.name}</p>
-                </button>
-              ))}
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {leagueClubs.map(c => (
+              <button key={c.id} onClick={() => {
+                setUserClub(c);
+                world.createHumanManager(c.id, `${userName} ${userSurname}`);
+                const allFix = initSeasonFixtures(currentDate, c.id);
+                updateNextFixture(allFix, currentDate, c.id);
+                setGameState('PLAYING');
+                notify();
+              }} className="p-4 bg-slate-100 hover:bg-slate-300 border border-slate-500 rounded-sm text-left transition-all shadow-sm group border-l-4 hover:border-l-blue-600">
+                <div className={`w-3 h-3 rounded-full mb-3 ${c.primaryColor} border border-slate-500`}></div>
+                <p className="font-black text-slate-950 truncate text-[11px] uppercase group-hover:text-blue-700">{c.name}</p>
+                <p className="text-[9px] text-slate-500 mt-1">Reputación: {Math.round(c.reputation / 10)}</p>
+              </button>
+            ))}
           </div>
         </div>
       </div>
     </div>
   );
+  }
 
   const isMatchView = currentView === 'MATCH';
   const isPreMatchView = currentView === 'PRE_MATCH' || currentView === 'PRESS_CONFERENCE_PRE' || currentView === 'PRESS_CONFERENCE_POST';

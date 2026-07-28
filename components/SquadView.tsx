@@ -85,8 +85,8 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
     return <Minus size={12} className="text-slate-300 mx-auto" />;
   };
 
-  const renderFormDots = (ratings: number[]) => {
-    if (ratings.length === 0) return null;
+  const renderFormDots = (ratings: number[] | undefined) => {
+    if (!ratings || ratings.length === 0) return null;
     return (
       <div className="flex gap-[2px] items-center justify-center">
         {ratings.map((r, i) => {
