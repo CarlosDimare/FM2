@@ -1,132 +1,171 @@
-# FM Argentina — Mejoras Implementadas
+# FM — Estado del Proyecto
 
-## 🟢 Completadas
+## 🔵 Completado
 
 ### Motor de Partido
-- **Sustituciones** — 5 cambios máximos, modal en 2 pasos (reemplazado → sustituto), evento SUBSTITUTION
-- **Tarjetas y faltas** — Faltas según entrada+agresión, amarilla (>6), roja (>12 o >8 en zona peligrosa), acumulación de 5 amarillas → suspensión
-- **Lesiones** — Según bravery+naturalFitness, días de recuperación aleatorios, aplicadas post-partido
-- **Parte médica visual** — Panel rojo en SquadView con jugadores lesionados: nombre, tipo de lesión, días restantes
-- **Lesiones graves** — Lesiones >30 días con evento especial y mensaje al inbox (SQUAD)
-- **Historial de lesiones** — `injuryHistory[]` con tipo/días/fecha, `injuryProneness` recalculado tras cada lesión e influye en la probabilidad de lesionarse en partido
-- **Instrucciones tácticas** — Mentalidad afecta remate, cierre afecta presión, estilo de pase agrega penalización, tempo afecta tiempo consumido, ancho afecta spread, contraataque agrega boost
-- **Saques de esquina** — Centro desde córner con calidad del lanzador + salto del atacante vs defensa, 15% de gol si supera umbral
-- **Tiros libres** — Faltas en zona peligrosa (>750) activan tiro libre directo, calidad según freeKickTaking, 12% de opción de gol
-- **Estadísticas de balón parado** — Córners y tiros libres registrados en TeamMatchStats
+- Sustituciones (5 cambios máximo, modal 2 pasos)
+- Tarjetas y faltas (amarilla >6, roja >12 o >8 en zona peligrosa, acumulación 5 amarillas → suspensión)
+- Lesiones (según bravery+naturalFitness, días aleatorios, post-partido)
+- Parte médico visual (panel rojo en SquadView)
+- Lesiones graves (>30 días, evento especial, inbox)
+- Historial de lesiones (`injuryHistory[]`, `injuryProneness`)
+- Instrucciones tácticas activas (mentalidad, cierre, pase, tempo, contraataque, ancho)
+- Córneres (15% gol si supera umbral de lanzador+salto)
+- Tiros libres (12% gol en zona peligrosa >750)
+- Efecto moral (multiplicador `0.95 + morale/1000`)
+- Efecto forma (últimos 5 ratings, multiplicador `0.92 + avgForm/30`)
 
-### Partido (UI)
-- **Charla técnica en el descanso** — Modal al minuto 45 con 3 opciones: Motivar (+15 moral), Exigir más (-5 moral), Mantener calma (+5 moral)
-- **Resumen post-partido con MVP** — Modal al minuto 90 con resultado final, ratings de jugadores por puntuación, MVP destacado con corona 👑
-
-### Ojeo (Scouting)
-- **Vista Scouting** — Lista de informes con CA/PA, fortalezas, debilidades, personalidad
-- **Buscador de jugadores** — Buscar por nombre y solicitar informe bajo demanda
-- **Filtros avanzados** — Posición (13 opciones), rango de edad, CA mínimo
-- **Columna de forma** — Promedio de últimos 5 partidos visible en resultados
-- **Lista de seguimiento** — Botón bookmark para agregar/quitar jugadores de seguimiento
-- **Presupuesto de scouting** — `scoutingBudget` por club, se gasta al generar informes
-- **Rol Scout** — Nuevo `StaffRole.SCOUT` con mayor `judgingAbility`/`judgingPotential`, generado automáticamente en cada club
+### Partido UI
+- Charla en descanso (min 45: motivar/exigir/calmar)
+- Resumen post-partido con MVP
+- Rueda de prensa pre-partido: 5 preguntas (objetivo, rival, planteamiento, estrella, derbi)
+- Rueda de prensa post-partido: 4 preguntas (resultado, actuación, próximo, rumores)
 
 ### Competiciones
-- **Registro de plantilla** — Límite de 28 jugadores y mínimo 4 sub-21 para L_ARG_1 y L_ARG_2, verificado al iniciar temporada
-- **Inscripción continental** — Clasificación a Libertadores/Sudamericana según posición en liga
-- **Regla sub-21 en partido** — 600 minutos mínimos acumulados por temporada; penalización de hasta 6 puntos en tabla
-- **Sanciones económicas** — $5,000 de multa automática por cada tarjeta roja
-- **Premios económicos** — Distribución por posición en liga (25%/15%/8%/3% del prize pool) y copas (50% al campeón)
+- Champion League formato suizo (36 equipos, 8 jornadas, playoff → R16 → QF → SF → F)
+- Europa + El Conférence (fase grupo → knockouts)
+- Copa América / Euro / AFCON (grupo → cuartos → semi final)
+- Mundial Clubes (32 equipos, grupo → knockouts)
+- Eliminatoria CONMEBOL (10 equipos round-robin)
+- Eliminatoria UEFA (grupos → playoff)
+- Mundial FIFA final (16 clasificados, 8 grupos, octavos → final)
+- Copas domésticas: Copa del Rey, FA Cup, DFB Pokal, Coppa Italia, Coupe de France
 
-### Inteligencia Artificial (Clubes)
-- **Compra IA** — Clubes compran en posiciones débiles según profundidad de plantilla (mínimos: 2 GK, 5 DEF, 4 MID, 2 FWD)
-- **Venta IA** — Clubes marcan como transferibles a los jugadores excedentes (GK>2, DEF>6, MID>6, FWD>3)
-- **Ofertas pendientes** — `processPendingOffers` acepta/rechaza/contraoferta según relación valor/precio + reputación
-- **Renovaciones automáticas** — `checkRenewalTriggers` renueva o libera agentes libres con presupuesto salarial
+### Selecciones Nacionales
+- 45 equipos de 6 confederaciones
+- `NationalTeamView` (plantilla con filtro por posición, fixtures, estadísticas, banderas)
+- `MatchSimulator.simulateNationalTeamMatch()` con reputación y CA
+- Sidebar "Selecciones" con top 10
+
+### Scouting
+- Vista con CA/PA, fortalezas, debilidades, personalidad
+- Buscador por nombre y solicitar informe
+- Filtros por posición, edad, CA mínimo
+- Lista de seguimiento (bookmark)
+- Presupuesto de escouting por club
+- Rol de SCOUT generado automáticamente
+
+### Inteligencia Artificial
+- Compra en posiciones débiles (mínimos: 2 GK, 5 DEF, 4 MID, 2 FWD)
+- Venta de excedentes
+- Ofertas: aceptación/rechazo/contraoferta según valor/precio + reputación
+- Renovación automática / liberación
+- Jóvenes (16-22) PA≥140 para desarrollo futuro
+- Reemplazo por edad (≥32 con decline → transferible)
+- Cesiones ofrecidas/solicitadas
 
 ### Traspasos y Contratos
-- **Negociación real** — `submitContractOffer` con intentos limitados (3), aceptación según lealtad + salario, posibilidad de ruptura
-- **Salario post-traspaso** — `completeTransfer` asigna nuevo salario y duración de contrato al cambiar de club
-- **Renovación desde PlayerModal** — Modal `ContractNegotiationModal` con selector de salario y años
-- **Cesiones** — `loanDetails` en Player, `completeLoan` con wageShare, IA ofrece/solicita cesiones, `processLoanReturns` al finalizar temporada
+- Negociación con intentos limitados (3), aceptación según lealtad + salario
+- Salario al cambiar de club y duración
+- Contract Negotiation Modal para renovación
+- Cesiones: `loanDetails`, `completeLoan`, `processLoanReturns`
+- Cláusula de rescisión (3× valor, activable pagando)
+- Agentes: 15% probabilidad, comisión 5-15%
+- Prima de fichaje: 8% del traspaso + CA×200
+- Cesión con opción de compra (`LOAN_TO_BUY`)
+- Deadline Day: 31 enero, 31 agosto (actividad IA intensificada, inbox especial)
 
 ### Plantilla (Squad)
-- **Forma del jugador** — `formRatings[]` con últimos 5 partidos, puntos de color (verde≥8, amarillo≥6, rojo<5) en columna "Forma"
-- **Ordenamiento** — Por posición, nombre, edad, tendencia, salario, física, moral, valor
-- **Iconos de estado** — Lesión, suspensión, transferible, problemas de contrato
-- **Indicador de titular** — Negrita para titulares
-- **Barra sub-21** — Progreso de minutos juveniles (0/600) visible en SquadView con indicador verde/ámbar
+- `formRatings[]` con puntos de color (verde≥8, ama≥6, rojo<5) en columna "Forma"
+- Ordenamiento: posición, nombre, edad, tendencia, salario, física, moral, valor
+- Iconos de estado: lesión, suspensión, transferible, contrato
+- Negrita para titulares
+- Barra sub-21 (progreso minutos)
 
-### Carrera del Técnico
-- **Reputación** — `managerReputation` (1-100), sube con victorias y títulos
-- **Ofertas de trabajo** — `checkManagerJobOffers`, clubes con mayor reputación ofrecen trabajo cuando la reputación del técnico es ≥60
-- **Historial** — PJ, G, E, P, GF, GC, racha, títulos, temporadas completadas
+### Cantera y Desarrollo
+- Hornada anual el 1 de agosto según instalaciones (`youthRecruitment`, `youthFacilities` 1-20)
+- Regiones de captación (`scoutingRegion`)
+- Préstamos de jóvenes U17-U21 por IA
+- Curvas de desarrollo: 6 fases (EARLY_WITH/YOUTH/EARLY_PRIME/PRIME/LATE_PRIME/VETERAN)
+- Promoción automática al primer equipo (CA≥100) y liberación (PA<100)
+- Desarrollo mensual (`developYouthPlayers`)
+
+### Rueda de Prensa
+- Pre-partido: 5 preguntas (objetivo, rival, planteamiento, jugador estrella, derbi)
+- Post-partido: 4 preguntas (resultado, actuación, próximo, rumores)
+- Efecto en moral de equipo y confianza de directiva
+- Detección automática de mejor goleador
+
+### Crónicas Automatizadas
+- Crónica de partido (3-4 líneas tras cada partido)
+- Crónica mensual (5-7 líneas al cambio de mes)
+- Crónica de carrera (10-15 líneas al finalizar partida)
+- `ChronicleView` con filtros (Todos/Partido/Mensual/Carrera)
+- Sidebar: botón "Crónicas" (BookOpen)
+- Generación en paths: avance diario, vacaciones, hacia próximo partido
+- Persistencia: guardado y cargado con la partida
+
+### Ficha de Entrenador (Manager Profile)
+- `ManagerProfile` con datos personales, carrera, histórico, relaciones
+- SETUP_USER con nacionalidad (15 países), origen (exjugador/cantras/jornalista), fecha nacimiento
+- Actualización tras cada partido: W/D/L, goles, jugador clave
+- Actualización tras fin de temporada: temporada+1, títulos, relaciones (directiva/prensa/afición), objetivo
+- `ManagerProfileView` con stats, títulos, relaciones, historial de clubes
+- Objetivo según reputación relativa del club vs liga
+- Sidebar: "Mi Carrera" (User icon)
 
 ### Directiva (Board)
-- **Vista Directiva** — BoardView con confianza de la directiva, saldo, presupuesto
-- **Mejora de instalaciones** — Solicitar mejora de entrenamiento o juveniles, costo = nivel² × 50,000, probabilidad según confianza
-- **Aumento de presupuesto** — Solicitar +30% del presupuesto de fichajes
-- **Confianza dinámica** — `evaluateBoardConfidence` según objetivo de temporada y resultados
+- BoardView con confianza, saldo, presupuesto
+- Mejora de instalaciones de entrenamiento/juveniles
+- Aumento de presupuesto extra si confianza alta
+- `evaluateBoardConfidence` según objetivos, liga, copas, selecciones
 
 ### Mensajes (Inbox)
-- **Categorías** — MARKET, SQUAD, STATEMENTS, FINANCE, COMPETITION, SCOUTING
-- **Nuevos mensajes** — Parte médico, próximo a recuperarse, ofertas de trabajo, traspasos completados, rechazo/aprobación de mejoras, registro de plantilla
-- **Acciones** — Botón "Acción Requerida" para MARKET→Fichajes, SQUAD→Plantilla, COMPETITION→Tabla, STATEMENTS→Ver Club
+- 6 categorías: MARKET, SQUAD, STATEMENTS, FINANCE, COMPETITION, SCOUTING
+- Acciones: botón "Acción Requerida" con destino según categoría
 
-### Deuda Técnica
-- ✅ Tailwind CSS local (npm package v3 + PostCSS) en lugar de CDN — funciona offline, precacheado por PWA
-- ✅ Flag CDN cache — runtimeCaching para flagcdn.com en workbox
-- ✅ Limpieza enum Position — eliminados 7 valores duplicados (DRC, DLC, MCR, MCL, AMC, STC, DMC)
-- ✅ Código muerto — eliminados `advanceTime`/`simulateDay` no utilizados de gameStore.ts
-- ✅ Bugfix: `simulateToNextMatch` — ya no simula el partido del usuario
-- ✅ Bugfix: `advanceTime` desde SENIOR_TACTICS — navega a PRESS_CONFERENCE_PRE en día de partido
-- ✅ Bugfix: categoría inválida `'DISCIPLINARY'` en `lifecycleManager.ts` — corregida a `'COMPETITION'` (no existía en `MessageCategory`)
+### Prensa y Medios
+- `MediaView` con portada de periódico
+- Tipos: HEADLINE, FEATURE, RUMOR, CRITICISM, PRAISE
+- Generación automática en eventos de partidos
 
-### Varios
-- **Auto-save** — Toggle en el encabezado, guarda antes de cada avance
-- **Teclas rápidas** — Space (avanzar), Esc (volver), M (Mercado), T (Táctica), S (Plantilla)
-- **Vacaciones optimizadas** — Procesa en lotes de 7 días, 52 re-renders vs 365
-- **Notificaciones granulares** — `notifyPlayers`, `notifyClubs`, `notifyInbox`, `notifyOffers`, `notifyTactics`
-- **Valor dinámico de jugadores** — Recalculado mensualmente según forma (últimos 5), edad (pico 26), y duración de contrato
-- **Cantera** — `generateYouthIntake` ejecutado el 1 de agosto, genera juveniles según nivel de instalaciones
-- **Múltiples slots de guardado** — IndexedDB con nombre personalizado, lista en modal de carga/guardado, sobrescritura rápida
-- **Tema oscuro** — CSS variables + clase `dark` en html, toggle persistente en guardados
-- **IA fichajes a largo plazo** — Clubes fichan jóvenes (16-22) con PA≥140 para desarrollo futuro
-- **IA reemplazo por edad** — Clubes marcan transferibles a jugadores ≥32 con tendencia declinante
-- **Cláusula de rescisión** — `releaseClause` 3x valor en cada jugador, activable pagando el monto (salta negociación)
-- **Ingresos por taquilla** — Partidos como local generan ingreso según capacidad del estadio y tipo de competición
-- **Loading states** — Esqueleto de carga animado en modal de simulación
-- **Prensa y Medios** — Sistema de portadas y titulares: `MediaView` con portada de periódico, titulares de partidos del club del usuario y de otros equipos/países, categorías (MATCH, TRANSFER, INJURY, BOARD, GENERAL), tipos (HEADLINE, FEATURE, RUMOR, CRITICISM, PRAISE), generación automática de noticias en partidos y eventos diarios
+### UI/UX
+- Tema oscuro (toggle sol/luna, CSS variables, persistencia)
+- Onboarding 6 pasos (`OnboardingTour`)
+- Responsive (vista tablet en SquadView/LeagueTable, BottomNav)
+- Teclas rápidas: Space, Esc, M, T, S
+- Auto-save (toggle), lotes de 7 días en vacaciones
+- Notificaciones push del navegador
+- Múltiples slots de guardado IndexedDB
+- Loading skeletón
+
+### Open‑Football‑Database
+- 54,645 jugadores reales, 570 clubes, 35 ligas en 30+ países
+- Atributos FM posiciones convertidos a Position enum
+- CA/PA convertidos a 1-20 (Fórmula weighted por posición)
+- JSON servidos estáticamente (fetch al arranque, no bund)
+- Selección de liga al crear partida (las 35 disponibles)
 
 ---
 
-## 🟡 Pendientes / Por Hacer
+## 🟡 Recientemente Completado
+- Crónicas (MATCH/MONTHLY/CAREER con ChronicleView y sidebar)
+- Entrenador (ManagerProfile + vista + setup + actualización en tiempo real)
+- Selección de ligas (35 disponibles, no solo Argentina)
+- Fix SquadView crash (`formRatings` undefined)
+- Fix `seasonStats` undefined en jugadores convertidos
 
-### Motor de Partido (Profundización)
-- [x] **Efecto de moral en rendimiento** — La moral del jugador afecta atributos durante el partido (multiplicador `0.95 + morale/1000` en `getEffectiveAttribute`)
-- [x] **Efecto de forma en rendimiento** — Últimos 5 ratings influyen en el rendimiento (multiplicador `0.92 + avgForm/30` en `getEffectiveAttribute`)
+---
 
-### Inteligencia Artificial (Profundización)
-- [x] **Fichajes a largo plazo** — IA fichar jóvenes con potencial para desarrollo futuro
-- [x] **Cesiones** — IA ofrece/solicita cesiones de jugadores
-- [x] **Reemplazo por edad** — IA marca transferibles a jugadores ≥32 con tendencia declinante
-- [x] **Precios dinámicos** — Valor de jugador recalculado mensualmente según forma, edad y contrato
+## ⚠️ Faltan / Bugs
 
-### Contratos (Profundización)
-- [x] **Cláusula de rescisión** — `releaseClause` en Player (3x valor), `makeTransferOffer` acepta automáticamente si ≥ cláusula, IA usa cláusulas
-- [x] **Agentes** — Representantes con exigencias de comisión (15% de probabilidad, comisión 5-15%)
-- [x] **Primas de fichaje** — Bono de firma = 8% del traspaso + CA×200, deducido del balance comprador y notificado al inbox
-- [x] **Cesiones con opción de compra** — Tipo de oferta `LOAN_TO_BUY` implementado con notificación de opción al finalizar préstamo
+### Bugs activos
+- [ ] Transferencia saliente no actualiza bien mínimos de plantilla
+- [ ] Vacaciones largas pueden abrir 2 ruedas de prensa simultáneas
+- [ ] loadSave: reconstrucción de selecciones a veces vacías
+- [ ] Onboarding desactualizado (faltan steps Crónicas y Mi Carrera)
+- [ ] Errores TS existentes: ErrorBoundary state/props, standing variable, `firstName` en Player
 
-### Cantera y Desarrollo
-- [x] **Calidad de hornada según captación** — `youthRecruitment` como atributo del club (1-20, afecta calidad de juveniles junto con `youthFacilities`)
-- [x] **Regiones de captación** — Asignar regiones para buscar talento (ya implementado via `scoutingRegion`)
-- [x] **Préstamos de jóvenes** — La IA ofrece cesiones de juveniles U17-U20 a otros clubes para desarrollo, con wageShare mayoritario para el club origen
-- [x] **Curvas de desarrollo por edad** — Fases granulares EARLY_YOUTH/YOUTH/EARLY_PRIME/PRIME/LATE_PRIME/VETERAN con multiplicadores por edad y bonus del 25% si la nacionalidad coincide con `scoutingRegion` del club
+### Mejoras sugeridas
+- [ ] Familiaridad táctica (forma se mejoran con tiempo)
+- [ ] Personalidad de jugador (leadership, consistency, big-match temperament)
+- [ ] Clubes en deuda → takeover (venta desesperada de activos o insolvencia)
+- [ ] Salario del staff según economía del país/liga
+- [ ] Historial de competitión de los partidos (records)
+- [ ] Actualizar pasos del Onboarding para incluir el nuevo recorrido
+- [ ] PWA cache streaming para los 18MB de JSON generados en `public/data/`
+- [ ] Calendario de torneos del año inicial (loseir año si la liga empezó otro año)
 
-### UI/UX
-- [x] **Notificaciones push** — Servicio de notificaciones del navegador con permiso del usuario, integrado en eventos clave (partidos, lesiones, traspasos, inbox)
-- [x] **Tema oscuro** — Toggle en encabezado (luna/sol), CSS variables, persistencia en guardado (`darkMode` en gameStore)
-- [x] **Onboarding** — Tour interactivo de 6 pasos (`OnboardingTour`) con highlight sobre elementos DOM, persistente en `localStorage`, repetible desde `SettingsModal`
-- [x] **Responsive** — Vista tablet intermedia (`md:block lg:hidden`) en `SquadView` y `LeagueTable`, `BottomNav` oculto en `lg`, sidebar fijo adaptable en tablets
+---
 
-### Guardado
-- [x] **Cloud save** — Sincronización automática con localStorage tras cada guardado en IndexedDB
-- [x] **Guardado en rasgo (profile)** — Guardar/cargar/eliminar perfiles de manager via `saveProfile`/`loadProfile`/`listProfiles`
-
+*Última actualización: julio 2026*

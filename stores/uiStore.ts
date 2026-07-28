@@ -22,6 +22,7 @@ interface UIStore {
   isVacationModalOpen: boolean;
   vacationTargetDate: string;
   isSimulating: boolean;
+  isInVacation: boolean;
   seasonSummary: CompetitionSummary[] | null;
   userWonLeague: boolean;
   viewLeagueId: string | null;
@@ -51,6 +52,7 @@ interface UIStore {
   setIsVacationModalOpen: (open: boolean) => void;
   setVacationTargetDate: (date: string) => void;
   setIsSimulating: (sim: boolean) => void;
+  setIsInVacation: (inVacation: boolean) => void;
   setSeasonSummary: (summary: CompetitionSummary[] | null) => void;
   setUserWonLeague: (won: boolean) => void;
   setViewLeagueId: (id: string | null) => void;
@@ -82,6 +84,7 @@ export const useUIStore = create<UIStore>((set) => ({
   isVacationModalOpen: false,
   vacationTargetDate: '',
   isSimulating: false,
+  isInVacation: false,
   seasonSummary: null,
   userWonLeague: false,
   viewLeagueId: null,
@@ -111,6 +114,7 @@ export const useUIStore = create<UIStore>((set) => ({
   setIsVacationModalOpen: (isVacationModalOpen) => set({ isVacationModalOpen }),
   setVacationTargetDate: (vacationTargetDate) => set({ vacationTargetDate }),
   setIsSimulating: (isSimulating) => set({ isSimulating }),
+  setIsInVacation: (isInVacation) => set({ isInVacation }),
   setSeasonSummary: (seasonSummary) => set({ seasonSummary }),
   setUserWonLeague: (userWonLeague) => set({ userWonLeague }),
   setViewLeagueId: (viewLeagueId) => set({ viewLeagueId }),

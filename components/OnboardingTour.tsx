@@ -49,6 +49,22 @@ export const DEFAULT_STEPS: OnboardingStep[] = [
     position: 'bottom'
   },
   {
+    id: 'chronicles',
+    targetId: 'CHRONICLES',
+    viewRequired: 'CHRONICLES',
+    title: 'Crónicas',
+    body: 'Aquí encontrarás crónicas de partidos, resumenes mensuales y la historia de tu carrera.',
+    position: 'right'
+  },
+  {
+    id: 'manager_profile',
+    targetId: 'MANAGER_PROFILE',
+    viewRequired: 'MANAGER_PROFILE',
+    title: 'Mi Carrera',
+    body: 'Consulta tu perfil personal, estadísticas de carrera y relaciones con la directiva, prensa y afición.',
+    position: 'right'
+  },
+  {
     id: 'finish',
     title: 'Listo para empezar',
     body: 'Pulsa la barra espaciadora para avanzar al primer partido. Mucha suerte en tu carrera.',

@@ -26,6 +26,7 @@ import { NationalTeamView } from './components/NationalTeamView';
 import { ClubsListView } from './components/ClubsListView';
 import { BottomNav } from './components/BottomNav';
 import { ChronicleView } from './components/ChronicleView';
+import { ManagerProfileView } from './components/ManagerProfileView';
 import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
 import { generateMatchChronicle, generateMonthlyChronicle } from './services/chronicleService';
@@ -72,7 +73,7 @@ const {
     setGameState, setView, setSelectedPlayer, setContextMenu, setIsSidebarOpen,
     setUserName, setUserSurname, setUserNationality, setUserOrigin, setUserBirthDate, setSelectedLeague, setUserClub,
     setViewExternalClub, setIsVacationModalOpen, setVacationTargetDate, setIsSimulating,
-    setSeasonSummary, setUserWonLeague, setViewLeagueId, setViewSquadType,
+    setIsInVacation, setSeasonSummary, setUserWonLeague, setViewLeagueId, setViewSquadType,
     setCurrentDate, setSeasonEndDate, setHasSave,
     setIsSaveModalOpen, setSaveNameInput, setIsLoadModalOpen, setAvailableSaves,
     isAutoSaveEnabled, setIsAutoSaveEnabled,
@@ -157,7 +158,8 @@ const {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
           scoutingReports: world.scoutingReports, chronicles: world.chronicles,
-          managerProfile: world.managerProfile
+          managerProfile: world.managerProfile,
+          nationalTeamManager: world.nationalTeamManager
         }
       };
       await saveGame(saveData);
@@ -361,6 +363,7 @@ if (result.userWonLeague) gs.trackTitle('Liga');
 
     if (target <= currentDate) return;
     setIsSimulating(true);
+    setIsInVacation(true);
 
     let tempDate = new Date(currentDate);
     let localFixtures = [...fixtures];
@@ -449,6 +452,7 @@ dayFixtures.forEach(f => {
            world.checkManagerJobOffers(currentDate, userClub.id, useGameStore.getState().managerReputation);
          }
         setIsSimulating(false);
+        setIsInVacation(false);
         setIsVacationModalOpen(false);
         setCurrentDate(tempDate);
         notify();
@@ -466,6 +470,7 @@ dayFixtures.forEach(f => {
     setCurrentDate(new Date(tempDate));
     if (userClub) updateNextFixture(localFixtures, tempDate, userClub.id);
     setIsSimulating(false);
+    setIsInVacation(false);
     setIsVacationModalOpen(false);
     setView('HOME');
     notify();
@@ -621,7 +626,8 @@ dayFixtures.forEach(f => {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
           scoutingReports: world.scoutingReports, chronicles: world.chronicles,
-          managerProfile: world.managerProfile
+          managerProfile: world.managerProfile,
+          nationalTeamManager: world.nationalTeamManager
         }
       };
       await saveGame(saveData);
@@ -679,6 +685,15 @@ dayFixtures.forEach(f => {
       else world.chronicles = [];
       if (data.worldState.managerProfile) world.managerProfile = data.worldState.managerProfile;
       else world.managerProfile = null;
+
+      // Restore NationalTeamManager from save if available, otherwise rebuild
+      const { NationalTeamManager } = await import('./services/nationalTeamManager');
+      if (data.worldState.nationalTeamManager) {
+        world.nationalTeamManager = data.worldState.nationalTeamManager;
+      } else {
+        world.nationalTeamManager = new NationalTeamManager();
+        world.nationalTeamManager.assignPlayersToNationalTeams(world.players, world.clubs);
+      }
 
       if (!useGameStore.getState().deepSimLeagues?.length) {
         const userLeague = world.getClub(data.gameState.userClubId)?.leagueId;
@@ -820,6 +835,8 @@ dayFixtures.forEach(f => {
         return <MediaView onBack={() => setView('HOME')} />;
       case 'CHRONICLES':
         return <ChronicleView onBack={() => setView('HOME')} clubId={userClub.id} />;
+      case 'MANAGER_PROFILE':
+        return <ManagerProfileView onBack={() => setView('HOME')} />;
       case 'TABLE':
         return (
           <div className="p-2 h-full flex flex-col">
@@ -883,6 +900,9 @@ dayFixtures.forEach(f => {
         }
         return null;
       case 'PRESS_CONFERENCE_PRE': {
+        if (isInVacation) {
+          return <div className="p-8 text-center text-slate-500 font-black uppercase">En vacaciones</div>;
+        }
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
@@ -892,6 +912,9 @@ dayFixtures.forEach(f => {
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
       }
 case 'PRESS_CONFERENCE_POST': {
+         if (isInVacation) {
+           return <div className="p-8 text-center text-slate-500 font-black uppercase">En vacaciones</div>;
+         }
          const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
          const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
          if (nextFixture && homeClub && awayClub) {
@@ -904,8 +927,8 @@ case 'PRESS_CONFERENCE_POST': {
            const opponent = homeClub.id === userClub.id ? awayClub : homeClub;
            return <PressConferenceView club={userClub} opponent={opponent} context="POST_MATCH" homeScore={nextFixture.homeScore} awayScore={nextFixture.awayScore} onFinish={() => { setView('HOME'); updateNextFixture(fixtures, currentDate, userClub.id); }} />;
          }
-        return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
-      }
+         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
+       }
       case 'PRE_MATCH': {
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;

@@ -215,7 +215,7 @@ export class ChampionsLeagueManager {
         date: new Date(currentDate),
         played: false,
         squadType: 'SENIOR',
-        stage: 'ROUND_16',
+        stage: 'ROUND_OF_16',
       });
     }
     
@@ -230,7 +230,7 @@ export class ChampionsLeagueManager {
         date: new Date(currentDate),
         played: false,
         squadType: 'SENIOR',
-        stage: 'ROUND_16',
+        stage: 'ROUND_OF_16',
       });
     }
     

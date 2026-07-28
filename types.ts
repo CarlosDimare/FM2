@@ -90,6 +90,8 @@ export interface ManagerHistory {
 export interface Player {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   photo?: string;
   age: number;
   birthDate: Date;

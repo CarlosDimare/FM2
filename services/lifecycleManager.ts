@@ -469,18 +469,21 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
                       }
                    }
                 }
-             } else if (hasPlayoff && !hasR16) {
-                // Check if playoff is done, generate R16
-                const playoffMatches = cupFixtures.filter(f => f.stage === 'QUARTER_FINAL' && f.homeTeamId.startsWith('ucl_'));
-                if (playoffMatches.length > 0 && playoffMatches.every(f => f.played)) {
-                   const winners: Club[] = [];
-                   playoffMatches.forEach(f => {
-                      const winnerId = f.homeScore! > f.awayScore! ? f.homeTeamId : f.awayTeamId;
-                      const w = world.getClub(winnerId);
-                      if (w) winners.push(w);
-                   });
-                   
-                   const directQualifiers = standings.filter(s => s.position <= 8);
+} else if (hasPlayoff && !hasR16) {
+                 // Check if playoff is done, generate R16
+                 const playoffMatches = cupFixtures.filter(f => f.stage === 'QUARTER_FINAL' && f.homeTeamId.startsWith('ucl_'));
+                 if (playoffMatches.length > 0 && playoffMatches.every(f => f.played)) {
+const allClubIds = Array.from(new Set(leaguePhaseMatches.flatMap(f => [f.homeTeamId, f.awayTeamId])));
+                    const standings = this.calculateUCLStandings(leaguePhaseMatches, allClubIds);
+                    
+                    const winners: Club[] = [];
+                    playoffMatches.forEach(f => {
+                       const winnerId = f.homeScore! > f.awayScore! ? f.homeTeamId : f.awayTeamId;
+                       const w = world.getClub(winnerId);
+                       if (w) winners.push(w);
+                    });
+                    
+                    const directQualifiers = standings.filter(s => s.position <= 8);
                    const r16Teams = [...directQualifiers.slice(0, 8), ...winners.map(c => ({ clubId: c.id, position: 0 }))];
                    
                    if (r16Teams.length >= 16) {
@@ -587,31 +590,43 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
        return newFixtures;
     }
 
-    private static calculateUCLStandings(fixtures: Fixture[], clubIds: string[]): { clubId: string; position: number; points: number; gd: number }[] {
-       const table: Record<string, { played: number; won: number; drawn: number; lost: number; gf: number; ga: number; points: number }> = {};
-       
-       clubIds.forEach(id => {
-          table[id] = { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0 };
-       });
+private static calculateUCLStandings(fixtures: Fixture[], clubIds: string[]): LeagueStanding[] {
+        const table: Record<string, { played: number; won: number; drawn: number; lost: number; gf: number; ga: number; points: number }> = {};
+        
+        clubIds.forEach(id => {
+           table[id] = { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0 };
+        });
 
-       fixtures.filter(f => f.played).forEach(f => {
-          const home = table[f.homeTeamId];
-          const away = table[f.awayTeamId];
-          if (home && away && f.homeScore !== undefined && f.awayScore !== undefined) {
-             home.played++; away.played++;
-             home.gf += f.homeScore; home.ga += f.awayScore;
-             away.gf += f.awayScore; away.ga += f.homeScore;
-             if (f.homeScore > f.awayScore) { home.won++; home.points += 3; away.lost++; }
-             else if (f.homeScore < f.awayScore) { away.won++; away.points += 3; home.lost++; }
-             else { home.drawn++; away.drawn++; home.points++; away.points++; }
-          }
-       });
+        fixtures.filter(f => f.played).forEach(f => {
+           const home = table[f.homeTeamId];
+           const away = table[f.awayTeamId];
+           if (home && away && f.homeScore !== undefined && f.awayScore !== undefined) {
+              home.played++; away.played++;
+              home.gf += f.homeScore; home.ga += f.awayScore;
+              away.gf += f.awayScore; away.ga += f.homeScore;
+              if (f.homeScore > f.awayScore) { home.won++; home.points += 3; away.lost++; }
+              else if (f.homeScore < f.awayScore) { away.won++; away.points += 3; home.lost++; }
+              else { home.drawn++; away.drawn++; home.points++; away.points++; }
+           }
+        });
 
-       return Object.entries(table)
-          .map(([clubId, s]) => ({ clubId, position: 0, points: s.points, gd: s.gf - s.ga }))
-          .sort((a, b) => b.points - a.points || b.gd - a.gd)
-          .map((s, i) => ({ ...s, position: i + 1 }));
-    }
+        return Object.entries(table)
+           .map(([clubId, s]) => ({
+              clubId,
+              played: s.played,
+              won: s.won,
+              drawn: s.drawn,
+              lost: s.lost,
+              goalsFor: s.gf,
+              goalsAgainst: s.ga,
+              goalDifference: s.gf - s.ga,
+              points: s.points,
+              form: [],
+              position: 0
+           }))
+           .sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference)
+           .map((s, i) => ({ ...s, position: i + 1 }));
+     }
 
   private static findNextCupDate(fromDate: Date): Date {
      const d = new Date(fromDate);

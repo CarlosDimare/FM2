@@ -260,9 +260,9 @@ export class WorldManager {
       if (r > 150 && g < 100 && b < 100) return 'bg-red-700';
       if (r < 100 && g > 150 && b > 200) return 'bg-sky-500';
       return 'bg-slate-500';
-   }
+}
 
-   private addContinentalCompetitions() {
+  private addContinentalCompetitions() {
       // UEFA Champions League
       this.competitions.push(
          { id: 'UCL', name: 'UEFA Champions League', country: 'Europa', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 20000000, squadRegistrationLimit: 25 },
@@ -1127,19 +1127,26 @@ export class WorldManager {
       if (!player || !sellerClub) { offer.status = 'REJECTED'; return; }
 
 if (offer.type === 'LOAN' || offer.type === 'LOAN_TO_BUY') {
-         const hasDepth = this.getPlayersByClub(sellerClub.id).filter(p => p.positions.some(pos => player.positions.includes(pos))).length > 3;
-         const acceptChance = offer.type === 'LOAN_TO_BUY' ? (hasDepth ? 0.5 : 0.2) : (hasDepth ? 0.6 : 0.3);
-         if (Math.random() < acceptChance) {
-           offer.status = 'ACCEPTED';
-           offer.responseDate = date;
-         } else {
-           offer.status = 'REJECTED';
-           offer.responseDate = date;
-         }
-         return;
-       }
+          const hasDepth = this.getPlayersByClub(sellerClub.id).filter(p => p.positions.some(pos => player.positions.includes(pos))).length > 3;
+          const acceptChance = offer.type === 'LOAN_TO_BUY' ? (hasDepth ? 0.5 : 0.2) : (hasDepth ? 0.6 : 0.3);
+          if (Math.random() < acceptChance) {
+            offer.status = 'ACCEPTED';
+            offer.responseDate = date;
+          } else {
+            offer.status = 'REJECTED';
+            offer.responseDate = date;
+          }
+          return;
+        }
 
-      const valueRatio = offer.amount / Math.max(1, player.value);
+        // Check if accepting would drop seller below minimums
+        if (offer.type === 'PURCHASE' && this.wouldDropBelowMinimums(sellerClub.id, player)) {
+          offer.status = 'REJECTED';
+          offer.responseDate = date;
+          return;
+        }
+
+       const valueRatio = offer.amount / Math.max(1, player.value);
       const repFactor = sellerClub.reputation / 5000;
       const acceptChance = Math.min(0.95, valueRatio * 1.5 - 0.3 + repFactor * 0.2);
       if (Math.random() < acceptChance) {
@@ -1151,7 +1158,7 @@ if (offer.type === 'LOAN' || offer.type === 'LOAN_TO_BUY') {
         offer.counterAmount = counterAmount;
         offer.responseDate = date;
       } else {
-        offer.status = 'REJECTED';
+offer.status = 'REJECTED';
         offer.responseDate = date;
       }
     });
