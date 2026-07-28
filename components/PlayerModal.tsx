@@ -9,6 +9,7 @@ import { ContractNegotiationModal } from './ContractNegotiationModal';
 import { X, MessageSquare, Activity, Map, FileText, History, TrendingUp, TrendingDown, Minus, ShieldAlert, ArrowRightLeft, UserX, UserPlus, Users, MessageCircle, AlertCircle, Info, Award, ShieldAlert as DisciplineIcon, Shield, User, Star, ChevronLeft, ChevronRight, Cake, Ruler, Weight, UserCircle } from 'lucide-react';
 import { FMTable, FMTableCell, FMButton, FMBox } from './FMUI';
 import { getFlagUrl } from '../data/static';
+import { getPlayerTag } from '../services/playerGenerator';
 
 interface PlayerModalProps {
   player: Player | null;
@@ -35,14 +36,14 @@ const POSITION_COORDS: Record<string, { x: number, y: number }> = {
 
 const getKeyAttributes = (pos: Position): string[] => {
   switch (pos) {
-    case Position.GK: return ['reflexes', 'handling', 'oneOnOnes', 'aerialReach', 'commandOfArea', 'agility'];
-    case Position.DC: return ['marking', 'tackling', 'heading', 'positioning', 'jumpingReach', 'strength', 'bravery'];
-    case Position.DR: case Position.DL: return ['tackling', 'marking', 'crossing', 'pace', 'stamina', 'positioning'];
-    case Position.DM: return ['tackling', 'marking', 'passing', 'positioning', 'teamwork', 'workRate'];
-    case Position.MC: return ['passing', 'technique', 'firstTouch', 'vision', 'decisions', 'teamwork'];
-    case Position.AM: return ['passing', 'technique', 'vision', 'flair', 'dribbling', 'offTheBall'];
-    case Position.ST: return ['finishing', 'composure', 'offTheBall', 'firstTouch', 'pace', 'acceleration', 'heading'];
-    default: return ['passing', 'determination', 'stamina'];
+    case Position.GK: return ['anticipacion', 'velocidad', 'fuerza', 'decision'];
+    case Position.DC: return ['anticipacion', 'fuerza', 'posicionamiento', 'agresividad'];
+    case Position.DR: case Position.DL: return ['velocidad', 'resistencia', 'pase', 'anticipacion'];
+    case Position.DM: return ['anticipacion', 'fuerza', 'pase', 'posicionamiento'];
+    case Position.MC: return ['pase', 'vision', 'control', 'decision'];
+    case Position.AM: return ['regate', 'vision', 'control', 'velocidad'];
+    case Position.ST: return ['disparo', 'velocidad', 'posicionamiento', 'control'];
+    default: return ['pase', 'decision', 'resistencia'];
   }
 };
 
@@ -76,9 +77,13 @@ const SubGroupHeader: React.FC<{ title: string }> = ({ title }) => (
    </div>
 );
 
+const getPlayerTagLabel = (player: Player): string => {
+  return getPlayerTag(player);
+};
+
 export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userClubId, currentDate }) => {
   const [activeTab, setActiveTab] = useState<'PROFILE' | 'PERSONAL' | 'POSITIONS' | 'HISTORY' | 'CONTRACT' | 'INTERACTION'>('PROFILE');
-  const [activeProfileSubTab, setActiveProfileSubTab] = useState<'TECHNICAL' | 'MENTAL' | 'PHYSICAL'>('TECHNICAL');
+  const [activeProfileSubTab, setActiveProfileSubTab] = useState<'VISIBLES' | 'INTERNOS' | 'ESTADO'>('VISIBLES');
   const [showRenewalModal, setShowRenewalModal] = useState(false);
   
   // Dialogue state
@@ -102,7 +107,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
   };
 
   const handleTalk = () => {
-    const result = DialogueSystem.getPlayerReaction(player, dialogueType, dialogueTone, currentDate);
+    const result = DialogueSystem.resolveCoachPlayerInteraction(player, dialogueType, dialogueTone, currentDate);
     setDialogueResult(result);
     player.morale = Math.max(0, Math.min(100, player.morale + result.moraleChange));
   };
@@ -111,7 +116,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
   const clubText = club ? club.secondaryColor : 'text-blue-900';
   const isHeaderLight = clubBg === 'bg-white';
 
-  const personalMotive = DialogueSystem.checkPlayerMotives(player, currentDate);
+  const personalMotive = ((player.morale < 40 || player.fitness < 60) && player.clubId);
 
   return (
     <>
@@ -174,7 +179,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
              {activeTab === 'PROFILE' && (
                 <div className="h-full flex flex-col gap-2 overflow-hidden">
                    <div className="md:hidden flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm shrink-0">
-                      {['TECHNICAL', 'MENTAL', 'PHYSICAL'].map(st => (
+                      {['VISIBLES', 'INTERNOS', 'ESTADO'].map(st => (
                         <button key={st} onClick={() => setActiveProfileSubTab(st as any)} className={`flex-1 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all ${activeProfileSubTab === st ? 'bg-[#3a4a3a] text-white' : 'text-slate-700'}`}>
                            {st.substring(0, 3)}
                         </button>
@@ -182,57 +187,45 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                    </div>
 
                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2 overflow-hidden">
-                      {/* Technical */}
-                      <div className={`${activeProfileSubTab === 'TECHNICAL' ? 'flex' : 'hidden md:flex'} flex-col bg-white border border-[#a0b0a0] overflow-hidden shadow-sm`}>
-                          <div className="px-2 py-1 border-b border-[#8c9c8c] bg-gradient-to-b from-[#cfd8cf] to-[#a3b4a3] shrink-0"><h3 className="text-[#1a1a1a] font-black text-[8px] uppercase tracking-widest">ATRI. TÉCNICOS</h3></div>
+                      {/* VISIBLES */}
+                      <div className={`${activeProfileSubTab === 'VISIBLES' ? 'flex' : 'hidden md:flex'} flex-col bg-white border border-[#a0b0a0] overflow-hidden shadow-sm`}>
+                          <div className="px-2 py-1 border-b border-[#8c9c8c] bg-gradient-to-b from-[#cfd8cf] to-[#a3b4a3] shrink-0"><h3 className="text-[#1a1a1a] font-black text-[8px] uppercase tracking-widest">ATRIBUTOS VISIBLES</h3></div>
                           <div className="flex-1 overflow-y-auto custom-scroll p-0.5">
-                            <SubGroupHeader title="Defensivo" />
-                            {['marking', 'tackling', 'heading'].map(k => (<AttributeRow key={k} label={k} value={player.stats.technical[k as keyof typeof player.stats.technical]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                            <SubGroupHeader title="Creativo" />
-                            {['passing', 'technique', 'firstTouch', 'crossing', 'dribbling'].map(k => (<AttributeRow key={k} label={k} value={player.stats.technical[k as keyof typeof player.stats.technical]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                            <SubGroupHeader title="Ofensivo / Otros" />
-                            {['finishing', 'longShots', 'corners', 'freeKickTaking', 'penaltyTaking', 'longThrows'].map(k => (<AttributeRow key={k} label={k} value={player.stats.technical[k as keyof typeof player.stats.technical]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
+                            {(['fisico', 'mental', 'tecnica', 'agresividad', 'polivalencia'] as const).map(k => (
+                              <AttributeRow key={k} label={k} value={player.stats.visible[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />
+                            ))}
                           </div>
                       </div>
 
-                      {/* Mental */}
-                      <div className={`${activeProfileSubTab === 'MENTAL' ? 'flex' : 'hidden md:flex'} flex-col bg-white border border-[#a0b0a0] overflow-hidden shadow-sm`}>
-                          <div className="px-2 py-1 border-b border-[#8c9c8c] bg-gradient-to-b from-[#cfd8cf] to-[#a3b4a3] shrink-0"><h3 className="text-[#1a1a1a] font-black text-[8px] uppercase tracking-widest">ATRI. MENTALES</h3></div>
+                      {/* INTERNOS */}
+                      <div className={`${activeProfileSubTab === 'INTERNOS' ? 'flex' : 'hidden md:flex'} flex-col bg-white border border-[#a0b0a0] overflow-hidden shadow-sm`}>
+                          <div className="px-2 py-1 border-b border-[#8c9c8c] bg-gradient-to-b from-[#cfd8cf] to-[#a3b4a3] shrink-0"><h3 className="text-[#1a1a1a] font-black text-[8px] uppercase tracking-widest">ATRIBUTOS INTERNOS</h3></div>
                           <div className="flex-1 overflow-y-auto custom-scroll p-0.5">
-                            <SubGroupHeader title="Inteligencia" />
-                            {['anticipation', 'decisions', 'positioning', 'vision', 'concentration'].map(k => (<AttributeRow key={k} label={k} value={player.stats.mental[k as keyof typeof player.stats.mental] as number} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                            <SubGroupHeader title="Esfuerzo y Carácter" />
-                            {['determination', 'workRate', 'teamwork', 'aggression', 'bravery', 'leadership'].map(k => (<AttributeRow key={k} label={k} value={player.stats.mental[k as keyof typeof player.stats.mental] as number} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                            <SubGroupHeader title="Otros" />
-                            {['composure', 'flair', 'offTheBall'].map(k => (<AttributeRow key={k} label={k} value={player.stats.mental[k as keyof typeof player.stats.mental] as number} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
+                            <SubGroupHeader title="Físico" />
+                            {(['velocidad', 'resistencia', 'fuerza'] as const).map(k => (<AttributeRow key={k} label={k} value={player.stats.internal[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
+                            <SubGroupHeader title="Técnico" />
+                            {(['control', 'pase', 'regate', 'disparo'] as const).map(k => (<AttributeRow key={k} label={k} value={player.stats.internal[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
+                            <SubGroupHeader title="Mental" />
+                            {(['anticipacion', 'decision', 'posicionamiento', 'vision'] as const).map(k => (<AttributeRow key={k} label={k} value={player.stats.internal[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
+                            <SubGroupHeader title="Otro" />
+                            {(['agresividad', 'polivalencia'] as const).map(k => (<AttributeRow key={k} label={k} value={player.stats.internal[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
                           </div>
                       </div>
 
-                      {/* Physical */}
-                      <div className={`${activeProfileSubTab === 'PHYSICAL' ? 'flex' : 'hidden md:flex'} flex-col gap-2 overflow-hidden`}>
-                          <div className="bg-white border border-[#a0b0a0] flex flex-col flex-1 overflow-hidden shadow-sm">
-                            <div className="px-2 py-1 border-b border-[#8c9c8c] bg-gradient-to-b from-[#cfd8cf] to-[#a3b4a3] shrink-0"><h3 className="text-[#1a1a1a] font-black text-[8px] uppercase tracking-widest">ATRI. FÍSICOS</h3></div>
-                            <div className="flex-1 overflow-y-auto custom-scroll p-0.5">
-                                <SubGroupHeader title="Velocidad" />
-                                {['acceleration', 'pace', 'agility'].map(k => (<AttributeRow key={k} label={k} value={player.stats.physical[k as keyof typeof player.stats.physical]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                                <SubGroupHeader title="Poder" />
-                                {['strength', 'jumpingReach', 'balance', 'stamina'].map(k => (<AttributeRow key={k} label={k} value={player.stats.physical[k as keyof typeof player.stats.physical]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                                <SubGroupHeader title="Condición" />
-                                {['naturalFitness'].map(k => (<AttributeRow key={k} label={k} value={player.stats.physical[k as keyof typeof player.stats.physical]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                                {player.stats.goalkeeping && (
-                                  <>
-                                      <SubGroupHeader title="Portería" />
-                                      {Object.keys(player.stats.goalkeeping).map(k => (<AttributeRow key={k} label={k} value={(player.stats.goalkeeping as any)[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                                  </>
-                                )}
-                            </div>
-                          </div>
-                          
-                          <div className="bg-white border border-[#a0b0a0] shrink-0 shadow-sm overflow-hidden mb-1 md:mb-0">
+                      {/* ESTADO */}
+                      <div className={`${activeProfileSubTab === 'ESTADO' ? 'flex' : 'hidden md:flex'} flex-col gap-2 overflow-hidden`}>
+                          <div className="bg-white border border-[#a0b0a0] shrink-0 shadow-sm overflow-hidden">
                             <div className="bg-gradient-to-b from-[#f0f4f0] to-[#d0d8d0] px-2 py-1 border-b border-[#a0b0a0]"><span className="text-[#1a1a1a] font-black text-[7px] uppercase tracking-widest">ESTADO ACTUAL</span></div>
                             <div className="p-1 flex flex-col">
                                 <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors border-b border-black/5"><span className="text-[7px] font-black text-slate-500 uppercase">Condición</span><span className="text-[10px] font-black text-green-700">{Math.round(player.fitness)}%</span></div>
                                 <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors"><span className="text-[7px] font-black text-slate-500 uppercase">Moral</span><span className={`text-[10px] font-black ${player.morale > 80 ? 'text-green-700' : 'text-blue-700'}`}>{player.morale > 80 ? 'MUY ALTA' : 'ALTA'}</span></div>
+                                <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors"><span className="text-[7px] font-black text-slate-500 uppercase">Lesión</span><span className="text-[10px] font-black text-slate-700">{player.injury ? player.injury.type + ' (' + player.injury.daysLeft + 'd)' : 'Ninguna'}</span></div>
+                            </div>
+                          </div>
+                          <div className="bg-white border border-[#a0b0a0] shrink-0 shadow-sm overflow-hidden">
+                            <div className="bg-gradient-to-b from-[#f0f4f0] to-[#d0d8d0] px-2 py-1 border-b border-[#a0b0a0]"><span className="text-[#1a1a1a] font-black text-[7px] uppercase tracking-widest">ETIQUETA</span></div>
+                            <div className="p-2 flex items-center justify-center">
+                               <span className="text-[11px] font-black uppercase text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-sm">{getPlayerTagLabel(player)}</span>
                             </div>
                           </div>
                       </div>

@@ -26,32 +26,32 @@ const BASE_COORDS: Record<number, { x: number, y: number }> = {
 
 export class ProfileNarrativeEngine {
   static getPersonalityLabel(player: Player): string {
-    const { mental } = player.stats;
-    if (mental.professionalism >= 18 && mental.determination >= 15) return "Modelo de Profesionalidad";
-    if (mental.temperament <= 6) return "Volátil";
-    if (mental.leadership >= 16) return "Líder Nato";
-    if (mental.determination >= 17) return "Muy Determinado";
+    const i = player.stats.internal;
+    if (i.decision >= 16 && i.polivalencia >= 14) return "Modelo de Profesionalidad";
+    if (i.agresividad >= 17) return "Volátil";
+    if (i.polivalencia >= 15) return "Líder Nato";
+    if (i.decision >= 17) return "Muy Determinado";
     return "Equilibrado";
   }
 
   static generateHeadline(player: Player): string {
-    const { technical, mental, physical, goalkeeping } = player.stats;
-    if (player.fitness < 60) return "Físicamente al límite, necesita descanso urgente.";
+    const i = player.stats.internal;
+    if (player.fitness < 60) return "Fisicamente al limite, necesita descanso urgente.";
     if (player.morale < 35) return "Desmotivado y con la cabeza fuera del equipo.";
-    if (goalkeeping) {
-       if (goalkeeping.reflexes >= 16) return "Un seguro bajo palos con reflejos felinos.";
-       if (goalkeeping.oneOnOnes >= 16) return "Especialista en salir triunfante de los mano a mano.";
+    if (player.positions[0] === Position.GK) {
+       if (i.anticipacion >= 16) return "Un seguro bajo palos con reflejos felinos.";
+       if (i.decision >= 16) return "Especialista en salir triunfante de los mano a mano.";
        return "Portero solvente que aporta seguridad a la zaga.";
     }
-    if (technical.finishing >= 16 && mental.composure >= 15) return "Un depredador del área que rara vez falla ante el gol.";
-    if (physical.pace >= 17 || physical.acceleration >= 17) return "Un velocista capaz de castigar cualquier defensa adelantada.";
-    if (technical.passing >= 16 && mental.vision >= 15) return "Un cerebro privilegiado capaz de ver huecos imposibles.";
-    if (technical.technique >= 16 && mental.flair >= 16) return "Un virtuoso del balón que deleita con su calidad técnica.";
-    if (technical.marking >= 16 && technical.tackling >= 16) return "Un baluarte defensivo prácticamente inexpugnable.";
-    if (technical.heading >= 16 && physical.jumpingReach >= 16) return "Un coloso del aire dominante en ambas áreas.";
-    if (mental.positioning >= 16 && mental.anticipation >= 16) return "Lee el juego de maravilla y siempre está en el lugar justo.";
-    if (mental.determination >= 18 && mental.workRate >= 17) return "Un guerrero incansable que lucha cada balón como si fuera el último.";
-    if (mental.leadership >= 17) return "El gran capitán que guía al grupo con autoridad y ejemplo.";
+    if (i.disparo >= 16 && i.decision >= 15) return "Un depredador del area que rara vez falla ante el gol.";
+    if (i.velocidad >= 17) return "Un velocista capaz de castigar cualquier defensa adelantada.";
+    if (i.pase >= 16 && i.vision >= 15) return "Un cerebro privilegiado capaz de ver huecos imposibles.";
+    if (i.control >= 16 && i.vision >= 16) return "Un virtuoso del balon que deleita con su calidad tecnica.";
+    if (i.anticipacion >= 16 && i.agresividad >= 16) return "Un baluarte defensivo practicamente inexpugnable.";
+    if (i.fuerza >= 16 && i.disparo >= 14) return "Un coloso del aire dominante en ambas areas.";
+    if (i.posicionamiento >= 16 && i.anticipacion >= 16) return "Lee el juego de maravilla y siempre esta en el lugar justo.";
+    if (i.decision >= 18 && i.resistencia >= 17) return "Un guerrero incansable que lucha cada balon como si fuera el ultimo.";
+    if (i.polivalencia >= 17) return "El gran capitan que guia al grupo con autoridad y ejemplo.";
     if (player.currentAbility > 150) return "Un futbolista de clase mundial que marca diferencias.";
     if (player.currentAbility > 120) return "Un jugador de gran nivel plenamente consolidado.";
     return "Un profesional centrado en cumplir con su labor diaria.";
@@ -61,11 +61,37 @@ export class ProfileNarrativeEngine {
 export class MatchSimulator {
   private static buildupPhase: Record<string, number> = {};
 
-  private static getEffectiveAttribute(p: Player, stats: Record<string, PlayerMatchStats>, category: 'mental' | 'technical' | 'physical' | 'goalkeeping', attr: string): number {
-    const group = (p.stats as any)[category];
-    const base = group && group[attr] !== undefined ? group[attr] : 10;
+  private static attrMap: Record<string, string> = {
+    'marking': 'anticipacion', 'tackling': 'anticipacion', 'heading': 'fuerza',
+    'passing': 'pase', 'technique': 'control', 'firstTouch': 'control',
+    'crossing': 'pase', 'dribbling': 'regate', 'finishing': 'disparo',
+    'longShots': 'disparo', 'corners': 'pase', 'freeKickTaking': 'disparo',
+    'penaltyTaking': 'disparo', 'longThrows': 'fuerza',
+    'acceleration': 'velocidad', 'pace': 'velocidad', 'stamina': 'resistencia',
+    'strength': 'fuerza', 'jumpingReach': 'fuerza', 'agility': 'velocidad',
+    'balance': 'control', 'naturalFitness': 'resistencia',
+    'anticipation': 'anticipacion', 'decisions': 'decision',
+    'positioning': 'posicionamiento', 'vision': 'vision',
+    'composure': 'decision', 'concentration': 'anticipacion',
+    'determination': 'decision', 'flair': 'vision',
+    'aggression': 'agresividad', 'bravery': 'agresividad',
+    'workRate': 'resistencia', 'teamwork': 'polivalencia',
+    'leadership': 'decision', 'offTheBall': 'posicionamiento',
+    'professionalism': 'decision', 'loyalty': 'polivalencia',
+    'pressure': 'decision', 'temperament': 'agresividad',
+    'adaptability': 'polivalencia', 'sportsmanship': 'decision',
+    'aerialReach': 'fuerza', 'commandOfArea': 'decision',
+    'communication': 'decision', 'eccentricity': 'decision',
+    'handling': 'control', 'kicking': 'pase', 'oneOnOnes': 'anticipacion',
+    'reflexes': 'velocidad', 'rushingOut': 'decision',
+    'punching': 'fuerza', 'throwing': 'pase',
+  };
+
+  private static getEffectiveAttribute(p: Player, stats: Record<string, PlayerMatchStats>, _category: string, attr: string): number {
+    const mapped = MatchSimulator.attrMap[attr] || attr;
+    const base = (p.stats.internal as any)[mapped] ?? 10;
     const condition = stats[p.id]?.condition || 100;
-    const moraleMult = 0.95 + (p.morale / 1000); 
+    const moraleMult = 0.95 + (p.morale / 1000);
     const fatigueMult = 1 - ((100 - condition) / 100 * 0.2);
     let formMult = 1;
     if (p.formRatings.length > 0) {
@@ -343,10 +369,10 @@ export class MatchSimulator {
         const cornerDefPlayers = cornerAttTeamId === homeTeam.id ? activeAway : activeHome;
         const cornerTeamStats = cornerAttTeamId === homeTeam.id ? newState.homeStats : newState.awayStats;
         cornerTeamStats.corners++;
-        const cornerTaker = cornerAttPlayers.filter(p => p.stats.technical.corners >= 10).sort((a,b) => b.stats.technical.corners - a.stats.technical.corners)[0] || cornerAttPlayers[0];
-        const headingTargets = cornerAttPlayers.filter(p => p.stats.technical.heading >= 10).sort((a,b) => (b.stats.technical.heading + b.stats.physical.jumpingReach) - (a.stats.technical.heading + a.stats.physical.jumpingReach));
+        const cornerTaker = cornerAttPlayers.filter(p => p.stats.internal.pase >= 10).sort((a,b) => b.stats.internal.pase - a.stats.internal.pase)[0] || cornerAttPlayers[0];
+        const headingTargets = cornerAttPlayers.filter(p => p.stats.internal.fuerza >= 10).sort((a,b) => (b.stats.internal.fuerza + b.stats.internal.fuerza) - (a.stats.internal.fuerza + a.stats.internal.fuerza));
         const attacker = headingTargets.length > 0 ? headingTargets[randomInt(0, Math.min(2, headingTargets.length-1))] : cornerAttPlayers[0];
-        const defHeader = cornerDefPlayers.filter(p => p.stats.technical.heading >= 10).sort((a,b) => b.stats.technical.heading - a.stats.technical.heading)[0] || cornerDefPlayers[0];
+        const defHeader = cornerDefPlayers.filter(p => p.stats.internal.fuerza >= 10).sort((a,b) => b.stats.internal.fuerza - a.stats.internal.fuerza)[0] || cornerDefPlayers[0];
 
         const cornerQuality = this.getEffectiveAttribute(cornerTaker, newState.playerStats, 'technical', 'corners') + (Math.random() * 6 - 3);
         const attackHeader = this.getEffectiveAttribute(attacker, newState.playerStats, 'technical', 'heading') + this.getEffectiveAttribute(attacker, newState.playerStats, 'physical', 'jumpingReach') * 0.5;
@@ -370,7 +396,7 @@ export class MatchSimulator {
         const fkDefTeam = newState.possessionTeamId === homeTeam.id ? awayTeam : homeTeam;
         const fkAttPlayers = newState.possessionTeamId === homeTeam.id ? activeHome : activeAway;
         const fkDefPlayers = newState.possessionTeamId === homeTeam.id ? activeAway : activeHome;
-        const kickTaker = fkAttPlayers.filter(p => p.stats.technical.freeKickTaking >= 10).sort((a,b) => b.stats.technical.freeKickTaking - a.stats.technical.freeKickTaking)[0] || fkAttPlayers[0];
+        const kickTaker = fkAttPlayers.filter(p => p.stats.internal.disparo >= 10).sort((a,b) => b.stats.internal.disparo - a.stats.internal.disparo)[0] || fkAttPlayers[0];
         const fkSkill = this.getEffectiveAttribute(kickTaker, newState.playerStats, 'technical', 'freeKickTaking');
         const technique = this.getEffectiveAttribute(kickTaker, newState.playerStats, 'technical', 'technique');
         const gk = fkDefPlayers.find(p => p.positions.includes(Position.GK)) || fkDefPlayers[0];
@@ -566,7 +592,7 @@ export class MatchSimulator {
         const stats = newState.playerStats[p.id];
         if (stats && timeConsumed > 0) {
             stats.minutesPlayed += (timeConsumed / 60);
-            const stamina = p.stats.physical.stamina;
+            const stamina = p.stats.internal.resistencia;
             const fatigueRate = 0.007 * (1.6 - stamina / 20) * tempoMult;
             stats.condition = Math.max(1, stats.condition - (timeConsumed * fatigueRate)); 
             this.updateRating(p, stats);
@@ -696,7 +722,7 @@ export class MatchSimulator {
           });
           if (player.injuryHistory.length > 20) player.injuryHistory.shift();
           const recentCount = player.injuryHistory.length;
-          const natFit = player.stats.physical.naturalFitness;
+          const natFit = player.stats.internal.resistencia;
           player.injuryProneness = Math.max(0.005, Math.min(0.2, (recentCount * 0.015) + ((20 - natFit) * 0.015)));
 
 if (stat.sustainedInjury.days > 30) {

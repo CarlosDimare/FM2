@@ -101,7 +101,7 @@ export class DialogueSystem {
   }
 
   static resolveCoachPlayerInteraction(player: Player, type: DialogueType, tone: DialogueTone, currentDate?: Date): DialogueResult {
-    const { mental } = player.stats;
+    const mental = player.stats.internal;
     let moraleChange = 0;
     let text = "";
     let reactionType: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' = 'NEUTRAL';
@@ -110,21 +110,21 @@ export class DialogueSystem {
 
     switch (type) {
       case 'PRAISE_FORM':
-        moraleChange = tone === 'AGGRESSIVE' ? (mental.professionalism >= 15 ? 5 : 15) : 8;
+        moraleChange = tone === 'AGGRESSIVE' ? (mental.decision >= 15 ? 5 : 15) : 8;
         reactionType = moraleChange >= 8 ? 'POSITIVE' : 'NEUTRAL';
-        text = tone === 'AGGRESSIVE' && mental.professionalism < 15
+        text = tone === 'AGGRESSIVE' && mental.decision < 15
           ? "¡Se siente el rey del mundo! Tu elogio le ha dado una confianza ciega."
           : `${player.name} agradece tus palabras y dice que seguirá trabajando duro.`;
         break;
       case 'CRITICIZE_FORM':
         if (tone === 'AGGRESSIVE') {
-          if (mental.temperament <= 6) {
+          if (mental.agresividad <= 6) {
             text = "¡Estalla de furia! Te dice que no tienes ni idea de fútbol y se siente insultado.";
             moraleChange = -25;
             reactionType = 'NEGATIVE';
             canReplica = true;
             tensionChange = 15;
-          } else if (mental.determination >= 17) {
+          } else if (mental.decision >= 17) {
             text = "Te mira con rabia contenida, pero asiente. Parece que lo has pinchado en el orgullo.";
             moraleChange = 5;
             reactionType = 'POSITIVE';
@@ -136,10 +136,10 @@ export class DialogueSystem {
             tensionChange = 10;
           }
         } else if (tone === 'MILD') {
-          text = mental.professionalism >= 12
+          text = mental.decision >= 12
             ? "Reconoce que no está en su mejor momento y promete esforzarse más."
             : "Te ignora con indiferencia. No cree que sus problemas sean tan graves.";
-          moraleChange = mental.professionalism >= 12 ? 5 : 0;
+          moraleChange = mental.decision >= 12 ? 5 : 0;
           reactionType = moraleChange > 0 ? 'POSITIVE' : 'NEUTRAL';
         } else {
           text = "Acepta la crítica profesionalmente, aunque se le nota algo dolido.";
@@ -149,7 +149,7 @@ export class DialogueSystem {
         break;
       case 'DEMAND_MORE':
         if (tone === 'AGGRESSIVE') {
-          if (mental.pressure >= 15) {
+          if (mental.decision >= 15) {
             text = "Acepta el desafío con una mirada desafiante. Está listo para la guerra.";
             moraleChange = 12;
             reactionType = 'POSITIVE';

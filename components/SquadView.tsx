@@ -4,6 +4,7 @@ import { Club, Player, POSITION_ORDER } from '../types';
 import { FMBox, FMTable, FMTableCell } from './FMUI';
 import { TrendingUp, TrendingDown, Minus, X, MessageSquare } from 'lucide-react';
 import { getFlagUrl } from '../data/static';
+import { getPlayerTag } from '../services/playerGenerator';
 import { DialogueSystem } from '../services/dialogueSystem';
 
 interface SquadViewProps {
@@ -110,16 +111,16 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
      if (player.suspension && player.suspension.matchesLeft > 0) {
         icons.push(<div key="sus" className="w-3 h-4 bg-red-600 border border-red-800 rounded-[1px] shadow-sm"></div>);
      }
-     if (DialogueSystem.checkPlayerMotives(player, currentDate)) {
+     if (((player.morale < 40 || player.fitness < 60) && player.clubId)) {
         icons.push(<div key="unh" className="relative flex items-center justify-center"><MessageSquare size={16} className="text-slate-700 fill-amber-400" /><span className="absolute inset-0 flex items-center justify-center text-[7px] font-black text-slate-900 mt-[-1px]">!!</span></div>);
      }
      return icons.length > 0 ? <div className="flex gap-1.5 items-center ml-2 shrink-0">{icons}</div> : null;
   };
 
-  const desktopHeaders = ['Pos', 'Nombre', 'Edad', 'Prog', 'Forma', 'Sueldo', 'Fis', 'Mor', 'Valor'];
+  const desktopHeaders = ['Pos', 'Nombre', 'Edad', 'Etiqueta', 'Forma', 'Sueldo', 'Fis', 'Mor', 'Valor'];
   const tabletHeaders = ['Pos', 'Nombre', 'Edad', 'Prog', 'Forma', 'Sueldo', 'Fis', 'Valor'];
   const mobileHeaders = ['Pos', 'Nombre', 'Edad', 'Fis', 'Valor'];
-  const desktopWidths = ['45px', 'auto', '35px', '35px', '60px', '75px', '40px', '40px', '85px'];
+  const desktopWidths = ['45px', 'auto', '35px', '80px', '60px', '75px', '40px', '40px', '85px'];
   const tabletWidths = ['45px', 'auto', '35px', '35px', '60px', '75px', '40px', '85px'];
   const mobileWidths = ['45px', 'auto', '35px', '40px', '80px'];
 
@@ -187,7 +188,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                         </div>
                     </FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>{player.age}</FMTableCell>
-                    <FMTableCell className="text-center">{renderTrend(player.developmentTrend)}</FMTableCell>
+                    <FMTableCell className="text-center"><span className="text-[8px] font-black text-blue-700 uppercase">{getPlayerTag(player)}</span></FMTableCell>
                     <FMTableCell className="text-center">{renderFormDots(player.formRatings)}</FMTableCell>
                     <FMTableCell className="text-right font-bold" isNumber>£{(player.salary / 1000).toFixed(0)}k</FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>
@@ -227,7 +228,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                         </div>
                     </FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>{player.age}</FMTableCell>
-                    <FMTableCell className="text-center">{renderTrend(player.developmentTrend)}</FMTableCell>
+                    <FMTableCell className="text-center"><span className="text-[8px] font-black text-blue-700 uppercase">{getPlayerTag(player)}</span></FMTableCell>
                     <FMTableCell className="text-center">{renderFormDots(player.formRatings)}</FMTableCell>
                     <FMTableCell className="text-right font-bold" isNumber>£{(player.salary / 1000).toFixed(0)}k</FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>

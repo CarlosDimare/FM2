@@ -292,10 +292,8 @@ export class WorldManager {
 
   createRandomPlayer(clubId: string, primaryPos: Position, minAge = 16, maxAge = 36, baseYear = 2008): Player {
     const club = this.getClub(clubId);
-    const repBase = club ? club.reputation / 500 : 10;
     let nat = club ? (Math.random() < 0.9 ? club.country : NATIONS[randomInt(0, NATIONS.length - 1)]) : "Argentina";
     const normalizeKey = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    
     let firstName = "", lastName = "";
     const regenData = REGEN_DB[normalizeKey(nat)];
     if (regenData) {
@@ -305,25 +303,21 @@ export class WorldManager {
         firstName = NAMES_DB.firstNames[randomInt(0, NAMES_DB.firstNames.length - 1)];
         lastName = NAMES_DB.lastNames[randomInt(0, NAMES_DB.lastNames.length - 1)];
     }
-
-    const ca = randomInt(Math.max(1, repBase * 5), Math.min(200, repBase * 15));
+    const age = randomInt(minAge, maxAge);
+    const repBase = club ? club.reputation / 500 : 10;
+    const qualityFactor = Math.max(0.3, Math.min(1.5, repBase / 15));
+    const player = generatePlayer(clubId, primaryPos, nat, `${firstName} ${lastName}`, age, { qualityFactor });
+    const ca = Math.max(40, Math.min(200, Math.round(qualityFactor * 100 + randomInt(-20, 20))));
     const pa = Math.min(200, ca + randomInt(0, 50));
-    const caBase = ca / 10;
-
-    const stats: PlayerStats = {
-        mental: { aggression: weightedRandom(caBase-4, caBase+4), anticipation: weightedRandom(caBase-4, caBase+4), bravery: weightedRandom(caBase-4, caBase+4), composure: weightedRandom(caBase-4, caBase+4), concentration: weightedRandom(caBase-4, caBase+4), decisions: weightedRandom(caBase-4, caBase+4), determination: randomInt(5, 20), flair: weightedRandom(caBase-4, caBase+4), leadership: weightedRandom(caBase-4, caBase+4), offTheBall: weightedRandom(caBase-4, caBase+4), positioning: weightedRandom(caBase-4, caBase+4), teamwork: weightedRandom(caBase-4, caBase+4), vision: weightedRandom(caBase-4, caBase+4), workRate: weightedRandom(caBase-4, caBase+4), professionalism: randomInt(5, 20), ambition: randomInt(5, 20), pressure: randomInt(5, 20), temperament: randomInt(5, 20), loyalty: randomInt(5, 20), adaptability: randomInt(5, 20), sportsmanship: randomInt(5, 20) },
-        technical: { corners: weightedRandom(caBase-4, caBase+4), crossing: weightedRandom(caBase-4, caBase+4), dribbling: weightedRandom(caBase-4, caBase+4), finishing: weightedRandom(caBase-4, caBase+4), firstTouch: weightedRandom(caBase-4, caBase+4), freeKickTaking: weightedRandom(caBase-4, caBase+4), heading: weightedRandom(caBase-4, caBase+4), longShots: weightedRandom(caBase-4, caBase+4), longThrows: weightedRandom(caBase-4, caBase+4), marking: weightedRandom(caBase-4, caBase+4), passing: weightedRandom(caBase-4, caBase+4), penaltyTaking: weightedRandom(caBase-4, caBase+4), tackling: weightedRandom(caBase-4, caBase+4), technique: weightedRandom(caBase-4, caBase+4) },
-        physical: { acceleration: weightedRandom(caBase-4, caBase+4), agility: weightedRandom(caBase-4, caBase+4), balance: weightedRandom(caBase-4, caBase+4), jumpingReach: weightedRandom(caBase-4, caBase+4), naturalFitness: weightedRandom(caBase-4, caBase+4), pace: weightedRandom(caBase-4, caBase+4), stamina: weightedRandom(caBase-4, caBase+4), strength: weightedRandom(caBase-4, caBase+4) }
-    };
-    if (primaryPos === Position.GK) {
-        stats.goalkeeping = { aerialReach: weightedRandom(caBase-4, caBase+4), commandOfArea: weightedRandom(caBase-4, caBase+4), communication: weightedRandom(caBase-4, caBase+4), eccentricity: randomInt(1, 20), handling: weightedRandom(caBase-4, caBase+4), kicking: weightedRandom(caBase-4, caBase+4), oneOnOnes: weightedRandom(caBase-4, caBase+4), reflexes: weightedRandom(caBase-4, caBase+4), rushingOut: weightedRandom(caBase-4, caBase+4), punching: weightedRandom(caBase-4, caBase+4), throwing: weightedRandom(caBase-4, caBase+4) };
-    }
-
-return {
-         id: generateUUID(), name: `${firstName} ${lastName}`, age: randomInt(minAge, maxAge), birthDate: new Date(baseYear - 20, randomInt(0, 11), randomInt(1, 28)), height: randomInt(165, 195), weight: randomInt(65, 95), nationality: nat, positions: [primaryPos], secondaryPositions: [], stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 }, statsByCompetition: {}, history: [], currentAbility: ca, potentialAbility: pa, reputation: ca * 40, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR', value: Math.round(ca * ca * 2000), salary: Math.round(ca * 2000 / 12), transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty, negotiationAttempts: 0, isUnhappyWithContract: false, releaseClause: Math.round(ca * ca * 2000 * 3), yellowCardsAccumulated: 0, formRatings: [], isTransferListed: false, injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02), relationships: {}, agent: randomInt(minAge, maxAge) >= 22 && Math.random() < 0.15 ? { name: `Agente ${lastName}`, commission: Math.round(5 + Math.random() * 10) } : undefined
-     };
+    player.currentAbility = ca;
+    player.potentialAbility = pa;
+    player.reputation = ca * 40;
+    player.value = Math.round(ca * ca * 2000);
+    player.salary = Math.round(ca * 2000 / 12);
+    player.releaseClause = Math.round(player.value * 3);
+    player.agent = age >= 22 && Math.random() < 0.15 ? { name: `Agente ${lastName}`, commission: Math.round(5 + Math.random() * 10) } : undefined;
+    return player;
   }
-
   getLeagueTable(compId: string, fixtures: Fixture[], squadType: SquadType, groupId?: number): TableEntry[] {
     const table: Record<string, TableEntry> = {};
     
@@ -995,13 +989,11 @@ addInboxMessage(category: MessageCategory, subject: string, body: string, date: 
     const strengths: string[] = [];
     const weaknesses: string[] = [];
 
-    const techKeys = Object.entries(player.stats.technical).sort(([,a], [,b]) => b - a);
-    const mentalKeys = Object.entries(player.stats.mental).sort(([,a], [,b]) => b - a);
+    const internalEntries = Object.entries(player.stats.internal).sort(([,a], [,b]) => b - a);
 
-    if (techKeys[0][1] >= 15) strengths.push(techKeys[0][0]);
-    if (mentalKeys[0][1] >= 15) strengths.push(mentalKeys[0][0]);
-    if (techKeys[techKeys.length-1][1] <= 8) weaknesses.push(techKeys[techKeys.length-1][0]);
-    if (mentalKeys[mentalKeys.length-1][1] <= 8) weaknesses.push(mentalKeys[mentalKeys.length-1][0]);
+    if (internalEntries[0][1] >= 15) strengths.push(internalEntries[0][0]);
+    if (internalEntries.length > 1 && internalEntries[1][1] >= 14) strengths.push(internalEntries[1][0]);
+    if (internalEntries[internalEntries.length-1][1] <= 8) weaknesses.push(internalEntries[internalEntries.length-1][0]);
 
     const summary = reportedCA >= 150 ? "Jugador de clase mundial." :
       reportedCA >= 120 ? "Excelente jugador para el equipo." :
@@ -1010,11 +1002,11 @@ addInboxMessage(category: MessageCategory, subject: string, body: string, date: 
       "Jugador de relleno. No recomiendo su fichaje.";
 
     let personality = "Equilibrado";
-    if (player.stats.mental.professionalism >= 17) personality = "Modelo de profesionalidad";
-    else if (player.stats.mental.determination >= 17) personality = "Muy determinado";
-    else if (player.stats.mental.ambition >= 17) personality = "Muy ambicioso";
-    else if (player.stats.mental.temperament <= 6) personality = "Volátil";
-    else if (player.stats.mental.leadership >= 16) personality = "Líder nato";
+    if (player.stats.internal.decision >= 17) personality = "Modelo de profesionalidad";
+    else if (player.stats.internal.decision >= 17) personality = "Muy determinado";
+    else if (player.stats.internal.vision >= 17) personality = "Muy ambicioso";
+    else if (player.stats.internal.agresividad <= 6) personality = "Volátil";
+    else if (player.stats.internal.polivalencia >= 16) personality = "Líder nato";
 
     const report: ScoutingReport = {
       id: generateUUID(),
