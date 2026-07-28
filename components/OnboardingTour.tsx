@@ -165,7 +165,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ active, currentV
   );
 };
 
-function computeTooltipStyle(rect: DOMRect, pos: 'top' | 'bottom' | 'left' | 'right'): React.CSSProperties {
+function computeTooltipStyle(rect: DOMRect, pos: 'top' | 'bottom' | 'left' | 'right' | 'center'): React.CSSProperties {
   const TOOLTIP_W = 320;
   const TOOLTIP_H = 180;
   const margin = 12;

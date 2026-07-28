@@ -26,7 +26,7 @@ import { ClubsListView } from './components/ClubsListView';
 import { BottomNav } from './components/BottomNav';
 import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
-import { Club, Player, Fixture, SquadType } from './types';
+import { Club, Player, Fixture, SquadType, PlayerMatchStats } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID } from './services/utils';
 import { MatchSimulator } from './services/engine';
 import { requestNotificationPermission, sendMatchNotification, sendInjuryNotification, sendTransferNotification, sendInboxNotification } from './services/notifications';
@@ -119,7 +119,7 @@ const App: React.FC = () => {
         if (isSaveModalOpen) setIsSaveModalOpen(false);
         else if (currentView !== 'HOME' && gameState === 'PLAYING') setView('HOME');
       }
-      if (e.key === ' ' && currentView === 'HOME' && currentView !== 'MATCH' && gameState === 'PLAYING' && !isVacationModalOpen) {
+      if (e.key === ' ' && currentView === 'HOME' && gameState === 'PLAYING' && !isVacationModalOpen) {
         e.preventDefault();
         advanceTimeRef.current();
       }
@@ -799,7 +799,7 @@ case 'PRESS_CONFERENCE_POST': {
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
-           return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats) => {
+           return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats: Record<string, PlayerMatchStats>) => {
               nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
               MatchSimulator.finalizeSeasonStats(
                 world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),

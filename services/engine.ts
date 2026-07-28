@@ -385,7 +385,7 @@ export class MatchSimulator {
             newState.events.push({ minute: state.minute, second: state.second, type: 'CORNER', text: `${this.getPlayerLabel(cornerTaker, cornerOffTeam)} lanza el córner. ${cornerQuality > 10 ? 'Buen centro al área.' : 'El centro no encuentra destinatario.'}`, teamId: cornerOffTeam.id, importance: 'MEDIUM', intensity: 2 });
             newState.ballState = 'IN_PLAY';
             const clearTarget = cornerDefPlayers.filter(p => SLOT_CONFIG[p.tacticalPosition || 0]?.line !== 'GK');
-            if (clearTarget.length > 0) newState.possessorId = clearTarget[randomInt(0, clearTarget.length-1)];
+            if (clearTarget.length > 0) newState.possessorId = clearTarget[randomInt(0, clearTarget.length-1)]?.id || null;
             else newState.possessorId = cornerDefPlayers[0]?.id || null;
         }
         timeConsumed = 20;

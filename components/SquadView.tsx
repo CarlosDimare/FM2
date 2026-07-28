@@ -7,6 +7,8 @@ import { getFlagUrl } from '../data/static';
 import { getPlayerTag } from '../services/playerGenerator';
 import { DialogueSystem } from '../services/dialogueSystem';
 
+type SortField = 'POS' | 'NAME' | 'AGE' | 'TREND' | 'SAL' | 'FIT' | 'MOR' | 'VAL';
+
 interface SquadViewProps {
   players: Player[];
   onSelectPlayer: (p: Player) => void;

@@ -3,7 +3,7 @@ import { Player, Staff, Club } from '../types';
 import { world } from '../services/worldManager';
 import { DialogueSystem } from '../services/dialogueSystem';
 import { FMBox, FMButton } from './FMUI';
-import { Users, MessageSquare, AlertTriangle, Heart, Swords, Briefcase, Building2, X } from 'lucide-react';
+import { Users, MessageSquare, AlertTriangle, Heart, Swords, Briefcase, Building2, X, DollarSign, Dumbbell } from 'lucide-react';
 
 interface PeopleHubProps {
   userClub: Club;

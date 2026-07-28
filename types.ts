@@ -27,7 +27,7 @@ export enum Zone {
 }
 
 export type TransitionPhase = 'ORGANIZED' | 'COUNTER' | 'DISORGANIZED';
-export type BallState = 'KICKOFF' | 'IN_PLAY' | 'OUT_OF_BOUNDS' | 'GOAL_CELEBRATION' | 'HALF_TIME' | 'FINISHED';
+export type BallState = 'KICKOFF' | 'IN_PLAY' | 'OUT_OF_BOUNDS' | 'CORNER' | 'FREE_KICK' | 'GOAL_CELEBRATION' | 'HALF_TIME' | 'FINISHED';
 
 export type SquadType = 'SENIOR' | 'RESERVE' | 'U20';
 
@@ -355,6 +355,7 @@ export interface PlayerMatchStats {
   card?: 'YELLOW' | 'RED';
   participationPhrase?: string;
   sustainedInjury?: { type: string; days: number };
+  severe?: boolean;
 }
 
 export interface TeamMatchStats {
@@ -453,8 +454,6 @@ export interface MatchSettings {
   pauseAtHalftime: boolean;
 }
 
-export type DialogueType = 'PRAISE_FORM' | 'CRITICIZE_FORM' | 'PRAISE_TRAINING' | 'DEMAND_MORE' | 'WARN_CONDUCT';
-
 export type DialogueTone = 'MILD' | 'MODERATE' | 'AGGRESSIVE';
 
 export interface DialogueResult {
@@ -518,8 +517,6 @@ export const POSITION_ORDER: Record<string, number> = {
 };
 
 export type DialogueType = 'PRAISE_FORM' | 'CRITICIZE_FORM' | 'PRAISE_TRAINING' | 'DEMAND_MORE' | 'WARN_CONDUCT' | 'SET_CAPTAIN' | 'CHANGE_POSITION' | 'INDIVIDUAL_TRAINING_FOCUS' | 'THREATEN_TRANSFER' | 'GRANT_CAPTANCY' | 'ASSIGN_TRAINING' | 'DELEGATE_MATCH' | 'REPRIMAND' | 'PROMISE_RESOURCES' | 'SCOUTING_FOCUS';
-
-export type DialogueTone = 'MILD' | 'MODERATE' | 'AGGRESSIVE';
 
 export type InteractionChannel = 'COACH_PLAYER' | 'COACH_STAFF' | 'COACH_MANAGER' | 'COACH_PRESS' | 'COACH_BOARD';
 

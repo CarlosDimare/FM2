@@ -7,6 +7,7 @@ import { REAL_PLAYERS_DB, RealPlayerDef } from "../data/realPlayers";
 import { SLOT_CONFIG } from "./engine";
 import { sendTransferNotification, sendInboxNotification } from "./notifications";
 import { generatePlayer, generateRandomPlayer, getPlayerTag } from "./playerGenerator";
+import { useGameStore } from "../stores/gameStore";
 
 export class WorldManager {
   players: Player[] = [];
@@ -147,6 +148,7 @@ export class WorldManager {
    getPlayer(id: string) { return this.players.find(p => p.id === id); }
    getPlayersByClub(clubId: string) { return this.players.filter(p => p.clubId === clubId); }
    getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === clubId); }
+   getStaff(id: string) { return this.staff.find(s => s.id === id); }
    getLeagues() { return this.competitions.filter(c => c.type === 'LEAGUE'); }
    getTactics() { return this.tactics; }
 

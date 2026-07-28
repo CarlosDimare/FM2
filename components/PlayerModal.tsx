@@ -1,12 +1,12 @@
 
 import React, { useState, useMemo } from 'react';
-import { Player, Attribute, DialogueType, DialogueResult, ATTRIBUTE_LABELS, ATTRIBUTE_TOOLTIPS, Position, SquadType, DialogueTone, POSITION_FULL_NAMES, PlayerHistoryEntry } from '../types';
+import { Player, Attribute, DialogueType, DialogueResult, ATTRIBUTE_LABELS, Position, SquadType, DialogueTone, POSITION_FULL_NAMES, PlayerHistoryEntry } from '../types';
 import { world } from '../services/worldManager';
 import { ProfileNarrativeEngine } from '../services/engine';
 import { DialogueSystem } from '../services/dialogueSystem';
 import { TransferOfferModal } from './TransferOfferModal';
 import { ContractNegotiationModal } from './ContractNegotiationModal';
-import { X, MessageSquare, Activity, Map, FileText, History, TrendingUp, TrendingDown, Minus, ShieldAlert, ArrowRightLeft, UserX, UserPlus, Users, MessageCircle, AlertCircle, Info, Award, ShieldAlert as DisciplineIcon, Shield, User, Star, ChevronLeft, ChevronRight, Cake, Ruler, Weight, UserCircle } from 'lucide-react';
+import { X, MessageSquare, Activity, Map, FileText, History, Minus, ShieldAlert, ArrowRightLeft, UserX, UserPlus, Users, MessageCircle, AlertCircle, Info, Award, ShieldAlert as DisciplineIcon, Shield, User, Star, ChevronLeft, ChevronRight, Cake, Ruler, Weight, UserCircle } from 'lucide-react';
 import { FMTable, FMTableCell, FMButton, FMBox } from './FMUI';
 import { getFlagUrl } from '../data/static';
 import { getPlayerTag } from '../services/playerGenerator';
@@ -47,43 +47,75 @@ const getKeyAttributes = (pos: Position): string[] => {
   }
 };
 
-// Atributo compactado para evitar scroll
-const AttributeRow: React.FC<{ label: string; value: Attribute; isKey: boolean; trend?: string }> = ({ label, value, isKey, trend }) => {
-  const valueColor = value >= 16 ? 'text-blue-800' : value >= 11 ? 'text-blue-600/60' : 'text-slate-400/40';
-  const labelColor = value >= 11 ? 'text-slate-600' : 'text-slate-400/60';
-  
-  return (
-    <div className={`flex items-center px-1.5 py-0.5 border-b border-[#a0b0a0]/5 hover:bg-[#ccd9cc] transition-colors cursor-default group ${isKey ? 'bg-blue-700/5' : ''}`} title={ATTRIBUTE_TOOLTIPS[label] || ''}>
-      <div className="w-5 flex items-center justify-end mr-2">
-         <span className={`text-[11px] font-black leading-tight ${valueColor}`} style={{ fontFamily: 'Verdana, sans-serif' }}>
-            {value}
-         </span>
-      </div>
-      <div className="w-2.5 mr-1 opacity-50">
-        {trend === 'RISING' && <TrendingUp size={9} className="text-green-600" />}
-        {trend === 'DECLINING' && <TrendingDown size={9} className="text-red-600" />}
-      </div>
-      <span className={`text-[8px] uppercase tracking-tighter truncate flex-1 ${labelColor} ${isKey ? 'font-black' : 'font-bold'}`} style={{ fontFamily: 'Verdana, sans-serif' }}>
-        {ATTRIBUTE_LABELS[label] || label}
-      </span>
-      {isKey && <div className="w-1 h-1 rounded-full bg-blue-400/40"></div>}
-    </div>
-  );
-};
-
-const SubGroupHeader: React.FC<{ title: string }> = ({ title }) => (
-   <div className="px-1.5 py-0.5 bg-black/5 border-y border-[#a0b0a0]/10 mb-0.5 mt-1 first:mt-0">
-      <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">{title}</span>
-   </div>
-);
-
 const getPlayerTagLabel = (player: Player): string => {
   return getPlayerTag(player);
 };
 
+const VISIBLE_INTERNAL_MAP: Record<string, string[]> = {
+  fisico: ['velocidad', 'resistencia', 'fuerza'],
+  mental: ['anticipacion', 'decision', 'posicionamiento', 'vision'],
+  tecnica: ['control', 'pase', 'regate', 'disparo'],
+  agresividad: ['agresividad'],
+  polivalencia: ['polivalencia'],
+};
+
+const VisibleAttrCard: React.FC<{
+  label: string;
+  value: number;
+  isKey: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  internals: Record<string, number>;
+  internalKeys: string[];
+}> = ({ label, value, isKey, expanded, onToggle, internals, internalKeys }) => {
+  const pct = Math.round((value / 20) * 100);
+  const barColor = value >= 16 ? 'bg-blue-700' : value >= 11 ? 'bg-blue-500' : value >= 7 ? 'bg-slate-400' : 'bg-slate-300';
+  const textColor = value >= 16 ? 'text-blue-900' : value >= 11 ? 'text-blue-700' : 'text-slate-500';
+
+  return (
+    <div className={`border border-[#a0b0a0] rounded-sm overflow-hidden transition-all ${expanded ? 'bg-white shadow-md' : 'bg-white hover:shadow-sm cursor-pointer'}`}>
+      <button onClick={onToggle} className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-[#f0f4f0] transition-colors">
+        <div className={`w-10 h-10 rounded-sm flex items-center justify-center shrink-0 ${isKey ? 'bg-blue-100 border border-blue-300' : 'bg-slate-100 border border-slate-200'}`}>
+          <span className={`text-lg font-black ${textColor}`}>{value}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-black uppercase tracking-wide text-slate-700">{ATTRIBUTE_LABELS[label] || label}</span>
+            <span className="text-[9px] font-bold text-slate-400">{pct}%</span>
+          </div>
+          <div className="h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+            <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${pct}%` }} />
+          </div>
+        </div>
+        {isKey && <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />}
+        <ChevronRight size={14} className={`text-slate-400 shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+      </button>
+      {expanded && (
+        <div className="border-t border-[#a0b0a0]/50 bg-[#f8faf8] px-3 py-2 space-y-1.5">
+          {internalKeys.map(ik => {
+            const iv = internals[ik];
+            const iPct = Math.round((iv / 20) * 100);
+            const iBarColor = iv >= 16 ? 'bg-blue-700' : iv >= 11 ? 'bg-blue-500' : iv >= 7 ? 'bg-slate-400' : 'bg-slate-300';
+            const iTextColor = iv >= 16 ? 'text-blue-800' : iv >= 11 ? 'text-blue-600' : 'text-slate-500';
+            return (
+              <div key={ik} className="flex items-center gap-2">
+                <span className="text-[8px] font-bold text-slate-500 uppercase w-20 truncate">{ATTRIBUTE_LABELS[ik] || ik}</span>
+                <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full ${iBarColor}`} style={{ width: `${iPct}%` }} />
+                </div>
+                <span className={`text-[10px] font-black w-5 text-right ${iTextColor}`}>{iv}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userClubId, currentDate }) => {
   const [activeTab, setActiveTab] = useState<'PROFILE' | 'PERSONAL' | 'POSITIONS' | 'HISTORY' | 'CONTRACT' | 'INTERACTION'>('PROFILE');
-  const [activeProfileSubTab, setActiveProfileSubTab] = useState<'VISIBLES' | 'INTERNOS' | 'ESTADO'>('VISIBLES');
+  const [expandedVisible, setExpandedVisible] = useState<string | null>(null);
   const [showRenewalModal, setShowRenewalModal] = useState(false);
   
   // Dialogue state
@@ -178,56 +210,63 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
           <div className="flex-1 overflow-hidden flex flex-col bg-[#d4dcd4] p-2 md:p-3 relative">
              {activeTab === 'PROFILE' && (
                 <div className="h-full flex flex-col gap-2 overflow-hidden">
-                   <div className="md:hidden flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm shrink-0">
-                      {['VISIBLES', 'INTERNOS', 'ESTADO'].map(st => (
-                        <button key={st} onClick={() => setActiveProfileSubTab(st as any)} className={`flex-1 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all ${activeProfileSubTab === st ? 'bg-[#3a4a3a] text-white' : 'text-slate-700'}`}>
-                           {st.substring(0, 3)}
-                        </button>
-                      ))}
-                   </div>
-
-                   <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2 overflow-hidden">
-                      {/* VISIBLES */}
-                      <div className={`${activeProfileSubTab === 'VISIBLES' ? 'flex' : 'hidden md:flex'} flex-col bg-white border border-[#a0b0a0] overflow-hidden shadow-sm`}>
-                          <div className="px-2 py-1 border-b border-[#8c9c8c] bg-gradient-to-b from-[#cfd8cf] to-[#a3b4a3] shrink-0"><h3 className="text-[#1a1a1a] font-black text-[8px] uppercase tracking-widest">ATRIBUTOS VISIBLES</h3></div>
-                          <div className="flex-1 overflow-y-auto custom-scroll p-0.5">
+                   <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 overflow-hidden">
+                      {/* VISIBLES - Main column */}
+                      <div className="md:col-span-2 flex flex-col overflow-hidden">
+                         <div className="px-2 py-1.5 mb-2 bg-gradient-to-r from-[#3a4a3a] to-[#2a3a2a] rounded-sm shrink-0">
+                            <h3 className="text-white font-black text-[9px] uppercase tracking-widest">ATRIBUTOS VISIBLES</h3>
+                         </div>
+                         <div className="flex-1 overflow-y-auto custom-scroll space-y-1.5 pr-1">
                             {(['fisico', 'mental', 'tecnica', 'agresividad', 'polivalencia'] as const).map(k => (
-                              <AttributeRow key={k} label={k} value={player.stats.visible[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />
+                              <VisibleAttrCard
+                                key={k}
+                                label={k}
+                                value={player.stats.visible[k]}
+                                isKey={keyAttributes.includes(k)}
+                                expanded={expandedVisible === k}
+                                onToggle={() => setExpandedVisible(expandedVisible === k ? null : k)}
+                                internals={player.stats.internal}
+                                internalKeys={VISIBLE_INTERNAL_MAP[k]}
+                              />
                             ))}
-                          </div>
+                         </div>
                       </div>
 
-                      {/* INTERNOS */}
-                      <div className={`${activeProfileSubTab === 'INTERNOS' ? 'flex' : 'hidden md:flex'} flex-col bg-white border border-[#a0b0a0] overflow-hidden shadow-sm`}>
-                          <div className="px-2 py-1 border-b border-[#8c9c8c] bg-gradient-to-b from-[#cfd8cf] to-[#a3b4a3] shrink-0"><h3 className="text-[#1a1a1a] font-black text-[8px] uppercase tracking-widest">ATRIBUTOS INTERNOS</h3></div>
-                          <div className="flex-1 overflow-y-auto custom-scroll p-0.5">
-                            <SubGroupHeader title="Físico" />
-                            {(['velocidad', 'resistencia', 'fuerza'] as const).map(k => (<AttributeRow key={k} label={k} value={player.stats.internal[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                            <SubGroupHeader title="Técnico" />
-                            {(['control', 'pase', 'regate', 'disparo'] as const).map(k => (<AttributeRow key={k} label={k} value={player.stats.internal[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                            <SubGroupHeader title="Mental" />
-                            {(['anticipacion', 'decision', 'posicionamiento', 'vision'] as const).map(k => (<AttributeRow key={k} label={k} value={player.stats.internal[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                            <SubGroupHeader title="Otro" />
-                            {(['agresividad', 'polivalencia'] as const).map(k => (<AttributeRow key={k} label={k} value={player.stats.internal[k]} isKey={keyAttributes.includes(k)} trend={player.developmentTrend} />))}
-                          </div>
-                      </div>
-
-                      {/* ESTADO */}
-                      <div className={`${activeProfileSubTab === 'ESTADO' ? 'flex' : 'hidden md:flex'} flex-col gap-2 overflow-hidden`}>
-                          <div className="bg-white border border-[#a0b0a0] shrink-0 shadow-sm overflow-hidden">
+                      {/* ESTADO - Side column */}
+                      <div className="flex flex-col gap-2 overflow-hidden">
+                         <div className="bg-white border border-[#a0b0a0] shrink-0 shadow-sm overflow-hidden">
                             <div className="bg-gradient-to-b from-[#f0f4f0] to-[#d0d8d0] px-2 py-1 border-b border-[#a0b0a0]"><span className="text-[#1a1a1a] font-black text-[7px] uppercase tracking-widest">ESTADO ACTUAL</span></div>
                             <div className="p-1 flex flex-col">
                                 <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors border-b border-black/5"><span className="text-[7px] font-black text-slate-500 uppercase">Condición</span><span className="text-[10px] font-black text-green-700">{Math.round(player.fitness)}%</span></div>
-                                <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors"><span className="text-[7px] font-black text-slate-500 uppercase">Moral</span><span className={`text-[10px] font-black ${player.morale > 80 ? 'text-green-700' : 'text-blue-700'}`}>{player.morale > 80 ? 'MUY ALTA' : 'ALTA'}</span></div>
+                                <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors border-b border-black/5"><span className="text-[7px] font-black text-slate-500 uppercase">Moral</span><span className={`text-[10px] font-black ${player.morale > 80 ? 'text-green-700' : player.morale > 50 ? 'text-blue-700' : 'text-red-600'}`}>{player.morale > 80 ? 'MUY ALTA' : player.morale > 50 ? 'ALTA' : 'BAJA'}</span></div>
                                 <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors"><span className="text-[7px] font-black text-slate-500 uppercase">Lesión</span><span className="text-[10px] font-black text-slate-700">{player.injury ? player.injury.type + ' (' + player.injury.daysLeft + 'd)' : 'Ninguna'}</span></div>
                             </div>
-                          </div>
-                          <div className="bg-white border border-[#a0b0a0] shrink-0 shadow-sm overflow-hidden">
+                         </div>
+                         <div className="bg-white border border-[#a0b0a0] shrink-0 shadow-sm overflow-hidden">
                             <div className="bg-gradient-to-b from-[#f0f4f0] to-[#d0d8d0] px-2 py-1 border-b border-[#a0b0a0]"><span className="text-[#1a1a1a] font-black text-[7px] uppercase tracking-widest">ETIQUETA</span></div>
                             <div className="p-2 flex items-center justify-center">
                                <span className="text-[11px] font-black uppercase text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-sm">{getPlayerTagLabel(player)}</span>
                             </div>
-                          </div>
+                         </div>
+                         <div className="bg-white border border-[#a0b0a0] shrink-0 shadow-sm overflow-hidden flex-1">
+                            <div className="bg-gradient-to-b from-[#f0f4f0] to-[#d0d8d0] px-2 py-1 border-b border-[#a0b0a0]"><span className="text-[#1a1a1a] font-black text-[7px] uppercase tracking-widest">ATTRIBUTOS INTERNOS</span></div>
+                            <div className="p-1 overflow-y-auto custom-scroll max-h-48">
+                               {(['velocidad', 'resistencia', 'fuerza', 'control', 'pase', 'regate', 'disparo', 'anticipacion', 'decision', 'posicionamiento', 'vision', 'agresividad', 'polivalencia'] as const).map(ik => {
+                                  const iv = player.stats.internal[ik];
+                                  const iPct = Math.round((iv / 20) * 100);
+                                  const iBarColor = iv >= 16 ? 'bg-blue-700' : iv >= 11 ? 'bg-blue-500' : iv >= 7 ? 'bg-slate-400' : 'bg-slate-300';
+                                  return (
+                                     <div key={ik} className="flex items-center gap-1.5 px-1 py-0.5 hover:bg-[#f0f4f0]">
+                                        <span className="text-[7px] font-bold text-slate-500 uppercase w-14 truncate">{ATTRIBUTE_LABELS[ik] || ik}</span>
+                                        <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
+                                           <div className={`h-full rounded-full ${iBarColor}`} style={{ width: `${iPct}%` }} />
+                                        </div>
+                                        <span className="text-[9px] font-black text-slate-600 w-4 text-right">{iv}</span>
+                                     </div>
+                                  );
+                               })}
+                            </div>
+                         </div>
                       </div>
                    </div>
                 </div>
