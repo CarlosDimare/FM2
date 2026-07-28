@@ -233,63 +233,17 @@ export class WorldManager {
      
      const primaryPos = posMap[def.position] || Position.MC;
      const age = def.age;
-     const birthDate = new Date(2008 - age, randomInt(0, 11), randomInt(1, 28));
-     const caBase = def.ca / 10;
-
-     const stats: PlayerStats = {
-        mental: { 
-           aggression: weightedRandom(caBase - 4, caBase + 4), anticipation: weightedRandom(caBase - 3, caBase + 4),
-           bravery: weightedRandom(caBase - 4, caBase + 4), composure: weightedRandom(caBase - 3, caBase + 4),
-           concentration: weightedRandom(caBase - 4, caBase + 4), decisions: weightedRandom(caBase - 3, caBase + 4),
-           determination: randomInt(10, 20), flair: weightedRandom(caBase - 5, caBase + 5),
-           leadership: weightedRandom(caBase - 5, caBase + 5), offTheBall: weightedRandom(caBase - 4, caBase + 4),
-           positioning: weightedRandom(caBase - 4, caBase + 4), teamwork: weightedRandom(caBase - 4, caBase + 4),
-           vision: weightedRandom(caBase - 4, caBase + 4), workRate: weightedRandom(caBase - 4, caBase + 4),
-           professionalism: randomInt(10, 20), ambition: randomInt(10, 20), pressure: randomInt(10, 20),
-           temperament: randomInt(5, 20), loyalty: randomInt(10, 20), adaptability: weightedRandom(10, 20),
-           sportsmanship: weightedRandom(5, 20)
-        },
-        technical: {
-           corners: weightedRandom(caBase - 5, caBase + 5), crossing: weightedRandom(caBase - 5, caBase + 5),
-           dribbling: weightedRandom(caBase - 5, caBase + 5), finishing: weightedRandom(caBase - 5, caBase + 5),
-           firstTouch: weightedRandom(caBase - 3, caBase + 4), freeKickTaking: weightedRandom(caBase - 5, caBase + 5),
-           heading: weightedRandom(caBase - 5, caBase + 5), longShots: weightedRandom(caBase - 5, caBase + 5),
-           longThrows: weightedRandom(caBase - 5, caBase + 5), marking: weightedRandom(caBase - 5, caBase + 5),
-           passing: weightedRandom(caBase - 4, caBase + 4), penaltyTaking: weightedRandom(caBase - 5, caBase + 5),
-           tackling: weightedRandom(caBase - 5, caBase + 5), technique: weightedRandom(caBase - 3, caBase + 4)
-        },
-        physical: {
-           acceleration: weightedRandom(caBase - 4, caBase + 4), agility: weightedRandom(caBase - 4, caBase + 4),
-           balance: weightedRandom(caBase - 4, caBase + 4), jumpingReach: weightedRandom(caBase - 4, caBase + 4),
-           naturalFitness: weightedRandom(caBase - 2, caBase + 4), pace: weightedRandom(caBase - 4, caBase + 4),
-           stamina: weightedRandom(caBase - 4, caBase + 4), strength: weightedRandom(caBase - 4, caBase + 4)
-        }
-     };
-
-     if (primaryPos === Position.GK) {
-        stats.goalkeeping = {
-           aerialReach: weightedRandom(caBase - 3, caBase + 4), commandOfArea: weightedRandom(caBase - 3, caBase + 4),
-           communication: weightedRandom(caBase - 3, caBase + 4), eccentricity: weightedRandom(1, 15),
-           handling: weightedRandom(caBase - 3, caBase + 4), kicking: weightedRandom(caBase - 3, caBase + 4),
-           oneOnOnes: weightedRandom(caBase - 3, caBase + 4), reflexes: weightedRandom(caBase - 3, caBase + 4),
-           rushingOut: weightedRandom(caBase - 3, caBase + 4), punching: weightedRandom(caBase - 3, caBase + 4),
-           throwing: weightedRandom(caBase - 3, caBase + 4)
-        };
-     }
-
-      return {
-         id: generateUUID(), name: def.name, photo: def.photo, age: age, birthDate,
-         height: 180, weight: 75, nationality: def.nationality, positions: [primaryPos], secondaryPositions: [],
-         stats, seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 },
-         statsByCompetition: {}, history: [], currentAbility: def.ca, potentialAbility: def.pa,
-         reputation: def.ca * 45, fitness: 100, morale: 100, clubId, isStarter: false, squad: 'SENIOR',
-         value: Math.round(def.ca * def.ca * 2500), salary: Math.round(def.ca * 2500 / 10) * 10,
-         transferStatus: 'NONE', contractExpiry: new Date(2010, 5, 30), loyalty: stats.mental.loyalty,
-         negotiationAttempts: 0, isUnhappyWithContract: false, developmentTrend: 'STABLE', yellowCardsAccumulated: 0,
-         formRatings: [], isTransferListed: false,
-         injuryHistory: [], injuryProneness: Math.max(0.01, (20 - stats.physical.naturalFitness) * 0.02),
-         relationships: {}
-      };
+     const nationality = def.nationality || "Argentina";
+     const qualityFactor = Math.max(0.5, Math.min(1.5, def.ca / 150));
+     const player = generatePlayer(clubId, primaryPos, nationality, def.name, age, { qualityFactor, minAge: age, maxAge: age });
+     player.photo = def.photo;
+     player.currentAbility = def.ca;
+     player.potentialAbility = def.pa;
+     player.reputation = def.ca * 45;
+     player.value = Math.round(def.ca * def.ca * 2500);
+     player.salary = Math.round(def.ca * 2500 / 10) * 10;
+     player.developmentTrend = 'STABLE';
+     return player;
    }
 
    generateSquadsForClub(clubId: string) {
