@@ -181,6 +181,8 @@ export class WorldManager {
             form: [],
             formRatings: [],
             personality: 'PROFESSIONAL',
+            seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 },
+            statsByCompetition: {},
             tags: [],
          };
          this.players.push(player);

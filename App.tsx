@@ -25,8 +25,10 @@ import { TournamentHub } from './components/TournamentHub';
 import { NationalTeamView } from './components/NationalTeamView';
 import { ClubsListView } from './components/ClubsListView';
 import { BottomNav } from './components/BottomNav';
+import { ChronicleView } from './components/ChronicleView';
 import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
+import { generateMatchChronicle, generateMonthlyChronicle } from './services/chronicleService';
 import { Club, Player, Fixture, SquadType, PlayerMatchStats } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID } from './services/utils';
 import { MatchSimulator } from './services/engine';
@@ -113,6 +115,7 @@ const App: React.FC = () => {
   }, [handleGlobalClick]);
 
   const advanceTimeRef = useRef<() => void>(null as any);
+  const lastChronicleMonth = useRef<number>(-1);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
@@ -153,7 +156,7 @@ const App: React.FC = () => {
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
-          scoutingReports: world.scoutingReports
+          scoutingReports: world.scoutingReports, chronicles: world.chronicles
         }
       };
       await saveGame(saveData);
@@ -254,6 +257,9 @@ if (result.userWonLeague) gs.trackTitle('Liga');
           world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
           world.trackU21Minutes(f.homeTeamId, hSquad, stats, currentDate);
           world.trackU21Minutes(f.awayTeamId, aSquad, stats, currentDate);
+          if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
+            generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
+          }
         }
         world.generateMatchNews(f, f.homeScore!, f.awayScore!, currentDate);
       });
@@ -277,6 +283,29 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       if (userClub) world.addInboxMessage('SQUAD', 'Cosecha de cantera', `Los juveniles de ${userClub.name} se han incorporado al club. Revisa los nuevos talentos en el equipo sub-20.`, nextDay);
     }
     if (nextDay.getDate() === 1) world.recalculateAllPlayerValues();
+
+    // Monthly chronicle generation
+    if (userClub && nextDay.getDate() === 1 && lastChronicleMonth.current !== nextDay.getMonth()) {
+      const prevMonth = nextDay.getMonth() === 0 ? 11 : nextDay.getMonth() - 1;
+      const prevYear = nextDay.getMonth() === 0 ? nextDay.getFullYear() - 1 : nextDay.getFullYear();
+      const monthFixtures = fixtures.filter(f => {
+        const fd = new Date(f.date);
+        return f.played && fd.getMonth() === prevMonth && fd.getFullYear() === prevYear &&
+          (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) && f.squadType === 'SENIOR';
+      });
+      let won = 0, drawn = 0, lost = 0;
+      monthFixtures.forEach(f => {
+        const isHome = f.homeTeamId === userClub.id;
+        const us = isHome ? f.homeScore! : f.awayScore!;
+        const them = isHome ? f.awayScore! : f.homeScore!;
+        if (us > them) won++; else if (us < them) lost++; else drawn++;
+      });
+      if (monthFixtures.length > 0) {
+        const monthDate = new Date(prevYear, prevMonth, 15);
+        generateMonthlyChronicle(userClub.id, monthDate, { won, drawn, lost });
+      }
+      lastChronicleMonth.current = nextDay.getMonth();
+    }
 
     // Transfer deadline day mechanics
     world.processDeadlineWeekActivity(nextDay);
@@ -364,11 +393,14 @@ dayFixtures.forEach(f => {
            const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
            LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
            world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-           world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-           world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
-         }
-         world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
-       });
+            world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+            world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+            if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
+              generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
+            }
+          }
+          world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
+        });
 
       const newCupFixtures = LifecycleManager.processCompetitionProgress(localFixtures, tempDate);
       if (newCupFixtures.length > 0) {
@@ -467,7 +499,7 @@ dayFixtures.forEach(f => {
       );
 dayFixtures.forEach(f => {
          const isUserMatch = userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id);
-         if (isUserMatch) return;
+          if (isUserMatch) return;
          
          const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
          
@@ -562,7 +594,7 @@ dayFixtures.forEach(f => {
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
-          scoutingReports: world.scoutingReports
+          scoutingReports: world.scoutingReports, chronicles: world.chronicles
         }
       };
       await saveGame(saveData);
@@ -616,6 +648,8 @@ dayFixtures.forEach(f => {
       if (!world.interactionLog) world.interactionLog = [];
       if (!world.activeReputationalBuffs) world.activeReputationalBuffs = [];
       if (!world.relationshipWeb) world.relationshipWeb = {};
+      if (data.worldState.chronicles) world.chronicles = data.worldState.chronicles;
+      else world.chronicles = [];
 
       if (!useGameStore.getState().deepSimLeagues?.length) {
         const userLeague = world.getClub(data.gameState.userClubId)?.leagueId;
@@ -755,6 +789,8 @@ dayFixtures.forEach(f => {
         return <InboxView setView={setView} />;
       case 'MEDIA':
         return <MediaView onBack={() => setView('HOME')} />;
+      case 'CHRONICLES':
+        return <ChronicleView onBack={() => setView('HOME')} clubId={userClub.id} />;
       case 'TABLE':
         return (
           <div className="p-2 h-full flex flex-col">
@@ -864,11 +900,12 @@ case 'PRESS_CONFERENCE_POST': {
                world.processMatchDayIncome(nextFixture.homeTeamId, nextFixture.competitionId, currentDate);
                world.trackU21Minutes(nextFixture.homeTeamId, world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'), stats, currentDate);
                world.trackU21Minutes(nextFixture.awayTeamId, world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, currentDate);
-              const userScore = homeClub.id === userClub.id ? h : a;
-              const oppScore = homeClub.id === userClub.id ? a : h;
-              useGameStore.getState().trackMatchResult(userScore, oppScore);
-              setView('PRESS_CONFERENCE_POST');
-              notify();
+               const userScore = homeClub.id === userClub.id ? h : a;
+               const oppScore = homeClub.id === userClub.id ? a : h;
+               useGameStore.getState().trackMatchResult(userScore, oppScore);
+               generateMatchChronicle(nextFixture, h, a, stats, userClub.id);
+               setView('PRESS_CONFERENCE_POST');
+               notify();
            }} />;
         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
