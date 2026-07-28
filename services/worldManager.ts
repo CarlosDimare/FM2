@@ -1223,7 +1223,6 @@ generateYouthIntake(year: number) {
         }
       });
     }
-}
 
   // --- MEDIA NEWS SYSTEM ---
 

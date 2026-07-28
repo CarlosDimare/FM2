@@ -92,6 +92,7 @@
 - **Cláusula de rescisión** — `releaseClause` 3x valor en cada jugador, activable pagando el monto (salta negociación)
 - **Ingresos por taquilla** — Partidos como local generan ingreso según capacidad del estadio y tipo de competición
 - **Loading states** — Esqueleto de carga animado en modal de simulación
+- **Prensa y Medios** — Sistema de portadas y titulares: `MediaView` con portada de periódico, titulares de partidos del club del usuario y de otros equipos/países, categorías (MATCH, TRANSFER, INJURY, BOARD, GENERAL), tipos (HEADLINE, FEATURE, RUMOR, CRITICISM, PRAISE), generación automática de noticias en partidos y eventos diarios
 
 ---
 
