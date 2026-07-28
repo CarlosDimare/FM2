@@ -34,69 +34,29 @@ export type SquadType = 'SENIOR' | 'RESERVE' | 'U20';
 export type Attribute = number; // 1-20
 
 export interface PlayerStats {
-  mental: {
-    aggression: Attribute;
-    anticipation: Attribute;
-    bravery: Attribute;
-    composure: Attribute;
-    concentration: Attribute;
-    decisions: Attribute;
-    determination: Attribute;
-    flair: Attribute;
-    leadership: Attribute;
-    offTheBall: Attribute;
-    positioning: Attribute;
-    teamwork: Attribute;
-    vision: Attribute;
-    workRate: Attribute;
-    professionalism: Attribute;
-    ambition: Attribute;
-    pressure: Attribute;
-    temperament: Attribute;
-    loyalty: Attribute;
-    adaptability: Attribute;
-    sportsmanship: Attribute;
-  };
-  technical: {
-    corners: Attribute;
-    crossing: Attribute;
-    dribbling: Attribute;
-    finishing: Attribute;
-    firstTouch: Attribute;
-    freeKickTaking: Attribute;
-    heading: Attribute;
-    longShots: Attribute;
-    longThrows: Attribute;
-    marking: Attribute;
-    passing: Attribute;
-    penaltyTaking: Attribute;
-    tackling: Attribute;
-    technique: Attribute;
-  };
-  physical: {
-    acceleration: Attribute;
-    agility: Attribute;
-    balance: Attribute;
-    jumpingReach: Attribute;
-    naturalFitness: Attribute;
-    pace: Attribute;
-    stamina: Attribute;
-    strength: Attribute;
-  };
-  goalkeeping?: {
-    aerialReach: Attribute;
-    commandOfArea: Attribute;
-    communication: Attribute;
-    eccentricity: Attribute;
-    handling: Attribute;
-    kicking: Attribute;
-    oneOnOnes: Attribute;
-    reflexes: Attribute;
-    rushingOut: Attribute;
-    punching: Attribute;
-    throwing: Attribute;
-  };
-}
+    internal: {
+      velocidad: Attribute;
+      resistencia: Attribute;
+      fuerza: Attribute;
+      control: Attribute;
+      pase: Attribute;
+      regate: Attribute;
+      disparo: Attribute;
+      anticipacion: Attribute;
+      decision: Attribute;
+      posicionamiento: Attribute;
+      vision: Attribute;
+      agresividad: Attribute;
+      polivalencia: Attribute;
+    };
+    visible: {
+      fisico: Attribute;
+      mental: Attribute;
+      tecnica: Attribute;
+      agresividad: Attribute;
+      polivalencia: Attribute;
+    };
+  }
 
 export interface PlayerSeasonStats {
   appearances: number;
@@ -509,88 +469,30 @@ export type TrainingCategory = keyof TrainingSchedule;
 export type TacticalStyle = 'CONTROL' | 'ATTACK' | 'DEFENSE' | 'COUNTER';
 
 export const ATTRIBUTE_LABELS: Record<string, string> = {
-  aggression: "Agresividad", anticipation: "Anticipación", bravery: "Valentía", composure: "Serenidad",
-  concentration: "Concentración", decisions: "Decisiones", determination: "Determinación", flair: "Talento",
-  leadership: "Liderazgo", offTheBall: "Desmarque", positioning: "Colocación", teamwork: "Trabajo en equipo",
-  vision: "Visión", workRate: "Sacrificio", professionalism: "Profesionalidad", ambition: "Ambición",
-  pressure: "Presión", temperament: "Temperamento", loyalty: "Lealtad", adaptability: "Adaptabilidad",
-  sportsmanship: "Deportividad", corners: "Córners", crossing: "Centros", dribbling: "Regate",
-  finishing: "Remate", firstTouch: "Primer toque", freeKickTaking: "Sacr. faltas", heading: "Cabeceo",
-  longShots: "Tiros lejanos", longThrows: "Saques largos", marking: "Marcaje", passing: "Pases",
-  penaltyTaking: "Penaltis", tackling: "Entradas", technique: "Técnica", acceleration: "Aceleración",
-  agility: "Agilidad", balance: "Equilibrio", jumpingReach: "Alcance de salto", naturalFitness: "Forma natural",
-  pace: "Velocidad", stamina: "Resistencia", strength: "Fuerza", aerialReach: "Alcance aéreo",
-  commandOfArea: "Mando en el área", communication: "Comunicación", eccentricity: "Excentricidad",
-  handling: "Agarre de balón", kicking: "Saque de puerta", oneOnOnes: "Uno contra uno",
-  reflexes: "Reflejos", rushingOut: "Salidas (área)", punching: "Despeje de puños", throwing: "Saque con la mano",
-  coaching: "Entrenamiento", judgingAbility: "Juzgar habilidad", judgingPotential: "Juzgar potencial",
-  tacticalKnowledge: "Conocimientos tácticos", medical: "Medicina", physiotherapy: "Fisioterapia",
-  motivation: "Motivación", manManagement: "Gestión personal"
+  velocidad: "Velocidad", resistencia: "Resistencia", fuerza: "Fuerza",
+  control: "Control", pase: "Pase", regate: "Regate", disparo: "Disparo",
+  anticipacion: "Anticipación", decision: "Decisión", posicionamiento: "Posicionamiento",
+  vision: "Visión", agresividad: "Agresividad", polivalencia: "Polivalencia",
+  fisico: "Físico", mental: "Mental", tecnica: "Técnica",
 };
 
 export const ATTRIBUTE_TOOLTIPS: Record<string, string> = {
-  aggression: "Determina la aspereza del jugador en las entradas.",
-  anticipation: "Capacidad de prever y reaccionar a los movimientos del rival.",
-  bravery: "Disposición a arriesgarse en jugadas peligrosas.",
-  composure: "Mantiene la calma bajo presión en momentos decisivos.",
-  concentration: "Mantiene el foco durante todo el partido sin errores.",
-  decisions: "Evalúa correctamente cuándo pasar, regatear o disparar.",
-  determination: "Empuje para seguir adelante incluso en situaciones adversas.",
-  flair: "Capacidad de hacer jugadas impredecibles con creatividad.",
-  leadership: "Influye positivamente en el rendimiento de sus compañeros.",
-  offTheBall: "Movimiento inteligente sin balón para desmarcarse.",
-  positioning: "Se coloca en la posición óptima defensiva o ofensiva.",
-  teamwork: "Sigue las instrucciones tácticas y trabaja para el equipo.",
-  vision: "Capacidad de ver y ejecutar pases que otros no ven.",
-  workRate: "Esfuerzo físico constante durante todo el partido.",
-  professionalism: "Compromiso con el entrenamiento y la carrera profesional.",
-  ambition: "Deseo de triunfar y alcanzar la élite del fútbol.",
-  pressure: "Rendimiento bajo presión en situaciones importantes.",
-  temperament: "Control emocional ante provocaciones del rival.",
-  loyalty: "Fidelidad al club y al contrato firmado.",
-  adaptability: "Capacidad de adaptarse a nuevas ligas y culturas.",
-  sportsmanship: "Juego limpio y respeto por las reglas.",
-  corners: "Precisión en el lanzamiento de córners.",
-  crossing: "Precisión en los centros al área desde las bandas.",
-  dribbling: "Capacidad para superar rivales con el balón controlado.",
-  finishing: "Precisión en la definición de cara al arco.",
-  firstTouch: "Control del balón en el primer contacto.",
-  freeKickTaking: "Habilidad en el lanzamiento de tiros libres directos.",
-  heading: "Eficacia en el juego aéreo, tanto ofensivo como defensivo.",
-  longShots: "Potencia y precisión en disparos desde media distancia.",
-  longThrows: "Capacidad para realizar saques de banda largos y precisos.",
-  marking: "Capacidad de seguir y presionar al rival directo.",
-  passing: "Precisión en los pases cortos y largos.",
-  penaltyTaking: "Efectividad en la ejecución de penaltis.",
-  tackling: "Limpieza y efectividad en las entradas al rival.",
-  technique: "Calidad técnica general con el balón.",
-  acceleration: "Capacidad de alcanzar la velocidad máxima rápidamente.",
-  agility: "Capacidad de cambiar de dirección con rapidez.",
-  balance: "Mantiene el equilibrio ante la presión del rival.",
-  jumpingReach: "Altura máxima que alcanza al saltar.",
-  naturalFitness: "Rapidez con la que se recupera la forma física tras lesiones.",
-  pace: "Velocidad máxima que puede alcanzar el jugador.",
-  stamina: "Capacidad de mantener el esfuerzo durante todo el partido.",
-  strength: "Fuerza física en el cuerpo a cuerpo.",
-  aerialReach: "Alcance aéreo del portero para atrapar balones colgados.",
-  commandOfArea: "Mando y control del área chica por parte del portero.",
-  communication: "Comunicación del portero con la línea defensiva.",
-  eccentricity: "Tendencia del portero a realizar jugadas arriesgadas.",
-  handling: "Seguridad del portero al atrapar el balón.",
-  kicking: "Precisión del portero en los saques de puerta largos.",
-  oneOnOnes: "Capacidad del portero en situaciones de mano a mano.",
-  reflexes: "Rapidez de reacción del portero ante disparos cercanos.",
-  rushingOut: "Capacidad del portero para salir del arco a cortar jugadas.",
-  punching: "Eficacia del portero al despejar el balón con los puños.",
-  throwing: "Precisión del portero en los saques con la mano.",
-  coaching: "Calidad del entrenador en el desarrollo de habilidades.",
-  judgingAbility: "Precisión al evaluar la habilidad actual de un jugador.",
-  judgingPotential: "Precisión al evaluar el potencial futuro de un jugador.",
-  tacticalKnowledge: "Nivel de conocimiento táctico del entrenador.",
-  medical: "Habilidad del médico en el tratamiento de lesiones.",
-  physiotherapy: "Habilidad del fisioterapeuta en la rehabilitación.",
-  motivation: "Capacidad del entrenador para motivar a la plantilla.",
-  manManagement: "Habilidad para manejar las relaciones con los jugadores."
+  velocidad: "Ritmo y aceleración en carrera. Afecta regates, contragolpes y desmarques.",
+  resistencia: "Capacidad de mantener el nivel físico durante 90 minutos.",
+  fuerza: "Potencia en contacto, juego aéreo y protección de balón.",
+  control: "Primer toque, recepción y orientación del balón.",
+  pase: "Precisión en pase corto, largo y en profundidad.",
+  regate: "Capacidad de desborde en 1vs1.",
+  disparo: "Precisión de tiro a puerta con ambas piernas.",
+  anticipacion: "Lectura de jugada e interceptación de pases.",
+  decision: "Toma de decisiones bajo presión.",
+  posicionamiento: "Colocación en el campo (ofensiva y defensiva).",
+  vision: "Capacidad de ver y ejecutar pases inesperados.",
+  agresividad: "Intensidad en presión y dureza en entradas.",
+  polivalencia: "Capacidad de jugar en varias posiciones sin perder nivel.",
+  fisico: "Capacidad atlética: ritmo, aguante y potencia.",
+  mental: "Inteligencia de juego: lectura, elección y colocación.",
+  tecnica: "Calidad con el balón: toque, precisión y desborde.",
 };
 
 export const POSITION_FULL_NAMES: Record<string, string> = {

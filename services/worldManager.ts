@@ -6,6 +6,7 @@ import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_P
 import { REAL_PLAYERS_DB, RealPlayerDef } from "../data/realPlayers";
 import { SLOT_CONFIG } from "./engine";
 import { sendTransferNotification, sendInboxNotification } from "./notifications";
+import { generatePlayer, generateRandomPlayer, getPlayerTag } from "./playerGenerator";
 
 export class WorldManager {
   players: Player[] = [];
