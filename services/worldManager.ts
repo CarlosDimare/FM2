@@ -1,5 +1,5 @@
 
-import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle } from "../types";
+import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle, ManagerProfile, ManagerOrigin, ClubHistoryEntry, RelationshipState } from "../types";
 import { generateUUID, randomInt, weightedRandom } from "./utils";
 import { NATIONS } from "../constants";
 import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, RealClubDef } from "../data/static";
@@ -28,6 +28,7 @@ export class WorldManager {
   relationshipWeb: Record<string, Record<string, { trust: number; respect: number; tension: number }>> = {};
   nationalTeamManager: any = null;
   chronicles: Chronicle[] = [];
+  managerProfile: ManagerProfile | null = null;
 
   constructor() { this.initWorld(); }
 
@@ -696,6 +697,153 @@ export class WorldManager {
     const manager: Staff = { id: generateUUID(), name, age: 35, nationality: "Argentina", role: 'HEAD_COACH', clubId, attributes: { coaching: 12, judgingAbility: 12, judgingPotential: 11, tacticalKnowledge: 10, adaptability: 10, medical: 2, physiotherapy: 2, motivation: 14, manManagement: 13 }, salary: 12000, contractExpiry: new Date(2009, 5, 30), history: [], personality: 'LEADER', morale: 100, reputation: 55, relationships: {}, pressReputation: 50, boardRelationship: 65 };
     this.staff = this.staff.filter(s => s.clubId !== clubId || s.role !== 'HEAD_COACH');
     this.staff.unshift(manager);
+  }
+
+  createManagerProfile(clubId: string, name: string, surname: string, nationality: string, origin: ManagerOrigin, birthDate: Date, startDate: Date): ManagerProfile {
+    const club = this.getClub(clubId);
+    const clubName = club ? club.name : 'Desconocido';
+    const objective = this.getClubObjective(clubId);
+    this.managerProfile = {
+      name, surname, fullName: `${name} ${surname}`,
+      nationality, birthDate, careerStartDate: startDate, origin,
+      currentClubId: clubId, currentClubName: clubName,
+      seasonInClub: 1, yearsInClub: 0,
+      totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
+      goalsFor: 0, goalsAgainst: 0,
+      titles: [], youthDebuts: 0, mostUsedPlayer: 'Ninguno',
+      biggestSale: null,
+      currentObjective: objective,
+      boardRelationship: 'CALM', pressRelationship: 'CALM', fansRelationship: 'CALM',
+      clubHistory: [{ clubId, clubName, startDate: new Date(startDate), seasons: 0, titles: [] }],
+      legacy: '',
+    };
+    return this.managerProfile;
+  }
+
+  updateManagerProfileMatch(userScore: number, oppScore: number) {
+    if (!this.managerProfile) return;
+    const p = this.managerProfile;
+    p.totalGames++;
+    p.goalsFor += userScore;
+    p.goalsAgainst += oppScore;
+    if (userScore > oppScore) p.totalWins++;
+    else if (userScore < oppScore) p.totalLosses++;
+    else p.totalDraws++;
+
+    // Update most used player
+    const userClub = this.getUserClub();
+    if (userClub) {
+      const squad = this.getPlayersByClub(userClub.id).filter(pl => pl.squad === 'SENIOR' && pl.seasonStats && pl.seasonStats.appearances > 0);
+      if (squad.length > 0) {
+        const mostUsed = squad.sort((a, b) => b.seasonStats.appearances - a.seasonStats.appearances)[0];
+        if (mostUsed && mostUsed.seasonStats.appearances >= 3) {
+          p.mostUsedPlayer = mostUsed.name;
+        }
+      }
+    }
+
+    // Update relationships based on result
+    if (userScore > oppScore) {
+      if (p.fansRelationship === 'WORRIED' || p.fansRelationship === 'ANGRY') p.fansRelationship = 'CALM';
+      else if (p.fansRelationship === 'CALM') p.fansRelationship = 'HAPPY';
+    } else if (userScore < oppScore) {
+      if (p.fansRelationship === 'HAPPY') p.fansRelationship = 'CALM';
+      else if (p.fansRelationship === 'CALM') p.fansRelationship = 'WORRIED';
+      else if (p.fansRelationship === 'WORRIED' && Math.random() < 0.3) p.fansRelationship = 'ANGRY';
+    }
+  }
+
+  updateManagerProfileYouthDebut() {
+    if (this.managerProfile) this.managerProfile.youthDebuts++;
+  }
+
+  updateManagerProfileBiggestSale(playerName: string, amount: number) {
+    if (!this.managerProfile) return;
+    if (!this.managerProfile.biggestSale || amount > this.managerProfile.biggestSale.amount) {
+      this.managerProfile.biggestSale = { player: playerName, amount };
+    }
+  }
+
+  updateManagerProfileSeasonEnd(wonTitle: boolean, titleNames: string[], leaguePosition: number, totalTeams: number) {
+    if (!this.managerProfile) return;
+    const p = this.managerProfile;
+    p.seasonInClub++;
+    p.yearsInClub++;
+
+    if (wonTitle) {
+      titleNames.forEach(t => {
+        if (!p.titles.includes(t)) p.titles.push(t);
+      });
+      const currentEntry = p.clubHistory.find(e => e.clubId === p.currentClubId && !e.endDate);
+      if (currentEntry) {
+        titleNames.forEach(t => {
+          if (!currentEntry.titles.includes(t)) currentEntry.titles.push(t);
+        });
+      }
+    }
+
+    // Update relationships based on season performance
+    const winRate = p.totalGames > 0 ? p.totalWins / p.totalGames : 0;
+    const midTable = totalTeams / 2;
+    if (leaguePosition <= midTable * 0.3) {
+      p.boardRelationship = 'HAPPY';
+      p.fansRelationship = 'HAPPY';
+    } else if (leaguePosition <= midTable) {
+      p.boardRelationship = 'CALM';
+    } else {
+      p.boardRelationship = 'WORRIED';
+      if (leaguePosition >= totalTeams - 2) {
+        p.boardRelationship = 'ANGRY';
+        p.fansRelationship = 'ANGRY';
+      }
+    }
+
+    // Update press relationship
+    if (winRate >= 0.6) p.pressRelationship = 'HAPPY';
+    else if (winRate >= 0.4) p.pressRelationship = 'CALM';
+    else p.pressRelationship = 'WORRIED';
+
+    // Update next objective
+    p.currentObjective = this.getClubObjective(p.currentClubId);
+
+    // Update club history seasons count
+    const currentEntry = p.clubHistory.find(e => e.clubId === p.currentClubId && !e.endDate);
+    if (currentEntry) currentEntry.seasons++;
+  }
+
+  getClubObjective(clubId: string): string {
+    const club = this.getClub(clubId);
+    if (!club) return 'Permanecer en la categoría';
+    const league = this.competitions.find(c => c.id === club.leagueId);
+    const clubsInLeague = this.clubs.filter(c => c.leagueId === club.leagueId);
+    const clubRep = clubsInLeague.sort((a, b) => b.reputation - a.reputation);
+    const position = clubRep.findIndex(c => c.id === clubId);
+    const total = clubRep.length;
+    if (position === 0) return 'Ganar el campeonato';
+    if (position <= 2) return 'Pelear por el título';
+    if (position <= Math.ceil(total * 0.25)) return 'Clasificar a competición continental';
+    if (position <= Math.ceil(total * 0.5)) return 'Finalizar en mitad alta';
+    if (position <= total - 3) return 'Consolidar la categoría';
+    return 'Evitar el descenso';
+  }
+
+  startNewClub(clubId: string, startDate: Date) {
+    if (!this.managerProfile) return;
+    const club = this.getClub(clubId);
+    if (!club) return;
+    // Close previous club entry
+    const prevEntry = this.managerProfile.clubHistory.find(e => e.clubId === this.managerProfile!.currentClubId && !e.endDate);
+    if (prevEntry) prevEntry.endDate = new Date(startDate);
+
+    this.managerProfile.currentClubId = clubId;
+    this.managerProfile.currentClubName = club.name;
+    this.managerProfile.seasonInClub = 1;
+    this.managerProfile.yearsInClub = 0;
+    this.managerProfile.boardRelationship = 'CALM';
+    this.managerProfile.pressRelationship = 'CALM';
+    this.managerProfile.fansRelationship = 'CALM';
+    this.managerProfile.currentObjective = this.getClubObjective(clubId);
+    this.managerProfile.clubHistory.push({ clubId, clubName: club.name, startDate: new Date(startDate), seasons: 0, titles: [] });
   }
 
   getRequestedSalary(player: Player, club: Club) {

@@ -610,3 +610,50 @@ export interface Chronicle {
   month?: number;
   year?: number;
 }
+
+export type ManagerOrigin = 'EX_PLAYER' | 'YOUTH_COACH' | 'JOURNALIST';
+export type RelationshipState = 'ANGRY' | 'WORRIED' | 'CALM' | 'HAPPY';
+
+export interface ClubHistoryEntry {
+  clubId: string;
+  clubName: string;
+  startDate: Date;
+  endDate?: Date;
+  seasons: number;
+  titles: string[];
+}
+
+export interface ManagerProfile {
+  name: string;
+  surname: string;
+  fullName: string;
+  nationality: string;
+  birthDate: Date;
+  careerStartDate: Date;
+  origin: ManagerOrigin;
+  photo?: string;
+
+  currentClubId: string;
+  currentClubName: string;
+  seasonInClub: number;
+  yearsInClub: number;
+
+  totalGames: number;
+  totalWins: number;
+  totalDraws: number;
+  totalLosses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  titles: string[];
+  youthDebuts: number;
+  mostUsedPlayer: string;
+  biggestSale: { player: string; amount: number } | null;
+
+  currentObjective: string;
+  boardRelationship: RelationshipState;
+  pressRelationship: RelationshipState;
+  fansRelationship: RelationshipState;
+
+  clubHistory: ClubHistoryEntry[];
+  legacy: string;
+}

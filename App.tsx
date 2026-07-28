@@ -62,15 +62,15 @@ const App: React.FC = () => {
 
   const notify = useWorldStore(s => s.notify);
 
-  const {
+const {
     gameState, currentView, selectedPlayer, contextMenu, isSidebarOpen,
-    userName, userSurname, selectedLeague, userClub, viewExternalClub,
+    userName, userSurname, userNationality, userOrigin, userBirthDate, selectedLeague, userClub, viewExternalClub,
     isVacationModalOpen, vacationTargetDate, isSimulating,
     seasonSummary, userWonLeague, viewLeagueId, viewSquadType,
     currentDate, seasonEndDate, hasSave,
     isSaveModalOpen, saveNameInput, isLoadModalOpen, availableSaves,
     setGameState, setView, setSelectedPlayer, setContextMenu, setIsSidebarOpen,
-    setUserName, setUserSurname, setSelectedLeague, setUserClub,
+    setUserName, setUserSurname, setUserNationality, setUserOrigin, setUserBirthDate, setSelectedLeague, setUserClub,
     setViewExternalClub, setIsVacationModalOpen, setVacationTargetDate, setIsSimulating,
     setSeasonSummary, setUserWonLeague, setViewLeagueId, setViewSquadType,
     setCurrentDate, setSeasonEndDate, setHasSave,
@@ -156,7 +156,8 @@ const App: React.FC = () => {
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
-          scoutingReports: world.scoutingReports, chronicles: world.chronicles
+          scoutingReports: world.scoutingReports, chronicles: world.chronicles,
+          managerProfile: world.managerProfile
         }
       };
       await saveGame(saveData);
@@ -195,6 +196,15 @@ const App: React.FC = () => {
 if (result.userWonLeague) gs.trackTitle('Liga');
        const wonCups = result.summaries.filter((s: any) => s.championId === userClub?.id && s.compType !== 'LEAGUE');
        wonCups.forEach((s: any) => gs.trackTitle(s.compName));
+       if (userClub) {
+         const leagueTable = world.getLeagueTable(userClub.leagueId, result.newFixtures.length > 0 ? result.newFixtures : fixtures, 'SENIOR');
+         const leaguePos = leagueTable.findIndex(e => e.clubId === userClub.id) + 1;
+         const leagueTotal = leagueTable.length;
+         const titleNames: string[] = [];
+         if (result.userWonLeague) titleNames.push('Liga');
+         wonCups.forEach((s: any) => titleNames.push(s.compName));
+         world.updateManagerProfileSeasonEnd(result.userWonLeague || wonCups.length > 0, titleNames, leaguePos || 10, leagueTotal || 20);
+       }
        sendMatchNotification('Temporada finalizada — revisa el resumen');
       if (userClub) {
         const leagueTable = world.getLeagueTable(userClub.leagueId, result.newFixtures.length > 0 ? result.newFixtures : fixtures, 'SENIOR');
@@ -258,6 +268,10 @@ if (result.userWonLeague) gs.trackTitle('Liga');
           world.trackU21Minutes(f.homeTeamId, hSquad, stats, currentDate);
           world.trackU21Minutes(f.awayTeamId, aSquad, stats, currentDate);
           if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
+            const us = f.homeTeamId === userClub.id ? homeScore : awayScore;
+            const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
+            useGameStore.getState().trackMatchResult(us, os);
+            world.updateManagerProfileMatch(us, os);
             generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
           }
         }
@@ -393,11 +407,15 @@ dayFixtures.forEach(f => {
            const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
            LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
            world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-            world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-            world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
-            if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
-              generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
-            }
+             world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+             world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+             if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
+               const us = f.homeTeamId === userClub.id ? homeScore : awayScore;
+               const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
+               useGameStore.getState().trackMatchResult(us, os);
+               world.updateManagerProfileMatch(us, os);
+               generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
+             }
           }
           world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
         });
@@ -415,17 +433,21 @@ dayFixtures.forEach(f => {
         const gs = useGameStore.getState();
         gs.setManagerHistory({ ...gs.managerHistory, seasonsCompleted: gs.managerHistory.seasonsCompleted + 1 });
         if (result.userWonLeague) gs.trackTitle('Liga');
-        const wonCups = result.summaries.filter((s: any) => s.championId === userClub?.id && s.compType !== 'LEAGUE');
-        wonCups.forEach((s: any) => gs.trackTitle(s.compName));
-        if (userClub) {
-          const leagueTable = world.getLeagueTable(userClub.leagueId, localFixtures, 'SENIOR');
-          const leaguePos = leagueTable.findIndex(e => e.clubId === userClub.id) + 1;
-          const leagueTotal = leagueTable.length;
-          const cupWinnerId = result.summaries.find((s: any) => s.compType !== 'LEAGUE' && s.championId)?.championId;
-          const wonCup = cupWinnerId === userClub.id;
-          world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, false);
-          world.checkManagerJobOffers(currentDate, userClub.id, useGameStore.getState().managerReputation);
-        }
+         const wonCups = result.summaries.filter((s: any) => s.championId === userClub?.id && s.compType !== 'LEAGUE');
+         wonCups.forEach((s: any) => gs.trackTitle(s.compName));
+         if (userClub) {
+           const leagueTable = world.getLeagueTable(userClub.leagueId, localFixtures, 'SENIOR');
+           const leaguePos = leagueTable.findIndex(e => e.clubId === userClub.id) + 1;
+           const leagueTotal = leagueTable.length;
+           const cupWinnerId = result.summaries.find((s: any) => s.compType !== 'LEAGUE' && s.championId)?.championId;
+           const wonCup = cupWinnerId === userClub.id;
+           const titleNames: string[] = [];
+           if (result.userWonLeague) titleNames.push('Liga');
+           wonCups.forEach((s: any) => titleNames.push(s.compName));
+           world.updateManagerProfileSeasonEnd(result.userWonLeague || wonCups.length > 0, titleNames, leaguePos || 10, leagueTotal || 20);
+           world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, false);
+           world.checkManagerJobOffers(currentDate, userClub.id, useGameStore.getState().managerReputation);
+         }
         setIsSimulating(false);
         setIsVacationModalOpen(false);
         setCurrentDate(tempDate);
@@ -470,17 +492,21 @@ dayFixtures.forEach(f => {
         const gs = useGameStore.getState();
         gs.setManagerHistory({ ...gs.managerHistory, seasonsCompleted: gs.managerHistory.seasonsCompleted + 1 });
         if (result.userWonLeague) gs.trackTitle('Liga');
-        const wonCups = result.summaries.filter((s: any) => s.championId === userClub.id && s.compType !== 'LEAGUE');
-        wonCups.forEach((s: any) => gs.trackTitle(s.compName));
-        if (userClub) {
-          const leagueTable = world.getLeagueTable(userClub.leagueId, localFixtures, 'SENIOR');
-          const leaguePos = leagueTable.findIndex(e => e.clubId === userClub.id) + 1;
-          const leagueTotal = leagueTable.length;
-          const cupWinnerId = result.summaries.find((s: any) => s.compType !== 'LEAGUE' && s.championId)?.championId;
-          const wonCup = cupWinnerId === userClub.id;
-          world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, false);
-          world.checkManagerJobOffers(tempDate, userClub.id, useGameStore.getState().managerReputation);
-        }
+         const wonCups = result.summaries.filter((s: any) => s.championId === userClub.id && s.compType !== 'LEAGUE');
+         wonCups.forEach((s: any) => gs.trackTitle(s.compName));
+         if (userClub) {
+           const leagueTable = world.getLeagueTable(userClub.leagueId, localFixtures, 'SENIOR');
+           const leaguePos = leagueTable.findIndex(e => e.clubId === userClub.id) + 1;
+           const leagueTotal = leagueTable.length;
+           const cupWinnerId = result.summaries.find((s: any) => s.compType !== 'LEAGUE' && s.championId)?.championId;
+           const wonCup = cupWinnerId === userClub.id;
+           const titleNames: string[] = [];
+           if (result.userWonLeague) titleNames.push('Liga');
+           wonCups.forEach((s: any) => titleNames.push(s.compName));
+           world.updateManagerProfileSeasonEnd(result.userWonLeague || wonCups.length > 0, titleNames, leaguePos || 10, leagueTotal || 20);
+           world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, false);
+           world.checkManagerJobOffers(tempDate, userClub.id, useGameStore.getState().managerReputation);
+         }
         setIsSimulating(false);
         setCurrentDate(tempDate);
         notify();
@@ -594,7 +620,8 @@ dayFixtures.forEach(f => {
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
-          scoutingReports: world.scoutingReports, chronicles: world.chronicles
+          scoutingReports: world.scoutingReports, chronicles: world.chronicles,
+          managerProfile: world.managerProfile
         }
       };
       await saveGame(saveData);
@@ -650,6 +677,8 @@ dayFixtures.forEach(f => {
       if (!world.relationshipWeb) world.relationshipWeb = {};
       if (data.worldState.chronicles) world.chronicles = data.worldState.chronicles;
       else world.chronicles = [];
+      if (data.worldState.managerProfile) world.managerProfile = data.worldState.managerProfile;
+      else world.managerProfile = null;
 
       if (!useGameStore.getState().deepSimLeagues?.length) {
         const userLeague = world.getClub(data.gameState.userClubId)?.leagueId;
@@ -903,6 +932,7 @@ case 'PRESS_CONFERENCE_POST': {
                const userScore = homeClub.id === userClub.id ? h : a;
                const oppScore = homeClub.id === userClub.id ? a : h;
                useGameStore.getState().trackMatchResult(userScore, oppScore);
+               world.updateManagerProfileMatch(userScore, oppScore);
                generateMatchChronicle(nextFixture, h, a, stats, userClub.id);
                setView('PRESS_CONFERENCE_POST');
                notify();
@@ -1005,7 +1035,39 @@ case 'PRESS_CONFERENCE_POST': {
             <label className="text-[10px] font-black text-slate-600 uppercase block mb-1 tracking-widest">Apellido</label>
             <input type="text" className="w-full bg-slate-100 border border-slate-500 rounded-sm px-4 py-3 text-slate-950 font-bold text-sm outline-none focus:border-slate-800" value={userSurname} onChange={(e) => setUserSurname(e.target.value)} />
           </div>
-          <FMButton onClick={() => setGameState('SETUP_LEAGUE')} className="w-full py-4 mt-4">
+          <div>
+            <label className="text-[10px] font-black text-slate-600 uppercase block mb-1 tracking-widest">Nacionalidad</label>
+            <select className="w-full bg-slate-100 border border-slate-500 rounded-sm px-4 py-3 text-slate-950 font-bold text-sm outline-none focus:border-slate-800" value={userNationality} onChange={(e) => setUserNationality(e.target.value)}>
+              <option value="Argentina">Argentina</option>
+              <option value="España">España</option>
+              <option value="Brasil">Brasil</option>
+              <option value="Inglaterra">Inglaterra</option>
+              <option value="Italia">Italia</option>
+              <option value="Alemania">Alemania</option>
+              <option value="Francia">Francia</option>
+              <option value="Portugal">Portugal</option>
+              <option value="Países Bajos">Países Bajos</option>
+              <option value="Uruguay">Uruguay</option>
+              <option value="Chile">Chile</option>
+              <option value="Colombia">Colombia</option>
+              <option value="México">México</option>
+              <option value="EE. UU.">EE. UU.</option>
+              <option value="Japón">Japón</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-black text-slate-600 uppercase block mb-1 tracking-widest">Origen</label>
+            <select className="w-full bg-slate-100 border border-slate-500 rounded-sm px-4 py-3 text-slate-950 font-bold text-sm outline-none focus:border-slate-800" value={userOrigin} onChange={(e) => setUserOrigin(e.target.value as any)}>
+              <option value="EX_PLAYER">Exjugador</option>
+              <option value="YOUTH_COACH">Categorías inferiores</option>
+              <option value="JOURNALIST">Periodista / Analista</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] font-black text-slate-600 uppercase block mb-1 tracking-widest">Fecha de nacimiento</label>
+            <input type="date" className="w-full bg-slate-100 border border-slate-500 rounded-sm px-4 py-3 text-slate-950 font-bold text-sm outline-none focus:border-slate-800" value={userBirthDate.toISOString().split('T')[0]} onChange={(e) => setUserBirthDate(new Date(e.target.value))} />
+          </div>
+          <FMButton onClick={() => { setGameState('SETUP_LEAGUE'); }} className="w-full py-4 mt-4">
             NUEVA PARTIDA <ChevronRight size={14} />
           </FMButton>
           {hasSave && (
@@ -1053,6 +1115,7 @@ case 'PRESS_CONFERENCE_POST': {
               <button key={c.id} onClick={() => {
                 setUserClub(c);
                 world.createHumanManager(c.id, `${userName} ${userSurname}`);
+                world.createManagerProfile(c.id, userName, userSurname, userNationality, userOrigin, userBirthDate, currentDate);
                 const allFix = initSeasonFixtures(currentDate, c.id);
                 updateNextFixture(allFix, currentDate, c.id);
                 setGameState('PLAYING');

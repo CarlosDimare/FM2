@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Player, Club, Competition, SquadType } from '../types';
+import { Player, Club, Competition, SquadType, ManagerOrigin } from '../types';
 import { SaveMetadata } from '../services/utils';
 import { CompetitionSummary } from '../components/SeasonSummaryModal';
 
@@ -13,6 +13,9 @@ interface UIStore {
   isSidebarOpen: boolean;
   userName: string;
   userSurname: string;
+  userNationality: string;
+  userOrigin: ManagerOrigin;
+  userBirthDate: Date;
   selectedLeague: Competition | null;
   userClub: Club | null;
   viewExternalClub: Club | null;
@@ -39,6 +42,9 @@ interface UIStore {
   setIsSidebarOpen: (open: boolean) => void;
   setUserName: (name: string) => void;
   setUserSurname: (surname: string) => void;
+  setUserNationality: (nat: string) => void;
+  setUserOrigin: (origin: ManagerOrigin) => void;
+  setUserBirthDate: (date: Date) => void;
   setSelectedLeague: (league: Competition | null) => void;
   setUserClub: (club: Club | null) => void;
   setViewExternalClub: (club: Club | null) => void;
@@ -67,6 +73,9 @@ export const useUIStore = create<UIStore>((set) => ({
   isSidebarOpen: false,
   userName: 'Manager',
   userSurname: 'Novato',
+  userNationality: 'Argentina',
+  userOrigin: 'EX_PLAYER',
+  userBirthDate: new Date(1985, 5, 15),
   selectedLeague: null,
   userClub: null,
   viewExternalClub: null,
@@ -93,6 +102,9 @@ export const useUIStore = create<UIStore>((set) => ({
   setIsSidebarOpen: (isSidebarOpen) => set({ isSidebarOpen }),
   setUserName: (userName) => set({ userName }),
   setUserSurname: (userSurname) => set({ userSurname }),
+  setUserNationality: (userNationality) => set({ userNationality }),
+  setUserOrigin: (userOrigin) => set({ userOrigin }),
+  setUserBirthDate: (userBirthDate) => set({ userBirthDate }),
   setSelectedLeague: (selectedLeague) => set({ selectedLeague }),
   setUserClub: (userClub) => set({ userClub }),
   setViewExternalClub: (viewExternalClub) => set({ viewExternalClub }),
