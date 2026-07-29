@@ -460,6 +460,8 @@ export class MatchSimulator {
 
     const tactic = isHomeActor ? homeTactic : awayTactic;
 
+    const widthSetting = tactic?.width ?? 10;
+
     const ballX = newState.ballPosition.x;
     const ballY = newState.ballPosition.y;
 
@@ -633,7 +635,6 @@ export class MatchSimulator {
             }
 
             const closingDown = tactic?.closingDown ?? 10;
-            const widthSetting = tactic?.width ?? 10;
             const pressure = this.calculatePressure(actor, defPlayers, ballX, ballY, newState.playerStats, isHomeActor, closingDown);
             const composure = this.getEffectiveAttribute(actor, newState.playerStats, 'mental', 'composure');
             const pressurePenalty = Math.max(0, (pressure - (composure * 0.8)) / 4);
@@ -746,7 +747,6 @@ export class MatchSimulator {
                     const passingStyle = tactic?.passingStyle ?? 10;
                     const directnessPenalty = (passingStyle - 10) * 0.15;
                     const passQuality = (passing * 0.7 + vision * 0.3) - (pressurePenalty * 1.2) - directnessPenalty;
-                    const widthSetting = tactic?.width ?? 10;
 
                     // SMART PASS TARGET SELECTION
                     const target = this.selectPassTarget(actor, attPlayers, tactic, ballX, ballY, isHomeActor, newState.playerStats, isBallInAttackingThird);
