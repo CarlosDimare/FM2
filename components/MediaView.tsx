@@ -9,11 +9,11 @@ interface MediaViewProps {
 }
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
-  HEADLINE: <Star size={14} className="text-yellow-400" />,
-  FEATURE: <Info size={14} className="text-blue-400" />,
-  RUMOR: <Clock size={14} className="text-purple-400" />,
-  CRITICISM: <AlertTriangle size={14} className="text-red-400" />,
-  PRAISE: <Trophy size={14} className="text-green-400" />,
+  HEADLINE: <Star size={14} className="text-amber-600" />,
+  FEATURE: <Info size={14} className="text-blue-600" />,
+  RUMOR: <Clock size={14} className="text-purple-600" />,
+  CRITICISM: <AlertTriangle size={14} className="text-red-600" />,
+  PRAISE: <Trophy size={14} className="text-green-600" />,
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -43,13 +43,15 @@ export const MediaView: React.FC<MediaViewProps> = ({ onBack }) => {
   const categories = ['ALL', 'MATCH', 'TRANSFER', 'INJURY', 'BOARD', 'GENERAL'];
 
   return (
-    <div className="flex flex-col h-full bg-[#1a1a2e] text-white overflow-hidden">
-      <header className="bg-gradient-to-b from-slate-900 to-slate-800 p-4 border-b border-slate-700 shrink-0">
+    <div className="flex flex-col h-full bg-[#d4dcd4] overflow-hidden" style={{ fontFamily: 'Verdana, sans-serif' }}>
+      <header className="bg-gradient-to-b from-[#e2e8f0] to-[#c8d2c8] p-4 border-b border-[#a0b0a0] shrink-0">
         <div className="flex items-center gap-3 mb-3">
-          <Newspaper size={24} className="text-red-500" />
+          <div className="bg-[#3a4a3a] rounded-sm p-1.5">
+            <Newspaper size={18} className="text-white" />
+          </div>
           <div>
-            <h2 className="text-lg font-black uppercase tracking-tighter">Prensa y Medios</h2>
-            <p className="text-[10px] text-slate-400 font-bold">Portadas, titulares y noticias del mundo del fútbol</p>
+            <h2 className="text-lg font-black text-slate-900 uppercase tracking-tighter">Prensa y Medios</h2>
+            <p className="text-[10px] text-slate-500 font-bold">Portadas, titulares y noticias del mundo del fútbol</p>
           </div>
         </div>
         <div className="flex gap-1 flex-wrap">
@@ -57,8 +59,8 @@ export const MediaView: React.FC<MediaViewProps> = ({ onBack }) => {
             <button key={cat} onClick={() => setFilter(cat)}
               className={`px-2 py-1 text-[10px] font-bold uppercase rounded-sm border transition-all ${
                 filter === cat
-                  ? 'bg-red-600 border-red-500 text-white'
-                  : 'bg-slate-800 border-slate-600 text-slate-400 hover:text-white'
+                  ? 'bg-[#3a4a3a] border-[#3a4a3a] text-white'
+                  : 'bg-[#bcc8bc] border-[#a0b0a0] text-slate-700 hover:bg-[#a0b0a0]'
               }`}>
               {cat === 'ALL' ? 'Todas' : CATEGORY_LABELS[cat]}
             </button>
@@ -68,23 +70,23 @@ export const MediaView: React.FC<MediaViewProps> = ({ onBack }) => {
 
       <div className="flex-1 overflow-y-auto">
         {selectedNews ? (
-          <div className="p-4 animate-fade-up">
-            <button onClick={() => setSelectedNews(null)} className="text-slate-400 hover:text-white text-xs mb-4 flex items-center gap-1">
+          <div className="p-4">
+            <button onClick={() => setSelectedNews(null)} className="text-slate-600 hover:text-slate-900 text-xs mb-4 flex items-center gap-1">
               <ArrowLeft size={14} /> Volver a la portada
             </button>
-            <div className="bg-slate-900 border border-slate-700 rounded-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-red-900 to-slate-900 p-4 border-b border-slate-700">
+            <div className="bg-white border border-[#a0b0a0] rounded-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-[#e2e8f0] to-[#d0d8d0] p-4 border-b border-[#a0b0a0]">
                 <div className="flex items-center gap-2 mb-2">
                   {TYPE_ICONS[selectedNews.type]}
-                  <span className="text-[10px] font-bold uppercase text-red-400">{TYPE_LABELS[selectedNews.type]}</span>
-                  <span className="text-[10px] font-bold uppercase text-slate-500">|</span>
-                  <span className="text-[10px] font-bold uppercase text-slate-400">{CATEGORY_LABELS[selectedNews.category]}</span>
+                  <span className="text-[10px] font-bold uppercase text-[#3a4a3a]">{TYPE_LABELS[selectedNews.type]}</span>
+                  <span className="text-[10px] font-bold uppercase text-slate-400">|</span>
+                  <span className="text-[10px] font-bold uppercase text-slate-600">{CATEGORY_LABELS[selectedNews.category]}</span>
                 </div>
-                <h3 className="text-xl font-black uppercase leading-tight">{selectedNews.headline}</h3>
-                <p className="text-sm text-slate-300 mt-1 italic">{selectedNews.subheadline}</p>
+                <h3 className="text-xl font-black text-slate-900 uppercase leading-tight">{selectedNews.headline}</h3>
+                <p className="text-sm text-slate-600 mt-1 italic">{selectedNews.subheadline}</p>
               </div>
               <div className="p-4">
-                <p className="text-sm text-slate-300 leading-relaxed">{selectedNews.body}</p>
+                <p className="text-sm text-slate-700 leading-relaxed">{selectedNews.body}</p>
                 <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-500">
                   <Clock size={12} /> {selectedNews.date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
                   {selectedNews.clubId && <span className="ml-2">Club: {world.getClub(selectedNews.clubId)?.name}</span>}
@@ -96,25 +98,25 @@ export const MediaView: React.FC<MediaViewProps> = ({ onBack }) => {
           <div className="space-y-3 p-4">
             {filtered.length === 0 && (
               <div className="text-center text-slate-500 py-8">
-                <Newspaper size={40} className="mx-auto mb-3 text-slate-600" />
+                <Newspaper size={40} className="mx-auto mb-3 text-slate-400" />
                 <p className="text-sm font-bold">No hay noticias aún</p>
-                <p className="text-xs text-slate-600 mt-1">Juega partidos y ocurren eventos para generar titulares</p>
+                <p className="text-xs text-slate-500 mt-1">Juega partidos y ocurren eventos para generar titulares</p>
               </div>
             )}
             {filtered.map(news => (
               <button key={news.id} onClick={() => setSelectedNews(news)}
-                className={`w-full text-left p-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-sm transition-all animate-fade-up ${
-                  news.isUserClubNews ? 'border-l-4 border-l-red-500' : 'border-l-4 border-l-slate-600'
+                className={`w-full text-left p-3 bg-white hover:bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm transition-all ${
+                  news.isUserClubNews ? 'border-l-4 border-l-[#3a4a3a]' : 'border-l-4 border-l-[#bcc8bc]'
                 }`}>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">{TYPE_ICONS[news.type]}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[9px] font-bold uppercase text-slate-500">{CATEGORY_LABELS[news.category]}</span>
-                      {news.isUserClubNews && <span className="text-[9px] font-bold uppercase text-red-400">Tu club</span>}
+                      {news.isUserClubNews && <span className="text-[9px] font-bold uppercase text-[#3a4a3a]">Tu club</span>}
                     </div>
-                    <h4 className="text-sm font-bold uppercase leading-tight text-slate-200">{news.headline}</h4>
-                    <p className="text-xs text-slate-400 mt-0.5">{news.subheadline}</p>
+                    <h4 className="text-sm font-bold uppercase leading-tight text-slate-900">{news.headline}</h4>
+                    <p className="text-xs text-slate-600 mt-0.5">{news.subheadline}</p>
                   </div>
                 </div>
               </button>
@@ -123,7 +125,7 @@ export const MediaView: React.FC<MediaViewProps> = ({ onBack }) => {
         )}
       </div>
 
-      <footer className="bg-slate-900 border-t border-slate-700 p-3 text-center text-[8px] text-slate-600 font-bold uppercase shrink-0">
+      <footer className="bg-[#bcc8bc] border-t border-[#a0b0a0] p-3 text-center text-[8px] text-slate-600 font-bold uppercase shrink-0">
         Portada de medios — Titulares de tu club y del mundo del fútbol
       </footer>
     </div>

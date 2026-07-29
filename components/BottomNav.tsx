@@ -46,7 +46,7 @@ export const BottomNav: React.FC = () => {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-[200] bg-slate-900 border-t border-slate-700 lg:hidden"
+      <nav className="fixed bottom-0 left-0 right-0 z-[200] bg-[#3a4a3a] border-t border-[#2a3a2a] lg:hidden"
            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <div className="flex items-center justify-around h-14">
           {tabs.map(tab => {
@@ -71,7 +71,7 @@ export const BottomNav: React.FC = () => {
       {showMore && (
         <>
           <div className="fixed inset-0 z-[199] bg-black/50 lg:hidden" onClick={() => setShowMore(false)} />
-           <div className="fixed bottom-14 left-0 right-0 z-[200] bg-slate-800 border-t border-slate-700 rounded-t-xl p-4 lg:hidden animate-slide-up"
+           <div className="fixed bottom-14 left-0 right-0 z-[200] bg-[#3a4a3a] border-t border-[#2a3a2a] rounded-t-xl p-4 lg:hidden animate-slide-up"
                style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
             <div className="grid grid-cols-3 gap-3">
               {moreItems.map(item => {

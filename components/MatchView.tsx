@@ -253,8 +253,8 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#cbd5e1] overflow-hidden relative">
-      <div className="w-full flex h-16 md:h-20 shadow-xl z-20 relative bg-slate-800 border-b-2 border-slate-600 shrink-0">
+    <div className="flex flex-col h-full bg-[#d4dcd4] overflow-hidden relative" style={{ fontFamily: 'Verdana, sans-serif' }}>
+      <div className="w-full flex h-16 md:h-20 shadow-xl z-20 relative bg-white border-b-2 border-[#a0b0a0] shrink-0">
         <div className={`flex-1 flex items-center justify-end pr-4 md:pr-10 relative overflow-hidden transition-colors ${hCol.bg}`}>
             <div className="relative z-10 flex flex-col items-end">
                <span className={`font-black text-xl md:text-4xl uppercase tracking-tighter text-right leading-none ${hCol.text}`}>{homeTeam.shortName}</span>
@@ -263,13 +263,13 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         </div>
 
          <div className="shrink-0 bg-[#111] px-4 md:px-10 flex items-center gap-4 border-x-4 border-yellow-500/80">
-           <span key={`h-${scoreFlashKey}`} className="font-mono font-bold text-4xl md:text-6xl text-yellow-400 animate-score-flash">{matchState.homeScore}</span>
+           <span key={`h-${scoreFlashKey}`} className="font-mono font-bold text-4xl md:text-6xl text-amber-600 animate-score-flash">{matchState.homeScore}</span>
            <div className="flex flex-col items-center min-w-[80px]">
-              <span className="font-mono font-bold text-xl md:text-2xl text-slate-200 tracking-widest tabular-nums">
+              <span className="font-mono font-bold text-xl md:text-2xl text-slate-900 tracking-widest tabular-nums">
                  {matchState.minute < 10 ? `0${matchState.minute}` : matchState.minute}:{matchState.second < 10 ? `0${matchState.second}` : matchState.second}
               </span>
            </div>
-           <span key={`a-${scoreFlashKey}`} className="font-mono font-bold text-4xl md:text-6xl text-yellow-400 animate-score-flash">{matchState.awayScore}</span>
+           <span key={`a-${scoreFlashKey}`} className="font-mono font-bold text-4xl md:text-6xl text-amber-600 animate-score-flash">{matchState.awayScore}</span>
         </div>
 
         <div className={`flex-1 flex items-center justify-start pl-4 md:pl-10 relative overflow-hidden transition-colors ${aCol.bg}`}>
@@ -280,7 +280,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         </div>
       </div>
 
-      <div className="w-full bg-slate-900 h-1.5 shrink-0 z-10">
+      <div className="w-full bg-[#bcc8bc] h-1.5 shrink-0 z-10">
         <div className="h-full bg-gradient-to-r from-yellow-500 via-yellow-400 to-green-400 transition-all duration-300 animate-progress-pulse"
              style={{ width: `${Math.min((matchState.minute / 90) * 100, 100)}%` }}>
         </div>
@@ -311,20 +311,20 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                     </span>
                     <button 
                         onClick={copyTechLog} 
-                        className={`flex items-center gap-1 border border-[#a0b0a0] px-3 py-1 text-[9px] font-black uppercase rounded shadow-sm transition-all ${copied ? 'bg-green-600 text-white border-green-700' : 'bg-white hover:bg-slate-50'}`}
+                        className={`flex items-center gap-1 border border-[#a0b0a0] px-3 py-1 text-[9px] font-black uppercase rounded shadow-sm transition-all ${copied ? 'bg-green-600 text-slate-900 border-green-700' : 'bg-white hover:bg-slate-50'}`}
                     >
                         {copied ? <Check size={12} /> : <Copy size={12} />}
                         {copied ? '¡Copiado!' : 'Copiar Todo'}
                     </button>
                 </div>
-                <div className="flex-1 bg-black/90 rounded border border-slate-700 p-4 font-mono text-[10px] text-green-400 overflow-y-auto custom-scroll shadow-inner" ref={techScrollRef}>
+                <div className="flex-1 bg-black/90 rounded border border-[#a0b0a0] p-4 font-mono text-[10px] text-green-600 overflow-y-auto custom-scroll shadow-inner" ref={techScrollRef}>
                     <div className="mb-4 opacity-100 text-yellow-500 border-b border-yellow-500/30 pb-2">
                         analiza el log<br/>refina el motor
                     </div>
                     {matchState.events.map((e, i) => (
                         <div key={i} className="mb-1 opacity-80 border-b border-white/5 pb-1 flex gap-2">
                             <span className="text-blue-400 shrink-0">[{e.minute}:{(e.second ?? 0).toString().padStart(2, '0')}]</span> 
-                            <span className={e.importance === 'HIGH' ? 'text-yellow-400 font-bold underline' : e.isTechnical ? 'text-slate-400' : 'text-white'}>
+                            <span className={e.importance === 'HIGH' ? 'text-amber-600 font-bold underline' : e.isTechnical ? 'text-slate-400' : 'text-slate-900'}>
                                 {e.text}
                             </span>
                         </div>
@@ -346,13 +346,13 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                     </div>
                 </FMBox>
 
-                <div className="bg-slate-800 text-white p-4 rounded-sm border border-slate-600 shadow-md">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest mb-3 text-slate-400 border-b border-slate-600 pb-1">Relato en Vivo</h4>
+                <div className="bg-white text-slate-900 p-4 rounded-sm border border-[#a0b0a0] shadow-md">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest mb-3 text-slate-400 border-b border-[#a0b0a0] pb-1">Relato en Vivo</h4>
                     <div className="space-y-1.5 font-mono text-xs">
                         {matchState.events.filter(e => !e.isTechnical).slice(-3).reverse().map((e, i) => (
-                            <div key={i} className="flex gap-3 opacity-90 border-b border-slate-700 pb-1 last:border-0">
-                                <span className="text-green-400 font-bold w-10 text-right shrink-0">{e.minute}'</span>
-                                <span className="text-slate-200">{e.text}</span>
+                            <div key={i} className="flex gap-3 opacity-90 border-b border-[#a0b0a0] pb-1 last:border-0">
+                                <span className="text-green-600 font-bold w-10 text-right shrink-0">{e.minute}'</span>
+                                <span className="text-slate-900">{e.text}</span>
                             </div>
                         ))}
                         {matchState.events.filter(e => !e.isTechnical).length === 0 && <span className="text-slate-500 italic">Esperando inicio...</span>}
@@ -393,12 +393,12 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         )}
       </div>
 
-      <footer className="bg-slate-900 p-3 md:p-4 flex items-center justify-center gap-4 shrink-0 border-t border-slate-700">
+      <footer className="bg-[#bcc8bc] p-3 md:p-4 flex items-center justify-center gap-4 shrink-0 border-t border-[#a0b0a0]">
         {matchState.minute < 90 ? (
           <div className="flex gap-4 items-center">
             <button 
                 onClick={() => setMatchState(p => ({...p, isPlaying: !p.isPlaying}))} 
-                className={`w-16 h-12 rounded-sm transition-all active:scale-95 shadow-lg border-b-4 flex items-center justify-center ${matchState.isPlaying ? 'bg-slate-300 text-slate-800 border-slate-500' : 'bg-green-600 text-white border-green-800 hover:bg-green-500'}`}
+                className={`w-16 h-12 rounded-sm transition-all active:scale-95 shadow-lg border-b-4 flex items-center justify-center ${matchState.isPlaying ? 'bg-[#bcc8bc] text-slate-700 border-[#a0b0a0]' : 'bg-green-600 text-white border-green-800 hover:bg-green-500'}`}
                 title={matchState.isPlaying ? "Pausar" : "Reanudar"}
             >
                 {matchState.isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
@@ -408,7 +408,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                 <>
                     {(isUserHome ? matchState.homeSubsUsed : matchState.awaySubsUsed) < 5 && (
                       <button onClick={() => { setSubTarget(null); setShowSubModal(true); }}
-                          className="h-12 px-3 bg-amber-600 hover:bg-amber-500 text-white rounded-sm flex items-center gap-2 border-b-4 border-amber-800 text-[10px] font-black uppercase transition-all active:scale-95 shadow-lg"
+                          className="h-12 px-3 bg-amber-600 hover:bg-amber-500 text-slate-900 rounded-sm flex items-center gap-2 border-b-4 border-amber-800 text-[10px] font-black uppercase transition-all active:scale-95 shadow-lg"
                           title="Realizar Cambio">
                           <UserPlus size={18} /> CAMBIO
                       </button>
@@ -424,7 +424,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                     )}
                     <button 
                         onClick={() => skipToTime(90)}
-                        className="w-16 h-12 bg-gradient-to-b from-slate-600 to-slate-800 hover:brightness-110 text-white rounded-sm flex items-center justify-center border-b-4 border-slate-950 transition-all active:scale-95"
+                        className="w-16 h-12 bg-gradient-to-b from-[#3a4a3a] to-[#2a3a2a] hover:brightness-110 text-white rounded-sm flex items-center justify-center border-b-4 border-[#1a2a1a] transition-all active:scale-95"
                         title="Ir al Final"
                     >
                         <SkipForward size={24} fill="currentColor" />
@@ -439,8 +439,8 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
 
       {showSubModal && (
         <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setShowSubModal(false)}>
-          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-slate-800 text-white p-3 flex items-center justify-between shrink-0">
+          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-[#a0b0a0] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-white text-slate-900 p-3 flex items-center justify-between shrink-0">
               <span className="text-sm font-black uppercase tracking-wider flex items-center gap-2"><UserPlus size={16} /> Realizar Cambio</span>
               <span className="text-[10px] font-bold text-amber-400">{(isUserHome ? 5 - matchState.homeSubsUsed : 5 - matchState.awaySubsUsed)} cambios restantes</span>
             </div>
@@ -501,8 +501,8 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
 
       {showHalfTimeTalk && (
         <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in">
-          <div className="bg-white w-full max-w-md rounded-sm shadow-2xl border-2 border-slate-500 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-slate-800 text-white p-4 text-center">
+          <div className="bg-white w-full max-w-md rounded-sm shadow-2xl border-2 border-[#a0b0a0] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-white text-slate-900 p-4 text-center">
               <span className="text-lg font-black uppercase tracking-wider flex items-center justify-center gap-2"><MessageCircle size={20} /> CHARLA TÉCNICA</span>
               <span className="text-[10px] text-slate-400 block mt-1">Descanso — {matchState.homeScore} - {matchState.awayScore}</span>
             </div>
@@ -545,13 +545,13 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
 
       {showPostMatch && (
         <div className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-slate-500 overflow-hidden flex flex-col">
-            <div className="bg-slate-900 text-white p-4 text-center">
+          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-[#a0b0a0] overflow-hidden flex flex-col">
+            <div className="bg-[#bcc8bc] text-slate-900 p-4 text-center">
               <span className="text-lg font-black uppercase tracking-wider">RESULTADO FINAL</span>
               <div className="text-4xl font-black mt-2">
-                <span className={matchState.homeScore > matchState.awayScore ? 'text-green-400' : 'text-slate-300'}>{matchState.homeScore}</span>
+                <span className={matchState.homeScore > matchState.awayScore ? 'text-green-600' : 'text-slate-300'}>{matchState.homeScore}</span>
                 <span className="text-slate-500 mx-3">-</span>
-                <span className={matchState.awayScore > matchState.homeScore ? 'text-green-400' : 'text-slate-300'}>{matchState.awayScore}</span>
+                <span className={matchState.awayScore > matchState.homeScore ? 'text-green-600' : 'text-slate-300'}>{matchState.awayScore}</span>
               </div>
               <div className="text-[10px] text-slate-400 mt-1">{homeTeam.shortName} vs {awayTeam.shortName}</div>
             </div>
@@ -595,7 +595,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
               );
             })()}
             <div className="p-3 border-t border-slate-200">
-              <button onClick={() => setShowPostMatch(false)} className="w-full py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-sm font-black uppercase text-[10px]">
+              <button onClick={() => setShowPostMatch(false)} className="w-full py-2 bg-blue-700 hover:bg-blue-600 text-slate-900 rounded-sm font-black uppercase text-[10px]">
                 Cerrar resumen
               </button>
             </div>

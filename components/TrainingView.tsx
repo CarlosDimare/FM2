@@ -115,7 +115,7 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club
     <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-hidden">
       <header className="shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#e8ece8] border border-[#a0b0a0] p-3 md:p-4 rounded-sm shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-slate-900 rounded-sm text-white">
+          <div className="p-2 bg-[#3a4a3a] rounded-sm text-white">
             <Dumbbell size={20} />
           </div>
           <div>
