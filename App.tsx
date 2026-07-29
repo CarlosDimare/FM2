@@ -34,12 +34,13 @@ import { Club, Player, Fixture, SquadType, PlayerMatchStats } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID, randomInt } from './services/utils';
 import { MatchSimulator } from './services/engine';
 import { requestNotificationPermission, sendMatchNotification, sendInjuryNotification, sendTransferNotification, sendInboxNotification } from './services/notifications';
-import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
+import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, ChevronLeft, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
 import { OnboardingTour, isOnboarded } from './components/OnboardingTour';
 import { FMButton } from './components/FMUI';
 import { useWorldStore } from './stores/worldStore';
 import { useUIStore } from './stores/uiStore';
 import { useGameStore } from './stores/gameStore';
+import { getFlagUrl } from './data/static';
 
 const App: React.FC = () => {
   const darkMode = useGameStore(s => s.darkMode);
@@ -65,13 +66,13 @@ const App: React.FC = () => {
 
 const {
     gameState, currentView, selectedPlayer, contextMenu, isSidebarOpen,
-    userName, userSurname, userNationality, userOrigin, userBirthDate, selectedLeague, userClub, viewExternalClub,
-    isVacationModalOpen, vacationTargetDate, isSimulating,
+    userName, userSurname, userNationality, userOrigin, userBirthDate, selectedCountry, selectedLeague, userClub, viewExternalClub,
+    isVacationModalOpen, vacationTargetDate, isSimulating, isInVacation,
     seasonSummary, userWonLeague, viewLeagueId, viewSquadType,
     currentDate, seasonEndDate, hasSave,
     isSaveModalOpen, saveNameInput, isLoadModalOpen, availableSaves,
     setGameState, setView, setSelectedPlayer, setContextMenu, setIsSidebarOpen,
-    setUserName, setUserSurname, setUserNationality, setUserOrigin, setUserBirthDate, setSelectedLeague, setUserClub,
+    setUserName, setUserSurname, setUserNationality, setUserOrigin, setUserBirthDate, setSelectedCountry, setSelectedLeague, setUserClub,
     setViewExternalClub, setIsVacationModalOpen, setVacationTargetDate, setIsSimulating,
     setIsInVacation, setSeasonSummary, setUserWonLeague, setViewLeagueId, setViewSquadType,
     setCurrentDate, setSeasonEndDate, setHasSave,
@@ -1105,7 +1106,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <label className="text-[10px] font-black text-slate-600 uppercase block mb-1 tracking-widest">Fecha de nacimiento</label>
             <input type="date" className="w-full bg-slate-100 border border-slate-500 rounded-sm px-4 py-3 text-slate-950 font-bold text-sm outline-none focus:border-slate-800" value={userBirthDate.toISOString().split('T')[0]} onChange={(e) => setUserBirthDate(new Date(e.target.value))} />
           </div>
-          <FMButton onClick={() => { setGameState('SETUP_LEAGUE'); }} className="w-full py-4 mt-4">
+          <FMButton onClick={() => { setGameState('SETUP_COUNTRY'); }} className="w-full py-4 mt-4">
             NUEVA PARTIDA <ChevronRight size={14} />
           </FMButton>
           {hasSave && (
@@ -1118,35 +1119,83 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
     </div>
   );
 
-  if (gameState === 'SETUP_LEAGUE') return (
-    <div className="h-screen w-screen bg-slate-400 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full bg-slate-200 rounded-sm p-10 border border-slate-600 text-center shadow-2xl max-h-[90vh] overflow-y-auto">
-        <h1 className="text-5xl font-black text-slate-950 mb-10 tracking-tighter italic uppercase">FM</h1>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {world.competitions.filter(c => c.type === 'LEAGUE').map(league => {
-            const clubCount = world.getClubsByLeague(league.id).length;
-            return (
-              <button key={league.id} onClick={() => { setSelectedLeague(league); setGameState('SETUP_TEAM'); }} className="p-6 bg-slate-300 border border-slate-500 hover:bg-slate-400 rounded-sm text-left transition-all group shadow-md flex flex-col">
-                <h3 className="text-lg font-black text-slate-950 mb-1 italic uppercase truncate">{league.name}</h3>
-                <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em]">{league.country}</p>
-                <p className="text-[10px] text-slate-500 mt-2">{clubCount} equipos</p>
+  if (gameState === 'SETUP_COUNTRY') {
+    const countryLeagues = world.competitions.filter(c => c.type === 'LEAGUE');
+    const countriesMap = new Map<string, number>();
+    countryLeagues.forEach(l => {
+      countriesMap.set(l.country, (countriesMap.get(l.country) || 0) + 1);
+    });
+    const countries = Array.from(countriesMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    return (
+      <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
+        <div className="max-w-4xl w-full bg-white rounded-sm p-4 sm:p-10 border border-[#a0b0a0] shadow-2xl max-h-[90vh] overflow-y-auto">
+          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 mb-2 tracking-tighter italic uppercase text-center">FM Argentina</h1>
+          <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-[0.3em] mb-6">Seleccioná un país</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {countries.map(([country, count]) => (
+              <button key={country} onClick={() => { setSelectedCountry(country); setGameState('SETUP_LEAGUE'); }}
+                className="p-4 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] rounded-sm text-left transition-all shadow-sm flex items-center gap-3">
+                <img src={getFlagUrl(country)} alt={country} className="w-8 h-6 rounded-sm object-cover border border-[#a0b0a0]" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-slate-900 text-xs uppercase truncate">{country}</p>
+                  <p className="text-[9px] text-slate-500">{count} liga{count !== 1 ? 's' : ''}</p>
+                </div>
               </button>
-            );
-          })}
+            ))}
+          </div>
+          <button onClick={() => setGameState('SETUP_USER')} className="mt-4 text-[10px] text-slate-500 hover:text-slate-900 font-bold flex items-center gap-1">
+            <ChevronLeft size={12} /> Volver a datos del manager
+          </button>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (gameState === 'SETUP_LEAGUE') {
+    const country = selectedCountry;
+    const leagues = world.competitions.filter(c => c.type === 'LEAGUE' && c.country === country);
+    return (
+      <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
+        <div className="max-w-4xl w-full bg-white rounded-sm p-4 sm:p-10 border border-[#a0b0a0] shadow-2xl max-h-[90vh] overflow-y-auto">
+          <button onClick={() => setGameState('SETUP_COUNTRY')} className="text-[10px] text-slate-500 hover:text-slate-900 font-bold mb-4 flex items-center gap-1">
+            <ChevronLeft size={12} /> Volver a países
+          </button>
+          <div className="flex items-center gap-3 mb-6">
+            {country && <img src={getFlagUrl(country)} alt={country} className="w-8 h-6 rounded-sm border border-[#a0b0a0]" />}
+            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight italic">{country}</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {leagues.map(league => {
+              const clubCount = world.getClubsByLeague(league.id).length;
+              return (
+                <button key={league.id} onClick={() => { setSelectedLeague(league); setGameState('SETUP_TEAM'); }}
+                  className="p-5 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] rounded-sm text-left transition-all shadow-sm flex flex-col">
+                  <h3 className="text-base font-black text-slate-900 mb-1 italic uppercase truncate">{league.name}</h3>
+                  <p className="text-[9px] text-slate-500">{clubCount} equipo{clubCount !== 1 ? 's' : ''}</p>
+                </button>
+              );
+            })}
+          </div>
+          {leagues.length === 0 && (
+            <p className="text-sm text-slate-500 text-center py-8">No hay ligas disponibles para este país.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (gameState === 'SETUP_TEAM') {
     const leagueClubs = world.getClubsByLeague(selectedLeague.id);
     return (
-    <div className="h-screen w-screen bg-slate-400 flex items-center justify-center p-4">
-      <div className="max-w-6xl w-full bg-slate-200 rounded-sm p-10 border border-slate-600 shadow-2xl max-h-[90vh] overflow-y-auto">
-        <button onClick={() => setGameState('SETUP_LEAGUE')} className="text-sm text-slate-500 hover:text-slate-950 mb-4 flex items-center gap-1">
-          <span>←</span> Volver a selección de liga
+    <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
+      <div className="max-w-6xl w-full bg-white rounded-sm p-4 sm:p-10 border border-[#a0b0a0] shadow-2xl max-h-[90vh] overflow-y-auto">
+        <button onClick={() => setGameState('SETUP_LEAGUE')} className="text-[10px] text-slate-500 hover:text-slate-900 font-bold mb-4 flex items-center gap-1">
+          <ChevronLeft size={12} /> Volver a ligas de {selectedCountry}
         </button>
-        <h1 className="text-3xl font-black text-slate-950 mb-8 italic uppercase border-b-4 border-slate-950 pb-2">{selectedLeague.name}</h1>
+        <div className="flex items-center gap-3 mb-6">
+          {selectedCountry && <img src={getFlagUrl(selectedCountry)} alt={selectedCountry} className="w-8 h-6 rounded-sm border border-[#a0b0a0]" />}
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight italic">{selectedLeague.name}</h2>
+        </div>
         <div className="space-y-8">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {leagueClubs.map(c => (
@@ -1158,9 +1207,9 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
                 updateNextFixture(allFix, currentDate, c.id);
                 setGameState('PLAYING');
                 notify();
-              }} className="p-4 bg-slate-100 hover:bg-slate-300 border border-slate-500 rounded-sm text-left transition-all shadow-sm group border-l-4 hover:border-l-blue-600">
-                <div className={`w-3 h-3 rounded-full mb-3 ${c.primaryColor} border border-slate-500`}></div>
-                <p className="font-black text-slate-950 truncate text-[11px] uppercase group-hover:text-blue-700">{c.name}</p>
+              }} className="p-4 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] rounded-sm text-left transition-all shadow-sm group border-l-4 hover:border-l-[#3a4a3a]">
+                <div className={`w-3 h-3 rounded-full mb-3 ${c.primaryColor} border border-[#a0b0a0]`}></div>
+                <p className="font-black text-slate-900 truncate text-[11px] uppercase group-hover:text-[#3a4a3a]">{c.name}</p>
                 <p className="text-[9px] text-slate-500 mt-1">Reputación: {Math.round(c.reputation / 10)}</p>
               </button>
             ))}

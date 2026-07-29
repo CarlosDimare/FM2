@@ -781,7 +781,7 @@ private static calculateUCLStandings(fixtures: Fixture[], clubIds: string[]): Le
       const club = world.getClub(p.clubId);
       const scoutingBonus = (() => {
         if (!club || phase !== 'YOUTH' && phase !== 'EARLY_YOUTH') return 1.0;
-        const regionMap: Record<string, string[]> = { ARG: ['Argentina'], BRA: ['Brasil'], URU: ['Uruguay'], CHL: ['Chile'], COL: ['Colombia'], ECU: ['Ecuador'], PAR: ['Paraguay'], PER: ['Peru'], VEN: ['Venezuela'], BOL: ['Bolivia'] };
+        const regionMap: Record<string, string[]> = { ARG: ['Argentina'], BRA: ['Brasil'], URU: ['Uruguay'], CHL: ['Chile'], COL: ['Colombia'], ECU: ['Ecuador'], PAR: ['Paraguay'], PER: ['Perú'], VEN: ['Venezuela'], BOL: ['Bolivia'] };
         const targets = regionMap[club.scoutingRegion];
         if (!targets) return 1.0;
         return targets.includes(p.nationality) ? 1.25 : 1.0;

@@ -20,7 +20,7 @@ export const COUNTRY_CODES: Record<string, string> = {
   "Ecuador": "ec",
   "Paraguay": "py",
   "Bolivia": "bo",
-  "Peru": "pe",
+  "Perú": "pe",
   "Venezuela": "ve",
   "España": "es",
   "Inglaterra": "gb-eng",
@@ -29,7 +29,22 @@ export const COUNTRY_CODES: Record<string, string> = {
   "Francia": "fr",
   "Portugal": "pt",
   "Bélgica": "be",
-  "Países Bajos": "nl"
+  "Países Bajos": "nl",
+  "Japón": "jp",
+  "México": "mx",
+  "USA": "us",
+  "Austria": "at",
+  "Croacia": "hr",
+  "Dinamarca": "dk",
+  "Grecia": "gr",
+  "Noruega": "no",
+  "Polonia": "pl",
+  "Rusia": "ru",
+  "Suecia": "se",
+  "Suiza": "ch",
+  "Turquía": "tr",
+  "Ucrania": "ua",
+  "Arabia Saudita": "sa",
 };
 
 export const getFlagUrl = (countryName: string) => {
@@ -199,9 +214,9 @@ export const CONT_CLUBS: RealClubDef[] = [
     { name: "Ind. del Valle", short: "IDV", pCol: "bg-black", sCol: "text-blue-600", stadium: "Banco Guayaquil", rep: 8000, country: "Ecuador" },
     { name: "Barcelona SC", short: "BSC", pCol: "bg-yellow-400", sCol: "text-red-600", stadium: "Monumental Banco Pichincha", rep: 7700, country: "Ecuador" },
     // Peru
-    { name: "Universitario", short: "UNI", pCol: "bg-red-100", sCol: "text-red-800", stadium: "Monumental U", rep: 7200, country: "Peru" },
-    { name: "Sporting Cristal", short: "CRI", pCol: "bg-sky-400", sCol: "text-white", stadium: "Alberto Gallardo", rep: 7100, country: "Peru" },
-    { name: "Alianza Lima", short: "ALI", pCol: "bg-blue-900", sCol: "text-white", stadium: "Alejandro Villanueva", rep: 7200, country: "Peru" },
+    { name: "Universitario", short: "UNI", pCol: "bg-red-100", sCol: "text-red-800", stadium: "Monumental U", rep: 7200, country: "Perú" },
+    { name: "Sporting Cristal", short: "CRI", pCol: "bg-sky-400", sCol: "text-white", stadium: "Alberto Gallardo", rep: 7100, country: "Perú" },
+    { name: "Alianza Lima", short: "ALI", pCol: "bg-blue-900", sCol: "text-white", stadium: "Alejandro Villanueva", rep: 7200, country: "Perú" },
     // Bolivia
     { name: "Bolívar", short: "BOL", pCol: "bg-sky-400", sCol: "text-white", stadium: "Hernando Siles", rep: 6800, country: "Bolivia" },
     { name: "The Strongest", short: "STR", pCol: "bg-yellow-400", sCol: "text-black", stadium: "Hernando Siles", rep: 6700, country: "Bolivia" },
@@ -238,8 +253,8 @@ export const CONT_CLUBS_TIER2: RealClubDef[] = [
     { name: "Emelec", short: "EME", pCol: "bg-blue-700", sCol: "text-slate-400", stadium: "George Capwell", rep: 7400, country: "Ecuador" },
     { name: "El Nacional", short: "ELN", pCol: "bg-red-600", sCol: "text-blue-500", stadium: "Atahualpa", rep: 6700, country: "Ecuador" },
     // Peru
-    { name: "Melgar", short: "MEL", pCol: "bg-red-700", sCol: "text-black", stadium: "UNSA", rep: 6900, country: "Peru" },
-    { name: "Cienciano", short: "CIE", pCol: "bg-red-600", sCol: "text-white", stadium: "Garcilaso", rep: 6600, country: "Peru" },
+    { name: "Melgar", short: "MEL", pCol: "bg-red-700", sCol: "text-black", stadium: "UNSA", rep: 6900, country: "Perú" },
+    { name: "Cienciano", short: "CIE", pCol: "bg-red-600", sCol: "text-white", stadium: "Garcilaso", rep: 6600, country: "Perú" },
     // Bolivia
     { name: "Wilstermann", short: "WIL", pCol: "bg-red-600", sCol: "text-blue-800", stadium: "Félix Capriles", rep: 6400, country: "Bolivia" },
     { name: "Oriente P.", short: "ORI", pCol: "bg-green-600", sCol: "text-white", stadium: "Tahuichi", rep: 6300, country: "Bolivia" }

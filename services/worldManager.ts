@@ -228,7 +228,7 @@ export class WorldManager {
       const map: Record<string, string> = {
          'Argentina': 'América del Sur', 'Brasil': 'América del Sur', 'Uruguay': 'América del Sur',
          'Chile': 'América del Sur', 'Colombia': 'América del Sur', 'Paraguay': 'América del Sur',
-         'Peru': 'América del Sur', 'Venezuela': 'América del Sur', 'Bolivia': 'América del Sur',
+         'Perú': 'América del Sur', 'Venezuela': 'América del Sur', 'Bolivia': 'América del Sur',
          'Ecuador': 'América del Sur',
          'Inglaterra': 'Europa', 'España': 'Europa', 'Italia': 'Europa', 'Alemania': 'Europa',
          'Francia': 'Europa', 'Portugal': 'Europa', 'Países Bajos': 'Europa', 'Bélgica': 'Europa',

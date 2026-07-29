@@ -3,7 +3,7 @@ import { Player, Club, Competition, SquadType, ManagerOrigin } from '../types';
 import { SaveMetadata } from '../services/utils';
 import { CompetitionSummary } from '../components/SeasonSummaryModal';
 
-type GameState = 'LOADING' | 'SETUP_USER' | 'SETUP_LEAGUE' | 'SETUP_TEAM' | 'PLAYING';
+type GameState = 'LOADING' | 'SETUP_USER' | 'SETUP_COUNTRY' | 'SETUP_LEAGUE' | 'SETUP_TEAM' | 'PLAYING';
 
 interface UIStore {
   gameState: GameState;
@@ -16,6 +16,7 @@ interface UIStore {
   userNationality: string;
   userOrigin: ManagerOrigin;
   userBirthDate: Date;
+  selectedCountry: string | null;
   selectedLeague: Competition | null;
   userClub: Club | null;
   viewExternalClub: Club | null;
@@ -46,6 +47,7 @@ interface UIStore {
   setUserNationality: (nat: string) => void;
   setUserOrigin: (origin: ManagerOrigin) => void;
   setUserBirthDate: (date: Date) => void;
+  setSelectedCountry: (country: string | null) => void;
   setSelectedLeague: (league: Competition | null) => void;
   setUserClub: (club: Club | null) => void;
   setViewExternalClub: (club: Club | null) => void;
@@ -78,6 +80,7 @@ export const useUIStore = create<UIStore>((set) => ({
   userNationality: 'Argentina',
   userOrigin: 'EX_PLAYER',
   userBirthDate: new Date(1985, 5, 15),
+  selectedCountry: null,
   selectedLeague: null,
   userClub: null,
   viewExternalClub: null,
@@ -108,6 +111,7 @@ export const useUIStore = create<UIStore>((set) => ({
   setUserNationality: (userNationality) => set({ userNationality }),
   setUserOrigin: (userOrigin) => set({ userOrigin }),
   setUserBirthDate: (userBirthDate) => set({ userBirthDate }),
+  setSelectedCountry: (selectedCountry) => set({ selectedCountry }),
   setSelectedLeague: (selectedLeague) => set({ selectedLeague }),
   setUserClub: (userClub) => set({ userClub }),
   setViewExternalClub: (viewExternalClub) => set({ viewExternalClub }),

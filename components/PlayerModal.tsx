@@ -317,7 +317,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                           </div>
                         );
                       })}
-                      {player.secondaryPositions.map(pos => {
+                      {player.secondaryPositions?.map(pos => {
                         const coords = POSITION_COORDS[pos] || { x: 50, y: 50 };
                         return (
                           <div key={pos} className="absolute w-5 h-5 -ml-2.5 -mt-2.5 flex items-center justify-center" style={{ left: `${coords.x}%`, top: `${coords.y}%` }}>
