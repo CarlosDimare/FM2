@@ -577,8 +577,7 @@ export class WorldManager {
             if (metadata.line === 'DEF') return primaryPos === Position.DC || primaryPos === Position.DL || primaryPos === Position.DR;
             if (metadata.line === 'DM') return primaryPos === Position.DM || primaryPos === Position.DML || primaryPos === Position.DMR;
             if (metadata.line === 'MID') return primaryPos === Position.MC || primaryPos === Position.MR || primaryPos === Position.ML;
-            // Fix: Comparison between narrowed enum type and specific member caused overlap error due to duplicate string values in Position enum. Casting primaryPos to any to skip overlap check.
-            if (metadata.line === 'AM') return (primaryPos as any) === Position.AM || primaryPos === Position.AMR || primaryPos === Position.AML;
+            if (metadata.line === 'AM') return primaryPos === Position.AM || primaryPos === Position.AMR || primaryPos === Position.AML;
             if (metadata.line === 'ATT') return primaryPos === Position.ST || primaryPos === Position.STR || primaryPos === Position.STL;
             return false;
         });

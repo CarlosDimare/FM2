@@ -109,12 +109,71 @@ export class NationalTeamManager {
   }
 
   assignPlayersToNationalTeams(players: Player[], clubs: Club[]) {
+    this.validateAndRebuildNationalTeams();
+    this.assignPlayersToNationalTeamsInternal(players, clubs);
+  }
+
+  private validateAndRebuildNationalTeams() {
+    // Ensure national teams array is properly initialized
+    if (!this.nationalTeams || !Array.isArray(this.nationalTeams)) {
+      console.warn('Rebuilding national teams array');
+      this.nationalTeams = NationalTeamManager.NATIONAL_TEAMS.map(team => ({
+        id: team.id,
+        name: team.name,
+        country: team.country,
+        confederation: team.confederation,
+        reputation: team.reputation,
+        formation: team.formation,
+        playerIds: []
+      }));
+    }
+
+    // Validate each team and rebuild if necessary
+    for (let i = 0; i < this.nationalTeams.length; i++) {
+      const team = this.nationalTeams[i];
+      if (!team || !team.id || !team.country) {
+        console.warn(`Rebuilding invalid team at index ${i}`);
+        const teamDef = NationalTeamManager.NATIONAL_TEAMS.find(t => t.id === team?.id);
+        if (teamDef) {
+          this.nationalTeams[i] = {
+            id: teamDef.id,
+            name: teamDef.name,
+            country: teamDef.country,
+            confederation: teamDef.confederation,
+            reputation: teamDef.reputation,
+            formation: teamDef.formation,
+            playerIds: []
+          };
+        }
+      }
+    }
+  }
+
+  private assignPlayersToNationalTeamsInternal(players: Player[], clubs: Club[]) {
+    // Ensure players and clubs arrays exist and are valid
+    if (!players || !clubs || !Array.isArray(players) || !Array.isArray(clubs)) {
+      console.warn('Invalid players or clubs data in assignPlayersToNationalTeams');
+      return;
+    }
+
     for (const team of this.nationalTeams) {
+      if (!team || !team.country) {
+        console.warn('Invalid team data in national teams list');
+        continue;
+      }
+
       const teamPlayers = players.filter(p => {
-        const club = clubs.find(c => c.id === p.clubId);
+        // Validate player data
+        if (!p || !p.id || !p.clubId) {
+          console.warn('Invalid player data:', p);
+          return false;
+        }
+        
+        const club = clubs.find(c => c && c.id === p.clubId);
         return club && club.country === team.country;
       });
 
+      // Sort by overall ability and take top 23 players
       team.playerIds = teamPlayers
         .sort((a, b) => {
           const aOverall = (a.stats.visible.fisico + a.stats.visible.mental + a.stats.visible.tecnica) / 3;

@@ -635,8 +635,9 @@ dayFixtures.forEach(f => {
       setIsSaveModalOpen(false);
       alert("Partida guardada correctamente.");
     } catch (e) {
-      console.error(e);
-      alert("Error al guardar la partida.");
+      console.error('Save game failed:', e);
+      const errorMessage = e instanceof Error ? e.message : 'Error desconocido al guardar la partida';
+      alert(`Error al guardar la partida: ${errorMessage}`);
     }
   };
 
@@ -649,7 +650,10 @@ dayFixtures.forEach(f => {
   const confirmLoadGame = async (id: string) => {
     try {
       const data = await loadGame(id);
-      if (!data) { alert("No se pudo cargar la partida."); return; }
+      if (!data) { 
+        alert("No se pudo cargar la partida. Puede que el archivo de guardado esté corrupto o no exista.");
+        return; 
+      }
 
       world.players = data.worldState.players;
       world.clubs = data.worldState.clubs;
@@ -689,7 +693,11 @@ dayFixtures.forEach(f => {
       // Restore NationalTeamManager from save if available, otherwise rebuild
       const { NationalTeamManager } = await import('./services/nationalTeamManager');
       if (data.worldState.nationalTeamManager) {
-        world.nationalTeamManager = data.worldState.nationalTeamManager;
+        // Validate the saved national team manager data
+        world.nationalTeamManager = new NationalTeamManager();
+        Object.assign(world.nationalTeamManager, data.worldState.nationalTeamManager);
+        // Reassign players to ensure consistency
+        world.nationalTeamManager.assignPlayersToNationalTeams(world.players, world.clubs);
       } else {
         world.nationalTeamManager = new NationalTeamManager();
         world.nationalTeamManager.assignPlayersToNationalTeams(world.players, world.clubs);
@@ -927,7 +935,7 @@ case 'PRESS_CONFERENCE_POST': {
            const opponent = homeClub.id === userClub.id ? awayClub : homeClub;
            return <PressConferenceView club={userClub} opponent={opponent} context="POST_MATCH" homeScore={nextFixture.homeScore} awayScore={nextFixture.awayScore} onFinish={() => { setView('HOME'); updateNextFixture(fixtures, currentDate, userClub.id); }} />;
          }
-         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
+return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos no disponibles</div>;
        }
       case 'PRE_MATCH': {
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;

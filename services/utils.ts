@@ -73,31 +73,70 @@ const loadFromCloud = async (id: string): Promise<any | null> => {
 };
 
 export const saveGame = async (data: any) => {
-  const db = await initDB();
-  return new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    if (!data.id) data.id = generateUUID();
-    const req = store.put(data);
-    req.onsuccess = () => { syncToCloud(data); resolve(); };
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    const db = await initDB();
+    return new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      if (!data.id) data.id = generateUUID();
+      const req = store.put(data);
+      req.onsuccess = async () => {
+        try {
+          await syncToCloud(data);
+          resolve();
+        } catch (cloudError) {
+          console.warn('Cloud sync failed, but local save succeeded:', cloudError);
+          resolve(); // Still resolve since local save worked
+        }
+      };
+      req.onerror = () => {
+        console.error('Save game failed:', req.error);
+        reject(req.error);
+      };
+    });
+  } catch (dbError) {
+    console.error('Database initialization failed:', dbError);
+    throw dbError;
+  }
 };
 
 export const loadGame = async (id: string): Promise<any> => {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.get(id);
-    req.onsuccess = async () => {
-      if (req.result) { resolve(req.result); return; }
-      const cloud = await loadFromCloud(id);
-      if (cloud) { resolve(cloud); return; }
-      resolve(null);
-    };
-    req.onerror = () => reject(req.error);
-  });
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(id);
+      req.onsuccess = async () => {
+        if (req.result) { 
+          console.log(`Game loaded successfully from local storage: ${id}`);
+          resolve(req.result); 
+          return; 
+        }
+        
+        try {
+          const cloud = await loadFromCloud(id);
+          if (cloud) { 
+            console.log(`Game loaded successfully from cloud: ${id}`);
+            resolve(cloud); 
+            return; 
+          }
+          console.warn(`Game not found in local or cloud storage: ${id}`);
+          resolve(null);
+        } catch (cloudError) {
+          console.error('Cloud load failed:', cloudError);
+          resolve(null);
+        }
+      };
+      req.onerror = () => {
+        console.error('Load game failed:', req.error);
+        reject(req.error);
+      };
+    });
+  } catch (dbError) {
+    console.error('Database initialization failed:', dbError);
+    throw dbError;
+  }
 };
 
 export const listSaves = async (): Promise<SaveMetadata[]> => {
