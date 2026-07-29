@@ -36,7 +36,7 @@ import { MatchSimulator } from './services/engine';
 import { requestNotificationPermission, sendMatchNotification, sendInjuryNotification, sendTransferNotification, sendInboxNotification } from './services/notifications';
 import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, ChevronLeft, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
 import { OnboardingTour, isOnboarded } from './components/OnboardingTour';
-import { FMButton } from './components/FMUI';
+import { FMButton, FMLoadingOverlay } from './components/FMUI';
 import { useWorldStore } from './stores/worldStore';
 import { useUIStore } from './stores/uiStore';
 import { useGameStore } from './stores/gameStore';
@@ -68,6 +68,7 @@ const {
     gameState, currentView, selectedPlayer, contextMenu, isSidebarOpen,
     userName, userSurname, userNationality, userOrigin, userBirthDate, selectedCountry, selectedLeague, userClub, viewExternalClub,
     isVacationModalOpen, vacationTargetDate, isSimulating, isInVacation,
+    vacationProgress, vacationDetail, vacationCancelled, setVacationProgress, setVacationDetail, setVacationCancelled, resetVacationState,
     seasonSummary, userWonLeague, viewLeagueId, viewSquadType,
     currentDate, seasonEndDate, hasSave,
     isSaveModalOpen, saveNameInput, isLoadModalOpen, availableSaves,
@@ -356,7 +357,7 @@ if (result.userWonLeague) gs.trackTitle('Liga');
 
   advanceTimeRef.current = advanceTime;
 
-  const startVacation = async (targetOverride?: Date) => {
+const startVacation = async (targetOverride?: Date) => {
     let target = targetOverride;
     if (!target) {
       if (!vacationTargetDate) return;
@@ -364,17 +365,41 @@ if (result.userWonLeague) gs.trackTitle('Liga');
     }
 
     if (target <= currentDate) return;
+    
+    // Reset vacation state
+    resetVacationState();
     setIsSimulating(true);
     setIsInVacation(true);
+    setVacationProgress(0);
+    setVacationDetail('Iniciando simulación...');
 
     let tempDate = new Date(currentDate);
     let localFixtures = [...fixtures];
     let batchCount = 0;
     const BATCH_SIZE = 7;
 
+    // Calculate total days for progress
+    const totalDays = Math.ceil((target.getTime() - tempDate.getTime()) / (1000 * 60 * 60 * 24));
+    let daysProcessed = 0;
+
     while (tempDate < target) {
+      // Check if cancelled
+      if (vacationCancelled) {
+        setIsSimulating(false);
+        setIsInVacation(false);
+        setVacationDetail('Vacaciones canceladas por el usuario');
+        setVacationProgress(0);
+        break;
+      }
+
       tempDate.setDate(tempDate.getDate() + 1);
       batchCount++;
+      daysProcessed++;
+
+      // Update progress every day
+      const progress = Math.min(100, Math.round((daysProcessed / totalDays) * 100));
+      setVacationProgress(progress);
+      setVacationDetail(`Procesando ${tempDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} (${daysProcessed}/${totalDays})`);
 
       LifecycleManager.checkBirthdays(tempDate);
       LifecycleManager.recoverDailyFitness();
@@ -396,34 +421,34 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       const dayFixtures = localFixtures.filter(f =>
         f.date.toDateString() === tempDate.toDateString() && !f.played
       );
-dayFixtures.forEach(f => {
-         const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
-         
-         if (isNationalTeamMatch) {
-           const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId);
-           f.played = true; f.homeScore = result.homeScore; f.awayScore = result.awayScore;
-         } else {
-           const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-           f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
-           const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-           const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
-           MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-           const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
-           const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-           LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-           world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-             world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-             world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
-             if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
-               const us = f.homeTeamId === userClub.id ? homeScore : awayScore;
-               const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
-               useGameStore.getState().trackMatchResult(us, os);
-               world.updateManagerProfileMatch(us, os);
-               generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
-             }
-          }
-          world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
-        });
+      dayFixtures.forEach(f => {
+        const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
+        
+        if (isNationalTeamMatch) {
+          const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId);
+          f.played = true; f.homeScore = result.homeScore; f.awayScore = result.awayScore;
+        } else {
+          const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+          f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
+          const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
+          const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+          MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
+          const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
+          const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
+          LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+          world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+            world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+            world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+            if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
+              const us = f.homeTeamId === userClub.id ? homeScore : awayScore;
+              const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
+              useGameStore.getState().trackMatchResult(us, os);
+              world.updateManagerProfileMatch(us, os);
+              generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
+            }
+        }
+        world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
+      });
 
       const newCupFixtures = LifecycleManager.processCompetitionProgress(localFixtures, tempDate);
       if (newCupFixtures.length > 0) {
@@ -464,7 +489,8 @@ dayFixtures.forEach(f => {
       if (batchCount >= BATCH_SIZE) {
         setCurrentDate(new Date(tempDate));
         batchCount = 0;
-        await new Promise(r => setTimeout(r, 10));
+        // Yield to main thread to allow UI updates and cancellation check
+        await new Promise(r => setTimeout(r, 0));
       }
     }
 
@@ -1229,6 +1255,15 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-400 text-slate-950 overflow-hidden font-sans relative text-sm dark:bg-gray-900 dark:text-gray-100">
       <div className={`h-1 w-full ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-slate-800'}`}></div>
+
+      {isInVacation && !vacationCancelled && (
+        <FMLoadingOverlay
+          message="Simulando Vacaciones"
+          progress={{ current: vacationProgress, total: 100, detail: vacationDetail }}
+          onCancel={() => setVacationCancelled(true)}
+          showCancel
+        />
+      )}
 
       {isSaveModalOpen && (
         <div className="fixed inset-0 z-[500] bg-slate-900/80 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in">

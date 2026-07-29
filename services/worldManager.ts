@@ -1240,6 +1240,17 @@ offer.status = 'REJECTED';
     });
   }
 
+  private wouldDropBelowMinimums(clubId: string, playerToSell: any): boolean {
+    const seniorPlayers = this.getPlayersByClub(clubId).filter(p => p.squad === 'SENIOR');
+    if (seniorPlayers.length <= 14) return true;
+    
+    const position = playerToSell.positions[0];
+    const positionDepth = seniorPlayers.filter(p => p.positions.includes(position)).length;
+    if (positionDepth <= 2) return true;
+    
+    return false;
+  }
+
   completeLoan(offer: TransferOffer) {
     const p = this.players.find(player => player.id === offer.playerId);
     if (!p) return;

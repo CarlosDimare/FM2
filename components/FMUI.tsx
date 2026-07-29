@@ -6,6 +6,62 @@ import React from 'react';
  * Focus: High contrast, technical gray tones, zero white/blue backgrounds.
  */
 
+export const FMSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg'; className?: string }> = ({ size = 'md', className = '' }) => {
+    const sizeClass = size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-10 h-10' : 'w-7 h-7';
+    return (
+        <div className={`${sizeClass} border-2 border-[#a0b0a0] border-t-[#3a4a3a] rounded-full animate-spin ${className}`} />
+    );
+};
+
+export const FMProgressBar: React.FC<{ value: number; max?: number; className?: string; height?: 'sm' | 'md' | 'lg' }> = ({ 
+    value, 
+    max = 100, 
+    className = '', 
+    height = 'md' 
+}) => {
+    const percentage = Math.max(0, Math.min(100, (value / max) * 100));
+    const heightClass = height === 'sm' ? 'h-2' : height === 'lg' ? 'h-4' : 'h-3';
+    return (
+        <div className={`w-full bg-[#e0e8e0] border border-[#a0b0a0] rounded-sm ${heightClass} overflow-hidden ${className}`}>
+            <div 
+                className="h-full bg-[#3a4a3a] transition-all duration-300 ease-out" 
+                style={{ width: `${percentage}%` }} 
+            />
+        </div>
+    );
+};
+
+export const FMLoadingOverlay: React.FC<{ 
+    message?: string; 
+    detail?: string; 
+    progress?: { current: number; total: number; detail: string };
+    onCancel?: () => void;
+    showCancel?: boolean;
+}> = ({ 
+    message = 'Procesando...', 
+    detail, 
+    progress, 
+    onCancel, 
+    showCancel = false 
+}) => (
+    <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm" style={{ fontFamily: 'Verdana, sans-serif' }}>
+        <FMSpinner size="lg" />
+        <p className="mt-4 text-[#1a1a1a] font-bold text-[12px] uppercase tracking-wider">{message}</p>
+        {progress && (
+            <div className="mt-4 w-full max-w-md">
+                <FMProgressBar value={progress.current} max={progress.total} />
+                <p className="mt-2 text-[#64748b] text-[10px] uppercase tracking-wider text-center">{progress.detail}</p>
+            </div>
+        )}
+        {detail && !progress && <p className="mt-2 text-[#64748b] text-[10px] uppercase tracking-wider">{detail}</p>}
+        {showCancel && onCancel && (
+            <FMButton variant="danger" className="mt-4 w-full max-w-md" onClick={onCancel}>
+                Cancelar y Volver
+            </FMButton>
+        )}
+    </div>
+);
+
 export const FMBox: React.FC<{ 
     title?: React.ReactNode; 
     children: React.ReactNode; 
