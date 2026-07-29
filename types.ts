@@ -330,7 +330,7 @@ export interface Tactic {
 export interface MatchEvent {
   minute: number;
   second?: number;
-  type: 'GOAL' | 'CHANCE' | 'MISS' | 'YELLOW_CARD' | 'RED_CARD' | 'WHISTLE' | 'INJURY' | 'PASS' | 'TACKLE' | 'INTERCEPTION' | 'SAVE' | 'CORNER' | 'FREE_KICK' | 'KICKOFF' | 'SUBSTITUTION';
+  type: 'GOAL' | 'CHANCE' | 'MISS' | 'YELLOW_CARD' | 'RED_CARD' | 'WHISTLE' | 'INJURY' | 'PASS' | 'TACKLE' | 'INTERCEPTION' | 'SAVE' | 'CORNER' | 'FREE_KICK' | 'KICKOFF' | 'SUBSTITUTION' | 'THROW_IN' | 'PENALTY' | 'OFFSIDE';
   text: string;
   teamId?: string;
   playerId?: string;
