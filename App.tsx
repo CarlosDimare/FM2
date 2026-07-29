@@ -31,7 +31,7 @@ import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
 import { generateMatchChronicle, generateMonthlyChronicle } from './services/chronicleService';
 import { Club, Player, Fixture, SquadType, PlayerMatchStats } from './types';
-import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID } from './services/utils';
+import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID, randomInt } from './services/utils';
 import { MatchSimulator } from './services/engine';
 import { requestNotificationPermission, sendMatchNotification, sendInjuryNotification, sendTransferNotification, sendInboxNotification } from './services/notifications';
 import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
@@ -272,9 +272,10 @@ if (result.userWonLeague) gs.trackTitle('Liga');
           if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
             const us = f.homeTeamId === userClub.id ? homeScore : awayScore;
             const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
-            useGameStore.getState().trackMatchResult(us, os);
-            world.updateManagerProfileMatch(us, os);
-            generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
+                useGameStore.getState().trackMatchResult(us, os);
+                world.updateManagerProfileMatch(us, os);
+                world.updateTacticalFamiliarity(userClub.id);
+                generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
           }
         }
         world.generateMatchNews(f, f.homeScore!, f.awayScore!, currentDate);
@@ -667,6 +668,10 @@ dayFixtures.forEach(f => {
       world.players.forEach(p => {
         if (!p.relationships) p.relationships = {};
         if (!p.injuryHistory) p.injuryHistory = [];
+        if (p.tacticalFamiliarity === undefined) p.tacticalFamiliarity = 50;
+        if (p.leadership === undefined) p.leadership = randomInt(5, 20);
+        if (p.consistency === undefined) p.consistency = randomInt(5, 20);
+        if (p.bigMatchTemperament === undefined) p.bigMatchTemperament = randomInt(5, 20);
       });
       world.staff.forEach(s => {
         if (!(s as any).relationships) (s as any).relationships = {};
@@ -962,9 +967,11 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
                world.trackU21Minutes(nextFixture.awayTeamId, world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, currentDate);
                const userScore = homeClub.id === userClub.id ? h : a;
                const oppScore = homeClub.id === userClub.id ? a : h;
-               useGameStore.getState().trackMatchResult(userScore, oppScore);
-               world.updateManagerProfileMatch(userScore, oppScore);
-               generateMatchChronicle(nextFixture, h, a, stats, userClub.id);
+                useGameStore.getState().trackMatchResult(userScore, oppScore);
+                world.updateManagerProfileMatch(userScore, oppScore);
+                world.updateTacticalFamiliarity(userClub.id);
+                world.updateClubRecords(nextFixture.homeTeamId, nextFixture.awayTeamId, h, a, currentDate, nextFixture.competitionId);
+                generateMatchChronicle(nextFixture, h, a, stats, userClub.id);
                setView('PRESS_CONFERENCE_POST');
                notify();
            }} />;

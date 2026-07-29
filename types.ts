@@ -122,6 +122,9 @@ export interface Player {
   lastNegotiationDate?: Date;
   requestedSalary?: number;
   isUnhappyWithContract: boolean;
+  leadership: number;
+  consistency: number;
+  bigMatchTemperament: number;
   releaseClause?: number;
   developmentTrend?: 'RISING' | 'DECLINING' | 'STABLE';
   yellowCardsAccumulated: number;
@@ -134,8 +137,18 @@ export interface Player {
   lastMotiveInteraction?: Date;
   trainingSchedule?: TrainingSchedule;
   formRatings: number[];
+  tacticalFamiliarity: number;
   isTransferListed: boolean;
   relationships: Record<string, { trust: number; respect: number; tension: number }>;
+}
+
+export interface ClubRecords {
+  biggestVictory: { opponent: string; goalsFor: number; goalsAgainst: number; date: Date; competition: string } | null;
+  biggestDefeat: { opponent: string; goalsFor: number; goalsAgainst: number; date: Date; competition: string } | null;
+  longestWinStreak: number;
+  currentWinStreak: number;
+  highestScoringMatch: { goalsTotal: number; opponent: string; date: Date } | null;
+  bestPlayerSeason: { playerName: string; goals: number; season: string } | null;
 }
 
 export interface Club {
@@ -168,6 +181,7 @@ export interface Club {
   seasonObjective?: 'WIN_LEAGUE' | 'TOP_4' | 'TOP_HALF' | 'AVOID_RELEGATION' | 'WIN_CUP' | 'CUP_SEMIS';
   shortlistedPlayerIds: string[];
   u21MinutesThisSeason: number;
+  records: ClubRecords;
 }
 
 export type CompetitionType = 'LEAGUE' | 'CUP' | 'CONTINENTAL_ELITE' | 'CONTINENTAL_SMALL' | 'GLOBAL';
@@ -224,6 +238,8 @@ export interface Competition {
   squadRegistrationLimit?: number;
   u21Requirement?: number;
   continentalSlots?: number;
+  seasonStartMonth?: number;
+  seasonEndMonth?: number;
 }
 
 export type MatchStage = 'REGULAR' | 'GROUP' | 'ROUND_OF_32' | 'ROUND_OF_16' | 'QUARTER_FINAL' | 'SEMI_FINAL' | 'FINAL';

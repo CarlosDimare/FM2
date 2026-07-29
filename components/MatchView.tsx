@@ -156,12 +156,8 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         setTimeout(() => setCopied(false), 2000);
     } catch (err) {
         console.error('Fallback copy failed', err);
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(logData).then(() => {
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            });
-        }
+        // Show user-friendly error message
+        alert('No se pudo copiar el resumen del partido. Por favor, intenta manualmente.');
     }
   };
 

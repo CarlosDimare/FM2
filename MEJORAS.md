@@ -121,7 +121,7 @@
 
 ### UI/UX
 - Tema oscuro (toggle sol/luna, CSS variables, persistencia)
-- Onboarding 6 pasos (`OnboardingTour`)
+- Onboarding 8 pasos (`OnboardingTour`)
 - Responsive (vista tablet en SquadView/LeagueTable, BottomNav)
 - Teclas rápidas: Space, Esc, M, T, S
 - Auto-save (toggle), lotes de 7 días en vacaciones
@@ -144,27 +144,29 @@
 - Selección de ligas (35 disponibles, no solo Argentina)
 - Fix SquadView crash (`formRatings` undefined)
 - Fix `seasonStats` undefined en jugadores convertidos
+- Fix Transferencia saliente actualiza mínimos de plantilla
+- Fix Vacaciones + rueda de prensa simultánea
+- Fix Onboarding: steps Crónicas y Mi Carrera añadidos (8 pasos)
+- Fix TS: ErrorBoundary (class → functional)
+- Fix TS: standing variable y ROUND_OF_16 en UCL
+- Fix TS: firstName/lastName añadidos a Player interface
+- Fix loadSave: reconstrucción de selecciones nacionales robusta
+- Fix save/load error handling mejorado
+- Fix claves duplicadas en data/static.ts
+- Familiaridad táctica implementada (0-100, afecta atributos)
+- Personalidad de jugador (leadership, consistency, big-match temperament)
+- Clubes en deuda → takeover automático con venta de jugadores
+- Salario del staff según economía del país (multiplier 0.6-2.2)
+- Historial de records del club (victoria/goles/racha más alta)
+- PWA cache: runtime caching para JSON + memoización en data loader
+- Calendario torneos: seasonStartMonth/seasonEndMonth por competición
 
 ---
 
 ## ⚠️ Faltan / Bugs
 
 ### Bugs activos
-- [ ] Transferencia saliente no actualiza bien mínimos de plantilla
-- [ ] Vacaciones largas pueden abrir 2 ruedas de prensa simultáneas
-- [ ] loadSave: reconstrucción de selecciones a veces vacías
-- [ ] Onboarding desactualizado (faltan steps Crónicas y Mi Carrera)
-- [ ] Errores TS existentes: ErrorBoundary state/props, standing variable, `firstName` en Player
-
-### Mejoras sugeridas
-- [ ] Familiaridad táctica (forma se mejoran con tiempo)
-- [ ] Personalidad de jugador (leadership, consistency, big-match temperament)
-- [ ] Clubes en deuda → takeover (venta desesperada de activos o insolvencia)
-- [ ] Salario del staff según economía del país/liga
-- [ ] Historial de competitión de los partidos (records)
-- [ ] Actualizar pasos del Onboarding para incluir el nuevo recorrido
-- [ ] PWA cache streaming para los 18MB de JSON generados en `public/data/`
-- [ ] Calendario de torneos del año inicial (loseir año si la liga empezó otro año)
+- Sin bugs activos pendientes
 
 ---
 

@@ -53,6 +53,14 @@ export default defineConfig(({ mode }) => {
                 cacheName: 'flag-cdn',
                 expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
               }
+            }, {
+              urlPattern: /\/data\/.*\.json$/i,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'fm-data-json',
+                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 7 },
+                cacheableResponse: { statuses: [0, 200] },
+              }
             }]
           },
         })

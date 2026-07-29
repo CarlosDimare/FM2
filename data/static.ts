@@ -84,14 +84,6 @@ export const REGEN_DB: any = {
      "nombres": ["Salomón", "Yeferson", "Darwin", "Telasco", "Nahuel", "Samuel", "Christian", "Jefferson", "Wilker", "Jon", "Jhon", "Eric", "Eduard", "Rómulo", "Sergio", "Alexander", "Alain", "José", "Bryan", "Kevin"],
      "apellidos": ["Rondón", "Soteldo", "Machís", "Segovia", "Ferraresi", "Cáseres", "Savarino", "Martínez", "Ángel", "Aramburu", "Chancellor", "Ramírez", "Bello", "Otero", "Córdova", "Rincón", "Baroja", "González", "Makoun", "Navarro"]
    },
-   "inglaterra": {
-     "nombres": ["Harry", "Jack", "Mason", "Declan", "Jude", "Cole", "Trent", "Bukayo", "Marcus", "Harvey", "Oliver", "George", "James", "Kyle", "Callum", "Reece", "Connor", "Luke", "Adam", "Ben"],
-     "apellidos": ["Walker", "Smith", "Palmer", "Bellingham", "Stones", "Rice", "Foden", "Shaw", "Cook", "Ward", "Kane", "White", "Moore", "Green", "Wood", "Cooper", "Brown", "Wilson", "Harrison", "Taylor"]
-   },
-   "alemania": {
-     "nombres": ["Lukas", "Finn", "Leon", "Jonas", "Maximilian", "Kai", "Florian", "Julian", "Timo", "Bastian", "Joshua", "Jan", "Lars", "Nico", "Stefan", "Mats", "Emil", "Niklas", "Benedikt", "Marco"],
-     "apellidos": ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Koch", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Zimmermann", "Krüger", "Hofmann", "Hartmann"]
-   },
    "francia": {
      "nombres": ["Kylian", "Antoine", "Neymar", "Karim", "Kingsley", "Aurélien", "Eduardo", "Théo", "Christopher", "Randal", "Dayot", "Bradley", "Moussa", "Ibrahim", "Florian", "Marcus", "Jean", "Pierre", "Matteo", "Lucas"],
      "apellidos": ["Mbappé", "Griezmann", "Junior", "Benzema", "Coman", "Tchouaméni", "Camavinga", "Hernández", "Nkunku", "Kolo", "Upamecano", "Barcola", "Diaby", "Konaté", "Thuram", "Thiago", "Dembélé", "Rabiot", "Guendouzi", "Tolisso"]

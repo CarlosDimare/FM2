@@ -91,14 +91,17 @@ export class MatchSimulator {
     const mapped = MatchSimulator.attrMap[attr] || attr;
     const base = (p.stats.internal as any)[mapped] ?? 10;
     const condition = stats[p.id]?.condition || 100;
-    const moraleMult = 0.95 + (p.morale / 1000);
+    const leadershipBonus = p.leadership > 14 ? (p.leadership - 14) * 0.002 : 0;
+    const moraleMult = 0.95 + (p.morale / 1000) + leadershipBonus;
     const fatigueMult = 1 - ((100 - condition) / 100 * 0.2);
     let formMult = 1;
     if (p.formRatings.length > 0) {
       const avgForm = p.formRatings.slice(-3).reduce((a, b) => a + b, 0) / Math.min(3, p.formRatings.length);
       formMult = 0.92 + (avgForm / 30);
     }
-    return Math.max(1, Math.round(base * moraleMult * fatigueMult * formMult));
+    const familiarityMult = 0.85 + (p.tacticalFamiliarity / 100) * 0.3;
+    const consistencyMult = 0.95 + (p.consistency / 20) * 0.1;
+    return Math.max(1, Math.round(base * moraleMult * fatigueMult * formMult * familiarityMult * consistencyMult));
   }
 
   private static calculatePressure(actor: Player, defPlayers: Player[], ballX: number, ballY: number, actorStats: Record<string, PlayerMatchStats>, isHomeActor: boolean, closingDown: number = 10): number {
@@ -750,8 +753,12 @@ if (stat.sustainedInjury.days > 30) {
   }
 
   static finalizeSeasonStats(hS: Player[], aS: Player[], mS: Record<string, PlayerMatchStats>, h: number, a: number, cId: string) {
+      const isCupMatch = ['UCL', 'UEL', 'UECL', 'COPA', 'EURO', 'AFCON', 'WC_Q', 'WC_FINAL', 'WCC'].includes(cId);
       const proc = (ps: Player[], ga: number) => ps.forEach(p => {
           const s = mS[p.id]; if(!s || s.minutesPlayed <= 0.1) return;
+          if (isCupMatch && p.bigMatchTemperament > 14) {
+            s.rating = Math.min(10, s.rating + (p.bigMatchTemperament - 14) * 0.15);
+          }
           p.seasonStats.appearances++; p.seasonStats.goals += s.goals; p.seasonStats.assists += s.assists; p.seasonStats.conceded += ga; p.seasonStats.totalRating += s.rating;
           if(!p.statsByCompetition[cId]) p.statsByCompetition[cId] = { appearances:0, goals:0, assists:0, cleanSheets:0, conceded:0, totalRating:0 };
           const cs = p.statsByCompetition[cId]; cs.appearances++; cs.goals += s.goals; cs.assists += s.assists; cs.conceded += ga; cs.totalRating += s.rating;

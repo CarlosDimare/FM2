@@ -73,6 +73,11 @@ export class LifecycleManager {
         club.finances.balance += lastMonthIncome;
         club.finances.balance -= lastMonthExpenses;
 
+        if (club.finances.balance < 0) {
+          const interest = Math.round(Math.abs(club.finances.balance) * 0.05);
+          club.finances.balance -= interest;
+        }
+
         club.finances.monthlyIncome = 0;
         club.finances.transferBudget += Math.round(lastMonthIncome * 0.05);
 
@@ -82,7 +87,38 @@ export class LifecycleManager {
         } else if (monthlyNet < -50000) {
           club.finances.transferBudget = Math.max(0, club.finances.transferBudget + Math.round(monthlyNet * 0.15));
         }
+
+        if (club.finances.balance < -(club.reputation * 500)) {
+          this.executeTakeover(club, currentDate);
+        }
       });
+   }
+
+   private static executeTakeover(club: Club, currentDate: Date) {
+      const squad = world.getPlayersByClub(club.id).filter(p => p.squad === 'SENIOR');
+      const sortedByValue = [...squad].sort((a, b) => b.value - a.value);
+
+      let fireSaleRevenue = 0;
+      const playersToSell = sortedByValue.slice(0, Math.ceil(sortedByValue.length * 0.4));
+      playersToSell.forEach(p => {
+        const fireSalePrice = Math.round(p.value * 0.3);
+        fireSaleRevenue += fireSalePrice;
+        p.value = fireSalePrice;
+        p.transferStatus = 'TRANSFERABLE';
+      });
+
+      const takeoverAmount = Math.round(club.reputation * 1000 + Math.abs(club.finances.balance) * 2);
+      club.finances.balance = Math.round(takeoverAmount * 0.5);
+      club.finances.transferBudget = Math.round(takeoverAmount * 0.3);
+      club.reputation = Math.min(10000, Math.max(2000, club.reputation - 500));
+
+      world.addInboxMessage(
+        'FINANCE',
+        'Cambio de propietario',
+        `${club.name} ha sido adquirido por nuevos inversores tras problemas financieros. Se vendieron ${playersToSell.length} jugadores por $${(fireSaleRevenue / 1000).toFixed(0)}K. Nuevo presupuesto: $${(club.finances.transferBudget / 1000).toFixed(0)}K.`,
+        currentDate,
+        club.id
+      );
    }
 
   // New: Decrement suspensions for clubs that just played

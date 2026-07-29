@@ -63,6 +63,7 @@ export class WorldManager {
       for (const lg of CONVERTED_LEAGUES) {
          const continent = this.getContinentForCountry(lg.country);
          const confederation = this.getConfederationForContinent(continent);
+         const isCrossYear = ['Inglaterra', 'España', 'Italia', 'Alemania', 'Francia', 'Portugal', 'Países Bajos', 'Bélgica'].includes(lg.country);
          this.competitions.push({
             id: lg.id,
             name: lg.name,
@@ -74,6 +75,8 @@ export class WorldManager {
             defaultPrizePool: this.calculatePrizePool(lg.reputation, lg.tier),
             squadRegistrationLimit: 25,
             u21Requirement: 3,
+            seasonStartMonth: isCrossYear ? 7 : 0,
+            seasonEndMonth: isCrossYear ? 4 : 11,
          });
       }
 
@@ -110,6 +113,7 @@ export class WorldManager {
             seasonObjective: c.reputation > 4000 ? 'TOP_4' : c.reputation > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION',
             shortlistedPlayerIds: [],
             u21MinutesThisSeason: 0,
+            records: { biggestVictory: null, biggestDefeat: null, longestWinStreak: 0, currentWinStreak: 0, highestScoringMatch: null, bestPlayerSeason: null },
          };
          this.clubs.push(club);
       }
@@ -181,7 +185,11 @@ export class WorldManager {
             reputation: p.ca * 45,
             form: [],
             formRatings: [],
+            tacticalFamiliarity: 50,
             personality: 'PROFESSIONAL',
+            leadership: randomInt(5, 20),
+            consistency: randomInt(5, 20),
+            bigMatchTemperament: randomInt(5, 20),
             seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 },
             statsByCompetition: {},
             tags: [],
@@ -265,30 +273,30 @@ export class WorldManager {
   private addContinentalCompetitions() {
       // UEFA Champions League
       this.competitions.push(
-         { id: 'UCL', name: 'UEFA Champions League', country: 'Europa', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 20000000, squadRegistrationLimit: 25 },
-         { id: 'UEL', name: 'UEFA Europa League', country: 'Europa', type: 'CONTINENTAL_SMALL', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 8000000, squadRegistrationLimit: 25 },
-         { id: 'UECL', name: 'UEFA Conference League', country: 'Europa', type: 'CONTINENTAL_SMALL', tier: 3, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 4000000, squadRegistrationLimit: 25 },
+         { id: 'UCL', name: 'UEFA Champions League', country: 'Europa', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 20000000, squadRegistrationLimit: 25, seasonStartMonth: 7, seasonEndMonth: 4 },
+         { id: 'UEL', name: 'UEFA Europa League', country: 'Europa', type: 'CONTINENTAL_SMALL', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 8000000, squadRegistrationLimit: 25, seasonStartMonth: 7, seasonEndMonth: 4 },
+         { id: 'UECL', name: 'UEFA Conference League', country: 'Europa', type: 'CONTINENTAL_SMALL', tier: 3, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 4000000, squadRegistrationLimit: 25, seasonStartMonth: 7, seasonEndMonth: 4 },
       );
        // Copa Libertadores + Sudamericana already exist in base
        // FIFA World Cup
        this.competitions.push(
-          { id: 'WC_Q', name: 'Clasificación Mundial', country: 'Global', type: 'GLOBAL', tier: 1, continent: 'Global', confederation: 'FIFA', defaultPrizePool: 0 },
+          { id: 'WC_Q', name: 'Clasificación Mundial', country: 'Global', type: 'GLOBAL', tier: 1, continent: 'Global', confederation: 'FIFA', defaultPrizePool: 0, seasonStartMonth: 0, seasonEndMonth: 11 },
        );
 
        // National team competitions
        this.competitions.push(
-          { id: 'COPA', name: 'Copa América', country: 'América del Sur', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'América del Sur', confederation: 'CONMEBOL', defaultPrizePool: 10000000 },
-          { id: 'EURO', name: 'UEFA Euro', country: 'Europa', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 15000000 },
-          { id: 'AFCON', name: 'Africa Cup of Nations', country: 'África', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'África', confederation: 'CAF', defaultPrizePool: 5000000 },
-          { id: 'WC_FINAL', name: 'Copa Mundial', country: 'Global', type: 'GLOBAL', tier: 1, continent: 'Global', confederation: 'FIFA', defaultPrizePool: 50000000 },
+          { id: 'COPA', name: 'Copa América', country: 'América del Sur', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'América del Sur', confederation: 'CONMEBOL', defaultPrizePool: 10000000, seasonStartMonth: 5, seasonEndMonth: 7 },
+          { id: 'EURO', name: 'UEFA Euro', country: 'Europa', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 15000000, seasonStartMonth: 5, seasonEndMonth: 7 },
+          { id: 'AFCON', name: 'Africa Cup of Nations', country: 'África', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'África', confederation: 'CAF', defaultPrizePool: 5000000, seasonStartMonth: 0, seasonEndMonth: 1 },
+          { id: 'WC_FINAL', name: 'Copa Mundial', country: 'Global', type: 'GLOBAL', tier: 1, continent: 'Global', confederation: 'FIFA', defaultPrizePool: 50000000, seasonStartMonth: 5, seasonEndMonth: 7 },
        );
 
        // Domestic cups
        this.competitions.push(
-          { id: 'COPA_REY', name: 'Copa del Rey', country: 'España', type: 'CUP', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 3000000 },
-          { id: 'FA_CUP', name: 'FA Cup', country: 'Inglaterra', type: 'CUP', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 3500000 },
-          { id: 'DFB_POKAL', name: 'DFB Pokal', country: 'Alemania', type: 'CUP', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 2500000 },
-          { id: 'COPA_ITALIA', name: 'Coppa Italia', country: 'Italia', type: 'CUP', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 2500000 },
+          { id: 'COPA_REY', name: 'Copa del Rey', country: 'España', type: 'CUP', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 3000000, seasonStartMonth: 7, seasonEndMonth: 4 },
+          { id: 'FA_CUP', name: 'FA Cup', country: 'Inglaterra', type: 'CUP', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 3500000, seasonStartMonth: 7, seasonEndMonth: 4 },
+          { id: 'DFB_POKAL', name: 'DFB Pokal', country: 'Alemania', type: 'CUP', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 2500000, seasonStartMonth: 7, seasonEndMonth: 4 },
+          { id: 'COPA_ITALIA', name: 'Coppa Italia', country: 'Italia', type: 'CUP', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 2500000, seasonStartMonth: 7, seasonEndMonth: 4 },
           { id: 'COPA_FRANCE', name: 'Coupe de France', country: 'Francia', type: 'CUP', tier: 2, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 2000000 },
           { id: 'COPA_LIB', name: 'Copa Libertadores', country: 'Sudamérica', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'América del Sur', confederation: 'CONMEBOL', defaultPrizePool: 8000000 },
           { id: 'COPA_SUD', name: 'Copa Sudamericana', country: 'Sudamérica', type: 'CONTINENTAL_SMALL', tier: 2, continent: 'América del Sur', confederation: 'CONMEBOL', defaultPrizePool: 3000000 },
@@ -324,7 +332,8 @@ export class WorldManager {
              boardConfidence: 65 + randomInt(0, 25),
               seasonObjective: def.rep > 4000 ? 'TOP_4' : def.rep > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION',
               shortlistedPlayerIds: [],
-              u21MinutesThisSeason: 0
+              u21MinutesThisSeason: 0,
+              records: { biggestVictory: null, biggestDefeat: null, longestWinStreak: 0, currentWinStreak: 0, highestScoringMatch: null, bestPlayerSeason: null }
           };
         this.clubs.push(club);
         this.injectRealPlayers(club);
@@ -472,12 +481,22 @@ export class WorldManager {
 
   generateStaffForClub(clubId: string) {
     const roles: StaffRole[] = ['HEAD_COACH', 'ASSISTANT_MANAGER', 'PHYSIO', 'FITNESS_COACH', 'RESERVE_MANAGER', 'YOUTH_MANAGER', 'SCOUT'];
+    const club = this.getClub(clubId);
+    const countryEconomy: Record<string, number> = {
+      'Argentina': 0.6, 'Brasil': 0.8, 'Uruguay': 0.6, 'Chile': 0.7, 'Colombia': 0.65,
+      'Inglaterra': 2.0, 'España': 1.8, 'Italia': 1.7, 'Alemania': 1.9, 'Francia': 1.8,
+      'Portugal': 1.2, 'Países Bajos': 1.5, 'Bélgica': 1.3, 'Turquía': 1.0, 'Rusia': 0.9,
+      'Estados Unidos': 2.2, 'México': 0.7, 'Japón': 1.6, 'China': 1.4, 'Arabia Saudita': 1.8,
+    };
+    const economyMult = club ? (countryEconomy[club.country] || 0.8) : 0.8;
+
     roles.forEach(role => {
       const s: Staff = {
         id: generateUUID(), name: `${STAFF_NAMES.names[randomInt(0, STAFF_NAMES.names.length-1)]} ${STAFF_NAMES.surnames[randomInt(0, STAFF_NAMES.surnames.length-1)]}`,
-        age: randomInt(35, 65), nationality: "Argentina", role: role, clubId: clubId,
+        age: randomInt(35, 65), nationality: club?.country || "Argentina", role: role, clubId: clubId,
         attributes: { coaching: weightedRandom(8, 20), judgingAbility: role === 'SCOUT' ? weightedRandom(12, 20) : weightedRandom(8, 20), judgingPotential: role === 'SCOUT' ? weightedRandom(12, 20) : weightedRandom(8, 20), tacticalKnowledge: weightedRandom(10, 20), adaptability: weightedRandom(5, 20), medical: role === 'PHYSIO' ? 18 : 5, physiotherapy: role === 'PHYSIO' ? 18 : 5, motivation: weightedRandom(8, 20), manManagement: weightedRandom(8, 20) },
-        salary: randomInt(3000, 15000), contractExpiry: new Date(2010, 5, 30), history: [],
+        salary: Math.round(randomInt(3000, 15000) * economyMult),
+        contractExpiry: new Date(2010, 5, 30), history: [],
         personality: ['LEADER', 'PASSIONATE', 'CALM', 'DISCIPLINARIAN', 'VISIONARY'][randomInt(0, 4)],
         morale: 70,
         reputation: 50,
@@ -594,6 +613,64 @@ export class WorldManager {
     });
 
     return players.filter(p => p.isStarter);
+  }
+
+  updateTacticalFamiliarity(clubId: string) {
+    const tactic = this.tactics[0];
+    if (!tactic) return;
+
+    const clubPlayers = this.getPlayersByClub(clubId);
+    clubPlayers.forEach(p => {
+      if (!p.isStarter) return;
+      const increment = p.tacticalFamiliarity < 50 ? 4 : p.tacticalFamiliarity < 80 ? 2 : 1;
+      p.tacticalFamiliarity = Math.min(100, p.tacticalFamiliarity + increment);
+    });
+
+    clubPlayers.forEach(p => {
+      if (!p.isStarter && p.tacticalFamiliarity > 30) {
+        p.tacticalFamiliarity = Math.max(30, p.tacticalFamiliarity - 1);
+      }
+    });
+  }
+
+  updateClubRecords(homeClubId: string, awayClubId: string, homeScore: number, awayScore: number, date: Date, competitionId: string) {
+    const homeClub = this.getClub(homeClubId);
+    const awayClub = this.getClub(awayClubId);
+    if (!homeClub || !awayClub) return;
+
+    const goalsTotal = homeScore + awayScore;
+    const goalDiff = Math.abs(homeScore - awayScore);
+
+    const updateRecord = (club: Club, opponentName: string, isWin: boolean, isHome: boolean) => {
+      const scored = isHome ? homeScore : awayScore;
+      const conceded = isHome ? awayScore : homeScore;
+
+      if (isWin && goalDiff > 0) {
+        if (!club.records.biggestVictory || goalDiff > Math.abs(club.records.biggestVictory.goalsFor - club.records.biggestVictory.goalsAgainst)) {
+          club.records.biggestVictory = { opponent: opponentName, goalsFor: scored, goalsAgainst: conceded, date, competition: competitionId };
+        }
+      } else if (!isWin && scored < conceded) {
+        if (!club.records.biggestDefeat || goalDiff > Math.abs(club.records.biggestDefeat.goalsAgainst - club.records.biggestDefeat.goalsFor)) {
+          club.records.biggestDefeat = { opponent: opponentName, goalsFor: scored, goalsAgainst: conceded, date, competition: competitionId };
+        }
+      }
+
+      if (goalsTotal > (club.records.highestScoringMatch?.goalsTotal || 0)) {
+        club.records.highestScoringMatch = { goalsTotal, opponent: opponentName, date };
+      }
+
+      if (isWin) {
+        club.records.currentWinStreak++;
+        if (club.records.currentWinStreak > club.records.longestWinStreak) {
+          club.records.longestWinStreak = club.records.currentWinStreak;
+        }
+      } else {
+        club.records.currentWinStreak = 0;
+      }
+    };
+
+    updateRecord(homeClub, awayClub.name, homeScore > awayScore, true);
+    updateRecord(awayClub, homeClub.name, awayScore > homeScore, false);
   }
 
   saveTactic(name: string, positions: number[], settings: TacticSettings) {
