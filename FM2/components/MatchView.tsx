@@ -556,7 +556,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
               <div className="text-[10px] text-slate-400 mt-1">{homeTeam.shortName} vs {awayTeam.shortName}</div>
             </div>
             {(() => {
-              const sorted = Object.entries(matchState.playerStats)
+              const sorted = Object.entries(matchState.playerStats as Record<string, PlayerMatchStats>)
                 .filter(([_, s]) => s.minutesPlayed > 0.1)
                 .sort(([, a], [, b]) => b.rating - a.rating)
                 .slice(0, 10);

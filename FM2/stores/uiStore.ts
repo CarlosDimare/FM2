@@ -69,6 +69,10 @@ interface UIStore {
   setSaveNameInput: (name: string) => void;
   setIsLoadModalOpen: (open: boolean) => void;
   setAvailableSaves: (saves: SaveMetadata[]) => void;
+  setVacationProgress: (progress: number) => void;
+  setVacationDetail: (detail: string) => void;
+  setVacationCancelled: (cancelled: boolean) => void;
+  resetVacationState: () => void;
   setIsAutoSaveEnabled: (enabled: boolean) => void;
 }
 

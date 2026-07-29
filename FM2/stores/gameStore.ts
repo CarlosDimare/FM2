@@ -16,6 +16,7 @@ interface GameStore {
   managerReputation: number;
   darkMode: boolean;
   deepSimLeagues: string[];
+  userClubId: string | null;
 
   setFixtures: (fixtures: Fixture[]) => void;
   setNextFixture: (f: Fixture | null) => void;
@@ -27,6 +28,7 @@ interface GameStore {
   setDeepSimLeagues: (leagues: string[]) => void;
   trackMatchResult: (userScore: number, opponentScore: number) => void;
   trackTitle: (title: string) => void;
+  setUserClubId: (id: string | null) => void;
 
   initSeasonFixtures: (startFrom: Date, clubId?: string) => Fixture[];
   updateNextFixture: (fixtures: Fixture[], date: Date, clubId: string) => Fixture | null;
@@ -52,6 +54,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   managerReputation: 50,
   darkMode: false,
   deepSimLeagues: [],
+  userClubId: null,
+
+  setUserClubId: (id) => set({ userClubId: id }),
 
   setFixtures: (fixtures) => set({ fixtures }),
   setNextFixture: (nextFixture) => set({ nextFixture }),
