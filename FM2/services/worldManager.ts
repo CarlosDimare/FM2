@@ -8,6 +8,7 @@ import { SLOT_CONFIG } from "./engine";
 import { sendTransferNotification, sendInboxNotification } from "./notifications";
 import { generatePlayer, generateRandomPlayer, getPlayerTag } from "./playerGenerator";
 import { useGameStore } from "../stores/gameStore";
+import { useUIStore } from "../stores/uiStore";
 import { loadConvertedClubs, loadConvertedPlayers, loadConvertedLeagues } from "../data/convertedDataLoader";
 
 export class WorldManager {
@@ -142,6 +143,11 @@ export class WorldManager {
             squad: 'SENIOR',
             positions: allPositions,
             primaryPosition: primaryPos,
+            secondaryPositions: allPositions.slice(1),
+            isStarter: false,
+            loyalty: randomInt(5, 20),
+            negotiationAttempts: 0,
+            isUnhappyWithContract: false,
             stats: {
                internal: {
                   velocidad: p.stats.internal.velocidad || 10,
@@ -174,8 +180,12 @@ export class WorldManager {
             fitness: 85 + randomInt(0, 15),
             morale: 60 + randomInt(0, 30),
             injury: null,
+            injuryHistory: [],
+            injuryProneness: randomInt(1, 10),
             yellowCards: 0,
             redCards: 0,
+            yellowCardsAccumulated: 0,
+            isTransferListed: false,
             goals: 0,
             assists: 0,
             matchesPlayed: 0,
@@ -197,7 +207,6 @@ export class WorldManager {
             bigMatchTemperament: randomInt(5, 20),
             seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 },
             statsByCompetition: {},
-            tags: [],
          };
          this.players.push(player);
       }
@@ -1990,8 +1999,7 @@ generateYouthIntake(year: number) {
   }
 
   getUserClub() {
-    const userClubId = useGameStore.getState().userClubId;
-    return userClubId ? this.getClub(userClubId) : undefined;
+    return useUIStore.getState().userClub || undefined;
   }
 }
 

@@ -811,6 +811,9 @@ const DEFAULT_TACTIC_SETTINGS: TacticSettings = {
   usePlaymaker: false,
   playOffside: false,
   counterAttack: false,
+  throughBalls: 'MIXED',
+  crossBall: 'MIXED',
+  longShots: 'MIXED',
   setPieces: {
     cornersLeft: 'Punto de Penalti',
     cornersRight: 'Punto de Penalti',

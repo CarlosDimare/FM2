@@ -1,5 +1,5 @@
 
-import { Player, Position, Club, Fixture, TableEntry, Competition, MatchStage, Staff, PlayerStats } from "../types";
+import { Player, Position, Club, Fixture, TableEntry, LeagueStanding, Competition, MatchStage, Staff, PlayerStats } from "../types";
 import { world } from "./worldManager";
 import { randomInt, generateUUID } from "./utils";
 import { CompetitionSummary } from "../components/SeasonSummaryModal";

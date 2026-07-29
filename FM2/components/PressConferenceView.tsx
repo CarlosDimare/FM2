@@ -139,13 +139,13 @@ export const PressConferenceView: React.FC<PressConferenceViewProps> = ({ club, 
   const starPlayerQuestion = useMemo(() => {
     if (context === 'POST_MATCH') return null;
     const topScorer = world.players
-      .filter(p => p.clubId === club.id && p.goals > 0)
-      .sort((a, b) => b.goals - a.goals)[0];
+      .filter(p => p.clubId === club.id && p.seasonStats.goals > 0)
+      .sort((a, b) => b.seasonStats.goals - a.seasonStats.goals)[0];
     
-    if (topScorer && topScorer.goals >= 5) {
+    if (topScorer && topScorer.seasonStats.goals >= 5) {
       return {
         id: 'star1',
-        question: `${topScorer.name} lleva ${topScorer.goals} goles esta temporada. ¿Es el jugador clave del equipo?`,
+        question: `${topScorer.name} lleva ${topScorer.seasonStats.goals} goles esta temporada. ¿Es el jugador clave del equipo?`,
         options: [
           { text: `Sin duda. ${topScorer.name} es fundamental para nuestro juego.`, moraleEffect: 4, confidenceEffect: 2, reaction: 'POSITIVE' as const },
           { text: "Todos los jugadores son importantes. No dependemos de uno solo.", moraleEffect: 1, confidenceEffect: 1, reaction: 'NEUTRAL' as const },

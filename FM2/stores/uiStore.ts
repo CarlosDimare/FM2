@@ -58,6 +58,10 @@ interface UIStore {
   setVacationTargetDate: (date: string) => void;
   setIsSimulating: (sim: boolean) => void;
   setIsInVacation: (inVacation: boolean) => void;
+  setVacationProgress: (progress: number) => void;
+  setVacationDetail: (detail: string) => void;
+  setVacationCancelled: (cancelled: boolean) => void;
+  resetVacationState: () => void;
   setSeasonSummary: (summary: CompetitionSummary[] | null) => void;
   setUserWonLeague: (won: boolean) => void;
   setViewLeagueId: (id: string | null) => void;
