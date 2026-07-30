@@ -167,6 +167,15 @@
 - Selección de liga 2 pasos: país → liga (SETUP_COUNTRY con banderas, SETUP_LEAGUE filtrado)
 - Player flags: COUNTRY_CODES 33 países, NATIONS 26 países, Perú normalizado con tilde
 - Performance: club caching con TTL (`playersByClubCache`, `clubByIdCache`), `invalidateClubCache()`
+- **8 Features nuevos:**
+  - League Stats: pestaña con goleadores, asistencias y mejor XI por posición en LeagueTable
+  - Formaciones UI: grid visual de mini-canchas en TacticsView (reemplaza dropdown)
+  - Comparar jugadores: modal lado a lado con atributos, stats, forma y barras de comparación
+  - Bracket visual: árbol de eliminación directa en TournamentHub para copas/knockouts
+  - Free agents: pestaña "Libres" en MarketView con pool de jugadores sin club
+  - Awards: pestaña "Premios" en TournamentHub (goleador, asistidor, mejor calificación, mejor joven)
+  - Historial financiero: tabla de últimos 12 meses en EconomyView (ingresos, egresos, neto, balance)
+  - Match speed: botones 1x/2x/4x en barra del partido para controlar velocidad de simulación
 - Fix ClubReport no conectado en App.tsx (case 'CLUB_REPORT' agregado)
 - Fix `primaryPosition` añadida a interfaz Player (asignada en worldManager pero invisible a TS)
 - Fix staff.history: se popula al final de cada temporada en processEndOfSeason
