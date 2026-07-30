@@ -20,7 +20,8 @@ export class WorldManager {
   inbox: InboxMessage[] = [];
   mediaNews: MediaNews[] = [];
   matchSettings: MatchSettings = {
-     pauseAtHalftime: true
+     pauseAtHalftime: true,
+     speedMultiplier: 1
   };
   scoutingReports: ScoutingReport[] = [];
   interactionLog: InteractionLogEntry[] = [];
@@ -98,14 +99,15 @@ export class WorldManager {
             country: c.country,
             primaryColor: this.hexToTailwind(c.primaryColor),
             secondaryColor: this.hexToTailwind(c.secondaryColor),
-            finances: {
-               balance: c.reputation * 2500,
-               transferBudget: c.reputation * 800,
-               wageBudget: c.reputation * 80,
-               monthlyIncome: c.reputation * 200,
-               monthlyExpenses: 0,
-               scoutingBudget: c.reputation * 100,
-            },
+             finances: {
+                balance: c.reputation * 2500,
+                transferBudget: c.reputation * 800,
+                wageBudget: c.reputation * 80,
+                monthlyIncome: c.reputation * 200,
+                monthlyExpenses: 0,
+                scoutingBudget: c.reputation * 100,
+                monthlyHistory: [],
+             },
             reputation: c.reputation,
             stadium: `${c.name} Stadium`,
             stadiumCapacity: c.reputation >= 8000 ? 50000 : c.reputation >= 7000 ? 30000 : c.reputation >= 6000 ? 20000 : c.reputation >= 5000 ? 12000 : 8000,
@@ -318,14 +320,15 @@ export class WorldManager {
            country: def.country,
            primaryColor: def.pCol,
            secondaryColor: def.sCol,
-            finances: {
-               balance: def.rep * 2500,
-               transferBudget: def.rep * 800,
-               wageBudget: def.rep * 80,
-               monthlyIncome: def.rep * 200,
-               monthlyExpenses: 0,
-               scoutingBudget: def.rep * 100
-            },
+             finances: {
+                balance: def.rep * 2500,
+                transferBudget: def.rep * 800,
+                wageBudget: def.rep * 80,
+                monthlyIncome: def.rep * 200,
+                monthlyExpenses: 0,
+                scoutingBudget: def.rep * 100,
+                monthlyHistory: []
+             },
             reputation: def.rep,
             stadium: def.stadium,
             stadiumCapacity: def.rep >= 8000 ? 50000 : def.rep >= 7000 ? 30000 : def.rep >= 6000 ? 20000 : def.rep >= 5000 ? 12000 : 8000,

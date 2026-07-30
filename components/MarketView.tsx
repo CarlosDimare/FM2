@@ -12,10 +12,14 @@ interface MarketViewProps {
 }
 
 export const MarketView: React.FC<MarketViewProps> = ({ onSelectPlayer, userClubId, currentDate }) => {
-  const [filter, setFilter] = useState<'ALL' | 'TRANSFERABLE' | 'LOANABLE'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'TRANSFERABLE' | 'LOANABLE' | 'FREE'>('ALL');
   const [search, setSearch] = useState('');
 
   const marketPlayers = useMemo(() => {
+    if (filter === 'FREE') {
+      return world.players.filter(p => p.clubId === 'FREE_AGENT' && p.name.toLowerCase().includes(search.toLowerCase()))
+        .sort((a,b) => b.currentAbility - a.currentAbility);
+    }
     return world.players.filter(p => {
       const isListed = p.transferStatus !== 'NONE';
       const matchesFilter = filter === 'ALL' || p.transferStatus === filter;
@@ -33,12 +37,13 @@ export const MarketView: React.FC<MarketViewProps> = ({ onSelectPlayer, userClub
               <p className="text-slate-600 font-bold text-[9px] md:text-[10px] uppercase tracking-widest italic">Buscando el próximo refuerzo estrella.</p>
            </div>
            
-           <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm w-full md:w-auto">
-              {[
-                { id: 'ALL', label: 'Todos' },
-                { id: 'TRANSFERABLE', label: 'Transf.' },
-                { id: 'LOANABLE', label: 'Cedibles' }
-              ].map(f => (
+            <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm w-full md:w-auto">
+               {[
+                 { id: 'ALL', label: 'Todos' },
+                 { id: 'TRANSFERABLE', label: 'Transf.' },
+                 { id: 'LOANABLE', label: 'Cedibles' },
+                 { id: 'FREE', label: 'Libres' }
+               ].map(f => (
                  <button 
                     key={f.id}
                     onClick={() => setFilter(f.id as any)}
@@ -84,12 +89,16 @@ export const MarketView: React.FC<MarketViewProps> = ({ onSelectPlayer, userClub
                      </div>
                   </FMTableCell>
                   <FMTableCell className="text-slate-700 text-[10px] italic">
-                     {world.getClub(p.clubId)?.name}
+                     {filter === 'FREE' ? <span className="text-slate-400">Sin club</span> : world.getClub(p.clubId)?.name}
                   </FMTableCell>
                   <FMTableCell className="text-center">
-                     <span className={`px-1.5 py-0.5 rounded-[1px] text-[8px] font-bold uppercase tracking-tighter border ${p.transferStatus === 'TRANSFERABLE' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                        {p.transferStatus === 'TRANSFERABLE' ? 'TRN' : 'CED'}
-                     </span>
+                     {filter === 'FREE' ? (
+                        <span className="px-1.5 py-0.5 rounded-[1px] text-[8px] font-bold uppercase tracking-tighter border bg-slate-50 text-slate-600 border-slate-200">LIBRE</span>
+                     ) : (
+                        <span className={`px-1.5 py-0.5 rounded-[1px] text-[8px] font-bold uppercase tracking-tighter border ${p.transferStatus === 'TRANSFERABLE' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                           {p.transferStatus === 'TRANSFERABLE' ? 'TRN' : 'CED'}
+                        </span>
+                     )}
                   </FMTableCell>
                   <FMTableCell className="text-right font-bold text-slate-900" isNumber>
                      £{(p.value / 1000000).toFixed(1)}M

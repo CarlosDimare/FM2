@@ -374,15 +374,30 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       <div className="flex flex-col h-full bg-[#d4dcd4] overflow-hidden select-none" onContextMenu={e => e.preventDefault()}>
          {/* Tactic Toolbar - Tier 1 */}
          <div className="bg-[#e8ece8] border-b border-[#a0b0a0] p-2 flex flex-col gap-2 z-30 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-                <select className="bg-white border border-[#a0b0a0] text-[10px] font-black px-3 py-2 uppercase rounded-sm shadow-inner flex-1 max-w-[200px]" 
-                   value={selectedTacticId} 
-                   onChange={(e) => handleTacticChange(e.target.value)}
-                >
-                   {world.getTactics().map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
-                
-                <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-inner">
+             <div className="flex items-center justify-between gap-2">
+                 <div className="flex gap-1.5 flex-1 overflow-x-auto scrollbar-hide py-1">
+                    {world.getTactics().map(t => {
+                       const isActive = t.id === selectedTacticId;
+                       return (
+                          <button key={t.id} onClick={() => handleTacticChange(t.id)}
+                             className={`relative flex-shrink-0 w-[72px] h-[52px] rounded-sm border transition-all flex flex-col items-center justify-center ${isActive ? 'border-[#3a4a3a] bg-white shadow-md ring-1 ring-[#3a4a3a]' : 'border-[#a0b0a0] bg-[#f0f4f0] hover:bg-white hover:border-[#3a4a3a]'}`}>
+                             <svg viewBox="0 0 100 70" className="w-full h-full p-0.5">
+                                <rect x="0" y="0" width="100" height="70" fill="#4a7c3f" rx="2" opacity="0.15" />
+                                <line x1="0" y1="35" x2="100" y2="35" stroke="#4a7c3f" strokeWidth="0.5" opacity="0.3" />
+                                <rect x="0" y="0" width="100" height="70" fill="none" stroke="#4a7c3f" strokeWidth="1" rx="2" opacity="0.4" />
+                                {t.positions.map(slotIdx => {
+                                   const coords = SLOT_COORDS[slotIdx];
+                                   if (!coords) return null;
+                                   return <circle key={slotIdx} cx={coords.l} cy={70 - (coords.t * 0.7)} r="3" fill={isActive ? '#3a4a3a' : '#555'} opacity={isActive ? 1 : 0.7} />;
+                                })}
+                             </svg>
+                             <span className={`text-[7px] font-black uppercase tracking-tight leading-none mt-0.5 ${isActive ? 'text-[#3a4a3a]' : 'text-slate-500'}`}>{t.id}</span>
+                          </button>
+                       );
+                    })}
+                 </div>
+                 
+                 <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-inner">
                     <button onClick={() => setViewMode('PITCH')} className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${viewMode === 'PITCH' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>
                         <LayoutGrid size={12} /> <span className="hidden sm:inline">DIBUJO</span>
                     </button>

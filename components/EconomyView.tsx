@@ -2,8 +2,8 @@
 import React from 'react';
 import { Club } from '../types';
 import { world } from '../services/worldManager';
-import { Wallet, TrendingUp, TrendingDown, PieChart, Landmark, PiggyBank, Info } from 'lucide-react';
-import { FMBox } from './FMUI';
+import { Wallet, TrendingUp, TrendingDown, PieChart, Landmark, PiggyBank, Info, History } from 'lucide-react';
+import { FMBox, FMTable, FMTableCell } from './FMUI';
 
 interface EconomyViewProps {
   club: Club;
@@ -149,8 +149,26 @@ export const EconomyView: React.FC<EconomyViewProps> = ({ club }) => {
                   <span className="text-[9px] font-black text-slate-700 uppercase">{currentSalaries.toLocaleString()} / £{wageBudget.toLocaleString()}</span>
                </div>
             </div>
-          </div>
+           </div>
         </FMBox>
+
+        {club.finances.monthlyHistory.length > 0 && (
+          <FMBox title="Historial Mensual" noPadding className="mt-4">
+            <FMTable headers={['Mes', 'Ingresos', 'Egresos', 'Neto', 'Balance']} colWidths={['80px', 'auto', 'auto', 'auto', 'auto']}>
+              {[...club.finances.monthlyHistory].reverse().map((entry, i) => (
+                <tr key={i} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
+                  <FMTableCell className="font-bold text-slate-700 text-[10px]">{entry.month}</FMTableCell>
+                  <FMTableCell className="text-green-700 text-[10px]" isNumber>£{entry.income.toLocaleString()}</FMTableCell>
+                  <FMTableCell className="text-red-700 text-[10px]" isNumber>£{entry.expenses.toLocaleString()}</FMTableCell>
+                  <FMTableCell className={`font-black text-[10px] ${entry.income - entry.expenses >= 0 ? 'text-green-700' : 'text-red-700'}`} isNumber>
+                    {entry.income - entry.expenses >= 0 ? '+' : ''}£{(entry.income - entry.expenses).toLocaleString()}
+                  </FMTableCell>
+                  <FMTableCell className="font-bold text-slate-900 text-[10px]" isNumber>£{entry.balance.toLocaleString()}</FMTableCell>
+                </tr>
+              ))}
+            </FMTable>
+          </FMBox>
+        )}
       </div>
     </div>
   );

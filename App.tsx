@@ -11,6 +11,7 @@ import { TrainingView } from './components/TrainingView';
 import { ScoutingView } from './components/ScoutingView';
 import { BoardView } from './components/BoardView';
 import { ClubReport } from './components/ClubReport';
+import { PlayerCompareModal } from './components/PlayerCompareModal';
 import { PeopleHub } from './components/PeopleHub';
 import { PressConferenceView } from './components/PressConferenceView';
 import { PreMatchView } from './components/PreMatchView';
@@ -80,9 +81,17 @@ const {
     setCurrentDate, setSeasonEndDate, setHasSave,
     setIsSaveModalOpen, setSaveNameInput, setIsLoadModalOpen, setAvailableSaves,
     isAutoSaveEnabled, setIsAutoSaveEnabled,
+    comparePlayerA, comparePlayerB, setComparePlayerA, setComparePlayerB,
   } = useUIStore();
 
   const { fixtures, nextFixture, setFixtures, setNextFixture, initSeasonFixtures, updateNextFixture } = useGameStore();
+
+  useEffect(() => {
+    if (comparePlayerA && selectedPlayer && selectedPlayer.id !== comparePlayerA.id && !comparePlayerB) {
+      setComparePlayerB(selectedPlayer);
+      setSelectedPlayer(null);
+    }
+  }, [selectedPlayer, comparePlayerA, comparePlayerB]);
 
   const getMatchSquad = (clubId: string) => {
     const clubPlayers = world.getPlayersByClub(clubId);
@@ -1399,6 +1408,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       )}
 
       {selectedPlayer && userClub && <PlayerModal player={selectedPlayer} userClubId={userClub.id} onClose={() => setSelectedPlayer(null)} currentDate={currentDate} />}
+      {comparePlayerA && comparePlayerB && <PlayerCompareModal playerA={comparePlayerA} playerB={comparePlayerB} onClose={() => { setComparePlayerA(null); setComparePlayerB(null); }} />}
       {contextMenu && <PlayerContextMenu player={contextMenu.player} x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} currentDate={currentDate} />}
       {seasonSummary && <SeasonSummaryModal summary={seasonSummary} userWonLeague={userWonLeague} onClose={() => { setSeasonSummary(null); setUserWonLeague(false); }} />}
       {currentView !== 'MATCH' && <BottomNav />}

@@ -1,8 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { TableEntry, Competition, SquadType, Player, Fixture } from '../types';
+import { TableEntry, Competition, SquadType, Player, Fixture, Position } from '../types';
 import { world } from '../services/worldManager';
-// Fix: Removed non-existent FMTableResponsive import
 import { FMBox, FMButton, FMTable, FMTableCell } from './FMUI';
 
 interface LeagueTableProps {
@@ -19,6 +18,7 @@ interface LeagueTableProps {
 export const LeagueTable: React.FC<LeagueTableProps> = ({ 
    entries, userClubId, allLeagues, currentLeagueId, onLeagueChange, currentSquadType = 'SENIOR', onSquadTypeChange
 }) => {
+   const [statsTab, setStatsTab] = useState<'SCORERS' | 'ASSISTS' | 'BEST_XI'>('SCORERS');
    
    const leaguePlayers = useMemo(() => {
       if (!currentLeagueId) return [];
@@ -36,9 +36,45 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
       return p.statsByCompetition[currentLeagueId].goals;
    };
 
-   const topScorers = useMemo(() => {
-      return [...leaguePlayers].sort((a, b) => getCompGoals(b) - getCompGoals(a)).slice(0, 20);
-   }, [leaguePlayers, currentLeagueId]);
+    const topScorers = useMemo(() => {
+       return [...leaguePlayers].sort((a, b) => getCompGoals(b) - getCompGoals(a)).slice(0, 20);
+    }, [leaguePlayers, currentLeagueId]);
+
+    const getCompAssists = (p: Player) => {
+       if (!currentLeagueId || !p.statsByCompetition[currentLeagueId]) return 0;
+       return p.statsByCompetition[currentLeagueId].assists;
+    };
+
+    const topAssisters = useMemo(() => {
+       return [...leaguePlayers].sort((a, b) => getCompAssists(b) - getCompAssists(a)).slice(0, 20);
+    }, [leaguePlayers, currentLeagueId]);
+
+    const getCompRating = (p: Player) => {
+       if (!currentLeagueId || !p.statsByCompetition[currentLeagueId]) return 0;
+       const s = p.statsByCompetition[currentLeagueId];
+       return s.appearances > 0 ? s.totalRating / s.appearances : 0;
+    };
+
+    const bestXI = useMemo(() => {
+       const posMap: Record<string, Position[]> = {
+          GK: [Position.GK],
+          DF: [Position.DC, Position.DL, Position.DR, Position.SW],
+          MF: [Position.DM, Position.MC, Position.ML, Position.MR, Position.AMC, Position.AML, Position.AMR],
+          FW: [Position.ST, Position.FW],
+       };
+       const best: Player[] = [];
+       Object.entries(posMap).forEach(([, positions]) => {
+          const eligible = leaguePlayers.filter(p => p.positions.some(pos => positions.includes(pos)) && getCompRating(p) > 0);
+          if (eligible.length > 0) {
+             const top = eligible.sort((a, b) => getCompRating(b) - getCompRating(a))[0];
+             if (!best.find(bp => bp.id === top.id)) best.push(top);
+          }
+       });
+       return best.sort((a, b) => {
+          const order = [Position.GK, Position.DC, Position.DL, Position.DR, Position.DM, Position.MC, Position.ML, Position.MR, Position.AMC, Position.AML, Position.AMR, Position.ST, Position.FW];
+          return order.indexOf(a.positions[0]) - order.indexOf(b.positions[0]);
+       }).slice(0, 11);
+    }, [leaguePlayers, currentLeagueId]);
 
    const getRowClass = (index: number) => {
       if (currentLeagueId === 'L_ARG_1') {
@@ -171,19 +207,60 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
              </div>
 
              <div className="h-full flex flex-col min-h-0">
-                 <FMBox title="Goleadores del Torneo" className="h-full flex flex-col overflow-hidden" noPadding>
-                    <FMTable headers={['#', 'Nombre', 'Goles']} colWidths={['35px', 'auto', '45px']}>
-                        {topScorers.filter(p => getCompGoals(p) > 0).map((p, i) => (
-                            <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc]`}>
-                                <FMTableCell className="text-center text-slate-400 font-bold">{i + 1}</FMTableCell>
-                                <FMTableCell className="truncate max-w-[100px] font-bold">{p.name}</FMTableCell>
-                                <FMTableCell className="text-center font-black text-green-700" isNumber>{getCompGoals(p)}</FMTableCell>
-                            </tr>
-                        ))}
-                        {topScorers.every(p => getCompGoals(p) === 0) && (
-                            <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin goles registrados</td></tr>
-                        )}
-                    </FMTable>
+                 <FMBox title="Estadísticas del Torneo" className="h-full flex flex-col overflow-hidden" noPadding>
+                    <div className="flex bg-[#bcc8bc] p-0.5 border-b border-[#a0b0a0] shrink-0">
+                       {([['SCORERS', 'Goleadores'], ['ASSISTS', 'Asistencias'], ['BEST_XI', 'Mejor XI']] as const).map(([key, label]) => (
+                          <button key={key} onClick={() => setStatsTab(key)} className={`flex-1 px-2 py-1.5 text-[8px] font-black uppercase transition-all rounded-[1px] ${statsTab === key ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}>{label}</button>
+                       ))}
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                       {statsTab === 'SCORERS' && (
+                          <FMTable headers={['#', 'Nombre', 'Goles']} colWidths={['35px', 'auto', '45px']}>
+                             {topScorers.filter(p => getCompGoals(p) > 0).map((p, i) => (
+                                <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc]`}>
+                                   <FMTableCell className="text-center text-slate-400 font-bold">{i + 1}</FMTableCell>
+                                   <FMTableCell className="truncate max-w-[100px] font-bold">{p.name}</FMTableCell>
+                                   <FMTableCell className="text-center font-black text-green-700" isNumber>{getCompGoals(p)}</FMTableCell>
+                                </tr>
+                             ))}
+                             {topScorers.every(p => getCompGoals(p) === 0) && (
+                                <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin goles registrados</td></tr>
+                             )}
+                          </FMTable>
+                       )}
+                       {statsTab === 'ASSISTS' && (
+                          <FMTable headers={['#', 'Nombre', 'Asist.']} colWidths={['35px', 'auto', '45px']}>
+                             {topAssisters.filter(p => getCompAssists(p) > 0).map((p, i) => (
+                                <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc]`}>
+                                   <FMTableCell className="text-center text-slate-400 font-bold">{i + 1}</FMTableCell>
+                                   <FMTableCell className="truncate max-w-[100px] font-bold">{p.name}</FMTableCell>
+                                   <FMTableCell className="text-center font-black text-blue-700" isNumber>{getCompAssists(p)}</FMTableCell>
+                                </tr>
+                             ))}
+                             {topAssisters.every(p => getCompAssists(p) === 0) && (
+                                <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin asistencias registradas</td></tr>
+                             )}
+                          </FMTable>
+                       )}
+                       {statsTab === 'BEST_XI' && (
+                          <FMTable headers={['Pos', 'Nombre', 'Club', 'Rating']} colWidths={['40px', 'auto', 'auto', '50px']}>
+                             {bestXI.map((p, i) => {
+                                const club = world.getClub(p.clubId);
+                                return (
+                                <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc]`}>
+                                   <FMTableCell className="text-center font-black text-[#3a4a3a]">{p.positions[0]}</FMTableCell>
+                                   <FMTableCell className="truncate max-w-[80px] font-bold">{p.name}</FMTableCell>
+                                   <FMTableCell className="truncate max-w-[70px] text-[9px] text-slate-500">{club?.shortName || '-'}</FMTableCell>
+                                   <FMTableCell className="text-center font-black text-green-700" isNumber>{getCompRating(p).toFixed(2)}</FMTableCell>
+                                </tr>
+                                );
+                             })}
+                             {bestXI.length === 0 && (
+                                <tr><td colSpan={4} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin datos de rating</td></tr>
+                             )}
+                          </FMTable>
+                       )}
+                    </div>
                  </FMBox>
              </div>
          </div>

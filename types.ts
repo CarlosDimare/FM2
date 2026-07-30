@@ -167,6 +167,7 @@ export interface Club {
     monthlyIncome: number;
     monthlyExpenses: number;
     scoutingBudget: number;
+    monthlyHistory: { month: string; income: number; expenses: number; balance: number }[];
   };
   reputation: number;
   stadium: string;
@@ -511,6 +512,7 @@ export interface TransferOffer {
 
 export interface MatchSettings {
   pauseAtHalftime: boolean;
+  speedMultiplier: number;
 }
 
 export type DialogueTone = 'MILD' | 'MODERATE' | 'AGGRESSIVE';

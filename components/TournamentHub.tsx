@@ -42,6 +42,7 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
   const isContinental = competition.type.startsWith('CONTINENTAL');
   const isNationalTeam = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(competition.id);
   const hasGroupStage = isContinental || ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(competition.id);
+  const hasBracket = isCup || isContinental;
 
   // Stats Logic
   const getCompStats = (p: Player) => p.statsByCompetition[competition.id] || { goals: 0, assists: 0, totalRating: 0, appearances: 0 };
@@ -60,6 +61,7 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
   const topScorers = useMemo(() => [...statsPlayers].sort((a,b) => getCompStats(b).goals - getCompStats(a).goals).slice(0, 15), [statsPlayers]);
   const topAssisters = useMemo(() => [...statsPlayers].sort((a,b) => getCompStats(b).assists - getCompStats(a).assists).slice(0, 15), [statsPlayers]);
   const topRated = useMemo(() => [...statsPlayers].filter(p => getCompStats(p).appearances >= 2).sort((a,b) => (getCompStats(b).totalRating/getCompStats(b).appearances) - (getCompStats(a).totalRating/getCompStats(a).appearances)).slice(0, 15), [statsPlayers]);
+  const bestYoung = useMemo(() => [...statsPlayers].filter(p => p.age <= 23 && getCompStats(p).appearances >= 2).sort((a,b) => (getCompStats(b).totalRating/getCompStats(b).appearances) - (getCompStats(a).totalRating/getCompStats(a).appearances)).slice(0, 10), [statsPlayers]);
 
   // National team group display
   const groupCount = isNationalTeam ? (competition.id === 'WC_FINAL' || competition.id === 'COPA' || competition.id === 'EURO' ? 8 : 6) : 8;
@@ -81,7 +83,9 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
           {[
             { id: 'TABLE', icon: ListOrdered, label: 'Tabla' },
             { id: 'CALENDAR', icon: Calendar, label: 'Partidos' },
-            { id: 'STATS', icon: Star, label: 'Estad.' }
+            ...(hasBracket ? [{ id: 'BRACKET', icon: LayoutGrid, label: 'Bracket' }] : []),
+            { id: 'STATS', icon: Star, label: 'Estad.' },
+            { id: 'AWARDS', icon: Trophy, label: 'Premios' }
           ].map((tab) => (
             <button 
               key={tab.id}
@@ -178,6 +182,12 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
            </FMBox>
         )}
 
+        {activeTab === 'BRACKET' && hasBracket && (
+           <div className="h-full overflow-auto p-2">
+              <BracketView competitionId={competition.id} fixtures={competitionFixtures} userClubId={userClubId} />
+           </div>
+        )}
+
         {activeTab === 'STATS' && (
            <div className="h-full overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-3 custom-scroll">
               <FMBox title="Goleadores" noPadding>
@@ -235,11 +245,127 @@ export const TournamentHub: React.FC<TournamentHubProps> = ({ competition, fixtu
                        );
                     })}
                     {topRated.length === 0 && <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin datos</td></tr>}
-                 </FMTable>
-              </FMBox>
-           </div>
-        )}
+                  </FMTable>
+               </FMBox>
+            </div>
+         )}
+
+         {activeTab === 'AWARDS' && (
+            <div className="h-full overflow-y-auto p-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+               <FMBox title="Goleador" noPadding>
+                  {topScorers.length > 0 && topScorers[0].statsByCompetition[competition.id]?.goals > 0 ? (
+                     <div className="p-4 bg-white flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center"><Goal size={20} className="text-amber-600" /></div>
+                        <div>
+                           <p className="font-black text-slate-900 text-sm">{topScorers[0].name}</p>
+                           <p className="text-[9px] text-slate-500 font-bold uppercase">{world.getClub(topScorers[0].clubId)?.name}</p>
+                           <p className="text-[10px] font-black text-amber-700">{getCompStats(topScorers[0]).goals} goles</p>
+                        </div>
+                     </div>
+                  ) : <div className="p-6 text-center text-slate-400 italic text-[10px]">Sin datos</div>}
+               </FMBox>
+
+               <FMBox title="Asistidor" noPadding>
+                  {topAssisters.length > 0 && topAssisters[0].statsByCompetition[competition.id]?.assists > 0 ? (
+                     <div className="p-4 bg-white flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-blue-100 border-2 border-blue-400 flex items-center justify-center"><Zap size={20} className="text-blue-600" /></div>
+                        <div>
+                           <p className="font-black text-slate-900 text-sm">{topAssisters[0].name}</p>
+                           <p className="text-[9px] text-slate-500 font-bold uppercase">{world.getClub(topAssisters[0].clubId)?.name}</p>
+                           <p className="text-[10px] font-black text-blue-700">{getCompStats(topAssisters[0]).assists} asistencias</p>
+                        </div>
+                     </div>
+                  ) : <div className="p-6 text-center text-slate-400 italic text-[10px]">Sin datos</div>}
+               </FMBox>
+
+               <FMBox title="Mejor Calificación" noPadding>
+                  {topRated.length > 0 ? (
+                     <div className="p-4 bg-white flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-green-100 border-2 border-green-400 flex items-center justify-center"><Star size={20} className="text-green-600" /></div>
+                        <div>
+                           <p className="font-black text-slate-900 text-sm">{topRated[0].name}</p>
+                           <p className="text-[9px] text-slate-500 font-bold uppercase">{world.getClub(topRated[0].clubId)?.name}</p>
+                           <p className="text-[10px] font-black text-green-700">{(getCompStats(topRated[0]).totalRating / getCompStats(topRated[0]).appearances).toFixed(2)} media</p>
+                        </div>
+                     </div>
+                  ) : <div className="p-6 text-center text-slate-400 italic text-[10px]">Sin datos</div>}
+               </FMBox>
+
+               <FMBox title="Mejor Jugador Joven (≤23)" noPadding>
+                  {bestYoung.length > 0 ? (
+                     <div className="p-4 bg-white flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-purple-100 border-2 border-purple-400 flex items-center justify-center"><UserCheck size={20} className="text-purple-600" /></div>
+                        <div>
+                           <p className="font-black text-slate-900 text-sm">{bestYoung[0].name}</p>
+                           <p className="text-[9px] text-slate-500 font-bold uppercase">{world.getClub(bestYoung[0].clubId)?.name} · {bestYoung[0].age} años</p>
+                           <p className="text-[10px] font-black text-purple-700">{(getCompStats(bestYoung[0]).totalRating / getCompStats(bestYoung[0]).appearances).toFixed(2)} media</p>
+                        </div>
+                     </div>
+                  ) : <div className="p-6 text-center text-slate-400 italic text-[10px]">Sin datos</div>}
+               </FMBox>
+            </div>
+         )}
       </div>
+    </div>
+  );
+};
+
+const STAGE_ORDER: string[] = ['ROUND_OF_32', 'ROUND_OF_16', 'QUARTER_FINAL', 'SEMI_FINAL', 'FINAL'];
+const STAGE_LABELS: Record<string, string> = { ROUND_OF_32: 'Octavos', ROUND_OF_16: 'Dieciseisavos', QUARTER_FINAL: 'Cuartos', SEMI_FINAL: 'Semifinal', FINAL: 'Final' };
+
+const BracketView: React.FC<{ competitionId: string; fixtures: Fixture[]; userClubId: string }> = ({ competitionId, fixtures, userClubId }) => {
+  const stages = useMemo(() => {
+    const grouped: Record<string, Fixture[]> = {};
+    STAGE_ORDER.forEach(s => { grouped[s] = fixtures.filter(f => f.stage === s).sort((a, b) => a.date.getTime() - b.date.getTime()); });
+    return grouped;
+  }, [fixtures]);
+
+  const availableStages = STAGE_ORDER.filter(s => stages[s] && stages[s].length > 0);
+  if (availableStages.length === 0) {
+    return <div className="h-full flex items-center justify-center text-slate-400 italic text-[10px] uppercase font-bold">No hay cruces de eliminación definidos aún.</div>;
+  }
+
+  return (
+    <div className="flex gap-3 h-full min-w-max pb-4">
+      {availableStages.map((stage, stageIdx) => {
+        const matches = stages[stage];
+        return (
+          <div key={stage} className="flex flex-col gap-2" style={{ minWidth: '200px' }}>
+            <div className="text-center py-1.5 bg-[#3a4a3a] text-white text-[9px] font-black uppercase tracking-widest rounded-sm sticky top-0 z-10">
+              {STAGE_LABELS[stage] || stage}
+            </div>
+            <div className="flex-1 flex flex-col justify-around gap-2">
+              {matches.map((f, i) => {
+                const homeName = getTeamName(f.homeTeamId);
+                const awayName = getTeamName(f.awayTeamId);
+                const isUserMatch = f.homeTeamId === userClubId || f.awayTeamId === userClubId;
+                const homeWon = f.played && (f.homeScore || 0) > (f.awayScore || 0);
+                const awayWon = f.played && (f.awayScore || 0) > (f.homeScore || 0);
+                const isPenalty = f.penaltyHome !== undefined;
+
+                return (
+                  <div key={f.id} className={`rounded-sm border ${isUserMatch ? 'border-blue-500 bg-blue-50' : 'border-[#a0b0a0] bg-white'} shadow-sm`}>
+                    <div className={`flex items-center justify-between px-2 py-1 ${homeWon ? 'bg-green-50' : ''}`}>
+                       <span className={`text-[9px] font-bold truncate max-w-[100px] ${homeWon ? 'text-green-700 font-black' : 'text-slate-700'}`}>{homeName}</span>
+                       <span className={`text-[10px] font-black ${homeWon ? 'text-green-700' : 'text-slate-500'}`}>{f.played ? f.homeScore : '-'}</span>
+                    </div>
+                    <div className="border-t border-[#a0b0a0]/30" />
+                    <div className={`flex items-center justify-between px-2 py-1 ${awayWon ? 'bg-green-50' : ''}`}>
+                       <span className={`text-[9px] font-bold truncate max-w-[100px] ${awayWon ? 'text-green-700 font-black' : 'text-slate-700'}`}>{awayName}</span>
+                       <span className={`text-[10px] font-black ${awayWon ? 'text-green-700' : 'text-slate-500'}`}>{f.played ? f.awayScore : '-'}</span>
+                    </div>
+                    {isPenalty && (
+                       <div className="text-center text-[7px] font-black text-amber-600 bg-amber-50 border-t border-amber-200 py-0.5">
+                          Penales: {f.penaltyHome} - {f.penaltyAway}
+                       </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

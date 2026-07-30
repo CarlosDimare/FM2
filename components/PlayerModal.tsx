@@ -10,6 +10,7 @@ import { X, MessageSquare, Activity, Map, FileText, History, Minus, ShieldAlert,
 import { FMTable, FMTableCell, FMButton, FMBox } from './FMUI';
 import { getFlagUrl } from '../data/static';
 import { getPlayerTag } from '../services/playerGenerator';
+import { useUIStore } from '../stores/uiStore';
 
 interface PlayerModalProps {
   player: Player | null;
@@ -118,6 +119,8 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
   const [expandedVisible, setExpandedVisible] = useState<string | null>(null);
   const [showRenewalModal, setShowRenewalModal] = useState(false);
   
+  const { comparePlayerA, setComparePlayerA, setComparePlayerB } = useUIStore();
+  
   // Dialogue state
   const [dialogueType, setDialogueType] = useState<DialogueType>('PRAISE_FORM');
   const [dialogueTone, setDialogueTone] = useState<DialogueTone>('MODERATE');
@@ -192,7 +195,10 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                 </div>
              </div>
 
-             <button onClick={onClose} className={`p-1 transition-colors shrink-0 ${isHeaderLight ? 'text-slate-400 hover:text-red-600' : 'text-white/40 hover:text-white'}`}><X size={20} md:size={24} /></button>
+             <div className="flex items-center gap-1 shrink-0">
+                <button onClick={() => { setComparePlayerA(player); }} className={`p-1 transition-colors ${isHeaderLight ? 'text-slate-400 hover:text-blue-600' : 'text-white/40 hover:text-blue-400'}`} title="Comparar"><ArrowRightLeft size={16} /></button>
+                <button onClick={onClose} className={`p-1 transition-colors ${isHeaderLight ? 'text-slate-400 hover:text-red-600' : 'text-white/40 hover:text-white'}`}><X size={20} md:size={24} /></button>
+             </div>
           </div>
 
           {/* Nav Tabs */}

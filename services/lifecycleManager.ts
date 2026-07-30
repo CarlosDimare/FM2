@@ -73,6 +73,11 @@ export class LifecycleManager {
         club.finances.balance += lastMonthIncome;
         club.finances.balance -= lastMonthExpenses;
 
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const monthLabel = `${monthNames[month]} ${currentDate.getFullYear()}`;
+        club.finances.monthlyHistory.push({ month: monthLabel, income: lastMonthIncome, expenses: lastMonthExpenses, balance: club.finances.balance });
+        if (club.finances.monthlyHistory.length > 12) club.finances.monthlyHistory.shift();
+
         if (club.finances.balance < 0) {
           const interest = Math.round(Math.abs(club.finances.balance) * 0.05);
           club.finances.balance -= interest;

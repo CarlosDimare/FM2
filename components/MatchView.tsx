@@ -107,7 +107,9 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
           matchTactics.homeTactic, matchTactics.awayTactic
       );
       matchStateRef.current = nextState;
-      const newDur = slowMotion ? 900 : GAME_SPEED_MS / 10;
+      const speedMult = world.matchSettings.speedMultiplier || 1;
+      const baseDur = slowMotion ? 900 : GAME_SPEED_MS / 10;
+      const newDur = Math.round(baseDur / speedMult);
       durationRef.current = newDur;
       setMatchState(nextState);
       setTickDuration(newDur);
@@ -403,6 +405,15 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
             >
                 {matchState.isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
             </button>
+
+            <div className="flex bg-white rounded-sm border border-[#a0b0a0] shadow-sm overflow-hidden">
+               {[1, 2, 4].map(speed => (
+                  <button key={speed} onClick={() => { world.matchSettings.speedMultiplier = speed; }}
+                     className={`px-2.5 py-1.5 text-[9px] font-black uppercase transition-all ${world.matchSettings.speedMultiplier === speed ? 'bg-[#3a4a3a] text-white' : 'text-slate-600 hover:bg-[#ccd9cc]'}`}>
+                     {speed}x
+                  </button>
+               ))}
+            </div>
 
             {!matchState.isPlaying && (
                 <>

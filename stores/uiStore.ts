@@ -39,6 +39,8 @@ interface UIStore {
   isLoadModalOpen: boolean;
   availableSaves: SaveMetadata[];
   isAutoSaveEnabled: boolean;
+  comparePlayerA: Player | null;
+  comparePlayerB: Player | null;
 
   setGameState: (state: GameState) => void;
   setView: (view: string) => void;
@@ -70,6 +72,8 @@ interface UIStore {
   setIsLoadModalOpen: (open: boolean) => void;
   setAvailableSaves: (saves: SaveMetadata[]) => void;
   setIsAutoSaveEnabled: (enabled: boolean) => void;
+  setComparePlayerA: (p: Player | null) => void;
+  setComparePlayerB: (p: Player | null) => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -106,6 +110,8 @@ export const useUIStore = create<UIStore>((set) => ({
   isLoadModalOpen: false,
   availableSaves: [],
   isAutoSaveEnabled: false,
+  comparePlayerA: null,
+  comparePlayerB: null,
 
   setGameState: (gameState) => set({ gameState }),
   setView: (currentView) => set({ currentView }),
@@ -141,4 +147,6 @@ export const useUIStore = create<UIStore>((set) => ({
   setIsLoadModalOpen: (isLoadModalOpen) => set({ isLoadModalOpen }),
   setAvailableSaves: (availableSaves) => set({ availableSaves }),
   setIsAutoSaveEnabled: (isAutoSaveEnabled) => set({ isAutoSaveEnabled }),
+  setComparePlayerA: (comparePlayerA) => set({ comparePlayerA }),
+  setComparePlayerB: (comparePlayerB) => set({ comparePlayerB }),
 }));
