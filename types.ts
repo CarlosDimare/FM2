@@ -469,6 +469,21 @@ export interface Staff {
   boardRelationship?: number;
 }
 
+export interface RealManager {
+  id: string;
+  name: string;
+  surname: string;
+  nationality: string;
+  age: number;
+  birthDate: Date;
+  currentClubId: string | null;
+  leagueId: string;
+  attributes: StaffAttributes;
+  personality: string;
+  reputation: number;
+  history: StaffHistoryEntry[];
+}
+
 export type MessageCategory = 'MARKET' | 'SQUAD' | 'STATEMENTS' | 'FINANCE' | 'COMPETITION' | 'SCOUTING' | 'PEOPLE';
 
 export interface ScoutingReport {

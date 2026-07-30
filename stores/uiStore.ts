@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { Player, Club, Competition, SquadType, ManagerOrigin } from '../types';
+import { Player, Club, Competition, SquadType, ManagerOrigin, RealManager } from '../types';
 import { SaveMetadata } from '../services/utils';
 import { CompetitionSummary } from '../components/SeasonSummaryModal';
 
-type GameState = 'LOADING' | 'SETUP_USER' | 'SETUP_COUNTRY' | 'SETUP_LEAGUE' | 'SETUP_TEAM' | 'PLAYING';
+type GameState = 'LOADING' | 'SETUP_USER' | 'SETUP_EXISTING_MANAGER' | 'SETUP_COUNTRY' | 'SETUP_LEAGUE' | 'SETUP_TEAM' | 'PLAYING';
 
 interface UIStore {
   gameState: GameState;
@@ -41,6 +41,7 @@ interface UIStore {
   isAutoSaveEnabled: boolean;
   comparePlayerA: Player | null;
   comparePlayerB: Player | null;
+  selectedExistingManager: RealManager | null;
 
   setGameState: (state: GameState) => void;
   setView: (view: string) => void;
@@ -74,6 +75,7 @@ interface UIStore {
   setIsAutoSaveEnabled: (enabled: boolean) => void;
   setComparePlayerA: (p: Player | null) => void;
   setComparePlayerB: (p: Player | null) => void;
+  setSelectedExistingManager: (m: RealManager | null) => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -112,6 +114,7 @@ export const useUIStore = create<UIStore>((set) => ({
   isAutoSaveEnabled: false,
   comparePlayerA: null,
   comparePlayerB: null,
+  selectedExistingManager: null,
 
   setGameState: (gameState) => set({ gameState }),
   setView: (currentView) => set({ currentView }),
@@ -149,4 +152,5 @@ export const useUIStore = create<UIStore>((set) => ({
   setIsAutoSaveEnabled: (isAutoSaveEnabled) => set({ isAutoSaveEnabled }),
   setComparePlayerA: (comparePlayerA) => set({ comparePlayerA }),
   setComparePlayerB: (comparePlayerB) => set({ comparePlayerB }),
+  setSelectedExistingManager: (selectedExistingManager) => set({ selectedExistingManager }),
 }));

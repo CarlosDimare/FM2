@@ -1,5 +1,5 @@
 
-import { Tactic, Position, TacticSettings, PlayerTacticSettings, TrainingSchedule } from "../types";
+import { Tactic, Position, TacticSettings, PlayerTacticSettings, TrainingSchedule, RealManager, StaffAttributes } from "../types";
 
 export interface RealClubDef {
    name: string;
@@ -884,6 +884,56 @@ export const NAMES_DB = {
     firstNames: ["Juan", "Carlos", "Diego", "Luis", "Sergio", "Pablo", "Matías", "Lucas", "Enzo", "Lautaro", "Julián", "Franco", "Nicolás", "Facundo", "Federico", "Santiago", "Tomás", "Ignacio", "Agustín", "Ezequiel", "Gabriel", "Maxi", "Rodrigo", "Leandro", "Cristian", "Martín", "Gonzalo", "Alan", "Brian", "Kevin"],
     lastNames: ["García", "Rodríguez", "González", "Fernández", "López", "Díaz", "Martínez", "Pérez", "Romero", "Sánchez", "Gómez", "Torres", "Ruiz", "Alvarez", "Moyano", "Rojas", "Gutiérrez", "Giménez", "Castro", "Ortiz", "Silva", "Nuñez", "Cabrera", "Morales", "Ríos", "Godoy", "Acosta", "Medina", "Herrera", "Sosa"]
 };
+
+const rmAttr = (coaching: number, tactical: number, manMgmt: number, motivation: number, judging: number, adapt: number): StaffAttributes => ({
+  coaching, tacticalKnowledge: tactical, manManagement: manMgmt, motivation,
+  judgingAbility: judging, judgingPotential: judging, adaptability: adapt, medical: 3, physiotherapy: 3
+});
+
+export const REAL_MANAGERS: RealManager[] = [
+  // INGLATERRA - L_ENG_1
+  { id: 'RM_PEP', name: 'Pep', surname: 'Guardiola', nationality: 'España', age: 54, birthDate: new Date(1971, 1, 18), currentClubId: '679', leagueId: 'L_ENG_1', attributes: rmAttr(18, 19, 14, 13, 16, 15), personality: 'VISIONARY', reputation: 95, history: [] },
+  { id: 'RM_ARTETA', name: 'Mikel', surname: 'Arteta', nationality: 'España', age: 42, birthDate: new Date(1982, 2, 26), currentClubId: '602', leagueId: 'L_ENG_1', attributes: rmAttr(16, 17, 13, 12, 14, 14), personality: 'CALM', reputation: 88, history: [] },
+  { id: 'RM_SLOT', name: 'Arne', surname: 'Slot', nationality: 'Países Bajos', age: 46, birthDate: new Date(1978, 8, 23), currentClubId: '676', leagueId: 'L_ENG_1', attributes: rmAttr(15, 16, 12, 11, 13, 13), personality: 'CALM', reputation: 82, history: [] },
+  { id: 'RM_POSTECOGLOU', name: 'Ange', surname: 'Postecoglou', nationality: 'Australia', age: 59, birthDate: new Date(1965, 7, 27), currentClubId: '728', leagueId: 'L_ENG_1', attributes: rmAttr(15, 14, 13, 15, 12, 11), personality: 'PASSIONATE', reputation: 78, history: [] },
+  { id: 'RM_EMERY', name: 'Unai', surname: 'Emery', nationality: 'España', age: 53, birthDate: new Date(1971, 10, 3), currentClubId: '603', leagueId: 'L_ENG_1', attributes: rmAttr(16, 17, 13, 12, 15, 14), personality: 'DISCIPLINARIAN', reputation: 85, history: [] },
+
+  // ESPAÑA - L_ESP_1
+  { id: 'RM_ANCELOTTI', name: 'Carlo', surname: 'Ancelotti', nationality: 'Italia', age: 66, birthDate: new Date(1959, 5, 10), currentClubId: '1736', leagueId: 'L_ESP_1', attributes: rmAttr(17, 16, 19, 14, 16, 16), personality: 'CALM', reputation: 94, history: [] },
+  { id: 'RM_SIMEONE', name: 'Diego', surname: 'Simeone', nationality: 'Argentina', age: 55, birthDate: new Date(1970, 3, 28), currentClubId: null, leagueId: 'L_ESP_1', attributes: rmAttr(16, 15, 17, 18, 14, 13), personality: 'PASSIONATE', reputation: 90, history: [] },
+  { id: 'RM_FLICK', name: 'Hans-Dieter', surname: 'Flick', nationality: 'Alemania', age: 60, birthDate: new Date(1965, 1, 24), currentClubId: '1708', leagueId: 'L_ESP_1', attributes: rmAttr(16, 17, 13, 14, 14, 12), personality: 'LEADER', reputation: 84, history: [] },
+
+  // ITALIA - L_ITA_1
+  { id: 'RM_INZAGHI', name: 'Simone', surname: 'Inzaghi', nationality: 'Italia', age: 49, birthDate: new Date(1975, 3, 9), currentClubId: '1135', leagueId: 'L_ITA_1', attributes: rmAttr(15, 15, 14, 13, 13, 12), personality: 'PASSIONATE', reputation: 84, history: [] },
+  { id: 'RM_MOTTA', name: 'Thiago', surname: 'Motta', nationality: 'Italia', age: 42, birthDate: new Date(1982, 7, 28), currentClubId: '1139', leagueId: 'L_ITA_1', attributes: rmAttr(14, 16, 12, 11, 13, 14), personality: 'VISIONARY', reputation: 78, history: [] },
+  { id: 'RM_CONTE', name: 'Antonio', surname: 'Conte', nationality: 'Italia', age: 55, birthDate: new Date(1969, 6, 31), currentClubId: '1150', leagueId: 'L_ITA_1', attributes: rmAttr(17, 16, 15, 16, 14, 11), personality: 'DISCIPLINARIAN', reputation: 87, history: [] },
+  { id: 'RM_PIOLI', name: 'Stefano', surname: 'Pioli', nationality: 'Italia', age: 59, birthDate: new Date(1965, 9, 19), currentClubId: '1099', leagueId: 'L_ITA_1', attributes: rmAttr(15, 14, 14, 13, 13, 13), personality: 'CALM', reputation: 80, history: [] },
+
+  // ALEMANIA - L_DEU_1
+  { id: 'RM_KOMPANY', name: 'Vincent', surname: 'Kompany', nationality: 'Bélgica', age: 39, birthDate: new Date(1986, 3, 10), currentClubId: '915', leagueId: 'L_DEU_1', attributes: rmAttr(14, 15, 13, 14, 12, 13), personality: 'LEADER', reputation: 79, history: [] },
+  { id: 'RM_ALONSO', name: 'Xabi', surname: 'Alonso', nationality: 'España', age: 43, birthDate: new Date(1981, 10, 25), currentClubId: '901', leagueId: 'L_DEU_1', attributes: rmAttr(16, 18, 13, 12, 15, 14), personality: 'VISIONARY', reputation: 86, history: [] },
+
+  // FRANCIA - L_FRA_1
+  { id: 'RM_ENRIQUE', name: 'Luis', surname: 'Enrique', nationality: 'España', age: 55, birthDate: new Date(1970, 4, 8), currentClubId: '868', leagueId: 'L_FRA_1', attributes: rmAttr(17, 17, 14, 15, 15, 14), personality: 'PASSIONATE', reputation: 89, history: [] },
+
+  // PAÍSES BAJOS - L_NLD_1
+  { id: 'RM_FARIOLI', name: 'Francesco', surname: 'Farioli', nationality: 'Italia', age: 36, birthDate: new Date(1988, 3, 25), currentClubId: '992', leagueId: 'L_NLD_1', attributes: rmAttr(13, 15, 11, 10, 12, 14), personality: 'VISIONARY', reputation: 72, history: [] },
+
+  // PORTUGAL - L_PRT_1
+  { id: 'RM_RUI_PEDRO', name: 'Rui', surname: 'Pedro', nationality: 'Portugal', age: 49, birthDate: new Date(1976, 5, 15), currentClubId: '1489', leagueId: 'L_PRT_1', attributes: rmAttr(14, 15, 12, 12, 13, 12), personality: 'CALM', reputation: 74, history: [] },
+
+  // TURQUÍA - L_TUR_1
+  { id: 'RM_JOSE', name: 'José', surname: 'Mourinho', nationality: 'Portugal', age: 62, birthDate: new Date(1963, 0, 26), currentClubId: '1870', leagueId: 'L_TUR_1', attributes: rmAttr(17, 18, 16, 15, 16, 14), personality: 'DISCIPLINARIAN', reputation: 90, history: [] },
+
+  // ARGENTINA - L_ARG_1
+  { id: 'RM_GALLARDO', name: 'Marcelo', surname: 'Gallardo', nationality: 'Argentina', age: 49, birthDate: new Date(1976, 1, 18), currentClubId: null, leagueId: 'L_ARG_1', attributes: rmAttr(16, 16, 14, 15, 14, 13), personality: 'VISIONARY', reputation: 82, history: [] },
+  { id: 'RM_BOCHE', name: 'Rodolfo', surname: 'Arruabarrena', nationality: 'Argentina', age: 49, birthDate: new Date(1975, 6, 20), currentClubId: '82', leagueId: 'L_ARG_1', attributes: rmAttr(13, 12, 12, 13, 11, 10), personality: 'PASSIONATE', reputation: 68, history: [] },
+  { id: 'RM_GUEDE', name: 'Pedro', surname: 'Guede', nationality: 'Argentina', age: 54, birthDate: new Date(1970, 9, 17), currentClubId: '96', leagueId: 'L_ARG_1', attributes: rmAttr(13, 12, 13, 14, 11, 10), personality: 'LEADER', reputation: 65, history: [] },
+
+  // BRASIL - L_BRA_1
+  { id: 'RM_ABEL', name: 'Abel', surname: 'Ferreira', nationality: 'Portugal', age: 45, birthDate: new Date(1979, 11, 22), currentClubId: '329', leagueId: 'L_BRA_1', attributes: rmAttr(16, 15, 14, 15, 14, 12), personality: 'DISCIPLINARIAN', reputation: 83, history: [] },
+  { id: 'RM_DORIVAL', name: 'Dorival', surname: 'Júnior', nationality: 'Brasil', age: 63, birthDate: new Date(1962, 3, 25), currentClubId: '322', leagueId: 'L_BRA_1', attributes: rmAttr(14, 13, 13, 14, 12, 11), personality: 'CALM', reputation: 72, history: [] },
+];
 
 export const STAFF_NAMES = {
     names: ["Marcelo", "Ramón", "Carlos", "Miguel", "Gustavo", "Eduardo", "Ricardo", "Gabriel", "Sebastián", "Diego", "Lionel", "Gerardo", "Jorge"],

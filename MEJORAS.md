@@ -167,6 +167,7 @@
 - Selección de liga 2 pasos: país → liga (SETUP_COUNTRY con banderas, SETUP_LEAGUE filtrado)
 - Player flags: COUNTRY_CODES 33 países, NATIONS 26 países, Perú normalizado con tilde
 - Performance: club caching con TTL (`playersByClubCache`, `clubByIdCache`), `invalidateClubCache()`
+- **Elegir Manager Existente al inicio:** nueva pantalla SETUP_EXISTING_MANAGER con ~22 DTs reales de las ligas del juego (Guardiola, Ancelotti, Simeone, Flick, Klopp-like Slot, Arteta, Mourinho, Farioli, Gallardo, Abel Ferreira, etc.). Cada uno con atributos personalizados (coaching, tacticalKnowledge, manManagement, motivation, etc.), personalidad, reputación e historial. Click → si tiene club, toma posesión directa (skipea selección de país/liga/equipo); si está desempleado (Simeone, Gallardo), va al flujo normal de selección de club. Nuevo método `createExistingManager` en WorldManager reemplaza al HEAD_COACH AI con los datos del manager real. Helpers: `AttrBar` component, datos en `REAL_MANAGERS` array en data/static.ts
 - **8 Features nuevos:**
   - League Stats: pestaña con goleadores, asistencias y mejor XI por posición en LeagueTable
   - Formaciones UI: grid visual de mini-canchas en TacticsView (reemplaza dropdown)

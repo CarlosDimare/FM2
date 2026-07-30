@@ -32,7 +32,7 @@ import { ManagerProfileView } from './components/ManagerProfileView';
 import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
 import { generateMatchChronicle, generateMonthlyChronicle } from './services/chronicleService';
-import { Club, Player, Fixture, SquadType, PlayerMatchStats } from './types';
+import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID, randomInt } from './services/utils';
 import { MatchSimulator } from './services/engine';
 import { requestNotificationPermission, sendMatchNotification, sendInjuryNotification, sendTransferNotification, sendInboxNotification } from './services/notifications';
@@ -42,7 +42,20 @@ import { FMButton, FMLoadingOverlay } from './components/FMUI';
 import { useWorldStore } from './stores/worldStore';
 import { useUIStore } from './stores/uiStore';
 import { useGameStore } from './stores/gameStore';
-import { getFlagUrl } from './data/static';
+import { getFlagUrl, REAL_MANAGERS } from './data/static';
+
+const AttrBar: React.FC<{ label: string; value: number; color: string }> = ({ label, value, color }) => {
+  const pct = Math.min(100, Math.max(0, (value / 20) * 100));
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[9px] font-bold text-slate-600 uppercase w-8 shrink-0">{label}</span>
+      <div className="flex-1 h-1.5 bg-slate-200 rounded-sm overflow-hidden">
+        <div className={`h-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-[9px] font-black text-slate-900 w-6 text-right">{value}</span>
+    </div>
+  );
+};
 
 const App: React.FC = () => {
   const darkMode = useGameStore(s => s.darkMode);
@@ -82,6 +95,7 @@ const {
     setIsSaveModalOpen, setSaveNameInput, setIsLoadModalOpen, setAvailableSaves,
     isAutoSaveEnabled, setIsAutoSaveEnabled,
     comparePlayerA, comparePlayerB, setComparePlayerA, setComparePlayerB,
+    selectedExistingManager, setSelectedExistingManager,
   } = useUIStore();
 
   const { fixtures, nextFixture, setFixtures, setNextFixture, initSeasonFixtures, updateNextFixture } = useGameStore();
@@ -1145,7 +1159,10 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <input type="date" className="w-full bg-slate-100 border border-slate-500 rounded-sm px-4 py-3 text-slate-950 font-bold text-sm outline-none focus:border-slate-800" value={userBirthDate.toISOString().split('T')[0]} onChange={(e) => setUserBirthDate(new Date(e.target.value))} />
           </div>
           <FMButton onClick={() => { setGameState('SETUP_COUNTRY'); }} className="w-full py-4 mt-4">
-            NUEVA PARTIDA <ChevronRight size={14} />
+            CREAR MI MANAGER <ChevronRight size={14} />
+          </FMButton>
+          <FMButton onClick={() => { setGameState('SETUP_EXISTING_MANAGER'); }} variant="secondary" className="w-full py-3 mt-2 text-xs border-2 border-slate-400">
+            <User size={14} /> ELEGIR MANAGER EXISTENTE
           </FMButton>
           {hasSave && (
             <FMButton onClick={handleOpenLoadModal} variant="secondary" className="w-full py-3 mt-2 text-xs border-2 border-slate-400">
@@ -1156,6 +1173,95 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       </div>
     </div>
   );
+
+  if (gameState === 'SETUP_EXISTING_MANAGER') {
+    const countryLeagues = world.competitions.filter(c => c.type === 'LEAGUE');
+    const countriesAvailable = Array.from(new Set(countryLeagues.map(l => l.country))).sort();
+    const clubName = (clubId: string | null): string => {
+      if (!clubId) return 'Desempleado';
+      const club = world.getClub(clubId);
+      return club ? club.name : 'Desconocido';
+    };
+    const onSelectManager = (m: RealManager) => {
+      setSelectedExistingManager(m);
+      setUserName(m.name);
+      setUserSurname(m.surname);
+      setUserNationality(m.nationality);
+      if (m.currentClubId) {
+        const club = world.getClub(m.currentClubId);
+        if (club) {
+          setUserClub(club);
+          const allFix = initSeasonFixtures(currentDate, club.id);
+          updateNextFixture(allFix, currentDate, club.id);
+          world.createExistingManager(m, club.id);
+          world.createManagerProfile(club.id, m.name, m.surname, m.nationality, 'EX_PLAYER', m.birthDate, currentDate);
+          setGameState('PLAYING');
+          notify();
+        }
+      } else {
+        setGameState('SETUP_COUNTRY');
+      }
+    };
+    return (
+      <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
+        <div className="max-w-5xl w-full bg-white rounded-sm p-4 sm:p-10 border border-[#a0b0a0] shadow-2xl max-h-[90vh] overflow-y-auto">
+          <button onClick={() => setGameState('SETUP_USER')} className="text-[10px] text-slate-500 hover:text-slate-900 font-bold mb-4 flex items-center gap-1">
+            <ChevronLeft size={12} /> Volver
+          </button>
+          <h1 className="text-3xl sm:text-5xl font-black text-slate-900 mb-2 tracking-tighter italic uppercase text-center">Elegir Manager</h1>
+          <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-[0.3em] mb-6">Directores técnicos reales de las ligas del juego</p>
+
+          <div className="space-y-6">
+            {countriesAvailable.map(country => {
+              const leaguesInCountry = countryLeagues.filter(l => l.country === country).map(l => l.id);
+              const managersInCountry = REAL_MANAGERS.filter(m => leaguesInCountry.includes(m.leagueId));
+              if (managersInCountry.length === 0) return null;
+              return (
+                <div key={country}>
+                  <div className="flex items-center gap-2 mb-3 border-b border-[#a0b0a0] pb-2">
+                    <img src={getFlagUrl(country)} alt={country} className="w-6 h-4 rounded-sm object-cover border border-[#a0b0a0]" />
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider italic">{country}</h3>
+                    <span className="text-[9px] text-slate-500 font-bold">{managersInCountry.length} DT{managersInCountry.length !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {managersInCountry.map(m => (
+                      <button key={m.id} onClick={() => onSelectManager(m)}
+                        className="p-4 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] hover:border-l-4 hover:border-l-[#3a4a3a] rounded-sm text-left transition-all shadow-sm">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <img src={getFlagUrl(m.nationality)} alt={m.nationality} className="w-5 h-4 rounded-sm object-cover border border-[#a0b0a0] shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-black text-slate-900 text-xs uppercase truncate">{m.name} {m.surname}</p>
+                              <p className="text-[9px] text-slate-500 font-bold">{m.age} años • {m.personality}</p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-base font-black text-[#3a4a3a]">{m.reputation}</p>
+                            <p className="text-[8px] text-slate-500 uppercase font-bold">Rep</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-sm ${m.currentClubId ? 'bg-[#3a4a3a] text-white' : 'bg-slate-300 text-slate-700'}`}>
+                            {m.currentClubId ? clubName(m.currentClubId) : 'Desempleado'}
+                          </span>
+                        </div>
+                        <div className="space-y-1 mt-2">
+                          <AttrBar label="Dir." value={m.attributes.coaching} color="bg-[#3a4a3a]" />
+                          <AttrBar label="Tác." value={m.attributes.tacticalKnowledge} color="bg-[#4a5a4a]" />
+                          <AttrBar label="Gest." value={m.attributes.manManagement} color="bg-[#5a6a5a]" />
+                          <AttrBar label="Mot." value={m.attributes.motivation} color="bg-[#6a7a6a]" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (gameState === 'SETUP_COUNTRY') {
     const countryLeagues = world.competitions.filter(c => c.type === 'LEAGUE');
@@ -1224,12 +1330,22 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
 
   if (gameState === 'SETUP_TEAM') {
     const leagueClubs = world.getClubsByLeague(selectedLeague.id);
+    const isExistingManager = !!selectedExistingManager;
     return (
     <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
       <div className="max-w-6xl w-full bg-white rounded-sm p-4 sm:p-10 border border-[#a0b0a0] shadow-2xl max-h-[90vh] overflow-y-auto">
         <button onClick={() => setGameState('SETUP_LEAGUE')} className="text-[10px] text-slate-500 hover:text-slate-900 font-bold mb-4 flex items-center gap-1">
           <ChevronLeft size={12} /> Volver a ligas de {selectedCountry}
         </button>
+        {isExistingManager && (
+          <div className="mb-4 p-3 bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm flex items-center gap-3">
+            <img src={getFlagUrl(selectedExistingManager.nationality)} alt={selectedExistingManager.nationality} className="w-6 h-4 rounded-sm border border-[#a0b0a0]" />
+            <div className="flex-1">
+              <p className="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Manager</p>
+              <p className="text-xs font-black text-slate-900 uppercase">{selectedExistingManager.name} {selectedExistingManager.surname} <span className="text-slate-500 font-bold ml-2">Rep: {selectedExistingManager.reputation}</span></p>
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-3 mb-6">
           {selectedCountry && <img src={getFlagUrl(selectedCountry)} alt={selectedCountry} className="w-8 h-6 rounded-sm border border-[#a0b0a0]" />}
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight italic">{selectedLeague.name}</h2>
@@ -1239,8 +1355,13 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             {leagueClubs.map(c => (
               <button key={c.id} onClick={() => {
                 setUserClub(c);
-                world.createHumanManager(c.id, `${userName} ${userSurname}`);
-                world.createManagerProfile(c.id, userName, userSurname, userNationality, userOrigin, userBirthDate, currentDate);
+                if (isExistingManager && selectedExistingManager) {
+                  world.createExistingManager(selectedExistingManager, c.id);
+                  world.createManagerProfile(c.id, selectedExistingManager.name, selectedExistingManager.surname, selectedExistingManager.nationality, 'EX_PLAYER', selectedExistingManager.birthDate, currentDate);
+                } else {
+                  world.createHumanManager(c.id, `${userName} ${userSurname}`);
+                  world.createManagerProfile(c.id, userName, userSurname, userNationality, userOrigin, userBirthDate, currentDate);
+                }
                 const allFix = initSeasonFixtures(currentDate, c.id);
                 updateNextFixture(allFix, currentDate, c.id);
                 setGameState('PLAYING');
