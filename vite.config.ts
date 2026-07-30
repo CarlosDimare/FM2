@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      base: '/FM2/',
       server: {
         port: 3000,
         host: '0.0.0.0',
@@ -23,20 +24,20 @@ export default defineConfig(({ mode }) => {
             background_color: '#94a3b8',
             display: 'standalone',
             orientation: 'portrait',
-            start_url: '/',
+            start_url: '/FM2/',
             icons: [
               {
-                src: '/icon-192.svg',
+                src: '/FM2/icon-192.svg',
                 sizes: '192x192',
                 type: 'image/svg+xml'
               },
               {
-                src: '/icon-512.svg',
+                src: '/FM2/icon-512.svg',
                 sizes: '512x512',
                 type: 'image/svg+xml'
               },
               {
-                src: '/icon-512.svg',
+                src: '/FM2/icon-512.svg',
                 sizes: '512x512',
                 type: 'image/svg+xml',
                 purpose: 'maskable'
