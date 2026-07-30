@@ -24,10 +24,6 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function isUserWin(homeScore: number, awayScore: number, isHome: boolean): boolean {
-  return isHome ? homeScore > awayScore : awayScore > homeScore;
-}
-
 function getGoalDescription(scorer: Player, minute: number): string {
   const descs = [
     `${scorer.name} abrió el marcador en el minuto ${minute}`,
@@ -35,8 +31,40 @@ function getGoalDescription(scorer: Player, minute: number): string {
     `${scorer.name} define con clase en el minuto ${minute}`,
     `Tiro imparable de ${scorer.name} en el minuto ${minute}`,
     `${scorer.name} marca en el minuto ${minute}`,
+    `Cabezazo certero de ${scorer.name} al minuto ${minute}`,
+    `${scorer.name} fusila al arquero en el minuto ${minute}`,
   ];
   return pick(descs);
+}
+
+function getGoalCommentary(minute: number, scorerName: string, isUserClub: boolean): string {
+  const early = minute <= 20;
+  const late = minute >= 70;
+  const mid = minute > 20 && minute < 70;
+
+  if (early) {
+    return pick([
+      `Arranque fulminante: ${scorerName} golpea temprano y enciende las alarmas del rival.`,
+      `Antes de los 20 minutos, ${scorerName} ya había puesto el 1-0. El partido se abrió de inmediato.`,
+      `Gol madrugador de ${scorerName}. El encuentro tomó temperatura desde el vamos.`,
+    ]);
+  }
+  if (late) {
+    return pick([
+      `En los minutos finales, ${scorerName} apareció para definir con jerarquía. Golpe letal sobre el cierre.`,
+      `Sobre el final, cuando todo parecía resuelto, ${scorerName} liquidó el partido con un gol que desató la celebración.`,
+      `Cierre de película: ${scorerName} anota en el tramo final y sella la historia.`,
+    ]);
+  }
+  return pick([
+    `Transcurrían ${minute} minutos cuando ${scorerName} encontró espacio y no perdonó.`,
+    `En plena etapa de control del partido, ${scorerName} rompió la paridad.`,
+    `Corría el minuto ${minute} y ${scorerName} ejecutó una jugada brillante para marcar.`,
+  ]);
+}
+
+function getComment(scorer: Player, minute: number, isUserClub: boolean): string {
+  return `${getGoalDescription(scorer, minute)}. ${getGoalCommentary(minute, scorer.name, isUserClub)}`;
 }
 
 function getAtmosphere(isWin: boolean, isDraw: boolean, isHome: boolean): string {
@@ -67,60 +95,154 @@ export function generateMatchChronicle(
   const isHome = fixture.homeTeamId === userClubId;
   const userClubName = isHome ? homeClub.name : awayClub.name;
   const opponentName = isHome ? awayClub.name : homeClub.name;
-  const win = isUserWin(homeScore, awayScore, isHome);
-  const draw = homeScore === awayScore;
+  const userScore = isHome ? homeScore : awayScore;
+  const oppScore = isHome ? awayScore : homeScore;
+  const win = userScore > oppScore;
+  const draw = userScore === oppScore;
 
   const allIds = Object.keys(stats);
   let bestPlayer: Player | null = null;
   let bestRating = 0;
+  let worstPlayer: Player | null = null;
+  let worstRating = 10;
   allIds.forEach(pid => {
     const s = stats[pid];
-    if (s && s.minutesPlayed > 30 && s.rating > bestRating) {
-      bestRating = s.rating;
-      bestPlayer = world.getPlayer(pid);
+    if (s && s.minutesPlayed > 30) {
+      if (s.rating > bestRating) {
+        bestRating = s.rating;
+        bestPlayer = world.getPlayer(pid);
+      }
+      if (s.rating < worstRating) {
+        worstRating = s.rating;
+        worstPlayer = world.getPlayer(pid);
+      }
     }
   });
 
   const scorers: { player: Player; minute: number }[] = [];
+  let totalShots = 0;
+  let totalOnTarget = 0;
   allIds.forEach(pid => {
     const s = stats[pid];
-    if (s && s.goals > 0) {
+    if (!s) return;
+    totalShots += s.shots || 0;
+    totalOnTarget += s.shotsOnTarget || 0;
+    if (s.goals > 0) {
       const p = world.getPlayer(pid);
-      if (p) scorers.push({ player: p, minute: 30 + Math.floor(Math.random() * 60) });
+      if (p) scorers.push({ player: p, minute: 5 + Math.floor(Math.random() * 80) });
     }
   });
+
+  // deduplicate scorers by id
+  const seen = new Set<string>();
+  const uniqueScorers = scorers.filter(s => {
+    if (seen.has(s.player.id)) return false;
+    seen.add(s.player.id);
+    return true;
+  });
+
+  // Sort scorers by minute for chronological narrative
+  uniqueScorers.sort((a, b) => a.minute - b.minute);
 
   let headline: string;
   if (draw) headline = pick(HEADLINES_DRAW);
   else if (win) headline = pick(HEADLINES_WIN);
   else headline = pick(HEADLINES_LOSS);
 
-  const parts: string[] = [];
-  parts.push(`${userClubName} ${win ? 'vence' : draw ? 'empata' : 'cae'} ${homeScore}-${awayScore} contra ${opponentName}.`);
-
-  if (scorers.length > 0) {
-    const desc = scorers.slice(0, 3).map(s => getGoalDescription(s.player, s.minute));
-    parts.push(desc.join('. ') + '.');
-  }
-
-  if (bestPlayer && bestRating >= 7.5) {
-    parts.push(`${bestPlayer.name} fue el más destacado (${bestRating.toFixed(1)}).`);
-  }
-
-  parts.push(getAtmosphere(win, draw, isHome));
-
+  // COLOFÓN (summary / lead paragraph -- the "copete")
+  const scoreStr = `${userScore}-${oppScore}`;
+  let summaryIntro: string;
   if (win) {
-    parts.push(pick(["El planteamiento táctico funcionó.", "Las decisiones del técnico dieron frutos.", "El equipo cumplió el plan."]));
-  } else if (!draw) {
-    parts.push(pick(["El equipo no encontró su ritmo.", "Las decisiones tácticas no funcionaron.", "El rival fue superior."]));
+    summaryIntro = pick([
+      `En una jornada vibrante, ${userClubName} superó a ${opponentName} por ${scoreStr} y sumó tres puntos clave.`,
+      `${userClubName} se impuso con autoridad ante ${opponentName} con un marcador de ${scoreStr}.`,
+      `Triunfo trabajado de ${userClubName} sobre ${opponentName}. El ${scoreStr} refleja lo visto en cancha.`,
+    ]);
+  } else if (draw) {
+    summaryIntro = pick([
+      `${userClubName} y ${opponentName} igualaron ${scoreStr} en un partido parejo que dejó sabor a poco.`,
+      `Reparto de puntos entre ${userClubName} y ${opponentName}: ${scoreStr} fue el resultado final.`,
+    ]);
+  } else {
+    summaryIntro = pick([
+      `${userClubName} cayó derrotado ${scoreStr} frente a ${opponentName} en una tarde para el olvido.`,
+      `Golpe duro para ${userClubName}: ${opponentName} se llevó la victoria por ${scoreStr}.`,
+    ]);
   }
+
+  // ====== DESARROLLO (narrative of the match) ======
+  const devParts: string[] = [];
+  devParts.push(summaryIntro);
+
+  // First half narrative
+  const firstHalfGoals = uniqueScorers.filter(s => s.minute <= 45);
+  const secondHalfGoals = uniqueScorers.filter(s => s.minute > 45);
+
+  if (firstHalfGoals.length > 0) {
+    devParts.push(`El primer tiempo arrancó con intensidad.`);
+    firstHalfGoals.forEach(s => {
+      devParts.push(`${getGoalDescription(s.player, s.minute)}. ${getGoalCommentary(s.minute, s.player.name, true)}`);
+    });
+  } else if (userScore === 0 && oppScore === 0) {
+    devParts.push(`El primer tiempo fue un estudio de cautela táctica. Ambos equipos se respetaron y las ocasiones de gol brillaron por su ausencia.`);
+  } else {
+    devParts.push(`Los primeros 45 minutos transcurrieron con dominio alternado, pero sin que ninguno lograra romper el cero en la primera etapa.`);
+  }
+
+  if (secondHalfGoals.length > 0) {
+    devParts.push(`En el complemento, el encuentro ganó en emotividad.`);
+    secondHalfGoals.forEach(s => {
+      devParts.push(`${getComment(s.player, s.minute, true)}`);
+    });
+  } else if (draw) {
+    devParts.push(`La segunda parte mantuvo la paridad. Ambos equipos intentaron pero las defensas prevalecieron.`);
+  } else if (win) {
+    devParts.push(`La segunda parte mostró a un equipo que supo manejar los tiempos y cerrar los espacios.`);
+  } else {
+    devParts.push(`En la segunda mitad, el equipo no encontró los caminos. El partido se complicó.`);
+  }
+
+  // Best player / MVP
+  if (bestPlayer && bestRating >= 7.5) {
+    devParts.push(`${bestPlayer.name} fue elegido la figura del partido con una calificación de ${bestRating.toFixed(1)}. ${bestPlayer.name} lideró cada avance y fue determinante.`);
+  } else if (bestPlayer) {
+    devParts.push(`${bestPlayer.name} fue el más regular del equipo (${bestRating.toFixed(1)}), aunque sin lograr desequilibrar.`);
+  }
+
+  if (worstPlayer && worstRating < 5.5) {
+    devParts.push(`Lejos de su mejor nivel, ${worstPlayer.name} apenas alcanzó un ${worstRating.toFixed(1)}. Su rendimiento quedó en deuda.`);
+  }
+
+  // Collective statistics paragraph
+  const accDesc = totalShots > 0
+    ? `En total, el equipo acumuló ${totalShots} disparos (${totalOnTarget} a puerta).`
+    : `El equipo no logró generar peligro en ataque.`;
+  devParts.push(accDesc);
+
+  if (userScore >= 3) {
+    devParts.push('Fue una lluvia de goles que celebró la afición.');
+  }
+
+  // Tactical analysis
+  if (win && userScore >= 3) {
+    devParts.push(pick(['El plan táctico fue ejecutado a la perfección. Cada pieza encajó con precisión quirúrgica.', 'Desde el banco se tomaron decisiones estratégicas que inclinaron la balanza.']));
+  } else if (win) {
+    devParts.push(pick(['El equipo mostró disciplina táctica y supo aprovechar los momentos clave.', 'Las indicaciones desde el banco rindieron frutos: partido controlado y victoria merecida.']));
+  } else if (draw) {
+    devParts.push(pick(['Servirá lo rescatado, pero el equipo debe mostrar más contundencia.', 'Un punto que suma pero que no termina de convencer.']));
+  } else {
+    devParts.push(pick(['Una tarde gris: el equipo no encontró su juego y el rival se aprovechó.', 'Tocará revisar el esquema táctico: el plan nunca se vio en la cancha.']));
+  }
+
+  // Atmosphere / cierre
+  devParts.push(getAtmosphere(win, draw, isHome));
 
   const chronicle: Chronicle = {
     id: generateUUID(),
     type: 'MATCH',
     date: new Date(fixture.date),
     title: headline,
-    body: parts.join(' '),
+    body: devParts.join('\n\n'),
     fixtureId: fixture.id,
     clubId: userClubId,
   };
