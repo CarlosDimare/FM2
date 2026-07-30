@@ -1,5 +1,5 @@
 
-import { Player, Club, MatchEvent, PlayerMatchStats, Zone, Position, TacticalReport, TacticSettings, TransitionPhase, MatchState, BallState } from '../types';
+import { Player, Club, MatchEvent, PlayerMatchStats, Zone, Position, TacticSettings, TransitionPhase, MatchState, BallState } from '../types';
 import { randomInt } from './utils';
 import { world } from './worldManager';
 import { sendInjuryNotification } from './notifications';

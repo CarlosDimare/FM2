@@ -14,6 +14,12 @@
 - Tiros libres (12% gol en zona peligrosa >750)
 - Efecto moral (multiplicador `0.95 + morale/1000`)
 - Efecto forma (últimos 5 ratings, multiplicador `0.92 + avgForm/30`)
+- Pase inteligente (peso por proximidad, focusPassing, usePlaymaker, targetMan)
+- Distribución GK (short/long/clearance), saque de banda (THROW_IN)
+- Gol + momentum (cambio moral), tácticas activadas (defensiveLine, timeWasting, longShots)
+- Marcación hombre vs zona, target man, pases filtrados, centro, fuera de juego, penales
+- Rating mejorado (clean sheet, pass completion, bonus posición), ventaja local (+0.15 rating)
+- Quick sim mejorado (forma + tácticas + habilidad), auto-sub por lesión, big match temperament
 
 ### Partido UI
 - Charla en descanso (min 45: motivar/exigir/calmar)
@@ -103,6 +109,7 @@
 - `ManagerProfileView` con stats, títulos, relaciones, historial de clubes
 - Objetivo según reputación relativa del club vs liga
 - Sidebar: "Mi Carrera" (User icon)
+- `clubHistory` se popula: seasons incrementado cada temporada, títulos al ganar
 
 ### Directiva (Board)
 - BoardView con confianza, saldo, presupuesto
@@ -128,6 +135,10 @@
 - Notificaciones push del navegador
 - Múltiples slots de guardado IndexedDB
 - Loading skeletón
+- FM Steel-Gray homogeneizado (todas las vistas migradas)
+- FMLoadingOverlay con spinner, progress bar, cancel button (vacaciones)
+- Selección de liga 2 pasos: país con bandera → liga filtrada
+- ClubReport: vista de información del club (equipación, palmarés, presupuestos)
 
 ### Open‑Football‑Database
 - 54,645 jugadores reales, 570 clubes, 35 ligas en 30+ países
@@ -135,31 +146,38 @@
 - CA/PA convertidos a 1-20 (Fórmula weighted por posición)
 - JSON servidos estáticamente (fetch al arranque, no bund)
 - Selección de liga al crear partida (las 35 disponibles)
+- 33 países con banderas (COUNTRY_CODES), 26 nacionalidades (NATIONS)
+- Performance: club caching con TTL, invalidación en mutaciones de clubId
 
 ---
 
 ## 🟡 Recientemente Completado
-- Crónicas (MATCH/MONTHLY/CAREER con ChronicleView y sidebar)
-- Entrenador (ManagerProfile + vista + setup + actualización en tiempo real)
-- Selección de ligas (35 disponibles, no solo Argentina)
-- Fix SquadView crash (`formRatings` undefined)
-- Fix `seasonStats` undefined en jugadores convertidos
-- Fix Transferencia saliente actualiza mínimos de plantilla
-- Fix Vacaciones + rueda de prensa simultánea
-- Fix Onboarding: steps Crónicas y Mi Carrera añadidos (8 pasos)
-- Fix TS: ErrorBoundary (class → functional)
-- Fix TS: standing variable y ROUND_OF_16 en UCL
-- Fix TS: firstName/lastName añadidos a Player interface
-- Fix loadSave: reconstrucción de selecciones nacionales robusta
-- Fix save/load error handling mejorado
-- Fix claves duplicadas en data/static.ts
-- Familiaridad táctica implementada (0-100, afecta atributos)
-- Personalidad de jugador (leadership, consistency, big-match temperament)
-- Clubes en deuda → takeover automático con venta de jugadores
-- Salario del staff según economía del país (multiplier 0.6-2.2)
-- Historial de records del club (victoria/goles/racha más alta)
-- PWA cache: runtime caching para JSON + memoización en data loader
-- Calendario torneos: seasonStartMonth/seasonEndMonth por competición
+- Motor de partido refinado (3 fases):
+  - Pase inteligente (peso por proximidad, focusPassing, usePlaymaker, targetMan)
+  - Distribución GK (short/long/clearance), saque de banda (THROW_IN)
+  - Gol + momentum (cambio moral), tácticas activadas (defensiveLine, timeWasting, longShots)
+  - Marcación hombre vs zona, target man, pases filtrados, centro, fuera de juego, penales
+  - Rating mejorado (clean sheet, pass completion, bonus posición), ventaja local (+0.15 rating)
+  - Quick sim mejorado (forma + tácticas + habilidad), auto-sub por lesión, big match temperament
+- Homogeneización visual FM Steel-Gray (`bg-[#d4dcd4]`, `border-[#a0b0a0]`, `bg-white`)
+  - Todas las vistas migradas: MatchView, PreMatchView, PressConferenceView, MediaView
+  - ChronicleView, ManagerProfileView, Sidebar, BottomNav, TrainingView, StaffView
+  - FMUI: FMSpinner, FMProgressBar, FMLoadingOverlay
+- Vacaciones async con progreso visual (FMLoadingOverlay, cancel button, día actual)
+- Selección de liga 2 pasos: país → liga (SETUP_COUNTRY con banderas, SETUP_LEAGUE filtrado)
+- Player flags: COUNTRY_CODES 33 países, NATIONS 26 países, Perú normalizado con tilde
+- Performance: club caching con TTL (`playersByClubCache`, `clubByIdCache`), `invalidateClubCache()`
+- Fix ClubReport no conectado en App.tsx (case 'CLUB_REPORT' agregado)
+- Fix `primaryPosition` añadida a interfaz Player (asignada en worldManager pero invisible a TS)
+- Fix staff.history: se popula al final de cada temporada en processEndOfSeason
+- Fix managerProfile.clubHistory: `seasons` se incrementa cada temporada (no solo al ganar títulos)
+- Fix import muerto TacticalReport eliminado de engine.ts
+- Fix `isInVacation` no destructurado en App.tsx
+- Fix `player.secondaryPositions?.map` optional chaining en PlayerModal
+- Fix `widthSetting` scoping en engine.ts (declaración movida antes, duplicados eliminados)
+- Fix `wouldDropBelowMinimums` implementado en WorldManager
+- Fix `ChevronLeft` import faltante en App.tsx
+- GitHub push a https://github.com/CarlosDimare/FM2
 
 ---
 
@@ -170,4 +188,4 @@
 
 ---
 
-*Última actualización: julio 2026*
+*Última actualización: 30 julio 2026*

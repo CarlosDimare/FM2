@@ -10,6 +10,7 @@ import { StaffView } from './components/StaffView';
 import { TrainingView } from './components/TrainingView';
 import { ScoutingView } from './components/ScoutingView';
 import { BoardView } from './components/BoardView';
+import { ClubReport } from './components/ClubReport';
 import { PeopleHub } from './components/PeopleHub';
 import { PressConferenceView } from './components/PressConferenceView';
 import { PreMatchView } from './components/PreMatchView';
@@ -907,6 +908,8 @@ dayFixtures.forEach(f => {
         return <ScoutingView clubId={userClub.id} onSelectPlayer={setSelectedPlayer} />;
       case 'BOARD':
         return <BoardView userClub={userClub} />;
+      case 'CLUB_REPORT':
+        return <ClubReport club={userClub} />;
       case 'PEOPLE_HUB':
         return <PeopleHub userClub={userClub} currentDate={currentDate} />;
       case 'CLUBS_LIST':

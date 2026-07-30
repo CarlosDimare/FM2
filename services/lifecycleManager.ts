@@ -304,6 +304,15 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
       player.statsByCompetition = {}; 
     });
 
+    world.staff.forEach(s => {
+      if (s.clubId) {
+        const lastEntry = s.history[s.history.length - 1];
+        if (!lastEntry || lastEntry.year !== seasonYear || lastEntry.clubId !== s.clubId) {
+          s.history.push({ year: seasonYear, clubId: s.clubId, role: s.role });
+        }
+      }
+    });
+
     // 6. Retirement & Regens
     const retiredIds: string[] = [];
     world.players.forEach(p => { if (p.age > 34 && Math.random() < (p.age - 32) * 0.20) retiredIds.push(p.id); });

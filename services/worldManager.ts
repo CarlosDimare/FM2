@@ -30,6 +30,11 @@ export class WorldManager {
   chronicles: Chronicle[] = [];
   managerProfile: ManagerProfile | null = null;
 
+  // Caching for performance
+  private playersByClubCache: Map<string, { timestamp: number; players: Player[] }> = new Map();
+  private clubByIdCache: Map<string, Club> = new Map();
+  private CACHE_TTL = 1000; // 1 second cache
+
   constructor() { this.initWorld(); }
 
    initWorld() {
@@ -343,13 +348,33 @@ export class WorldManager {
      });
   }
 
-   getClub(id: string) { return this.clubs.find(c => c.id === id); }
-   getPlayer(id: string) { return this.players.find(p => p.id === id); }
-   getPlayersByClub(clubId: string) { return this.players.filter(p => p.clubId === clubId); }
-   getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === clubId); }
-   getStaff(id: string) { return this.staff.find(s => s.id === id); }
-   getLeagues() { return this.competitions.filter(c => c.type === 'LEAGUE'); }
-   getTactics() { return this.tactics; }
+getClub(id: string) {
+    const cached = this.clubByIdCache.get(id);
+    if (cached) return cached;
+    const club = this.clubs.find(c => c.id === id);
+    if (club) this.clubByIdCache.set(id, club);
+    return club;
+  }
+  getPlayer(id: string) { return this.players.find(p => p.id === id); }
+  getPlayersByClub(clubId: string) {
+    const cached = this.playersByClubCache.get(clubId);
+    const now = Date.now();
+    if (cached && (now - cached.timestamp) < this.CACHE_TTL) {
+      return cached.players;
+    }
+    const players = this.players.filter(p => p.clubId === clubId);
+    this.playersByClubCache.set(clubId, { timestamp: now, players });
+    return players;
+  }
+getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === clubId); }
+  getStaff(id: string) { return this.staff.find(s => s.id === id); }
+  getLeagues() { return this.competitions.filter(c => c.type === 'LEAGUE'); }
+  getTactics() { return this.tactics; }
+
+  private invalidateClubCache(clubId: string) {
+    this.playersByClubCache.delete(clubId);
+    this.clubByIdCache.delete(clubId);
+  }
 
    getPlayersByNationalTeam(teamId: string): Player[] {
       if (!this.nationalTeamManager) return [];
@@ -721,6 +746,8 @@ export class WorldManager {
             offer.date, p.id);
         }
         p.clubId = offer.fromClubId; p.isStarter = false; p.tacticalPosition = undefined;
+        this.invalidateClubCache(offer.fromClubId);
+        this.invalidateClubCache(offer.toClubId);
         p.isTransferListed = false;
         if (newClub) {
           const salaryFactor = 0.8 + Math.random() * 0.6;
@@ -766,7 +793,14 @@ export class WorldManager {
 
   rescindContract(playerId: string, date: Date) {
     const p = this.players.find(player => player.id === playerId);
-    if (p) { p.clubId = 'FREE_AGENT'; p.isStarter = false; p.tacticalPosition = undefined; p.isTransferListed = false; }
+    if (p) { 
+      const oldClubId = p.clubId;
+      p.clubId = 'FREE_AGENT'; 
+      p.isStarter = false; 
+      p.tacticalPosition = undefined; 
+      p.isTransferListed = false; 
+      this.invalidateClubCache(oldClubId);
+    }
   }
 
   createHumanManager(clubId: string, name: string) {
@@ -850,8 +884,12 @@ export class WorldManager {
       titleNames.forEach(t => {
         if (!p.titles.includes(t)) p.titles.push(t);
       });
-      const currentEntry = p.clubHistory.find(e => e.clubId === p.currentClubId && !e.endDate);
-      if (currentEntry) {
+    }
+
+    const currentEntry = p.clubHistory.find(e => e.clubId === p.currentClubId && !e.endDate);
+    if (currentEntry) {
+      currentEntry.seasons++;
+      if (wonTitle) {
         titleNames.forEach(t => {
           if (!currentEntry.titles.includes(t)) currentEntry.titles.push(t);
         });
@@ -881,10 +919,6 @@ export class WorldManager {
 
     // Update next objective
     p.currentObjective = this.getClubObjective(p.currentClubId);
-
-    // Update club history seasons count
-    const currentEntry = p.clubHistory.find(e => e.clubId === p.currentClubId && !e.endDate);
-    if (currentEntry) currentEntry.seasons++;
   }
 
   getClubObjective(clubId: string): string {
@@ -1180,6 +1214,8 @@ export class WorldManager {
         if (Math.random() < renewChance) {
           p.contractExpiry = new Date(date.getFullYear() + 2, 5, 30);
         } else if (Math.random() < 0.3) {
+          const oldClubId = p.clubId;
+          this.invalidateClubCache(oldClubId);
           p.clubId = 'FREE_AGENT';
           const availableBudget = club.finances.wageBudget - this.getPlayersByClub(club.id).reduce((s, pl) => s + pl.salary, 0);
           if (availableBudget > 0) {
@@ -1187,6 +1223,7 @@ export class WorldManager {
             if (newSalary <= availableBudget) {
               p.salary = newSalary;
               p.contractExpiry = new Date(date.getFullYear() + 1, 5, 30);
+              this.invalidateClubCache(club.id);
               p.clubId = club.id;
             }
           }
@@ -1256,6 +1293,8 @@ offer.status = 'REJECTED';
     if (!p) return;
     const isLoanToBuy = offer.type === 'LOAN_TO_BUY';
     p.loanDetails = { originalClubId: p.clubId, wageShare: offer.wageShare, loanToBuy: isLoanToBuy };
+    this.invalidateClubCache(p.clubId);
+    this.invalidateClubCache(offer.fromClubId);
     p.clubId = offer.fromClubId;
     p.isStarter = false;
     p.isTransferListed = false;
@@ -1271,6 +1310,8 @@ offer.status = 'REJECTED';
     this.players.forEach(p => {
       if (p.loanDetails) {
         const wasLoanToBuy = p.loanDetails.loanToBuy;
+        this.invalidateClubCache(p.clubId);
+        this.invalidateClubCache(p.loanDetails.originalClubId);
         p.clubId = p.loanDetails.originalClubId;
         p.loanDetails = undefined;
         p.isStarter = false;

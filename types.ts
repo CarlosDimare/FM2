@@ -100,6 +100,7 @@ export interface Player {
   nationality: string;
   positions: Position[];
   secondaryPositions: Position[];
+  primaryPosition?: Position;
   stats: PlayerStats;
   seasonStats: PlayerSeasonStats;
   statsByCompetition: Record<string, PlayerSeasonStats>;
