@@ -38,7 +38,7 @@ import { MatchSimulator } from './services/engine';
 import { requestNotificationPermission, sendMatchNotification, sendInjuryNotification, sendTransferNotification, sendInboxNotification } from './services/notifications';
 import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, ChevronLeft, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
 import { OnboardingTour, isOnboarded } from './components/OnboardingTour';
-import { FMButton, FMLoadingOverlay } from './components/FMUI';
+import { FMButton, FMLoadingOverlay, FMModal } from './components/FMUI';
 import { useWorldStore } from './stores/worldStore';
 import { useUIStore } from './stores/uiStore';
 import { useGameStore } from './stores/gameStore';
@@ -61,6 +61,8 @@ const App: React.FC = () => {
   const darkMode = useGameStore(s => s.darkMode);
   const setDarkMode = useGameStore(s => s.setDarkMode);
   const [showOnboarding, setShowOnboarding] = React.useState(false);
+  const [showConflictModal, setShowConflictModal] = React.useState(false);
+  const [managerToConfirm, setManagerToConfirm] = React.useState<RealManager | null>(null);
 
   React.useEffect(() => {
     if (!isOnboarded()) {
@@ -1188,22 +1190,65 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       setUserSurname(m.surname);
       setUserNationality(m.nationality);
       if (m.currentClubId) {
-        const club = world.getClub(m.currentClubId);
-        if (club) {
-          setUserClub(club);
-          const allFix = initSeasonFixtures(currentDate, club.id);
-          updateNextFixture(allFix, currentDate, club.id);
-          world.createExistingManager(m, club.id);
-          world.createManagerProfile(club.id, m.name, m.surname, m.nationality, 'EX_PLAYER', m.birthDate, currentDate);
-          setGameState('PLAYING');
-          notify();
-        }
+        // If manager has a club, show conflict modal
+        setManagerToConfirm(m);
+        setShowConflictModal(true);
       } else {
+        // If unemployed, go to country selection
         setGameState('SETUP_COUNTRY');
       }
     };
+    const createManagerAndStartGame = (manager: RealManager, clubId: string, fired: boolean) => {
+      const club = world.getClub(clubId);
+      if (club) {
+        setUserClub(club);
+        const allFix = initSeasonFixtures(currentDate, club.id);
+        updateNextFixture(allFix, currentDate, club.id);
+        world.replaceHeadCoach(manager, club.id, fired);
+        world.createManagerProfile(club.id, manager.name, manager.surname, manager.nationality, 'EX_PLAYER', manager.birthDate, currentDate);
+        setGameState('PLAYING');
+        notify();
+      }
+    };
+
+    const handleTakeClub = () => {
+      if (managerToConfirm && managerToConfirm.currentClubId) {
+        createManagerAndStartGame(managerToConfirm, managerToConfirm.currentClubId, false);
+      }
+      setShowConflictModal(false);
+      setManagerToConfirm(null);
+    };
+
+    const handleFireAndTakeFree = () => {
+      if (managerToConfirm && managerToConfirm.currentClubId) {
+        createManagerAndStartGame(managerToConfirm, managerToConfirm.currentClubId, true);
+      }
+      setShowConflictModal(false);
+      setManagerToConfirm(null);
+    };
+
     return (
       <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
+        {showConflictModal && managerToConfirm && (
+          <FMModal isOpen={showConflictModal} onClose={() => setShowConflictModal(false)} title="Conflicto de Manager" size="lg">
+            <p className="text-sm text-slate-700 mb-4">
+              El manager <span className="font-bold">{managerToConfirm.name} {managerToConfirm.surname}</span> actualmente dirige al <span className="font-bold">{clubName(managerToConfirm.currentClubId)}</span>.
+              ¿Qué acción deseas tomar?
+            </p>
+            <div className="flex justify-around gap-4 mt-6">
+              <FMButton onClick={handleTakeClub} className="flex-1 py-3">
+                <User size={14} /> Tomar el control de {clubName(managerToConfirm.currentClubId)}
+              </FMButton>
+              <FMButton onClick={handleFireAndTakeFree} variant="danger" className="flex-1 py-3">
+                <Trash2 size={14} /> Despedirlo y tomar el club libre
+              </FMButton>
+            </div>
+            <div className="mt-4 text-xs text-slate-500 italic text-center">
+              Advertencia: Despedir un manager puede tener consecuencias en la reputación del club y la relación con la directiva.
+            </div>
+          </FMModal>
+        )}
+
         <div className="max-w-5xl w-full bg-white rounded-sm p-4 sm:p-10 border border-[#a0b0a0] shadow-2xl max-h-[90vh] overflow-y-auto">
           <button onClick={() => setGameState('SETUP_USER')} className="text-[10px] text-slate-500 hover:text-slate-900 font-bold mb-4 flex items-center gap-1">
             <ChevronLeft size={12} /> Volver
@@ -1354,18 +1399,17 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {leagueClubs.map(c => (
               <button key={c.id} onClick={() => {
-                setUserClub(c);
-                if (isExistingManager && selectedExistingManager) {
-                  world.createExistingManager(selectedExistingManager, c.id);
-                  world.createManagerProfile(c.id, selectedExistingManager.name, selectedExistingManager.surname, selectedExistingManager.nationality, 'EX_PLAYER', selectedExistingManager.birthDate, currentDate);
+                if (selectedExistingManager) {
+                  createManagerAndStartGame(selectedExistingManager, c.id, false);
                 } else {
+                  setUserClub(c);
                   world.createHumanManager(c.id, `${userName} ${userSurname}`);
                   world.createManagerProfile(c.id, userName, userSurname, userNationality, userOrigin, userBirthDate, currentDate);
+                  const allFix = initSeasonFixtures(currentDate, c.id);
+                  updateNextFixture(allFix, currentDate, c.id);
+                  setGameState('PLAYING');
+                  notify();
                 }
-                const allFix = initSeasonFixtures(currentDate, c.id);
-                updateNextFixture(allFix, currentDate, c.id);
-                setGameState('PLAYING');
-                notify();
               }} className="p-4 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] rounded-sm text-left transition-all shadow-sm group border-l-4 hover:border-l-[#3a4a3a]">
                 <div className={`w-3 h-3 rounded-full mb-3 ${c.primaryColor} border border-[#a0b0a0]`}></div>
                 <p className="font-black text-slate-900 truncate text-[11px] uppercase group-hover:text-[#3a4a3a]">{c.name}</p>
@@ -1458,24 +1502,12 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
               {currentDate.toLocaleDateString()}
             </div>
             <div id="header-actions" className="flex items-center gap-2">
-              {!isPreMatchView && (
-                <FMButton variant="secondary" onClick={simulateToNextMatch} disabled={isSimulating} title="Simular hasta próximo partido">
-                  <RefreshCw size={10} /> Próximo
-                </FMButton>
-              )}
               <button onClick={() => setIsAutoSaveEnabled(!isAutoSaveEnabled)} className={`p-1.5 rounded-sm border transition-colors ${isAutoSaveEnabled ? 'bg-slate-800 text-green-400 border-green-600' : 'bg-slate-700 text-slate-400 border-slate-600'}`} title={isAutoSaveEnabled ? 'Auto-guardado activado' : 'Auto-guardado desactivado'}>
                 <Save size={12} />
               </button>
               <button onClick={() => setDarkMode(!darkMode)} className="p-1.5 rounded-sm border border-slate-600 bg-slate-700 text-yellow-300 hover:bg-slate-600 transition-colors" title={darkMode ? 'Modo claro' : 'Modo oscuro'}>
                 {darkMode ? <Sun size={12} /> : <Moon size={12} />}
               </button>
-              <FMButton variant={isPreMatchView ? "primary" : "primary"} onClick={advanceTime} className={userClub ? (isPreMatchView ? "bg-slate-950 text-white animate-pulse border-white/40" : "bg-slate-900 text-white border-white/30 shadow-lg") : ""}>
-                {isPreMatchView ? (
-                  <><Zap size={10} fill="currentColor" /> Jugar Partido</>
-                ) : (
-                  <><Play size={10} fill="currentColor" /> Continuar</>
-                )}
-              </FMButton>
             </div>
           </div>
         </header>
@@ -1485,7 +1517,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         {userClub && !isMatchView && (
           <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
         )}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#94a3b8] relative overflow-hidden pb-14 lg:pb-0">
+        <main className="flex-1 flex flex-col min-w-0 bg-[#94a3b8] relative overflow-hidden pb-[104px] lg:pb-0">
           {renderCurrentView()}
         </main>
         {onboardingActive && <OnboardingTour active={onboardingActive} currentView={currentView} onComplete={() => setShowOnboarding(false)} />}
@@ -1532,7 +1564,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       {comparePlayerA && comparePlayerB && <PlayerCompareModal playerA={comparePlayerA} playerB={comparePlayerB} onClose={() => { setComparePlayerA(null); setComparePlayerB(null); }} />}
       {contextMenu && <PlayerContextMenu player={contextMenu.player} x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} currentDate={currentDate} />}
       {seasonSummary && <SeasonSummaryModal summary={seasonSummary} userWonLeague={userWonLeague} onClose={() => { setSeasonSummary(null); setUserWonLeague(false); }} />}
-      {currentView !== 'MATCH' && <BottomNav />}
+      {currentView !== 'MATCH' && <BottomNav advanceTime={advanceTime} simulateToNextMatch={simulateToNextMatch} isSimulating={isSimulating} isPreMatchView={isPreMatchView} />}
     </div>
   );
 };

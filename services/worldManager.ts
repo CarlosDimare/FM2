@@ -812,7 +812,7 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
     this.staff.unshift(manager);
   }
 
-  createExistingManager(managerData: RealManager, clubId: string) {
+  replaceHeadCoach(managerData: RealManager, clubId: string, fired: boolean) {
     const fullName = `${managerData.name} ${managerData.surname}`;
     const manager: Staff = {
       id: managerData.id,
@@ -822,15 +822,24 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
       role: 'HEAD_COACH',
       clubId,
       attributes: { ...managerData.attributes },
-      salary: 15000,
-      contractExpiry: new Date(2010, 5, 30),
+      salary: fired ? 10000 : 15000, // Reduced salary if fired
+      contractExpiry: new Date(this.currentDate.getFullYear() + 2, 5, 30), // 2-year contract
       history: [...managerData.history],
       personality: managerData.personality,
-      morale: 100,
+      morale: fired ? 60 : 100, // Lower morale if fired
       reputation: managerData.reputation,
+      internationalReputation: managerData.internationalReputation,
       relationships: {},
-      pressReputation: Math.min(100, managerData.reputation + 10),
-      boardRelationship: 70,
+      pressReputation: fired ? 30 : Math.min(100, managerData.reputation + 10),
+      boardRelationship: fired ? 40 : 70, // Lower board relationship if fired
+      biography: managerData.biography,
+      preferredFormation: managerData.preferredFormation,
+      tacticalStyle: managerData.tacticalStyle,
+      pressIntensity: managerData.pressIntensity,
+      possessionVsCounter: managerData.possessionVsCounter,
+      playingStyle: managerData.playingStyle,
+      careerHonours: managerData.careerHonours,
+      previousClubs: managerData.previousClubs,
     };
     this.staff = this.staff.filter(s => s.clubId !== clubId || s.role !== 'HEAD_COACH');
     this.staff.unshift(manager);

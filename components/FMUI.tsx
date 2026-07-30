@@ -153,3 +153,27 @@ export const FMTableCell: React.FC<React.TdHTMLAttributes<HTMLTableCellElement> 
         {children}
     </td>
 );
+
+export const FMModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
+    size?: 'md' | 'lg';
+    children: React.ReactNode;
+}> = ({ isOpen, onClose, title, size = 'md', children }) => {
+    if (!isOpen) return null;
+    const maxWidth = size === 'lg' ? 'max-w-2xl' : 'max-w-md';
+    return (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose} style={{ fontFamily: 'Verdana, sans-serif' }}>
+            <div className={`bg-[#e8ece8] border-2 border-[#a0b0a0] rounded-sm shadow-2xl w-full ${maxWidth} mx-4 max-h-[85vh] overflow-y-auto`} onClick={e => e.stopPropagation()}>
+                <div className="border-b border-[#a0b0a0] px-3 py-2 flex justify-between items-center" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
+                    <span className="text-[#1a1a1a] font-bold text-[12px] tracking-tight uppercase">{title}</span>
+                    <button onClick={onClose} className="text-[#4a5a4a] hover:text-[#1a2a1a] transition-colors font-bold text-lg leading-none">&times;</button>
+                </div>
+                <div className="p-4">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+};

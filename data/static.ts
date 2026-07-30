@@ -892,48 +892,210 @@ const rmAttr = (coaching: number, tactical: number, manMgmt: number, motivation:
 
 export const REAL_MANAGERS: RealManager[] = [
   // INGLATERRA - L_ENG_1
-  { id: 'RM_PEP', name: 'Pep', surname: 'Guardiola', nationality: 'España', age: 54, birthDate: new Date(1971, 1, 18), currentClubId: '679', leagueId: 'L_ENG_1', attributes: rmAttr(18, 19, 14, 13, 16, 15), personality: 'VISIONARY', reputation: 95, history: [] },
-  { id: 'RM_ARTETA', name: 'Mikel', surname: 'Arteta', nationality: 'España', age: 42, birthDate: new Date(1982, 2, 26), currentClubId: '602', leagueId: 'L_ENG_1', attributes: rmAttr(16, 17, 13, 12, 14, 14), personality: 'CALM', reputation: 88, history: [] },
-  { id: 'RM_SLOT', name: 'Arne', surname: 'Slot', nationality: 'Países Bajos', age: 46, birthDate: new Date(1978, 8, 23), currentClubId: '676', leagueId: 'L_ENG_1', attributes: rmAttr(15, 16, 12, 11, 13, 13), personality: 'CALM', reputation: 82, history: [] },
-  { id: 'RM_POSTECOGLOU', name: 'Ange', surname: 'Postecoglou', nationality: 'Australia', age: 59, birthDate: new Date(1965, 7, 27), currentClubId: '728', leagueId: 'L_ENG_1', attributes: rmAttr(15, 14, 13, 15, 12, 11), personality: 'PASSIONATE', reputation: 78, history: [] },
-  { id: 'RM_EMERY', name: 'Unai', surname: 'Emery', nationality: 'España', age: 53, birthDate: new Date(1971, 10, 3), currentClubId: '603', leagueId: 'L_ENG_1', attributes: rmAttr(16, 17, 13, 12, 15, 14), personality: 'DISCIPLINARIAN', reputation: 85, history: [] },
+  {
+    id: 'RM_PEP', name: 'Pep', surname: 'Guardiola', nationality: 'España', age: 54, birthDate: new Date(1971, 1, 18), currentClubId: '679', leagueId: 'L_ENG_1',
+    attributes: rmAttr(18, 19, 14, 13, 16, 15), personality: 'VISIONARY', reputation: 95, internationalReputation: 98,
+    biography: 'Uno de los entrenadores más influyentes y exitosos de la historia moderna del fútbol, conocido por su estilo de juego de posesión (Tiki-taka) y alta presión.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'CONTROL', pressIntensity: 'HIGH', possessionVsCounter: 'POSSESSION', playingStyle: 'Tiki-taka (posesión corta, presión alta tras pérdida)',
+    careerHonours: ['La Liga x3', 'Champions League x2', 'Premier League x6', 'Bundesliga x3'],
+    previousClubs: [{ clubId: '1708', clubName: 'Barcelona', years: '2008-2012', titles: ['La Liga x3', 'Champions League x2'] }, { clubId: '915', clubName: 'Bayern Munich', years: '2013-2016', titles: ['Bundesliga x3'] }], history: []
+  },
+  {
+    id: 'RM_ARTETA', name: 'Mikel', surname: 'Arteta', nationality: 'España', age: 42, birthDate: new Date(1982, 2, 26), currentClubId: '602', leagueId: 'L_ENG_1',
+    attributes: rmAttr(16, 17, 13, 12, 14, 14), personality: 'CALM', reputation: 88, internationalReputation: 85,
+    biography: 'Ex-jugador y discípulo de Pep Guardiola, ha transformado al Arsenal en un contendiente al título, enfatizando el fútbol de ataque y la disciplina táctica.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'ATTACK', pressIntensity: 'HIGH', possessionVsCounter: 'POSSESSION', playingStyle: 'Posesión con transiciones rápidas y ataque por bandas',
+    careerHonours: ['FA Cup x1'],
+    previousClubs: [], history: []
+  },
+  {
+    id: 'RM_SLOT', name: 'Arne', surname: 'Slot', nationality: 'Países Bajos', age: 46, birthDate: new Date(1978, 8, 23), currentClubId: '676', leagueId: 'L_ENG_1',
+    attributes: rmAttr(15, 16, 12, 11, 13, 13), personality: 'CALM', reputation: 82, internationalReputation: 80,
+    biography: 'Reconocido por su trabajo en el Feyenoord, donde implementó un estilo de juego ofensivo y energético. Recientemente asumió el mando del Liverpool.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'ATTACK', pressIntensity: 'MEDIUM', possessionVsCounter: 'BALANCED', playingStyle: 'Fútbol total, ataque por bandas y presión alta',
+    careerHonours: ['Eredivisie x1'],
+    previousClubs: [{ clubId: '1013', clubName: 'Feyenoord', years: '2021-2024', titles: ['Eredivisie x1'] }], history: []
+  },
+  {
+    id: 'RM_POSTECOGLOU', name: 'Ange', surname: 'Postecoglou', nationality: 'Australia', age: 59, birthDate: new Date(1965, 7, 27), currentClubId: '728', leagueId: 'L_ENG_1',
+    attributes: rmAttr(15, 14, 13, 15, 12, 11), personality: 'PASSIONATE', reputation: 78, internationalReputation: 75,
+    biography: 'Conocido por su enfoque ofensivo y la transformación de equipos en escuadras emocionantes. Ha logrado éxitos en Escocia y ahora en la Premier League.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'ATTACK', pressIntensity: 'HIGH', possessionVsCounter: 'POSSESSION', playingStyle: 'Fútbol rápido, ofensivo y de alta energía',
+    careerHonours: ['Scottish Premiership x2', 'Scottish Cup x1'],
+    previousClubs: [{ clubId: 'CEL', clubName: 'Celtic', years: '2021-2023', titles: ['Scottish Premiership x2', 'Scottish Cup x1'] }], history: []
+  },
+  {
+    id: 'RM_EMERY', name: 'Unai', surname: 'Emery', nationality: 'España', age: 53, birthDate: new Date(1971, 10, 3), currentClubId: '603', leagueId: 'L_ENG_1',
+    attributes: rmAttr(16, 17, 13, 12, 15, 14), personality: 'DISCIPLINARIAN', reputation: 85, internationalReputation: 87,
+    biography: 'Especialista en competiciones de copa, particularmente la Europa League. Famoso por su meticulosa preparación táctica y su capacidad para mejorar jugadores.',
+    preferredFormation: '4-2-3-1 Doble Pivote', tacticalStyle: 'BALANCED', pressIntensity: 'MEDIUM', possessionVsCounter: 'BALANCED', playingStyle: 'Orden táctico, solidez defensiva y transiciones rápidas',
+    careerHonours: ['Europa League x4', 'Coupe de France x1'],
+    previousClubs: [{ clubId: 'PSG', clubName: 'Paris Saint-Germain', years: '2016-2018', titles: ['Coupe de France x1'] }, { clubId: 'VIL', clubName: 'Villarreal', years: '2020-2022', titles: ['Europa League x1'] }], history: []
+  },
 
   // ESPAÑA - L_ESP_1
-  { id: 'RM_ANCELOTTI', name: 'Carlo', surname: 'Ancelotti', nationality: 'Italia', age: 66, birthDate: new Date(1959, 5, 10), currentClubId: '1736', leagueId: 'L_ESP_1', attributes: rmAttr(17, 16, 19, 14, 16, 16), personality: 'CALM', reputation: 94, history: [] },
-  { id: 'RM_SIMEONE', name: 'Diego', surname: 'Simeone', nationality: 'Argentina', age: 55, birthDate: new Date(1970, 3, 28), currentClubId: null, leagueId: 'L_ESP_1', attributes: rmAttr(16, 15, 17, 18, 14, 13), personality: 'PASSIONATE', reputation: 90, history: [] },
-  { id: 'RM_FLICK', name: 'Hans-Dieter', surname: 'Flick', nationality: 'Alemania', age: 60, birthDate: new Date(1965, 1, 24), currentClubId: '1708', leagueId: 'L_ESP_1', attributes: rmAttr(16, 17, 13, 14, 14, 12), personality: 'LEADER', reputation: 84, history: [] },
+  {
+    id: 'RM_ANCELOTTI', name: 'Carlo', surname: 'Ancelotti', nationality: 'Italia', age: 66, birthDate: new Date(1959, 5, 10), currentClubId: '1736', leagueId: 'L_ESP_1',
+    attributes: rmAttr(17, 16, 19, 14, 16, 16), personality: 'CALM', reputation: 94, internationalReputation: 97,
+    biography: 'Entrenador legendario conocido por su adaptabilidad y su habilidad para manejar vestuarios llenos de estrellas, logrando múltiples títulos de Champions League.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'CONTROL', pressIntensity: 'LOW', possessionVsCounter: 'BALANCED', playingStyle: 'Fútbol pragmático, gestión de talentos y solidez defensiva',
+    careerHonours: ['Champions League x5', 'La Liga x2', 'Serie A x1', 'Premier League x1', 'Ligue 1 x1', 'Bundesliga x1'],
+    previousClubs: [{ clubId: 'ACM', clubName: 'AC Milan', years: '2001-2009', titles: ['Champions League x2'] }, { clubId: 'CHE', clubName: 'Chelsea', years: '2009-2011', titles: ['Premier League x1'] }], history: []
+  },
+  {
+    id: 'RM_SIMEONE', name: 'Diego', surname: 'Simeone', nationality: 'Argentina', age: 55, birthDate: new Date(1970, 3, 28), currentClubId: null, leagueId: 'L_ESP_1',
+    attributes: rmAttr(16, 15, 17, 18, 14, 13), personality: 'PASSIONATE', reputation: 90, internationalReputation: 92,
+    biography: 'El "Cholo" es sinónimo de Atlético de Madrid, donde ha construido un equipo con una identidad defensiva férrea y una capacidad de contraataque letal. Desempleado, buscando un nuevo desafío.',
+    preferredFormation: '4-4-2 Clásica', tacticalStyle: 'DEFENSE', pressIntensity: 'MEDIUM', possessionVsCounter: 'COUNTER', playingStyle: 'Bloque bajo, agresividad defensiva y transiciones rápidas',
+    careerHonours: ['La Liga x2', 'Europa League x2'],
+    previousClubs: [{ clubId: 'ATL', clubName: 'Atlético de Madrid', years: '2011-2024', titles: ['La Liga x2', 'Europa League x2'] }], history: []
+  },
+  {
+    id: 'RM_FLICK', name: 'Hans-Dieter', surname: 'Flick', nationality: 'Alemania', age: 60, birthDate: new Date(1965, 1, 24), currentClubId: '1708', leagueId: 'L_ESP_1',
+    attributes: rmAttr(16, 17, 13, 14, 14, 12), personality: 'LEADER', reputation: 84, internationalReputation: 88,
+    biography: 'Artífice del sextete con el Bayern de Múnich, destaca por su enfoque táctico moderno y su capacidad para motivar a los jugadores. Recientemente asumió en Barcelona.',
+    preferredFormation: '4-2-3-1 Doble Pivote', tacticalStyle: 'ATTACK', pressIntensity: 'HIGH', possessionVsCounter: 'POSSESSION', playingStyle: 'Fútbol vertical, presión tras pérdida y ataque combinativo',
+    careerHonours: ['Champions League x1', 'Bundesliga x2', 'Copa de Alemania x1'],
+    previousClubs: [{ clubId: 'FCB', clubName: 'Bayern Munich', years: '2019-2021', titles: ['Champions League x1', 'Bundesliga x2'] }], history: []
+  },
 
   // ITALIA - L_ITA_1
-  { id: 'RM_INZAGHI', name: 'Simone', surname: 'Inzaghi', nationality: 'Italia', age: 49, birthDate: new Date(1975, 3, 9), currentClubId: '1135', leagueId: 'L_ITA_1', attributes: rmAttr(15, 15, 14, 13, 13, 12), personality: 'PASSIONATE', reputation: 84, history: [] },
-  { id: 'RM_MOTTA', name: 'Thiago', surname: 'Motta', nationality: 'Italia', age: 42, birthDate: new Date(1982, 7, 28), currentClubId: '1139', leagueId: 'L_ITA_1', attributes: rmAttr(14, 16, 12, 11, 13, 14), personality: 'VISIONARY', reputation: 78, history: [] },
-  { id: 'RM_CONTE', name: 'Antonio', surname: 'Conte', nationality: 'Italia', age: 55, birthDate: new Date(1969, 6, 31), currentClubId: '1150', leagueId: 'L_ITA_1', attributes: rmAttr(17, 16, 15, 16, 14, 11), personality: 'DISCIPLINARIAN', reputation: 87, history: [] },
-  { id: 'RM_PIOLI', name: 'Stefano', surname: 'Pioli', nationality: 'Italia', age: 59, birthDate: new Date(1965, 9, 19), currentClubId: '1099', leagueId: 'L_ITA_1', attributes: rmAttr(15, 14, 14, 13, 13, 13), personality: 'CALM', reputation: 80, history: [] },
+  {
+    id: 'RM_INZAGHI', name: 'Simone', surname: 'Inzaghi', nationality: 'Italia', age: 49, birthDate: new Date(1975, 3, 9), currentClubId: '1135', leagueId: 'L_ITA_1',
+    attributes: rmAttr(15, 15, 14, 13, 13, 12), personality: 'PASSIONATE', reputation: 84, internationalReputation: 82,
+    biography: 'Conocido por su trabajo en el Inter, donde ha ganado títulos y desarrollado un estilo de juego ofensivo y atractivo, manteniendo la solidez defensiva italiana.',
+    preferredFormation: '3-5-2 Carrileros', tacticalStyle: 'ATTACK', pressIntensity: 'MEDIUM', possessionVsCounter: 'BALANCED', playingStyle: 'Fútbol directo, ataques por los costados y transiciones rápidas',
+    careerHonours: ['Serie A x1', 'Copa Italia x2'],
+    previousClubs: [{ clubId: 'LAZ', clubName: 'Lazio', years: '2016-2021', titles: ['Copa Italia x1'] }], history: []
+  },
+  {
+    id: 'RM_MOTTA', name: 'Thiago', surname: 'Motta', nationality: 'Italia', age: 42, birthDate: new Date(1982, 7, 28), currentClubId: '1139', leagueId: 'L_ITA_1',
+    attributes: rmAttr(14, 16, 12, 11, 13, 14), personality: 'VISIONARY', reputation: 78, internationalReputation: 75,
+    biography: 'Un joven entrenador con ideas tácticas innovadoras, ha sorprendido en la Serie A con su fútbol propositivo. Recientemente asumió la dirección técnica de la Juventus.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'CONTROL', pressIntensity: 'HIGH', possessionVsCounter: 'POSSESSION', playingStyle: 'Fútbol de posesión con defensa zonal y ataque posicional',
+    careerHonours: [],
+    previousClubs: [{ clubId: 'BOL', clubName: 'Bologna', years: '2022-2024', titles: [] }], history: []
+  },
+  {
+    id: 'RM_CONTE', name: 'Antonio', surname: 'Conte', nationality: 'Italia', age: 55, birthDate: new Date(1969, 6, 31), currentClubId: '1150', leagueId: 'L_ITA_1',
+    attributes: rmAttr(17, 16, 15, 16, 14, 11), personality: 'DISCIPLINARIAN', reputation: 87, internationalReputation: 89,
+    biography: 'Famoso por su intensa disciplina táctica y su sistema 3-5-2. Ha ganado títulos en Italia e Inglaterra, exigiendo siempre el máximo de sus jugadores.',
+    preferredFormation: '3-5-2 Carrileros', tacticalStyle: 'DEFENSE', pressIntensity: 'HIGH', possessionVsCounter: 'COUNTER', playingStyle: 'Defensa sólida, carrileros profundos y transiciones rápidas',
+    careerHonours: ['Serie A x4', 'Premier League x1', 'FA Cup x1'],
+    previousClubs: [{ clubId: 'JUV', clubName: 'Juventus', years: '2011-2014', titles: ['Serie A x3'] }, { clubId: 'CHE', clubName: 'Chelsea', years: '2016-2018', titles: ['Premier League x1'] }], history: []
+  },
+  {
+    id: 'RM_PIOLI', name: 'Stefano', surname: 'Pioli', nationality: 'Italia', age: 59, birthDate: new Date(1965, 9, 19), currentClubId: '1099', leagueId: 'L_ITA_1',
+    attributes: rmAttr(15, 14, 14, 13, 13, 13), personality: 'CALM', reputation: 80, internationalReputation: 78,
+    biography: 'Entrenador con una larga trayectoria en Italia, logró el Scudetto con el AC Milan, destacando por su capacidad para construir equipos cohesionados.',
+    preferredFormation: '4-2-3-1 Doble Pivote', tacticalStyle: 'BALANCED', pressIntensity: 'MEDIUM', possessionVsCounter: 'BALANCED', playingStyle: 'Fútbol equilibrado, solidez defensiva y aprovechamiento de individualidades',
+    careerHonours: ['Serie A x1'],
+    previousClubs: [{ clubId: 'ACM', clubName: 'AC Milan', years: '2019-2024', titles: ['Serie A x1'] }], history: []
+  },
 
   // ALEMANIA - L_DEU_1
-  { id: 'RM_KOMPANY', name: 'Vincent', surname: 'Kompany', nationality: 'Bélgica', age: 39, birthDate: new Date(1986, 3, 10), currentClubId: '915', leagueId: 'L_DEU_1', attributes: rmAttr(14, 15, 13, 14, 12, 13), personality: 'LEADER', reputation: 79, history: [] },
-  { id: 'RM_ALONSO', name: 'Xabi', surname: 'Alonso', nationality: 'España', age: 43, birthDate: new Date(1981, 10, 25), currentClubId: '901', leagueId: 'L_DEU_1', attributes: rmAttr(16, 18, 13, 12, 15, 14), personality: 'VISIONARY', reputation: 86, history: [] },
+  {
+    id: 'RM_KOMPANY', name: 'Vincent', surname: 'Kompany', nationality: 'Bélgica', age: 39, birthDate: new Date(1986, 3, 10), currentClubId: '915', leagueId: 'L_DEU_1',
+    attributes: rmAttr(14, 15, 13, 14, 12, 13), personality: 'LEADER', reputation: 79, internationalReputation: 75,
+    biography: 'Ex-defensor central de élite, conocido por su liderazgo y su estilo de juego basado en la posesión y la construcción desde atrás. Recientemente asumió en Bayern Munich.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'CONTROL', pressIntensity: 'HIGH', possessionVsCounter: 'POSSESSION', playingStyle: 'Fútbol de posesión, salida limpia y presión tras pérdida',
+    careerHonours: ['Championship x1'],
+    previousClubs: [{ clubId: 'BUR', clubName: 'Burnley', years: '2022-2024', titles: ['Championship x1'] }], history: []
+  },
+  {
+    id: 'RM_ALONSO', name: 'Xabi', surname: 'Alonso', nationality: 'España', age: 43, birthDate: new Date(1981, 10, 25), currentClubId: '901', leagueId: 'L_DEU_1',
+    attributes: rmAttr(16, 18, 13, 12, 15, 14), personality: 'VISIONARY', reputation: 86, internationalReputation: 88,
+    biography: 'Joven entrenador con una meteórica carrera, transformó al Bayer Leverkusen en un equipo dominante con un fútbol atractivo y efectivo, basado en la versatilidad táctica.',
+    preferredFormation: '3-4-3', tacticalStyle: 'CONTROL', pressIntensity: 'HIGH', possessionVsCounter: 'POSSESSION', playingStyle: 'Fútbol posicional, ataques por los costados y mucha fluidez',
+    careerHonours: ['Bundesliga x1', 'Copa de Alemania x1'],
+    previousClubs: [], history: []
+  },
 
   // FRANCIA - L_FRA_1
-  { id: 'RM_ENRIQUE', name: 'Luis', surname: 'Enrique', nationality: 'España', age: 55, birthDate: new Date(1970, 4, 8), currentClubId: '868', leagueId: 'L_FRA_1', attributes: rmAttr(17, 17, 14, 15, 15, 14), personality: 'PASSIONATE', reputation: 89, history: [] },
+  {
+    id: 'RM_ENRIQUE', name: 'Luis', surname: 'Enrique', nationality: 'España', age: 55, birthDate: new Date(1970, 4, 8), currentClubId: '868', leagueId: 'L_FRA_1',
+    attributes: rmAttr(17, 17, 14, 15, 15, 14), personality: 'PASSIONATE', reputation: 89, internationalReputation: 90,
+    biography: 'Un entrenador de fuerte carácter y estilo de juego ofensivo, ha dirigido a grandes clubes y a la selección española, siempre buscando la iniciativa en el campo.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'ATTACK', pressIntensity: 'HIGH', possessionVsCounter: 'POSSESSION', playingStyle: 'Fútbol vertical, presión constante y juego combinativo',
+    careerHonours: ['La Liga x2', 'Champions League x1', 'Copa del Rey x2'],
+    previousClubs: [{ clubId: 'ROM', clubName: 'AS Roma', years: '2011-2012', titles: [] }, { clubId: 'FCB', clubName: 'Barcelona', years: '2014-2017', titles: ['La Liga x2', 'Champions League x1'] }], history: []
+  },
 
   // PAÍSES BAJOS - L_NLD_1
-  { id: 'RM_FARIOLI', name: 'Francesco', surname: 'Farioli', nationality: 'Italia', age: 36, birthDate: new Date(1988, 3, 25), currentClubId: '992', leagueId: 'L_NLD_1', attributes: rmAttr(13, 15, 11, 10, 12, 14), personality: 'VISIONARY', reputation: 72, history: [] },
+  {
+    id: 'RM_FARIOLI', name: 'Francesco', surname: 'Farioli', nationality: 'Italia', age: 36, birthDate: new Date(1988, 3, 25), currentClubId: '992', leagueId: 'L_NLD_1',
+    attributes: rmAttr(13, 15, 11, 10, 12, 14), personality: 'VISIONARY', reputation: 72, internationalReputation: 68,
+    biography: 'Joven técnico italiano con ideas modernas, conocido por su enfoque en el fútbol de posesión y una defensa organizada. Actualmente en el Ajax.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'CONTROL', pressIntensity: 'MEDIUM', possessionVsCounter: 'POSSESSION', playingStyle: 'Fútbol de posesión, control del balón y salida limpia desde atrás',
+    careerHonours: [],
+    previousClubs: [{ clubId: 'NICE', clubName: 'OGC Nice', years: '2023-2024', titles: [] }], history: []
+  },
 
   // PORTUGAL - L_PRT_1
-  { id: 'RM_RUI_PEDRO', name: 'Rui', surname: 'Pedro', nationality: 'Portugal', age: 49, birthDate: new Date(1976, 5, 15), currentClubId: '1489', leagueId: 'L_PRT_1', attributes: rmAttr(14, 15, 12, 12, 13, 12), personality: 'CALM', reputation: 74, history: [] },
+  {
+    id: 'RM_RUI_PEDRO', name: 'Rui', surname: 'Pedro', nationality: 'Portugal', age: 49, birthDate: new Date(1976, 5, 15), currentClubId: '1489', leagueId: 'L_PRT_1',
+    attributes: rmAttr(14, 15, 12, 12, 13, 12), personality: 'CALM', reputation: 74, internationalReputation: 70,
+    biography: 'Entrenador portugués con experiencia en el fútbol local, busca consolidar su carrera en la élite. Su estilo prioriza la organización táctica.',
+    preferredFormation: '4-2-3-1 Doble Pivote', tacticalStyle: 'BALANCED', pressIntensity: 'MEDIUM', possessionVsCounter: 'BALANCED', playingStyle: 'Fútbol organizado, solidez defensiva y transiciones rápidas',
+    careerHonours: [],
+    previousClubs: [], history: []
+  },
 
   // TURQUÍA - L_TUR_1
-  { id: 'RM_JOSE', name: 'José', surname: 'Mourinho', nationality: 'Portugal', age: 62, birthDate: new Date(1963, 0, 26), currentClubId: '1870', leagueId: 'L_TUR_1', attributes: rmAttr(17, 18, 16, 15, 16, 14), personality: 'DISCIPLINARIAN', reputation: 90, history: [] },
+  {
+    id: 'RM_JOSE', name: 'José', surname: 'Mourinho', nationality: 'Portugal', age: 62, birthDate: new Date(1963, 0, 26), currentClubId: '1870', leagueId: 'L_TUR_1',
+    attributes: rmAttr(17, 18, 16, 15, 16, 14), personality: 'DISCIPLINARIAN', reputation: 90, internationalReputation: 95,
+    biography: 'El "Special One" es uno de los entrenadores más ganadores, conocido por su mentalidad defensiva, el pragmatismo y la habilidad para ganar títulos en diversas ligas.',
+    preferredFormation: '4-2-3-1 Doble Pivote', tacticalStyle: 'DEFENSE', pressIntensity: 'LOW', possessionVsCounter: 'COUNTER', playingStyle: 'Fútbol pragmático, defensa sólida y contraataques letales',
+    careerHonours: ['Champions League x2', 'Europa League x2', 'Premier League x3', 'Serie A x2', 'La Liga x1', 'Primeira Liga x2'],
+    previousClubs: [{ clubId: 'POR', clubName: 'Porto', years: '2002-2004', titles: ['Champions League x1'] }, { clubId: 'CHE', clubName: 'Chelsea', years: '2004-2007', titles: ['Premier League x2'] }], history: []
+  },
 
   // ARGENTINA - L_ARG_1
-  { id: 'RM_GALLARDO', name: 'Marcelo', surname: 'Gallardo', nationality: 'Argentina', age: 49, birthDate: new Date(1976, 1, 18), currentClubId: null, leagueId: 'L_ARG_1', attributes: rmAttr(16, 16, 14, 15, 14, 13), personality: 'VISIONARY', reputation: 82, history: [] },
-  { id: 'RM_BOCHE', name: 'Rodolfo', surname: 'Arruabarrena', nationality: 'Argentina', age: 49, birthDate: new Date(1975, 6, 20), currentClubId: '82', leagueId: 'L_ARG_1', attributes: rmAttr(13, 12, 12, 13, 11, 10), personality: 'PASSIONATE', reputation: 68, history: [] },
-  { id: 'RM_GUEDE', name: 'Pedro', surname: 'Guede', nationality: 'Argentina', age: 54, birthDate: new Date(1970, 9, 17), currentClubId: '96', leagueId: 'L_ARG_1', attributes: rmAttr(13, 12, 13, 14, 11, 10), personality: 'LEADER', reputation: 65, history: [] },
+  {
+    id: 'RM_GALLARDO', name: 'Marcelo', surname: 'Gallardo', nationality: 'Argentina', age: 49, birthDate: new Date(1976, 1, 18), currentClubId: null, leagueId: 'L_ARG_1',
+    attributes: rmAttr(16, 16, 14, 15, 14, 13), personality: 'VISIONARY', reputation: 82, internationalReputation: 85,
+    biography: 'Uno de los entrenadores más exitosos en la historia de River Plate, reconocido por su estilo de juego ofensivo y la constante reinvención de sus equipos. Desempleado, en busca de un nuevo desafío.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'ATTACK', pressIntensity: 'HIGH', possessionVsCounter: 'POSSESSION', playingStyle: 'Fútbol ofensivo, presión constante y juego combinativo',
+    careerHonours: ['Copa Libertadores x2', 'Copa Sudamericana x1'],
+    previousClubs: [{ clubId: 'MON', clubName: 'Nacional (Uru)', years: '2011-2012', titles: [] }, { clubId: 'RIV', clubName: 'River Plate', years: '2014-2022', titles: ['Copa Libertadores x2'] }], history: []
+  },
+  {
+    id: 'RM_BOCHE', name: 'Rodolfo', surname: 'Arruabarrena', nationality: 'Argentina', age: 49, birthDate: new Date(1975, 6, 20), currentClubId: '82', leagueId: 'L_ARG_1',
+    attributes: rmAttr(13, 12, 12, 13, 11, 10), personality: 'PASSIONATE', reputation: 68, internationalReputation: 65,
+    biography: 'Ex-lateral izquierdo con una destacada carrera en Boca Juniors, ha dirigido en Argentina y en el extranjero, buscando inculcar un estilo de juego intenso y ofensivo.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'ATTACK', pressIntensity: 'MEDIUM', possessionVsCounter: 'BALANCED', playingStyle: 'Fútbol dinámico, ataque por bandas y presión en campo rival',
+    careerHonours: ['Primera División Argentina x1'],
+    previousClubs: [{ clubId: 'BOC', clubName: 'Boca Juniors', years: '2014-2016', titles: ['Primera División Argentina x1'] }], history: []
+  },
+  {
+    id: 'RM_GUEDE', name: 'Pedro', surname: 'Guede', nationality: 'Argentina', age: 54, birthDate: new Date(1970, 9, 17), currentClubId: '96', leagueId: 'L_ARG_1',
+    attributes: rmAttr(13, 12, 13, 14, 11, 10), personality: 'LEADER', reputation: 65, internationalReputation: 60,
+    biography: 'Entrenador argentino con experiencia en Chile y México, conocido por su estilo ofensivo y su predilección por esquemas de tres defensores. Actualmente en San Lorenzo.',
+    preferredFormation: '3-5-2 Carrileros', tacticalStyle: 'ATTACK', pressIntensity: 'HIGH', possessionVsCounter: 'BALANCED', playingStyle: 'Juego vertical, presión alta y ataque con muchos jugadores',
+    careerHonours: ['Copa Chile x1'],
+    previousClubs: [{ clubId: 'COLO', clubName: 'Colo-Colo', years: '2016-2018', titles: ['Copa Chile x1'] }], history: []
+  },
 
   // BRASIL - L_BRA_1
-  { id: 'RM_ABEL', name: 'Abel', surname: 'Ferreira', nationality: 'Portugal', age: 45, birthDate: new Date(1979, 11, 22), currentClubId: '329', leagueId: 'L_BRA_1', attributes: rmAttr(16, 15, 14, 15, 14, 12), personality: 'DISCIPLINARIAN', reputation: 83, history: [] },
-  { id: 'RM_DORIVAL', name: 'Dorival', surname: 'Júnior', nationality: 'Brasil', age: 63, birthDate: new Date(1962, 3, 25), currentClubId: '322', leagueId: 'L_BRA_1', attributes: rmAttr(14, 13, 13, 14, 12, 11), personality: 'CALM', reputation: 72, history: [] },
+  {
+    id: 'RM_ABEL', name: 'Abel', surname: 'Ferreira', nationality: 'Portugal', age: 45, birthDate: new Date(1979, 11, 22), currentClubId: '329', leagueId: 'L_BRA_1',
+    attributes: rmAttr(16, 15, 14, 15, 14, 12), personality: 'DISCIPLINARIAN', reputation: 83, internationalReputation: 85,
+    biography: 'El exitoso entrenador portugués que ha dominado el fútbol sudamericano con Palmeiras, destacando por su pragmatismo y la versatilidad táctica.',
+    preferredFormation: '4-2-3-1 Doble Pivote', tacticalStyle: 'BALANCED', pressIntensity: 'MEDIUM', possessionVsCounter: 'COUNTER', playingStyle: 'Fútbol competitivo, defensa sólida y transiciones rápidas',
+    careerHonours: ['Copa Libertadores x2', 'Brasileirão x2'],
+    previousClubs: [{ clubId: 'PAL', clubName: 'Palmeiras', years: '2020-2024', titles: ['Copa Libertadores x2'] }], history: []
+  },
+  {
+    id: 'RM_DORIVAL', name: 'Dorival', surname: 'Júnior', nationality: 'Brasil', age: 63, birthDate: new Date(1962, 3, 25), currentClubId: '322', leagueId: 'L_BRA_1',
+    attributes: rmAttr(14, 13, 13, 14, 12, 11), personality: 'CALM', reputation: 72, internationalReputation: 70,
+    biography: 'Entrenador con amplia experiencia en el fútbol brasileño, conocido por su gestión de grupo y su capacidad para hacer jugar bien a sus equipos. Actualmente en Flamengo.',
+    preferredFormation: '4-3-3 Ofensiva', tacticalStyle: 'ATTACK', pressIntensity: 'LOW', possessionVsCounter: 'POSSESSION', playingStyle: 'Fútbol ofensivo, con posesión y creación de juego',
+    careerHonours: ['Copa Libertadores x1', 'Copa de Brasil x1'],
+    previousClubs: [{ clubId: 'FLA', clubName: 'Flamengo', years: '2022-2023', titles: ['Copa Libertadores x1'] }], history: []
+  },
 ];
+
 
 export const STAFF_NAMES = {
     names: ["Marcelo", "Ramón", "Carlos", "Miguel", "Gustavo", "Eduardo", "Ricardo", "Gabriel", "Sebastián", "Diego", "Lionel", "Gerardo", "Jorge"],

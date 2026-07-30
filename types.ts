@@ -450,6 +450,13 @@ export interface StaffHistoryEntry {
   role: StaffRole;
 }
 
+export interface StaffPreviousClub {
+  clubId: string;
+  clubName: string;
+  years: string;
+  titles: string[];
+}
+
 export interface Staff {
   id: string;
   name: string;
@@ -464,9 +471,18 @@ export interface Staff {
   personality?: string;
   morale?: number;
   reputation?: number;
+  internationalReputation?: number;
   relationships?: Record<string, { trust: number; respect: number; tension: number }>;
   pressReputation?: number;
   boardRelationship?: number;
+  biography?: string;
+  preferredFormation?: string;
+  tacticalStyle?: 'CONTROL' | 'ATTACK' | 'DEFENSE' | 'COUNTER' | 'BALANCED';
+  pressIntensity?: 'LOW' | 'MEDIUM' | 'HIGH';
+  possessionVsCounter?: 'POSSESSION' | 'COUNTER' | 'BALANCED';
+  playingStyle?: string;
+  careerHonours?: string[];
+  previousClubs?: StaffPreviousClub[];
 }
 
 export interface RealManager {
@@ -482,6 +498,15 @@ export interface RealManager {
   personality: string;
   reputation: number;
   history: StaffHistoryEntry[];
+  biography?: string;
+  preferredFormation?: string;
+  tacticalStyle?: 'CONTROL' | 'ATTACK' | 'DEFENSE' | 'COUNTER' | 'BALANCED';
+  pressIntensity?: 'LOW' | 'MEDIUM' | 'HIGH';
+  possessionVsCounter?: 'POSSESSION' | 'COUNTER' | 'BALANCED';
+  playingStyle?: string;
+  internationalReputation?: number;
+  careerHonours?: string[];
+  previousClubs?: StaffPreviousClub[];
 }
 
 export type MessageCategory = 'MARKET' | 'SQUAD' | 'STATEMENTS' | 'FINANCE' | 'COMPETITION' | 'SCOUTING' | 'PEOPLE';

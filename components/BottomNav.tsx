@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Users, Clipboard, Play, MoreHorizontal, Trophy, ShoppingBag, Wallet, Briefcase, Dumbbell, Binoculars, Award } from 'lucide-react';
+import { Home, Users, Clipboard, Play, MoreHorizontal, Trophy, ShoppingBag, Wallet, Briefcase, Dumbbell, Binoculars, Award, RefreshCw, Zap, SkipForward } from 'lucide-react';
 import { useUIStore } from '../stores/uiStore';
 
 const tabs = [
@@ -20,7 +20,14 @@ const moreItems = [
   { id: 'BOARD', label: 'Directiva', icon: Award },
 ];
 
-export const BottomNav: React.FC = () => {
+interface BottomNavProps {
+  advanceTime: () => void;
+  simulateToNextMatch: () => void;
+  isSimulating: boolean;
+  isPreMatchView: boolean;
+}
+
+export const BottomNav: React.FC<BottomNavProps> = ({ advanceTime, simulateToNextMatch, isSimulating, isPreMatchView }) => {
   const { currentView, setView, userClub } = useUIStore();
 
   const [showMore, setShowMore] = React.useState(false);
@@ -48,6 +55,28 @@ export const BottomNav: React.FC = () => {
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-[200] bg-[#3a4a3a] border-t border-[#2a3a2a] lg:hidden"
            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <div className="flex items-center justify-around h-12 border-b border-[#2a3a2a]">
+          {!isPreMatchView && (
+            <button
+              onClick={simulateToNextMatch}
+              disabled={isSimulating}
+              className="flex items-center justify-center gap-1.5 flex-1 h-full text-slate-200 active:bg-[#2a3a2a] disabled:opacity-50 transition-colors"
+            >
+              <SkipForward size={18} />
+              <span className="text-[10px] font-black uppercase tracking-wider">Próximo Partido</span>
+            </button>
+          )}
+          <button
+            onClick={advanceTime}
+            disabled={isSimulating}
+            className={`flex items-center justify-center gap-1.5 flex-1 h-full text-white active:bg-[#2a3a2a] disabled:opacity-50 transition-colors ${isPreMatchView ? 'bg-[#5a6a5a] animate-pulse' : ''}`}
+          >
+            {isPreMatchView ? <Zap size={18} fill="currentColor" /> : <RefreshCw size={18} />}
+            <span className="text-[10px] font-black uppercase tracking-wider">
+              {isPreMatchView ? 'Jugar Partido' : 'Continuar'}
+            </span>
+          </button>
+        </div>
         <div className="flex items-center justify-around h-14">
           {tabs.map(tab => {
             const Icon = tab.icon;
@@ -71,7 +100,7 @@ export const BottomNav: React.FC = () => {
       {showMore && (
         <>
           <div className="fixed inset-0 z-[199] bg-black/50 lg:hidden" onClick={() => setShowMore(false)} />
-           <div className="fixed bottom-14 left-0 right-0 z-[200] bg-[#3a4a3a] border-t border-[#2a3a2a] rounded-t-xl p-4 lg:hidden animate-slide-up"
+           <div className="fixed bottom-26 left-0 right-0 z-[200] bg-[#3a4a3a] border-t border-[#2a3a2a] rounded-t-xl p-4 lg:hidden animate-slide-up"
                style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
             <div className="grid grid-cols-3 gap-3">
               {moreItems.map(item => {
