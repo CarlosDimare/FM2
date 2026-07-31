@@ -186,6 +186,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    const [pickSlot, setPickSlot] = useState<number | null>(null);
    const [pickBenchPlayer, setPickBenchPlayer] = useState<Player | null>(null);
    const [arrowMode, setArrowMode] = useState(false);
+   const [arrowMenuSlot, setArrowMenuSlot] = useState<number | null>(null);
    const [confirmAction, setConfirmAction] = useState<'AUTOPICK' | 'CLEAR' | null>(null);
 
    const activeTactic = world.getTactics().find(t => t.id === selectedTacticId) || world.getTactics()[0];
@@ -228,7 +229,20 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       notifyPlayers();
    };
 
+   const deleteArrowsForSlots = (slots: number[]) => {
+      if (!activeTactic) return;
+      slots.forEach(slot => delete activeTactic.arrows[slot]);
+      Object.keys(activeTactic.arrows).forEach(from => {
+         if (slots.includes(activeTactic.arrows[parseInt(from, 10)])) delete activeTactic.arrows[parseInt(from, 10)];
+      });
+      notifyTactics();
+   };
+
    const handleArrowTap = (slotIdx: number) => {
+      if (activeTactic.arrows[slotIdx] !== undefined) {
+         setArrowMenuSlot(slotIdx);
+         return;
+      }
       if (drawingArrowFrom === null) {
          setDrawingArrowFrom(slotIdx);
       } else if (drawingArrowFrom === slotIdx) {
@@ -249,9 +263,11 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
          const oldSlot = player.tacticalPosition;
          player.tacticalPosition = pickSlot;
          if (current) { current.tacticalPosition = oldSlot; current.isStarter = true; }
+         deleteArrowsForSlots([pickSlot, oldSlot]);
       } else {
          player.isStarter = true;
          player.tacticalPosition = pickSlot;
+         deleteArrowsForSlots([pickSlot]);
       }
       setPickSlot(null);
       notifyPlayers();
@@ -263,6 +279,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
          current.isStarter = false;
          current.tacticalPosition = undefined;
       }
+      deleteArrowsForSlots([slot]);
       setPickSlot(null);
       notifyPlayers();
    };
@@ -275,6 +292,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
          chosen.tacticalPosition = undefined;
          pickBenchPlayer.isStarter = true;
          pickBenchPlayer.tacticalPosition = slot;
+         deleteArrowsForSlots([slot]);
          notifyPlayers();
       }
       setPickBenchPlayer(null);
@@ -302,6 +320,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
        const targetSlots = [...newTactic.positions];
 
        unassignedPlayers.forEach(p => p.tacticalPosition = undefined);
+       newTactic.arrows = {};
 
        const gkSlot = targetSlots.find(s => SLOT_CONFIG[s].line === 'GK');
        if (gkSlot !== undefined) {
@@ -341,6 +360,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
       if (p1) p1.tacticalPosition = targetSlot;
       if (p2) p2.tacticalPosition = draggingSlot;
+      deleteArrowsForSlots([draggingSlot, targetSlot]);
 
       const idx1 = activeTactic.positions.indexOf(draggingSlot);
       const idx2 = activeTactic.positions.indexOf(targetSlot);
@@ -470,6 +490,9 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
               const slotIdx = parseInt(idx);
               const p = starters.find(pl => pl.tacticalPosition === slotIdx);
               const isSelected = selectedSlot === slotIdx;
+              const isTacticSlot = activeTactic.positions.includes(slotIdx);
+              const isDragActive = draggingSlot !== null;
+              if (!isTacticSlot && !isDragActive) return null;
               
               return (
                  <div 
@@ -508,7 +531,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                            <span className="px-1 py-px bg-black/70 text-white text-[6px] sm:text-[7px] font-black uppercase rounded-sm leading-none truncate max-w-[64px] shadow-sm">{p.name}</span>
                        </div>
                     ) : (
-                       <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-dashed flex items-center justify-center font-black text-[8px] sm:text-[10px] uppercase tracking-tight transition-all cursor-pointer hover:scale-110 ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${currentHoverSlot === slotIdx ? 'border-white bg-white/25 text-white' : 'border-white/50 bg-white/5 text-white/80'}`}>
+                       <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-dashed flex items-center justify-center font-black text-[8px] sm:text-[10px] uppercase tracking-tight transition-all cursor-pointer hover:scale-110 ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${isTacticSlot ? 'border-white/50 bg-white/5 text-white/80' : 'border-green-400 bg-green-400/25 text-green-100 animate-pulse'} ${currentHoverSlot === slotIdx && !isTacticSlot ? 'border-green-200 bg-green-300/40' : ''}`}>
                           {SLOT_CONFIG[slotIdx]?.abbr || 'JUG'}
                        </div>
                     )}
@@ -841,6 +864,32 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
          {renderPickModal()}
          {renderBenchModal()}
+
+         {/* Arrow Menu Modal */}
+         {arrowMenuSlot !== null && (
+            <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setArrowMenuSlot(null)}>
+               <FMBox title="Flecha de ataque" className="w-full max-w-sm shadow-2xl border-2 border-slate-400">
+                  <div className="p-6 space-y-6">
+                     <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0"><GitBranch size={18} /></div>
+                        <div>
+                           <p className="text-xs font-black text-slate-900 uppercase leading-snug">Existe una flecha desde {SLOT_CONFIG[arrowMenuSlot]?.abbr || arrowMenuSlot}</p>
+                           <p className="text-[10px] text-slate-600 mt-1 leading-relaxed">Podés borrarla o dibujar una nueva hacia otro puesto.</p>
+                        </div>
+                     </div>
+                     <div className="flex flex-col gap-2">
+                        <FMButton variant="danger" onClick={() => { deleteArrowsForSlots([arrowMenuSlot]); setArrowMenuSlot(null); }} className="w-full py-3">
+                           <Trash2 size={12}/> BORRAR FLECHA
+                        </FMButton>
+                        <FMButton variant="secondary" onClick={() => { setDrawingArrowFrom(arrowMenuSlot); setArrowMenuSlot(null); }} className="w-full py-3">
+                           <GitBranch size={12}/> DIBUJAR OTRA
+                        </FMButton>
+                        <FMButton variant="secondary" onClick={() => setArrowMenuSlot(null)} className="w-full py-3">CANCELAR</FMButton>
+                     </div>
+                  </div>
+               </FMBox>
+            </div>
+         )}
 
          {/* Confirm Modal: Assistant XI / Clear Selection */}
          {confirmAction && (
