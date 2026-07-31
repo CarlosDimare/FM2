@@ -4,7 +4,7 @@ import { Player, Position, Club, TacticSettings, PlayerTacticSettings, Tactic } 
 import { world } from '../services/worldManager';
 import { notifyPlayers, notifyTactics } from '../stores/worldStore';
 import { SLOT_CONFIG } from '../services/engine';
-import { Save, UserCheck, MousePointer2, ArrowUpRight, LayoutGrid, ClipboardList, X, Users, Star } from 'lucide-react';
+import { Save, UserCheck, MousePointer2, ArrowUpRight, LayoutGrid, ClipboardList, X, Users, Star, Trash2, GitBranch } from 'lucide-react';
 import { FMButton, FMBox } from './FMUI';
 
 interface TacticsViewProps {
@@ -185,6 +185,8 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
    const [pickSlot, setPickSlot] = useState<number | null>(null);
    const [pickBenchPlayer, setPickBenchPlayer] = useState<Player | null>(null);
+   const [arrowMode, setArrowMode] = useState(false);
+   const [confirmAction, setConfirmAction] = useState<'AUTOPICK' | 'CLEAR' | null>(null);
 
    const activeTactic = world.getTactics().find(t => t.id === selectedTacticId) || world.getTactics()[0];
    const starters = players.filter(p => p.isStarter && p.tacticalPosition !== undefined);
@@ -219,6 +221,21 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       const currentSquad = players.length > 0 ? players[0].squad : 'SENIOR';
       world.selectBestEleven(club.id, currentSquad, activeTactic.id); 
       if (players.length > 0) notifyPlayers();
+   };
+
+   const handleClearSelection = () => {
+      players.forEach(p => { p.isStarter = false; p.tacticalPosition = undefined; });
+      notifyPlayers();
+   };
+
+   const handleArrowTap = (slotIdx: number) => {
+      if (drawingArrowFrom === null) {
+         setDrawingArrowFrom(slotIdx);
+      } else if (drawingArrowFrom === slotIdx) {
+         setDrawingArrowFrom(null);
+      } else {
+         handleCreateArrow(slotIdx);
+      }
    };
 
    const handlePickForSlot = (player: Player) => {
@@ -373,7 +390,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    const handleTouchStart = (e: React.TouchEvent, slotIdx: number) => {
       e.preventDefault();
       touchStartSlot.current = slotIdx;
-      setDraggingSlot(slotIdx);
+      if (!arrowMode) setDraggingSlot(slotIdx);
       setSelectedSlot(slotIdx);
    };
 
@@ -402,7 +419,9 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
          if (slotEl) {
             const targetSlot = parseInt(slotEl.getAttribute('data-slot') || '', 10);
             if (!isNaN(targetSlot)) {
-               if (touchStartSlot.current !== null && touchStartSlot.current !== targetSlot) {
+               if (arrowMode) {
+                  handleArrowTap(targetSlot);
+               } else if (touchStartSlot.current !== null && touchStartSlot.current !== targetSlot) {
                   handleSlotDrop(targetSlot);
                } else if (touchStartSlot.current === targetSlot) {
                   setPickSlot(targetSlot);
@@ -416,7 +435,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    };
 
     const renderPitch = () => (
-       <div className="relative w-full max-w-[420px] aspect-[3/4] shadow-2xl bg-[#1e3a29] border-[3px] border-white/30 rounded-sm overflow-hidden ring-4 ring-[#a0b0a0]/30"
+       <div className={`relative w-full max-w-[420px] aspect-[3/4] shadow-2xl bg-[#1e3a29] border-[3px] border-white/30 rounded-sm overflow-hidden ring-4 ring-[#a0b0a0]/30 ${arrowMode ? 'cursor-crosshair' : ''}`}
             onMouseLeave={() => { setDraggingSlot(null); setDrawingArrowFrom(null); setCurrentHoverSlot(null); }}
             onTouchMove={handlePitchTouchMove}
             onTouchEnd={handlePitchTouchEnd}>
@@ -447,7 +466,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                })}
            </svg>
 
-           {Object.entries(SLOT_COORDS).filter(([idx]) => activeTactic.positions.includes(parseInt(idx))).map(([idx, coords]) => {
+           {Object.entries(SLOT_COORDS).map(([idx, coords]) => {
               const slotIdx = parseInt(idx);
               const p = starters.find(pl => pl.tacticalPosition === slotIdx);
               const isSelected = selectedSlot === slotIdx;
@@ -458,23 +477,26 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                      data-slot={slotIdx}
                      className={`absolute transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-16 sm:h-16 flex flex-col items-center justify-center z-10 
                                  ${draggingSlot === slotIdx ? 'opacity-30 scale-90' : ''}
-                                 ${currentHoverSlot === slotIdx ? 'ring-2 ring-white/50 rounded-full' : ''}`} 
+                                 ${currentHoverSlot === slotIdx ? 'ring-2 ring-white/50 rounded-full' : ''}
+                                 ${drawingArrowFrom === slotIdx ? 'ring-2 ring-amber-400 rounded-full' : ''}`} 
                      style={{ top: `${coords.t}%`, left: `${coords.l}%` }}
                      onMouseEnter={() => setCurrentHoverSlot(slotIdx)}
-                     onMouseDown={(e) => {
-                         if (e.button === 0) setDraggingSlot(slotIdx);
-                         if (e.button === 2) setDrawingArrowFrom(slotIdx);
-                         setSelectedSlot(slotIdx);
-                     }}
-                     onMouseUp={() => {
-                         if (draggingSlot === slotIdx) {
-                            setPickSlot(slotIdx);
-                         } else if (draggingSlot !== null) {
-                            handleSlotDrop(slotIdx);
-                         }
-                         if (drawingArrowFrom !== null) handleCreateArrow(slotIdx);
-                         setDraggingSlot(null);
-                     }}
+                      onMouseDown={(e) => {
+                          if (e.button === 0 && !arrowMode) setDraggingSlot(slotIdx);
+                          if (e.button === 2 && !arrowMode) setDrawingArrowFrom(slotIdx);
+                          setSelectedSlot(slotIdx);
+                      }}
+                      onMouseUp={() => {
+                          if (arrowMode) {
+                             handleArrowTap(slotIdx);
+                          } else if (draggingSlot === slotIdx) {
+                             setPickSlot(slotIdx);
+                          } else if (draggingSlot !== null) {
+                             handleSlotDrop(slotIdx);
+                          }
+                          if (drawingArrowFrom !== null && !arrowMode) handleCreateArrow(slotIdx);
+                          setDraggingSlot(null);
+                      }}
                      onContextMenu={(e) => { e.preventDefault(); if (p) onContextMenu?.(e, p); }}
                      onTouchStart={(e) => handleTouchStart(e, slotIdx)}
                  >
@@ -502,27 +524,24 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
              <span className="flex items-center gap-1.5"><Users size={12} /> Suplentes</span>
              <span className="bg-black/10 px-2 rounded-full text-[9px] border border-black/5">{bench.length}</span>
           </header>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scroll bg-[#dbe6db]/40">
-             {bench.map(p => (
-                <button key={p.id} onClick={() => setPickBenchPlayer(p)}
-                   className="w-full flex items-center gap-2.5 p-2 bg-white border border-[#a0b0a0] rounded-sm hover:border-[#3a4a3a] hover:bg-[#f2f7f2] transition-all shadow-sm text-left group"
-                   onContextMenu={(e) => { e.preventDefault(); onContextMenu?.(e, p); }}>
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
-                      {getDorsal(p, players)}
-                   </div>
-                   <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase text-slate-900 truncate leading-none group-hover:text-[#3a4a3a]">{p.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                         <span className="text-[8px] font-bold text-slate-400 uppercase">CA: {(p.currentAbility/20).toFixed(1)}</span>
-                         <span className={`text-[8px] font-black ${p.fitness < 70 ? 'text-red-600' : 'text-green-700'}`}>{Math.round(p.fitness)}% FIS</span>
-                      </div>
-                   </div>
-                </button>
-             ))}
-             {bench.length === 0 && (
-                <div className="p-6 text-center text-[9px] font-black uppercase tracking-widest text-slate-400 italic">Sin suplentes disponibles</div>
-             )}
-          </div>
+           <div className="flex-1 overflow-y-auto p-2 custom-scroll bg-[#dbe6db]/40">
+              <div className="grid grid-cols-3 gap-1.5">
+                 {bench.map(p => (
+                    <button key={p.id} onClick={() => setPickBenchPlayer(p)}
+                       className="flex flex-col items-center gap-1 p-1.5 bg-white border border-[#a0b0a0] rounded-sm hover:border-[#3a4a3a] hover:bg-[#f2f7f2] transition-all shadow-sm group"
+                       onContextMenu={(e) => { e.preventDefault(); onContextMenu?.(e, p); }}>
+                       <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
+                          {getDorsal(p, players)}
+                       </div>
+                       <span className="text-[7px] font-black uppercase text-slate-800 truncate max-w-full leading-none">{p.name}</span>
+                       <span className="text-[7px] font-bold text-slate-500 whitespace-nowrap">CA {(p.currentAbility/20).toFixed(1)}</span>
+                    </button>
+                 ))}
+              </div>
+              {bench.length === 0 && (
+                 <div className="p-6 text-center text-[9px] font-black uppercase tracking-widest text-slate-400 italic">Sin suplentes disponibles</div>
+              )}
+           </div>
        </div>
     );
 
@@ -695,12 +714,18 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
             </div>
 
             {/* Toolbar - Tier 2 */}
-            <div className="flex gap-2">
-                <FMButton variant="secondary" onClick={handleAutoPick} className="flex-1 py-2 text-[9px]">
-                   <UserCheck size={12}/> ELEGIR 11
+            <div className="flex flex-wrap gap-2">
+                <FMButton variant="secondary" onClick={() => setConfirmAction('AUTOPICK')} className="flex-1 min-w-[45%] py-2 text-[9px]">
+                   <UserCheck size={12}/> EL SEGUNDO ELIGE 11
                 </FMButton>
-                <FMButton variant="secondary" onClick={() => setIsSaveModalOpen(true)} className="flex-1 py-2 text-[9px]">
+                <FMButton variant={arrowMode ? 'vacation' : 'secondary'} onClick={() => setArrowMode(!arrowMode)} className="flex-1 min-w-[45%] py-2 text-[9px]">
+                   <GitBranch size={12}/> FLECHAS {arrowMode ? 'ON' : 'OFF'}
+                </FMButton>
+                <FMButton variant="secondary" onClick={() => setIsSaveModalOpen(true)} className="flex-1 min-w-[45%] py-2 text-[9px]">
                    <Save size={12}/> GUARDAR
+                </FMButton>
+                <FMButton variant="danger" onClick={() => setConfirmAction('CLEAR')} className="flex-1 min-w-[45%] py-2 text-[9px]">
+                   <Trash2 size={12}/> BORRAR
                 </FMButton>
             </div>
          </div>
@@ -710,9 +735,10 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                {viewMode === 'PITCH' ? (
                   <div className="flex flex-col items-center gap-4 w-full pb-2">
                       {renderPitch()}
-                      <div className="w-full max-w-[420px] bg-white/60 p-2 rounded-sm border border-[#a0b0a0] text-[8px] font-black text-slate-500 uppercase tracking-widest flex flex-wrap justify-center gap-3 sm:gap-6 shadow-sm">
+                      <div className="w-full max-w-[420px] bg-white/60 p-2 rounded-sm border border-[#a0b0a0] text-[8px] font-black text-slate-500 uppercase tracking-widest flex flex-wrap justify-center gap-2 sm:gap-5 shadow-sm">
                           <span className="flex items-center gap-1.5"><MousePointer2 size={10} className="text-slate-400" /> CLICK FICHA: ELEGIR JUGADOR</span>
-                          <span className="flex items-center gap-1.5"><ArrowUpRight size={10} className="text-slate-400" /> ARRASTRE: CAMBIAR POSICIÓN</span>
+                          <span className="flex items-center gap-1.5"><ArrowUpRight size={10} className="text-slate-400" /> ARRASTRAR: MOVER / INTERCAMBIAR</span>
+                          <span className="flex items-center gap-1.5"><GitBranch size={10} className="text-amber-600" /> FLECHAS: BOTÓN FLECHAS → TOCAR ORIGEN → DESTINO</span>
                       </div>
                       <div className="w-full max-w-[420px] lg:hidden">
                          <div className="border border-[#a0b0a0] bg-[#e8ece8] rounded-sm shadow-sm max-h-56 overflow-y-auto custom-scroll">
@@ -815,6 +841,39 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
          {renderPickModal()}
          {renderBenchModal()}
+
+         {/* Confirm Modal: Assistant XI / Clear Selection */}
+         {confirmAction && (
+            <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setConfirmAction(null)}>
+               <FMBox title={confirmAction === 'AUTOPICK' ? 'Delegar elección del once' : 'Borrar selección'} className="w-full max-w-sm shadow-2xl border-2 border-slate-400">
+                  <div className="p-6 space-y-6">
+                     <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white ${confirmAction === 'AUTOPICK' ? 'bg-[#3a4a3a]' : 'bg-red-600'}`}>
+                           {confirmAction === 'AUTOPICK' ? <UserCheck size={18} /> : <Trash2 size={18} />}
+                        </div>
+                        <div>
+                           <p className="text-xs font-black text-slate-900 uppercase leading-snug">
+                              {confirmAction === 'AUTOPICK' ? 'El segundo entrenador armará el mejor once' : 'Quitar todos los jugadores del campo'}
+                           </p>
+                           <p className="text-[10px] text-slate-600 mt-1 leading-relaxed">
+                              {confirmAction === 'AUTOPICK'
+                                 ? 'Seleccionará los 11 titulares según la táctica activa, priorizando atributos, forma y estado físico.'
+                                 : 'Todos los puestos quedarán vacíos y podrás armar el once desde cero.'}
+                           </p>
+                        </div>
+                     </div>
+                     <div className="flex gap-2">
+                        <FMButton variant="secondary" onClick={() => setConfirmAction(null)} className="flex-1 py-3">CANCELAR</FMButton>
+                        <FMButton variant="primary" onClick={() => {
+                           if (confirmAction === 'AUTOPICK') handleAutoPick();
+                           else handleClearSelection();
+                           setConfirmAction(null);
+                        }} className="flex-1 py-3">CONFIRMAR</FMButton>
+                     </div>
+                  </div>
+               </FMBox>
+            </div>
+         )}
 
          {/* Save Modal */}
          {isSaveModalOpen && (
