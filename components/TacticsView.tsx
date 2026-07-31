@@ -175,7 +175,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    const [viewMode, setViewMode] = useState<'PITCH' | 'INSTRUCTIONS'>('PITCH');
    const [instructionType, setInstructionType] = useState<'TEAM' | 'INDIVIDUAL'>('TEAM');
    const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
-   const [selectedTacticId, setSelectedTacticId] = useState<string>('');
+   const [selectedTacticId, setSelectedTacticId] = useState<string>(world.getTactics()[0]?.id || '');
    const [newTacticName, setNewTacticName] = useState('');
    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
    
@@ -447,7 +447,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                })}
            </svg>
 
-           {Object.entries(SLOT_COORDS).map(([idx, coords]) => {
+           {Object.entries(SLOT_COORDS).filter(([idx]) => activeTactic.positions.includes(parseInt(idx))).map(([idx, coords]) => {
               const slotIdx = parseInt(idx);
               const p = starters.find(pl => pl.tacticalPosition === slotIdx);
               const isSelected = selectedSlot === slotIdx;
@@ -479,11 +479,15 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                      onTouchStart={(e) => handleTouchStart(e, slotIdx)}
                  >
                     {p ? (
-                       <div title={p.name} className={`relative w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center font-black text-[11px] sm:text-sm shadow-lg transition-all hover:scale-110 cursor-pointer ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : `${club.primaryColor} ${club.secondaryColor} border-black/20`}`}>
-                          {getDorsal(p, players)}
+                       <div className="flex flex-col items-center gap-0.5">
+                          <div title={`${p.name} — ${SLOT_CONFIG[slotIdx]?.abbr || ''}`} className={`relative w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center font-black text-[11px] sm:text-sm shadow-lg transition-all hover:scale-110 cursor-pointer ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : `${club.primaryColor} ${club.secondaryColor} border-black/20`}`}>
+                              {getDorsal(p, players)}
+                           </div>
+                           <span className="px-1 py-px bg-black/70 text-white text-[6px] sm:text-[7px] font-black uppercase rounded-sm leading-none truncate max-w-[64px] shadow-sm">{p.name}</span>
                        </div>
                     ) : (
-                       <div className={`w-7 h-7 sm:w-10 sm:h-10 rounded-full border border-dashed flex items-center justify-center transition-colors ${currentHoverSlot === slotIdx ? 'border-white bg-white/20' : 'border-white/10'}`}>
+                       <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-dashed flex items-center justify-center font-black text-[8px] sm:text-[10px] uppercase tracking-tight transition-all cursor-pointer hover:scale-110 ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${currentHoverSlot === slotIdx ? 'border-white bg-white/25 text-white' : 'border-white/50 bg-white/5 text-white/80'}`}>
+                          {SLOT_CONFIG[slotIdx]?.abbr || 'JUG'}
                        </div>
                     )}
                  </div>
@@ -527,7 +531,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       const current = starters.find(p => p.tacticalPosition === pickSlot);
       const line = SLOT_CONFIG[pickSlot]?.line || '?';
       const lineLabel: Record<string, string> = { GK: 'Portero', SW: 'Libero', DEF: 'Defensa', DM: 'Mediocentro Def.', MID: 'Mediocentro', AM: 'Mediapunta', ATT: 'Delantero' };
-      const eligible = players.filter(p => !p.injury && (!p.suspension || p.suspension.matchesLeft === 0) && p.id !== current?.id);
+      const eligible = players.filter(p => !p.injury && (!p.suspension || p.suspension.matchesLeft === 0) && !(p.isStarter && p.tacticalPosition !== undefined) && p.id !== current?.id);
       const ranked = [...eligible].sort((a, b) => slotFit(b, pickSlot) - slotFit(a, pickSlot));
       const top3 = ranked.slice(0, 3);
       const rest = ranked.slice(3).sort((a, b) => b.currentAbility - a.currentAbility);
