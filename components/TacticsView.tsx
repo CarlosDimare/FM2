@@ -4,7 +4,7 @@ import { Player, Position, Club, TacticSettings, PlayerTacticSettings, Tactic } 
 import { world } from '../services/worldManager';
 import { notifyPlayers, notifyTactics } from '../stores/worldStore';
 import { SLOT_CONFIG } from '../services/engine';
-import { Save, UserCheck, SlidersHorizontal, MousePointer2, Settings2, Trash2, ArrowUpRight, ChevronRight, LayoutGrid, ClipboardList, UserPlus, X } from 'lucide-react';
+import { Save, UserCheck, MousePointer2, ArrowUpRight, LayoutGrid, ClipboardList, X, Users, Star } from 'lucide-react';
 import { FMButton, FMBox } from './FMUI';
 
 interface TacticsViewProps {
@@ -55,6 +55,45 @@ const SLOT_COORDS: Record<number, { t: number, l: number }> = {
    
    // ATT (t: 12)
    27: { t: 12, l: 8 }, 29: { t: 12, l: 29 }, 26: { t: 12, l: 50 }, 30: { t: 12, l: 71 }, 28: { t: 12, l: 92 },
+};
+
+const getPlayerLine = (p: Player): string => {
+  if (p.positions.includes(Position.GK)) return 'GK';
+  if (p.positions.includes(Position.SW)) return 'SW';
+  const pos = p.positions[0];
+  if ([Position.DC, Position.DR, Position.DL].includes(pos)) return 'DEF';
+  if ([Position.DM, Position.DMR, Position.DML].includes(pos)) return 'DM';
+  if ([Position.MC, Position.MR, Position.ML].includes(pos)) return 'MID';
+  if ([Position.AM, Position.AMR, Position.AML].includes(pos)) return 'AM';
+  return 'ATT';
+};
+
+const LINE_NEIGHBORS: Record<string, string[]> = {
+  GK: ['DEF'],
+  SW: ['DEF'],
+  DEF: ['SW', 'DM'],
+  DM: ['DEF', 'MID'],
+  MID: ['DM', 'AM'],
+  AM: ['MID', 'ATT'],
+  ATT: ['AM'],
+};
+
+const lineFit = (p: Player, line: string): number => {
+  const pLine = getPlayerLine(p);
+  if (line === pLine) return 20;
+  if (p.secondaryPositions && p.secondaryPositions.some(sp => {
+    const spLine = getPlayerLine({ ...p, positions: [sp] } as Player);
+    return spLine === line;
+  })) return 15;
+  if ((LINE_NEIGHBORS[line] || []).includes(pLine)) return 9;
+  if ((LINE_NEIGHBORS[pLine] || []).includes(line)) return 9;
+  return 3;
+};
+
+const slotFit = (p: Player, slot: number): number => {
+  const metadata = SLOT_CONFIG[slot];
+  if (!metadata) return 0;
+  return lineFit(p, metadata.line) + p.currentAbility / 20;
 };
 
 const SliderRow: React.FC<{ 
@@ -113,6 +152,25 @@ const CycleOption: React.FC<{ label: string; value: string; options: { id: strin
     </div>
 );
 
+const PlayerRow: React.FC<{ p: Player; players: Player[]; fitScore: number; highlight?: boolean; onPick: () => void; badge?: string }> = ({ p, players, fitScore, highlight, onPick, badge }) => (
+   <button onClick={onPick}
+      className={`flex items-center gap-2 px-2.5 py-2 rounded-sm border text-left transition-all shadow-sm w-full ${highlight ? 'bg-green-50 border-green-500 ring-1 ring-green-500' : 'bg-white border-[#a0b0a0] hover:border-[#3a4a3a]'}`}>
+      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
+         {getDorsal(p, players)}
+      </span>
+      <div className="min-w-0 flex-1">
+         <p className="text-[10px] font-black uppercase truncate leading-none text-slate-900">{p.name}</p>
+         <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[8px] font-bold text-slate-400">{p.positions.join('/')}</span>
+            <span className="text-[8px] font-black text-slate-600">CA {(p.currentAbility/20).toFixed(1)}</span>
+            {fitScore >= 15 && <span className="text-[8px] font-black text-green-700">Apto</span>}
+            {badge && <span className="ml-auto text-[8px] font-black uppercase text-blue-700">{badge}</span>}
+         </div>
+      </div>
+      <span className="text-[9px] font-black text-slate-700 shrink-0">{Math.round(fitScore)}</span>
+   </button>
+);
+
 export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onContextMenu }) => {
    const [viewMode, setViewMode] = useState<'PITCH' | 'INSTRUCTIONS'>('PITCH');
    const [instructionType, setInstructionType] = useState<'TEAM' | 'INDIVIDUAL'>('TEAM');
@@ -124,9 +182,9 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    const [draggingSlot, setDraggingSlot] = useState<number | null>(null);
    const [drawingArrowFrom, setDrawingArrowFrom] = useState<number | null>(null);
    const [currentHoverSlot, setCurrentHoverSlot] = useState<number | null>(null);
-   const [showPickModal, setShowPickModal] = useState(false);
-   const [pickTargetSlot, setPickTargetSlot] = useState<number | null>(null);
-   const [pickedPlayer, setPickedPlayer] = useState<Player | null>(null);
+
+   const [pickSlot, setPickSlot] = useState<number | null>(null);
+   const [pickBenchPlayer, setPickBenchPlayer] = useState<Player | null>(null);
 
    const activeTactic = world.getTactics().find(t => t.id === selectedTacticId) || world.getTactics()[0];
    const starters = players.filter(p => p.isStarter && p.tacticalPosition !== undefined);
@@ -141,7 +199,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    const updateTeamSettings = (key: keyof TacticSettings, val: any) => {
        if (!activeTactic) return;
         activeTactic.settings = { ...activeTactic.settings, [key]: val };
-         notifyTactics();
+          notifyTactics();
    };
 
    const updateIndividualSettings = (slot: number, key: keyof PlayerTacticSettings, val: any) => {
@@ -163,23 +221,22 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       if (players.length > 0) notifyPlayers();
    };
 
-   const handleAssignToSlot = (slot: number) => {
-      if (!pickedPlayer) return;
-      const current = starters.find(p => p.tacticalPosition === slot);
+   const handlePickForSlot = (player: Player) => {
+      if (pickSlot === null) return;
+      const current = starters.find(p => p.tacticalPosition === pickSlot);
       if (current) {
          current.isStarter = false;
          current.tacticalPosition = undefined;
       }
-      if (pickedPlayer.isStarter && pickedPlayer.tacticalPosition !== undefined) {
-         const oldSlot = pickedPlayer.tacticalPosition;
-         pickedPlayer.tacticalPosition = slot;
-         if (current) current.tacticalPosition = oldSlot;
-         if (current) current.isStarter = true;
+      if (player.isStarter && player.tacticalPosition !== undefined) {
+         const oldSlot = player.tacticalPosition;
+         player.tacticalPosition = pickSlot;
+         if (current) { current.tacticalPosition = oldSlot; current.isStarter = true; }
       } else {
-         pickedPlayer.isStarter = true;
-         pickedPlayer.tacticalPosition = slot;
+         player.isStarter = true;
+         player.tacticalPosition = pickSlot;
       }
-      setPickedPlayer(null);
+      setPickSlot(null);
       notifyPlayers();
    };
 
@@ -189,48 +246,22 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
          current.isStarter = false;
          current.tacticalPosition = undefined;
       }
-      setPickedPlayer(null);
+      setPickSlot(null);
       notifyPlayers();
    };
 
-   const renderPickPitch = () => (
-      <div className="relative w-full max-w-[300px] aspect-[3/4] mx-auto shadow-2xl bg-[#1e3a29] border-[3px] border-white/30 rounded-sm overflow-hidden ring-4 ring-[#a0b0a0]/30 select-none">
-         <svg className="absolute inset-0 w-full h-full opacity-40 pointer-events-none">
-            <g stroke="white" strokeWidth="2" fill="none">
-               <rect x="5%" y="5%" width="90%" height="90%" />
-               <line x1="5%" y1="50%" x2="95%" y2="50%" />
-               <circle cx="50%" cy="50%" r="15%" />
-               <rect x="25%" y="5%" width="50%" height="15%" />
-               <rect x="25%" y="80%" width="50%" height="15%" />
-            </g>
-         </svg>
-         {activeTactic.positions.map((slotIdx) => {
-            const coords = SLOT_COORDS[slotIdx];
-            if (!coords) return null;
-            const p = starters.find(pl => pl.tacticalPosition === slotIdx);
-            const isSelected = pickTargetSlot === slotIdx;
-            return (
-               <div key={slotIdx} data-slot={slotIdx}
-                  className={`absolute transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center z-10 rounded-full cursor-pointer transition-all ${isSelected ? 'ring-4 ring-yellow-400' : 'hover:ring-2 hover:ring-white/50'}`}
-                  style={{ top: `${coords.t}%`, left: `${coords.l}%` }}
-                  onClick={() => {
-                     if (p) { handleUnassignSlot(slotIdx); }
-                     else if (pickedPlayer) { handleAssignToSlot(slotIdx); setPickTargetSlot(null); }
-                     else setPickTargetSlot(null);
-                  }}
-               >
-                  {p ? (
-                     <div title={p.name} className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 flex items-center justify-center font-black text-[10px] sm:text-xs shadow-lg ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : `${club.primaryColor} ${club.secondaryColor} border-black/20`}`}>
-                        {getDorsal(p, players)}
-                     </div>
-                  ) : (
-                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center text-white/60 font-black text-sm">+</div>
-                  )}
-               </div>
-            );
-         })}
-      </div>
-   );
+   const handlePickForBench = (chosen: Player) => {
+      if (!pickBenchPlayer) return;
+      if (chosen.isStarter && chosen.tacticalPosition !== undefined) {
+         const slot = chosen.tacticalPosition;
+         chosen.isStarter = false;
+         chosen.tacticalPosition = undefined;
+         pickBenchPlayer.isStarter = true;
+         pickBenchPlayer.tacticalPosition = slot;
+         notifyPlayers();
+      }
+      setPickBenchPlayer(null);
+   };
 
    const isPlayerSuitableForLine = (p: Player, line: string) => {
        const pos = p.positions[0];
@@ -253,10 +284,8 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
        const unassignedPlayers = [...currentStarters];
        const targetSlots = [...newTactic.positions];
 
-       // Clear current positions
        unassignedPlayers.forEach(p => p.tacticalPosition = undefined);
 
-       // 1. Assign GK
        const gkSlot = targetSlots.find(s => SLOT_CONFIG[s].line === 'GK');
        if (gkSlot !== undefined) {
            const gkIdx = unassignedPlayers.findIndex(p => p.positions.includes(Position.GK));
@@ -267,7 +296,6 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
            }
        }
 
-       // 2. Assign remaining based on line suitability
        for (const slot of [...targetSlots]) {
            if (!targetSlots.includes(slot)) continue;
            
@@ -275,7 +303,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
            let bestIdx = unassignedPlayers.findIndex(p => isPlayerSuitableForLine(p, line));
            
            if (bestIdx === -1 && unassignedPlayers.length > 0) {
-               bestIdx = 0; // Fallback
+               bestIdx = 0;
            }
 
            if (bestIdx !== -1) {
@@ -302,10 +330,8 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       if (idx1 !== -1) activeTactic.positions[idx1] = targetSlot;
       if (idx2 !== -1) activeTactic.positions[idx2] = draggingSlot;
       
-      // If we move to an empty slot, ensure it becomes active in the tactic definition
       if (idx1 === -1 && p1) activeTactic.positions.push(targetSlot);
       if (idx1 !== -1 && !p2 && idx2 === -1) {
-          // If we moved a player FROM a slot to an empty slot, and no one swapped back, remove the old slot
           activeTactic.positions.splice(idx1, 1);
           activeTactic.positions.push(targetSlot);
       }
@@ -378,6 +404,8 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
             if (!isNaN(targetSlot)) {
                if (touchStartSlot.current !== null && touchStartSlot.current !== targetSlot) {
                   handleSlotDrop(targetSlot);
+               } else if (touchStartSlot.current === targetSlot) {
+                  setPickSlot(targetSlot);
                }
             }
          }
@@ -424,7 +452,6 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
               const p = starters.find(pl => pl.tacticalPosition === slotIdx);
               const isSelected = selectedSlot === slotIdx;
               
-              // Render ALL slots to allow free dragging
               return (
                  <div 
                      key={idx} 
@@ -440,8 +467,13 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                          setSelectedSlot(slotIdx);
                      }}
                      onMouseUp={() => {
-                         if (draggingSlot !== null) handleSlotDrop(slotIdx);
+                         if (draggingSlot === slotIdx) {
+                            setPickSlot(slotIdx);
+                         } else if (draggingSlot !== null) {
+                            handleSlotDrop(slotIdx);
+                         }
                          if (drawingArrowFrom !== null) handleCreateArrow(slotIdx);
+                         setDraggingSlot(null);
                      }}
                      onContextMenu={(e) => { e.preventDefault(); if (p) onContextMenu?.(e, p); }}
                      onTouchStart={(e) => handleTouchStart(e, slotIdx)}
@@ -452,7 +484,6 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                        </div>
                     ) : (
                        <div className={`w-7 h-7 sm:w-10 sm:h-10 rounded-full border border-dashed flex items-center justify-center transition-colors ${currentHoverSlot === slotIdx ? 'border-white bg-white/20' : 'border-white/10'}`}>
-                          {/* Show subtle indicator for empty slots */}
                        </div>
                     )}
                  </div>
@@ -460,6 +491,167 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
            })}
        </div>
     );
+
+    const renderBenchPanel = () => (
+       <div className="flex flex-col h-full">
+          <header className="p-3 border-b border-[#a0b0a0] text-[10px] font-black uppercase tracking-widest text-slate-700 flex justify-between items-center" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
+             <span className="flex items-center gap-1.5"><Users size={12} /> Suplentes</span>
+             <span className="bg-black/10 px-2 rounded-full text-[9px] border border-black/5">{bench.length}</span>
+          </header>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scroll bg-[#dbe6db]/40">
+             {bench.map(p => (
+                <button key={p.id} onClick={() => setPickBenchPlayer(p)}
+                   className="w-full flex items-center gap-2.5 p-2 bg-white border border-[#a0b0a0] rounded-sm hover:border-[#3a4a3a] hover:bg-[#f2f7f2] transition-all shadow-sm text-left group"
+                   onContextMenu={(e) => { e.preventDefault(); onContextMenu?.(e, p); }}>
+                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
+                      {getDorsal(p, players)}
+                   </div>
+                   <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase text-slate-900 truncate leading-none group-hover:text-[#3a4a3a]">{p.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                         <span className="text-[8px] font-bold text-slate-400 uppercase">CA: {(p.currentAbility/20).toFixed(1)}</span>
+                         <span className={`text-[8px] font-black ${p.fitness < 70 ? 'text-red-600' : 'text-green-700'}`}>{Math.round(p.fitness)}% FIS</span>
+                      </div>
+                   </div>
+                </button>
+             ))}
+             {bench.length === 0 && (
+                <div className="p-6 text-center text-[9px] font-black uppercase tracking-widest text-slate-400 italic">Sin suplentes disponibles</div>
+             )}
+          </div>
+       </div>
+    );
+
+    const renderPickModal = () => {
+      if (pickSlot === null) return null;
+      const current = starters.find(p => p.tacticalPosition === pickSlot);
+      const line = SLOT_CONFIG[pickSlot]?.line || '?';
+      const lineLabel: Record<string, string> = { GK: 'Portero', SW: 'Libero', DEF: 'Defensa', DM: 'Mediocentro Def.', MID: 'Mediocentro', AM: 'Mediapunta', ATT: 'Delantero' };
+      const eligible = players.filter(p => !p.injury && (!p.suspension || p.suspension.matchesLeft === 0) && p.id !== current?.id);
+      const ranked = [...eligible].sort((a, b) => slotFit(b, pickSlot) - slotFit(a, pickSlot));
+      const top3 = ranked.slice(0, 3);
+      const rest = ranked.slice(3).sort((a, b) => b.currentAbility - a.currentAbility);
+      return (
+         <div className="fixed inset-0 z-[600] bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setPickSlot(null)}>
+            <div className="bg-[#e8ece8] border-2 border-[#a0b0a0] rounded-sm shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()} style={{ fontFamily: 'Verdana, sans-serif' }}>
+               <header className="px-4 py-3 border-b border-[#a0b0a0] flex justify-between items-center shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
+                  <div>
+                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider italic">Puesto: {lineLabel[line] || line}</h3>
+                     <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{current ? `Titular actual: ${current.name}` : 'Casilla vacante — elige a un jugador'}</p>
+                  </div>
+                  <button onClick={() => setPickSlot(null)} className="bg-black/10 hover:bg-black/20 rounded-sm p-2 transition-colors">
+                     <X size={16} className="text-slate-800" />
+                  </button>
+               </header>
+
+               <div className="flex-1 overflow-y-auto custom-scroll p-3 sm:p-4 space-y-4">
+                  {current && (
+                     <div className="flex items-center justify-between px-3 py-2 bg-amber-50 border border-amber-400 rounded-sm">
+                        <span className="text-[10px] font-black uppercase text-amber-900">Titular: {current.name}</span>
+                        <button onClick={() => handleUnassignSlot(pickSlot)} className="text-[9px] font-black uppercase text-amber-900 underline">Quitar del 11</button>
+                     </div>
+                  )}
+
+                  {top3.length > 0 && (
+                     <div>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                           <Star size={11} className="text-amber-500 fill-amber-500" /> Mejores opciones para este puesto
+                        </p>
+                        <div className="space-y-1.5">
+                           {top3.map((p, i) => (
+                              <PlayerRow key={p.id} p={p} players={players} fitScore={slotFit(p, pickSlot)} highlight onPick={() => handlePickForSlot(p)} badge={i === 0 ? 'Recomendado' : undefined} />
+                           ))}
+                        </div>
+                     </div>
+                  )}
+
+                  {rest.length > 0 && (
+                     <div>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Resto del plantel</p>
+                        <div className="space-y-1.5">
+                           {rest.map(p => (
+                              <PlayerRow key={p.id} p={p} players={players} fitScore={slotFit(p, pickSlot)} onPick={() => handlePickForSlot(p)} />
+                           ))}
+                        </div>
+                     </div>
+                  )}
+
+                  {ranked.length === 0 && (
+                     <p className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">No hay jugadores disponibles</p>
+                  )}
+               </div>
+
+               <footer className="px-4 py-3 border-t border-[#a0b0a0] flex gap-2 shrink-0">
+                  <FMButton variant="secondary" onClick={handleAutoPick} className="flex-1 py-2.5 text-[9px]">
+                     <UserCheck size={12} /> AUTO COMPLETAR
+                  </FMButton>
+                  <FMButton variant="primary" onClick={() => setPickSlot(null)} className="flex-1 py-2.5 text-[9px]">
+                     LISTO
+                  </FMButton>
+               </footer>
+            </div>
+         </div>
+      );
+    };
+
+    const renderBenchModal = () => {
+      if (!pickBenchPlayer) return null;
+      const line = getPlayerLine(pickBenchPlayer);
+      const lineLabel: Record<string, string> = { GK: 'Portero', SW: 'Libero', DEF: 'Defensa', DM: 'Mediocentro Def.', MID: 'Mediocentro', AM: 'Mediapunta', ATT: 'Delantero' };
+      const eligible = players.filter(p => !p.injury && (!p.suspension || p.suspension.matchesLeft === 0) && p.id !== pickBenchPlayer.id);
+      const ranked = [...eligible].sort((a, b) => (lineFit(b, line) + b.currentAbility / 20) - (lineFit(a, line) + a.currentAbility / 20));
+      const top3 = ranked.slice(0, 3);
+      const rest = ranked.slice(3).sort((a, b) => b.currentAbility - a.currentAbility);
+      return (
+         <div className="fixed inset-0 z-[600] bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setPickBenchPlayer(null)}>
+            <div className="bg-[#e8ece8] border-2 border-[#a0b0a0] rounded-sm shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()} style={{ fontFamily: 'Verdana, sans-serif' }}>
+               <header className="px-4 py-3 border-b border-[#a0b0a0] flex justify-between items-center shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
+                  <div>
+                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider italic">Cambio de suplente</h3>
+                     <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{pickBenchPlayer.name} ({lineLabel[line] || line}) — elige un titular para intercambiar</p>
+                  </div>
+                  <button onClick={() => setPickBenchPlayer(null)} className="bg-black/10 hover:bg-black/20 rounded-sm p-2 transition-colors">
+                     <X size={16} className="text-slate-800" />
+                  </button>
+               </header>
+
+               <div className="flex-1 overflow-y-auto custom-scroll p-3 sm:p-4 space-y-4">
+                  {top3.length > 0 && (
+                     <div>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                           <Star size={11} className="text-amber-500 fill-amber-500" /> Mejores opciones para {lineLabel[line]}
+                        </p>
+                        <div className="space-y-1.5">
+                           {top3.map((p, i) => (
+                              <PlayerRow key={p.id} p={p} players={players} fitScore={lineFit(p, line) + p.currentAbility / 20}
+                                 onPick={() => handlePickForBench(p)} badge={p.isStarter ? 'Titular' : undefined} highlight={i === 0} />
+                           ))}
+                        </div>
+                     </div>
+                  )}
+
+                  {rest.length > 0 && (
+                     <div>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Resto del plantel</p>
+                        <div className="space-y-1.5">
+                           {rest.map(p => (
+                              <PlayerRow key={p.id} p={p} players={players} fitScore={lineFit(p, line) + p.currentAbility / 20}
+                                 onPick={() => handlePickForBench(p)} badge={p.isStarter ? 'Titular' : undefined} />
+                           ))}
+                        </div>
+                     </div>
+                  )}
+               </div>
+
+               <footer className="px-4 py-3 border-t border-[#a0b0a0] flex gap-2 shrink-0">
+                  <FMButton variant="secondary" onClick={() => setPickBenchPlayer(null)} className="flex-1 py-2.5 text-[9px]">
+                     CANCELAR
+                  </FMButton>
+               </footer>
+            </div>
+         </div>
+      );
+    };
 
    return (
       <div className="flex flex-col h-full bg-[#d4dcd4] overflow-hidden select-none" onContextMenu={e => e.preventDefault()}>
@@ -501,10 +693,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
             {/* Toolbar - Tier 2 */}
             <div className="flex gap-2">
                 <FMButton variant="secondary" onClick={handleAutoPick} className="flex-1 py-2 text-[9px]">
-                   <UserCheck size={12}/> AUTO 11
-                </FMButton>
-                <FMButton variant="primary" onClick={() => setShowPickModal(true)} className="flex-1 py-2 text-[9px]">
-                   <UserPlus size={12}/> ELEGIR 11
+                   <UserCheck size={12}/> ELEGIR 11
                 </FMButton>
                 <FMButton variant="secondary" onClick={() => setIsSaveModalOpen(true)} className="flex-1 py-2 text-[9px]">
                    <Save size={12}/> GUARDAR
@@ -515,12 +704,16 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
          <div className="flex-1 flex overflow-hidden">
             <div className="flex-1 relative overflow-y-auto custom-scroll bg-[#cbd5e1]/30 p-2 sm:p-4 flex justify-center items-start">
                {viewMode === 'PITCH' ? (
-                  <div className="flex flex-col items-center gap-4 w-full">
+                  <div className="flex flex-col items-center gap-4 w-full pb-2">
                       {renderPitch()}
                       <div className="w-full max-w-[420px] bg-white/60 p-2 rounded-sm border border-[#a0b0a0] text-[8px] font-black text-slate-500 uppercase tracking-widest flex flex-wrap justify-center gap-3 sm:gap-6 shadow-sm">
-                          <span className="flex items-center gap-1.5"><MousePointer2 size={10} className="text-slate-400" /> IZQ: MOVER / ELEGIR</span>
-                          <span className="flex items-center gap-1.5"><ArrowUpRight size={10} className="text-slate-400" /> DER: DIBUJAR FLECHA</span>
-                          <span className="flex items-center gap-1.5"><UserPlus size={10} className="text-slate-400" /> CLICK: VER JUGADOR</span>
+                          <span className="flex items-center gap-1.5"><MousePointer2 size={10} className="text-slate-400" /> CLICK FICHA: ELEGIR JUGADOR</span>
+                          <span className="flex items-center gap-1.5"><ArrowUpRight size={10} className="text-slate-400" /> ARRASTRE: CAMBIAR POSICIÓN</span>
+                      </div>
+                      <div className="w-full max-w-[420px] lg:hidden">
+                         <div className="border border-[#a0b0a0] bg-[#e8ece8] rounded-sm shadow-sm max-h-56 overflow-y-auto custom-scroll">
+                            {renderBenchPanel()}
+                         </div>
                       </div>
                   </div>
                ) : (
@@ -557,7 +750,6 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                           </div>
                       ) : (
                           <div className="flex flex-col md:flex-row gap-4 min-h-[500px]">
-                              {/* Selected Position Indicator */}
                               <div className="w-full md:w-48 shrink-0 flex flex-col gap-2">
                                   <div className="h-[250px] md:h-[280px] flex justify-center">
                                      {renderPitch()}
@@ -611,108 +803,14 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                )}
             </div>
 
-            {/* Bench Sidebar - Desktop only */}
-            <div className="w-64 border-l border-[#a0b0a0] bg-[#e8ece8] flex flex-col shadow-inner hidden xl:flex">
-               <header className="p-3 bg-[#d4dcd4] border-b border-[#a0b0a0] text-[10px] font-black uppercase tracking-widest text-slate-700 flex justify-between items-center" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
-                  <span>Disponibles</span>
-                  <span className="bg-black/10 px-2 rounded-full text-[9px] border border-black/5">{bench.length}</span>
-               </header>
-               <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scroll bg-[#dbe6db]/40">
-                  {bench.map(p => (
-                     <div key={p.id} className="flex items-center gap-3 p-2 bg-white border border-[#a0b0a0] rounded-sm hover:border-blue-500 transition-all cursor-default group shadow-sm" onContextMenu={(e) => onContextMenu?.(e, p)}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
-                           {p.positions[0]}
-                        </div>
-                        <div className="min-w-0">
-                           <p className="text-[10px] font-black uppercase text-slate-900 truncate leading-none group-hover:text-blue-800">{p.name}</p>
-                           <div className="flex items-center gap-2 mt-1.5">
-                              <span className="text-[8px] font-bold text-slate-400 uppercase">CA: {(p.currentAbility/20).toFixed(1)}</span>
-                              <span className={`text-[8px] font-black ${p.fitness < 90 ? 'text-red-600' : 'text-green-700'}`}>{Math.round(p.fitness)}% FIS</span>
-                           </div>
-                        </div>
-                     </div>
-                  ))}
-               </div>
+            {/* Bench Panel - Desktop */}
+            <div className="w-64 border-l border-[#a0b0a0] bg-[#e8ece8] flex-col shadow-inner hidden lg:flex">
+               {renderBenchPanel()}
             </div>
          </div>
 
-         {/* Pick XI Modal */}
-         {showPickModal && (
-            <div className="fixed inset-0 z-[600] bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-overlay-in">
-               <div className="bg-[#e8ece8] border-2 border-[#a0b0a0] rounded-sm shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden" style={{ fontFamily: 'Verdana, sans-serif' }}>
-                  <header className="px-4 py-3 border-b border-[#a0b0a0] flex justify-between items-center shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
-                     <div>
-                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider italic">Elegir Titulares</h3>
-                        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Toca un jugador y luego una posición en el campo</p>
-                     </div>
-                     <div className="flex items-center gap-3">
-                        <span className={`px-3 py-1 rounded-sm font-black text-xs border ${starters.length === 11 ? 'bg-green-700 text-white border-green-900' : 'bg-[#3a4a3a] text-white border-black'}`}>
-                           {starters.length}/11
-                        </span>
-                        <button onClick={() => { setShowPickModal(false); setPickedPlayer(null); }} className="bg-black/10 hover:bg-black/20 rounded-sm p-2 transition-colors">
-                           <X size={16} className="text-slate-800" />
-                        </button>
-                     </div>
-                  </header>
-
-                  <div className="flex-1 overflow-y-auto custom-scroll p-3 sm:p-4">
-                     {pickedPlayer && (
-                        <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-400 rounded-sm text-[10px] font-black uppercase tracking-wide text-amber-900 flex items-center justify-between gap-2">
-                           <span>Asignando: {pickedPlayer.name} → toca una casilla vacía en el campo</span>
-                           <button onClick={() => setPickedPlayer(null)} className="text-amber-900 underline">Cancelar</button>
-                        </div>
-                     )}
-                     <div className="flex flex-col md:flex-row gap-4">
-                        <div className="md:w-[280px] md:shrink-0 flex flex-col gap-2">
-                           {renderPickPitch()}
-                           <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest text-center leading-relaxed">
-                              Toca un titular para devolverlo al banquillo
-                           </div>
-                        </div>
-                        <div className="flex-1 min-h-0 flex flex-col">
-                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pb-4">
-                              {players.filter(p => !p.injury && (!p.suspension || p.suspension.matchesLeft === 0))
-                                 .sort((a, b) => (Number(b.isStarter) - Number(a.isStarter)) || (b.currentAbility - a.currentAbility))
-                                 .map(p => {
-                                    const isPicked = pickedPlayer?.id === p.id;
-                                    return (
-                                       <button key={p.id} onClick={() => {
-                                          if (p.isStarter && p.tacticalPosition !== undefined) { handleUnassignSlot(p.tacticalPosition); }
-                                          else setPickedPlayer(isPicked ? null : p);
-                                       }}
-                                          className={`flex items-center gap-2 px-2 py-1.5 rounded-sm border text-left transition-all shadow-sm ${isPicked ? 'bg-amber-50 border-amber-500 ring-1 ring-amber-500' : p.isStarter ? 'bg-[#3a4a3a] border-[#2a3a2a] hover:brightness-110' : 'bg-white border-[#a0b0a0] hover:border-[#3a4a3a]'}`}
-                                       >
-                                          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
-                                             {getDorsal(p, players)}
-                                          </span>
-                                          <div className="min-w-0 flex-1">
-                                             <p className={`text-[10px] font-black uppercase truncate leading-none ${p.isStarter ? 'text-white' : 'text-slate-900'}`}>{p.name}</p>
-                                             <div className="flex items-center gap-1.5 mt-1">
-                                                <span className={`text-[8px] font-bold ${p.isStarter ? 'text-slate-300' : 'text-slate-400'}`}>{p.positions[0]}</span>
-                                                <span className={`text-[8px] font-black ${p.isStarter ? 'text-green-400' : 'text-slate-500'}`}>CA {(p.currentAbility/20).toFixed(1)}</span>
-                                                <span className={`text-[8px] font-black ml-auto ${p.fitness < 70 ? 'text-red-500' : p.isStarter ? 'text-slate-300' : 'text-slate-500'}`}>{Math.round(p.fitness)}%</span>
-                                             </div>
-                                          </div>
-                                          {p.isStarter && <span className="text-[8px] font-black text-green-400 uppercase shrink-0">Tit</span>}
-                                       </button>
-                                    );
-                                 })}
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-
-                  <footer className="px-4 py-3 border-t border-[#a0b0a0] flex gap-2 shrink-0">
-                     <FMButton variant="secondary" onClick={() => { setPickedPlayer(null); handleAutoPick(); }} className="flex-1 py-2.5 text-[9px]">
-                        <UserCheck size={12} /> AUTO SELECCIONAR
-                     </FMButton>
-                     <FMButton variant="primary" onClick={() => { setShowPickModal(false); setPickedPlayer(null); }} className="flex-1 py-2.5 text-[9px]">
-                        <UserCheck size={12} /> LISTO
-                     </FMButton>
-                  </footer>
-               </div>
-            </div>
-         )}
+         {renderPickModal()}
+         {renderBenchModal()}
 
          {/* Save Modal */}
          {isSaveModalOpen && (

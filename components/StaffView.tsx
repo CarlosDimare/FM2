@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { Staff, Club, STAFF_ATTRIBUTE_LABELS } from '../types';
 import { world } from '../services/worldManager';
-import { notifyClubs } from '../stores/worldStore';
+import { notifyClubs, useWorldStore } from '../stores/worldStore';
 import { getAttributeColor } from '../constants';
-import { X, Briefcase, Activity, Calendar, History, Wallet, BookOpen, Trophy, Star, Shield, Zap, Target, Swords, MapPin, Users, ClipboardList, Dumbbell, Mic, MessageCircle, GraduationCap, Binoculars } from 'lucide-react';
-import { FMTable, FMTableCell } from './FMUI';
+import { getFlagUrl } from '../data/static';
+import { X, Activity, Calendar, History, Wallet, BookOpen, Trophy, Star, Shield, Zap, Target, Swords, MapPin, Users, ClipboardList, Dumbbell, Mic, MessageCircle, GraduationCap, Binoculars } from 'lucide-react';
+import { FMBox, FMTable, FMTableCell } from './FMUI';
 
 const TACTICAL_STYLE_LABELS: Record<string, string> = {
   CONTROL: 'Control',
@@ -33,6 +34,19 @@ const PERSONALITY_LABELS: Record<string, string> = {
   PASSIONATE: 'Pasional',
   DISCIPLINARIAN: 'Disciplinado',
   LEADER: 'Líder',
+};
+
+const getRoleShort = (role: string) => {
+  switch(role) {
+    case 'HEAD_COACH': return 'DT';
+    case 'ASSISTANT_MANAGER': return 'AYDT';
+    case 'PHYSIO': return 'FISIO';
+    case 'FITNESS_COACH': return 'PF';
+    case 'RESERVE_MANAGER': return 'RESERVA';
+    case 'YOUTH_MANAGER': return 'SUB-20';
+    case 'SCOUT': return 'OJEADOR';
+    default: return role;
+  }
 };
 
 function generateProfileText(staff: Staff): string {
@@ -90,11 +104,14 @@ function generateProfileText(staff: Staff): string {
 
 interface StaffViewProps {
   staff: Staff[];
+  club?: Club;
 }
 
 export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [activeTab, setActiveTab] = useState<'PERSONAL' | 'DELEGACION'>('PERSONAL');
+  const clubs = useWorldStore(s => s.clubs);
+  const liveClub = clubs.find(c => c.id === club?.id) || club;
 
   const getRoleLabel = (role: string) => {
     switch(role) {
@@ -126,10 +143,9 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
   ];
 
   const setDelegation = (key: string, staffId: string | undefined) => {
-    if (!club) return;
-    const current = club[key as 'trainingDelegatedTo'];
-    if (staffId) club[key as 'trainingDelegatedTo'] = staffId;
-    else delete club[key as 'trainingDelegatedTo'];
+    if (!liveClub) return;
+    if (staffId) liveClub[key as 'trainingDelegatedTo'] = staffId;
+    else delete liveClub[key as 'trainingDelegatedTo'];
     notifyClubs();
   };
 
@@ -138,9 +154,21 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
     return staff.find(s => s.id === staffId)?.name || null;
   };
 
+  const getDelegationBadges = (s: Staff) => {
+    if (!liveClub) return [];
+    return [
+      liveClub.trainingDelegatedTo === s.id && 'Entreno',
+      liveClub.pressDelegatedTo === s.id && 'Prensa',
+      liveClub.talksDelegatedTo === s.id && 'Charlas',
+      liveClub.reserveDelegatedTo === s.id && 'Reserva',
+      liveClub.u20DelegatedTo === s.id && 'Sub-20',
+      liveClub.scoutingDelegatedTo === s.id && 'Scouting',
+    ].filter(Boolean) as string[];
+  };
+
   const renderDelegationTab = () => (
     <div className="flex-1 overflow-y-auto custom-scroll pb-24">
-      {!club ? (
+      {!liveClub ? (
         <div className="p-12 text-center text-slate-500 font-black uppercase text-[10px] tracking-widest">Selecciona un club para gestionar delegaciones</div>
       ) : (
         <div className="max-w-3xl mx-auto space-y-3">
@@ -151,7 +179,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
             <p className="text-[9px] text-slate-500 mt-1">Asigna responsabilidades a tu cuerpo técnico para ocuparte solo de lo que importa. Tareas sin delegar quedan a tu cargo.</p>
           </div>
           {DELEGABLE_TASKS.map(task => {
-            const delegatedId = club[task.key];
+            const delegatedId = liveClub[task.key];
             const delegatedName = getDelegatedName(delegatedId);
             const candidates = staff.filter(s => task.suggestedRoles.includes(s.role));
             return (
@@ -217,48 +245,97 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
       </header>
 
       {activeTab === 'PERSONAL' ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto flex-1 pb-24 custom-scroll">
-        {sortedStaff.map(s => (
-          <div 
-            key={s.id} 
-            onClick={() => setSelectedStaff(s)}
-            className={`p-5 rounded-sm border transition-all cursor-pointer group relative overflow-hidden shadow-sm hover:shadow-md ${s.role === 'HEAD_COACH' ? 'bg-blue-100 border-blue-400 hover:bg-blue-50 hover:border-blue-600' : 'bg-slate-200 border-slate-400 hover:border-slate-600 hover:bg-slate-100'}`}
-          >
-            <div className={`absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 ${s.role === 'HEAD_COACH' ? 'text-blue-900' : 'text-slate-900'}`}>
-               <Briefcase size={64} />
-            </div>
-            <div className="flex items-center gap-3 mb-3">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm border-2 shrink-0 ${s.role === 'HEAD_COACH' ? 'bg-blue-700 text-white border-blue-900' : 'bg-slate-600 text-white border-slate-800'}`}>
-                {s.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-lg font-black text-slate-950 uppercase italic truncate">{s.name}</h3>
-                <p className={`${s.role === 'HEAD_COACH' ? 'text-blue-800 text-[10px]' : 'text-blue-700 text-[9px]'} font-black uppercase tracking-widest`}>{getRoleLabel(s.role)}</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 text-[10px] text-slate-600 font-bold uppercase">
-               <span>{s.nationality}</span>
-               <span>{s.age} años</span>
-               {s.reputation && s.role === 'HEAD_COACH' && (
-                 <span className="flex items-center gap-1 text-amber-700"><Star size={10} className="fill-amber-500" /> {s.reputation}</span>
-               )}
-            </div>
-            {(club && (club.trainingDelegatedTo === s.id || club.pressDelegatedTo === s.id || club.talksDelegatedTo === s.id || club.reserveDelegatedTo === s.id || club.u20DelegatedTo === s.id || club.scoutingDelegatedTo === s.id)) && (
-              <div className="mt-3 flex flex-wrap gap-1">
-                {[
-                  club.trainingDelegatedTo === s.id && 'Entreno',
-                  club.pressDelegatedTo === s.id && 'Prensa',
-                  club.talksDelegatedTo === s.id && 'Charlas',
-                  club.reserveDelegatedTo === s.id && 'Reserva',
-                  club.u20DelegatedTo === s.id && 'Sub-20',
-                  club.scoutingDelegatedTo === s.id && 'Scouting',
-                ].filter(Boolean).map(b => (
-                  <span key={b as string} className="px-1.5 py-0.5 bg-green-100 border border-green-400 rounded-sm text-green-800 text-[8px] font-black uppercase">{b}</span>
-                ))}
-              </div>
-            )}
+      <div className="flex-1 min-h-0 pb-24">
+        <FMBox title={`Cuerpo Técnico (${sortedStaff.length})`} className="h-full" noPadding>
+          {/* Desktop Table View */}
+          <div className="hidden md:block h-full overflow-hidden">
+            <FMTable
+              headers={['Rol', 'Nombre', 'Edad', 'Nacionalidad', 'Rep', 'Sueldo', 'Delegaciones']}
+              colWidths={['70px', 'auto', '40px', '90px', '40px', '70px', '150px']}
+            >
+              {sortedStaff.map((s, idx) => {
+                const badges = getDelegationBadges(s);
+                return (
+                  <tr
+                    key={s.id}
+                    onClick={() => setSelectedStaff(s)}
+                    className={`
+                      cursor-pointer transition-colors border-b border-[#e0e0e0]
+                      ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
+                      hover:bg-[#ccd9cc]
+                      ${s.role === 'HEAD_COACH' ? 'font-bold' : ''}
+                    `}
+                  >
+                    <FMTableCell className="text-center text-slate-700 font-bold">{getRoleShort(s.role)}</FMTableCell>
+                    <FMTableCell className="text-slate-900">
+                      <div className="flex items-center min-w-0">
+                        <img src={getFlagUrl(s.nationality)} alt={s.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-slate-300" />
+                        <span className="truncate">{s.name}</span>
+                        {s.role === 'HEAD_COACH' && s.reputation && (
+                          <span className="ml-2 flex items-center gap-0.5 text-amber-700 shrink-0"><Star size={10} className="fill-amber-500" /> {s.reputation}</span>
+                        )}
+                      </div>
+                    </FMTableCell>
+                    <FMTableCell className="text-center font-bold" isNumber>{s.age}</FMTableCell>
+                    <FMTableCell className="text-slate-500 text-[10px]">{s.nationality}</FMTableCell>
+                    <FMTableCell className="text-center font-bold" isNumber>{s.reputation ?? '-'}</FMTableCell>
+                    <FMTableCell className="text-right font-bold" isNumber>£{(s.salary / 1000).toFixed(0)}k</FMTableCell>
+                    <FMTableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {badges.length > 0 ? badges.map(b => (
+                          <span key={b} className="px-1.5 py-0.5 bg-green-100 border border-green-400 rounded-sm text-green-800 text-[8px] font-black uppercase whitespace-nowrap">{b}</span>
+                        )) : <span className="text-slate-300 text-[9px]">—</span>}
+                      </div>
+                    </FMTableCell>
+                  </tr>
+                );
+              })}
+            </FMTable>
           </div>
-        ))}
+
+          {/* Mobile Table View */}
+          <div className="md:hidden h-full overflow-hidden">
+            <FMTable
+              headers={['Rol', 'Nombre', 'Edad', 'Delegaciones']}
+              colWidths={['56px', 'auto', '36px', '120px']}
+            >
+              {sortedStaff.map((s, idx) => {
+                const badges = getDelegationBadges(s);
+                return (
+                  <tr
+                    key={s.id}
+                    onClick={() => setSelectedStaff(s)}
+                    className={`
+                      cursor-pointer transition-colors border-b border-[#e0e0e0]
+                      ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
+                      hover:bg-[#ccd9cc]
+                      ${s.role === 'HEAD_COACH' ? 'font-bold' : ''}
+                    `}
+                  >
+                    <FMTableCell className="text-center text-slate-700 font-bold text-[9px] px-1">{getRoleShort(s.role)}</FMTableCell>
+                    <FMTableCell className="text-slate-900 px-2">
+                      <div className="flex items-center min-w-0">
+                        <img src={getFlagUrl(s.nationality)} alt={s.nationality} className="w-3 h-2 object-cover shadow-sm rounded-[1px] mr-1.5 shrink-0 border border-slate-300" />
+                        <span className="truncate max-w-[110px] text-[10px]">{s.name}</span>
+                        {s.role === 'HEAD_COACH' && s.reputation && (
+                          <span className="ml-1.5 flex items-center gap-0.5 text-amber-700 shrink-0"><Star size={9} className="fill-amber-500" /> {s.reputation}</span>
+                        )}
+                      </div>
+                    </FMTableCell>
+                    <FMTableCell className="text-center font-bold text-[10px]" isNumber>{s.age}</FMTableCell>
+                    <FMTableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {badges.length > 0 ? badges.map(b => (
+                          <span key={b} className="px-1 py-0.5 bg-green-100 border border-green-400 rounded-sm text-green-800 text-[7px] font-black uppercase whitespace-nowrap">{b}</span>
+                        )) : <span className="text-slate-300 text-[9px]">—</span>}
+                      </div>
+                    </FMTableCell>
+                  </tr>
+                );
+              })}
+            </FMTable>
+          </div>
+        </FMBox>
       </div>
       ) : renderDelegationTab()}
 
