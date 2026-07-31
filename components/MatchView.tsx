@@ -75,7 +75,16 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
   useEffect(() => {
     if (matchState.minute >= 45 && matchState.halftimeTriggered && !matchState.isPlaying && !halfTimeTalkDone.current) {
       halfTimeTalkDone.current = true;
-      setShowHalfTimeTalk(true);
+      const userClub = world.getClub(userClubId);
+      if (userClub?.talksDelegatedTo) {
+        const delegate = world.getStaffByClub(userClubId).find(s => s.id === userClub.talksDelegatedTo);
+        const squad = world.getPlayersByClub(userClubId).filter(p => p.squad === 'SENIOR');
+        squad.forEach(p => { p.morale = Math.max(1, Math.min(100, p.morale + 3)); });
+        world.addInboxMessage('SQUAD', 'Charla de descanso: staff', `${delegate?.name || 'El asistente'} arengó al equipo en el descanso. La moral del plantel sube ligeramente.`, currentDate);
+        setShowHalfTimeTalk(false);
+      } else {
+        setShowHalfTimeTalk(true);
+      }
     }
   }, [matchState.minute, matchState.halftimeTriggered, matchState.isPlaying]);
 

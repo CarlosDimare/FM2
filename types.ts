@@ -179,6 +179,11 @@ export interface Club {
    scoutingRegion: 'ARG' | 'BRA' | 'URU' | 'CHL' | 'COL' | 'ECU' | 'PAR' | 'PER' | 'URY' | 'VEN' | 'BOL' | 'GLO';
   qualifiedFor?: string | null;
   trainingDelegatedTo?: string;
+  pressDelegatedTo?: string;
+  talksDelegatedTo?: string;
+  reserveDelegatedTo?: string;
+  u20DelegatedTo?: string;
+  scoutingDelegatedTo?: string;
   boardConfidence: number;
   seasonObjective?: 'WIN_LEAGUE' | 'TOP_4' | 'TOP_HALF' | 'AVOID_RELEGATION' | 'WIN_CUP' | 'CUP_SEMIS';
   shortlistedPlayerIds: string[];
@@ -574,6 +579,18 @@ export const ATTRIBUTE_LABELS: Record<string, string> = {
   anticipacion: "Anticipación", decision: "Decisión", posicionamiento: "Posicionamiento",
   vision: "Visión", agresividad: "Agresividad", polivalencia: "Polivalencia",
   fisico: "Físico", mental: "Mental", tecnica: "Técnica",
+};
+
+export const STAFF_ATTRIBUTE_LABELS: Record<string, string> = {
+  coaching: "Entrenamiento",
+  judgingAbility: "Evaluar Habilidad",
+  judgingPotential: "Evaluar Potencial",
+  tacticalKnowledge: "Conocimiento Táctico",
+  adaptability: "Adaptabilidad",
+  medical: "Conoc. Médico",
+  physiotherapy: "Fisioterapia",
+  motivation: "Motivación",
+  manManagement: "Gestión de Jugadores",
 };
 
 export const ATTRIBUTE_TOOLTIPS: Record<string, string> = {

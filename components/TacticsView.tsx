@@ -4,7 +4,7 @@ import { Player, Position, Club, TacticSettings, PlayerTacticSettings, Tactic } 
 import { world } from '../services/worldManager';
 import { notifyPlayers, notifyTactics } from '../stores/worldStore';
 import { SLOT_CONFIG } from '../services/engine';
-import { Save, UserCheck, SlidersHorizontal, MousePointer2, Settings2, Trash2, ArrowUpRight, ChevronRight, LayoutGrid, ClipboardList } from 'lucide-react';
+import { Save, UserCheck, SlidersHorizontal, MousePointer2, Settings2, Trash2, ArrowUpRight, ChevronRight, LayoutGrid, ClipboardList, UserPlus, X } from 'lucide-react';
 import { FMButton, FMBox } from './FMUI';
 
 interface TacticsViewProps {
@@ -12,6 +12,28 @@ interface TacticsViewProps {
    club: Club;
    onContextMenu?: (e: React.MouseEvent, player: Player) => void;
 }
+
+const DORSAL_POOLS: Record<string, number[]> = {
+  GK: [1, 12, 21, 31, 33],
+  SW: [5, 6, 16],
+  DEF: [2, 3, 4, 5, 6, 15, 16, 22, 23, 24, 26],
+  DM: [14, 24, 25, 6],
+  MID: [7, 8, 10, 17, 18, 20, 27],
+  AM: [10, 11, 19, 26, 29],
+  ATT: [9, 11, 19, 27, 28, 29, 30],
+};
+
+const getDorsal = (p: Player, allPlayers: Player[]): number => {
+  const line = p.positions.includes(Position.GK) ? 'GK'
+    : p.positions.includes(Position.SW) ? 'SW'
+    : [Position.DC, Position.DR, Position.DL].includes(p.positions[0]) ? 'DEF'
+    : [Position.DM, Position.DMR, Position.DML].includes(p.positions[0]) ? 'DM'
+    : [Position.MC, Position.MR, Position.ML].includes(p.positions[0]) ? 'MID'
+    : [Position.AM, Position.AMR, Position.AML].includes(p.positions[0]) ? 'AM' : 'ATT';
+  const pool = DORSAL_POOLS[line] || DORSAL_POOLS.ATT;
+  const idx = allPlayers.filter(x => x.squad === p.squad && x.positions.includes(p.positions[0])).indexOf(p);
+  return pool[Math.max(0, idx % pool.length)];
+};
 
 const SLOT_COORDS: Record<number, { t: number, l: number }> = {
    0: { t: 90, l: 50 }, // GK
@@ -102,6 +124,9 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    const [draggingSlot, setDraggingSlot] = useState<number | null>(null);
    const [drawingArrowFrom, setDrawingArrowFrom] = useState<number | null>(null);
    const [currentHoverSlot, setCurrentHoverSlot] = useState<number | null>(null);
+   const [showPickModal, setShowPickModal] = useState(false);
+   const [pickTargetSlot, setPickTargetSlot] = useState<number | null>(null);
+   const [pickedPlayer, setPickedPlayer] = useState<Player | null>(null);
 
    const activeTactic = world.getTactics().find(t => t.id === selectedTacticId) || world.getTactics()[0];
    const starters = players.filter(p => p.isStarter && p.tacticalPosition !== undefined);
@@ -137,6 +162,75 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       world.selectBestEleven(club.id, currentSquad, activeTactic.id); 
       if (players.length > 0) notifyPlayers();
    };
+
+   const handleAssignToSlot = (slot: number) => {
+      if (!pickedPlayer) return;
+      const current = starters.find(p => p.tacticalPosition === slot);
+      if (current) {
+         current.isStarter = false;
+         current.tacticalPosition = undefined;
+      }
+      if (pickedPlayer.isStarter && pickedPlayer.tacticalPosition !== undefined) {
+         const oldSlot = pickedPlayer.tacticalPosition;
+         pickedPlayer.tacticalPosition = slot;
+         if (current) current.tacticalPosition = oldSlot;
+         if (current) current.isStarter = true;
+      } else {
+         pickedPlayer.isStarter = true;
+         pickedPlayer.tacticalPosition = slot;
+      }
+      setPickedPlayer(null);
+      notifyPlayers();
+   };
+
+   const handleUnassignSlot = (slot: number) => {
+      const current = starters.find(p => p.tacticalPosition === slot);
+      if (current) {
+         current.isStarter = false;
+         current.tacticalPosition = undefined;
+      }
+      setPickedPlayer(null);
+      notifyPlayers();
+   };
+
+   const renderPickPitch = () => (
+      <div className="relative w-full max-w-[300px] aspect-[3/4] mx-auto shadow-2xl bg-[#1e3a29] border-[3px] border-white/30 rounded-sm overflow-hidden ring-4 ring-[#a0b0a0]/30 select-none">
+         <svg className="absolute inset-0 w-full h-full opacity-40 pointer-events-none">
+            <g stroke="white" strokeWidth="2" fill="none">
+               <rect x="5%" y="5%" width="90%" height="90%" />
+               <line x1="5%" y1="50%" x2="95%" y2="50%" />
+               <circle cx="50%" cy="50%" r="15%" />
+               <rect x="25%" y="5%" width="50%" height="15%" />
+               <rect x="25%" y="80%" width="50%" height="15%" />
+            </g>
+         </svg>
+         {activeTactic.positions.map((slotIdx) => {
+            const coords = SLOT_COORDS[slotIdx];
+            if (!coords) return null;
+            const p = starters.find(pl => pl.tacticalPosition === slotIdx);
+            const isSelected = pickTargetSlot === slotIdx;
+            return (
+               <div key={slotIdx} data-slot={slotIdx}
+                  className={`absolute transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center z-10 rounded-full cursor-pointer transition-all ${isSelected ? 'ring-4 ring-yellow-400' : 'hover:ring-2 hover:ring-white/50'}`}
+                  style={{ top: `${coords.t}%`, left: `${coords.l}%` }}
+                  onClick={() => {
+                     if (p) { handleUnassignSlot(slotIdx); }
+                     else if (pickedPlayer) { handleAssignToSlot(slotIdx); setPickTargetSlot(null); }
+                     else setPickTargetSlot(null);
+                  }}
+               >
+                  {p ? (
+                     <div title={p.name} className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 flex items-center justify-center font-black text-[10px] sm:text-xs shadow-lg ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : `${club.primaryColor} ${club.secondaryColor} border-black/20`}`}>
+                        {getDorsal(p, players)}
+                     </div>
+                  ) : (
+                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center text-white/60 font-black text-sm">+</div>
+                  )}
+               </div>
+            );
+         })}
+      </div>
+   );
 
    const isPlayerSuitableForLine = (p: Player, line: string) => {
        const pos = p.positions[0];
@@ -353,11 +447,8 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                      onTouchStart={(e) => handleTouchStart(e, slotIdx)}
                  >
                     {p ? (
-                       <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center font-black text-[9px] sm:text-xs shadow-lg transition-all hover:scale-110 cursor-pointer ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : `${club.primaryColor} ${club.secondaryColor} border-black/20`}`}>
-                          {p.positions[0]}
-                          <div className="absolute -bottom-4 sm:-bottom-5 bg-black/80 text-white px-1.5 py-0.5 rounded-[1px] text-[7px] sm:text-[8px] font-black uppercase whitespace-nowrap truncate max-w-[60px] sm:max-w-[80px] shadow-sm">
-                             {p.name.split(' ').pop()}
-                          </div>
+                       <div title={p.name} className={`relative w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center font-black text-[11px] sm:text-sm shadow-lg transition-all hover:scale-110 cursor-pointer ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : `${club.primaryColor} ${club.secondaryColor} border-black/20`}`}>
+                          {getDorsal(p, players)}
                        </div>
                     ) : (
                        <div className={`w-7 h-7 sm:w-10 sm:h-10 rounded-full border border-dashed flex items-center justify-center transition-colors ${currentHoverSlot === slotIdx ? 'border-white bg-white/20' : 'border-white/10'}`}>
@@ -410,9 +501,12 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
             {/* Toolbar - Tier 2 */}
             <div className="flex gap-2">
                 <FMButton variant="secondary" onClick={handleAutoPick} className="flex-1 py-2 text-[9px]">
-                   <UserCheck size={12}/> ELEGIR 11
+                   <UserCheck size={12}/> AUTO 11
                 </FMButton>
-                <FMButton variant="primary" onClick={() => setIsSaveModalOpen(true)} className="flex-1 py-2 text-[9px]">
+                <FMButton variant="primary" onClick={() => setShowPickModal(true)} className="flex-1 py-2 text-[9px]">
+                   <UserPlus size={12}/> ELEGIR 11
+                </FMButton>
+                <FMButton variant="secondary" onClick={() => setIsSaveModalOpen(true)} className="flex-1 py-2 text-[9px]">
                    <Save size={12}/> GUARDAR
                 </FMButton>
             </div>
@@ -426,6 +520,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                       <div className="w-full max-w-[420px] bg-white/60 p-2 rounded-sm border border-[#a0b0a0] text-[8px] font-black text-slate-500 uppercase tracking-widest flex flex-wrap justify-center gap-3 sm:gap-6 shadow-sm">
                           <span className="flex items-center gap-1.5"><MousePointer2 size={10} className="text-slate-400" /> IZQ: MOVER / ELEGIR</span>
                           <span className="flex items-center gap-1.5"><ArrowUpRight size={10} className="text-slate-400" /> DER: DIBUJAR FLECHA</span>
+                          <span className="flex items-center gap-1.5"><UserPlus size={10} className="text-slate-400" /> CLICK: VER JUGADOR</span>
                       </div>
                   </div>
                ) : (
@@ -540,6 +635,84 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                </div>
             </div>
          </div>
+
+         {/* Pick XI Modal */}
+         {showPickModal && (
+            <div className="fixed inset-0 z-[600] bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-overlay-in">
+               <div className="bg-[#e8ece8] border-2 border-[#a0b0a0] rounded-sm shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden" style={{ fontFamily: 'Verdana, sans-serif' }}>
+                  <header className="px-4 py-3 border-b border-[#a0b0a0] flex justify-between items-center shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
+                     <div>
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider italic">Elegir Titulares</h3>
+                        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Toca un jugador y luego una posición en el campo</p>
+                     </div>
+                     <div className="flex items-center gap-3">
+                        <span className={`px-3 py-1 rounded-sm font-black text-xs border ${starters.length === 11 ? 'bg-green-700 text-white border-green-900' : 'bg-[#3a4a3a] text-white border-black'}`}>
+                           {starters.length}/11
+                        </span>
+                        <button onClick={() => { setShowPickModal(false); setPickedPlayer(null); }} className="bg-black/10 hover:bg-black/20 rounded-sm p-2 transition-colors">
+                           <X size={16} className="text-slate-800" />
+                        </button>
+                     </div>
+                  </header>
+
+                  <div className="flex-1 overflow-y-auto custom-scroll p-3 sm:p-4">
+                     {pickedPlayer && (
+                        <div className="mb-3 px-3 py-2 bg-amber-50 border border-amber-400 rounded-sm text-[10px] font-black uppercase tracking-wide text-amber-900 flex items-center justify-between gap-2">
+                           <span>Asignando: {pickedPlayer.name} → toca una casilla vacía en el campo</span>
+                           <button onClick={() => setPickedPlayer(null)} className="text-amber-900 underline">Cancelar</button>
+                        </div>
+                     )}
+                     <div className="flex flex-col md:flex-row gap-4">
+                        <div className="md:w-[280px] md:shrink-0 flex flex-col gap-2">
+                           {renderPickPitch()}
+                           <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest text-center leading-relaxed">
+                              Toca un titular para devolverlo al banquillo
+                           </div>
+                        </div>
+                        <div className="flex-1 min-h-0 flex flex-col">
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pb-4">
+                              {players.filter(p => !p.injury && (!p.suspension || p.suspension.matchesLeft === 0))
+                                 .sort((a, b) => (Number(b.isStarter) - Number(a.isStarter)) || (b.currentAbility - a.currentAbility))
+                                 .map(p => {
+                                    const isPicked = pickedPlayer?.id === p.id;
+                                    return (
+                                       <button key={p.id} onClick={() => {
+                                          if (p.isStarter && p.tacticalPosition !== undefined) { handleUnassignSlot(p.tacticalPosition); }
+                                          else setPickedPlayer(isPicked ? null : p);
+                                       }}
+                                          className={`flex items-center gap-2 px-2 py-1.5 rounded-sm border text-left transition-all shadow-sm ${isPicked ? 'bg-amber-50 border-amber-500 ring-1 ring-amber-500' : p.isStarter ? 'bg-[#3a4a3a] border-[#2a3a2a] hover:brightness-110' : 'bg-white border-[#a0b0a0] hover:border-[#3a4a3a]'}`}
+                                       >
+                                          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
+                                             {getDorsal(p, players)}
+                                          </span>
+                                          <div className="min-w-0 flex-1">
+                                             <p className={`text-[10px] font-black uppercase truncate leading-none ${p.isStarter ? 'text-white' : 'text-slate-900'}`}>{p.name}</p>
+                                             <div className="flex items-center gap-1.5 mt-1">
+                                                <span className={`text-[8px] font-bold ${p.isStarter ? 'text-slate-300' : 'text-slate-400'}`}>{p.positions[0]}</span>
+                                                <span className={`text-[8px] font-black ${p.isStarter ? 'text-green-400' : 'text-slate-500'}`}>CA {(p.currentAbility/20).toFixed(1)}</span>
+                                                <span className={`text-[8px] font-black ml-auto ${p.fitness < 70 ? 'text-red-500' : p.isStarter ? 'text-slate-300' : 'text-slate-500'}`}>{Math.round(p.fitness)}%</span>
+                                             </div>
+                                          </div>
+                                          {p.isStarter && <span className="text-[8px] font-black text-green-400 uppercase shrink-0">Tit</span>}
+                                       </button>
+                                    );
+                                 })}
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <footer className="px-4 py-3 border-t border-[#a0b0a0] flex gap-2 shrink-0">
+                     <FMButton variant="secondary" onClick={() => { setPickedPlayer(null); handleAutoPick(); }} className="flex-1 py-2.5 text-[9px]">
+                        <UserCheck size={12} /> AUTO SELECCIONAR
+                     </FMButton>
+                     <FMButton variant="primary" onClick={() => { setShowPickModal(false); setPickedPlayer(null); }} className="flex-1 py-2.5 text-[9px]">
+                        <UserCheck size={12} /> LISTO
+                     </FMButton>
+                  </footer>
+               </div>
+            </div>
+         )}
 
          {/* Save Modal */}
          {isSaveModalOpen && (

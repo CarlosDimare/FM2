@@ -102,7 +102,6 @@
 - Persistencia: guardado y cargado con la partida
 
 ### Ficha de Entrenador (Manager Profile)
-- `ManagerProfile` con datos personales, carrera, histórico, relaciones
 - SETUP_USER con nacionalidad (15 países), origen (exjugador/cantras/jornalista), fecha nacimiento
 - Actualización tras cada partido: W/D/L, goles, jugador clave
 - Actualización tras fin de temporada: temporada+1, títulos, relaciones (directiva/prensa/afición), objetivo
@@ -110,6 +109,17 @@
 - Objetivo según reputación relativa del club vs liga
 - Sidebar: "Mi Carrera" (User icon)
 - `clubHistory` se popula: seasons incrementado cada temporada, títulos al ganar
+
+### Staff / Empleados
+- Perfil de empleado con biografía, reseña generada por atributos, perfil táctico (formación, estilo, presión, enfoque), reputación, palmarés y clubes anteriores
+- Atributos de staff en español (STAFF_ATTRIBUTE_LABELS)
+- Cards estilo jugador con iniciales, reputación y badges de tareas delegadas
+- Pestaña "Delegación": 6 tareas delegables (Entrenamiento, Prensa, Charlas, Reserva, Sub-20, Scouting) con selector de empleado
+- Efectos: prensa delegada (respuesta automática neutral), charla de descanso delegada (+moral, inbox), entrenamiento delegado (TrainingView)
+
+### Tácticas
+- Fichas en el campo con dorsales estilo FM08 (sin nombres propios, tooltip al pasar)
+- Modal "ELEGIR 11" responsive: tap jugador → tap casilla; tap titular → banquillo; contador 11/11; auto-selección integrada
 
 ### Directiva (Board)
 - BoardView con confianza, saldo, presupuesto

@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { Staff, ATTRIBUTE_LABELS } from '../types';
+import { Staff, Club, STAFF_ATTRIBUTE_LABELS } from '../types';
 import { world } from '../services/worldManager';
+import { notifyClubs } from '../stores/worldStore';
 import { getAttributeColor } from '../constants';
-import { X, Briefcase, Activity, Calendar, History, Wallet, BookOpen, Trophy, Star, Shield, Zap, Target, Swords, MapPin } from 'lucide-react';
+import { X, Briefcase, Activity, Calendar, History, Wallet, BookOpen, Trophy, Star, Shield, Zap, Target, Swords, MapPin, Users, ClipboardList, Dumbbell, Mic, MessageCircle, GraduationCap, Binoculars } from 'lucide-react';
 import { FMTable, FMTableCell } from './FMUI';
 
 const TACTICAL_STYLE_LABELS: Record<string, string> = {
@@ -91,8 +92,9 @@ interface StaffViewProps {
   staff: Staff[];
 }
 
-export const StaffView: React.FC<StaffViewProps> = ({ staff }) => {
+export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [activeTab, setActiveTab] = useState<'PERSONAL' | 'DELEGACION'>('PERSONAL');
 
   const getRoleLabel = (role: string) => {
     switch(role) {
@@ -114,32 +116,151 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff }) => {
      return 0;
   });
 
+  const DELEGABLE_TASKS: { key: 'trainingDelegatedTo' | 'pressDelegatedTo' | 'talksDelegatedTo' | 'reserveDelegatedTo' | 'u20DelegatedTo' | 'scoutingDelegatedTo'; label: string; icon: React.ReactNode; desc: string; suggestedRoles: string[] }[] = [
+    { key: 'trainingDelegatedTo', label: 'Entrenamiento', icon: <Dumbbell size={14} />, desc: 'Planificar y dirigir las sesiones de entrenamiento del primer equipo.', suggestedRoles: ['ASSISTANT_MANAGER', 'FITNESS_COACH', 'HEAD_COACH'] },
+    { key: 'pressDelegatedTo', label: 'Conferencia de Prensa', icon: <Mic size={14} />, desc: 'Atender a los medios antes y después de cada partido.', suggestedRoles: ['ASSISTANT_MANAGER', 'HEAD_COACH'] },
+    { key: 'talksDelegatedTo', label: 'Charlas de Equipo', icon: <MessageCircle size={14} />, desc: 'Dar la charla técnica y la motivacional en el descanso.', suggestedRoles: ['ASSISTANT_MANAGER', 'HEAD_COACH'] },
+    { key: 'reserveDelegatedTo', label: 'Dirección del Equipo Reserva', icon: <Users size={14} />, desc: 'Gestionar partidos, formación y decisiones del equipo reserva.', suggestedRoles: ['RESERVE_MANAGER', 'ASSISTANT_MANAGER'] },
+    { key: 'u20DelegatedTo', label: 'Dirección de Sub-20', icon: <GraduationCap size={14} />, desc: 'Gestionar partidos, formación y decisiones de los juveniles.', suggestedRoles: ['YOUTH_MANAGER', 'ASSISTANT_MANAGER'] },
+    { key: 'scoutingDelegatedTo', label: 'Scouting', icon: <Binoculars size={14} />, desc: 'Solicitar informes y seguir a los jugadores objetivo.', suggestedRoles: ['SCOUT', 'ASSISTANT_MANAGER'] },
+  ];
+
+  const setDelegation = (key: string, staffId: string | undefined) => {
+    if (!club) return;
+    const current = club[key as 'trainingDelegatedTo'];
+    if (staffId) club[key as 'trainingDelegatedTo'] = staffId;
+    else delete club[key as 'trainingDelegatedTo'];
+    notifyClubs();
+  };
+
+  const getDelegatedName = (staffId?: string) => {
+    if (!staffId) return null;
+    return staff.find(s => s.id === staffId)?.name || null;
+  };
+
+  const renderDelegationTab = () => (
+    <div className="flex-1 overflow-y-auto custom-scroll pb-24">
+      {!club ? (
+        <div className="p-12 text-center text-slate-500 font-black uppercase text-[10px] tracking-widest">Selecciona un club para gestionar delegaciones</div>
+      ) : (
+        <div className="max-w-3xl mx-auto space-y-3">
+          <div className="bg-[#e8ece8] border border-[#a0b0a0] rounded-sm p-3 mb-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-2">
+              <ClipboardList size={14} /> Delegación de Tareas
+            </p>
+            <p className="text-[9px] text-slate-500 mt-1">Asigna responsabilidades a tu cuerpo técnico para ocuparte solo de lo que importa. Tareas sin delegar quedan a tu cargo.</p>
+          </div>
+          {DELEGABLE_TASKS.map(task => {
+            const delegatedId = club[task.key];
+            const delegatedName = getDelegatedName(delegatedId);
+            const candidates = staff.filter(s => task.suggestedRoles.includes(s.role));
+            return (
+              <div key={task.key} className="bg-white border border-[#a0b0a0] rounded-sm shadow-sm overflow-hidden">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-[#a0b0a0] bg-[#f2f7f2]">
+                  <div className={`w-9 h-9 rounded-sm flex items-center justify-center shrink-0 border ${delegatedId ? 'bg-green-100 border-green-400 text-green-800' : 'bg-slate-200 border-slate-400 text-slate-600'}`}>
+                    {task.icon}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-slate-900">{task.label}</p>
+                    <p className="text-[9px] text-slate-500 leading-snug mt-0.5">{task.desc}</p>
+                  </div>
+                  <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-sm border shrink-0 ${delegatedId ? 'bg-green-50 text-green-800 border-green-300' : 'bg-amber-50 text-amber-800 border-amber-300'}`}>
+                    {delegatedId ? 'Delegada' : 'A tu cargo'}
+                  </span>
+                </div>
+                <div className="px-4 py-3">
+                  {delegatedId && (
+                    <div className="mb-2 px-3 py-2 bg-green-50 border border-green-300 rounded-sm text-[10px] font-black uppercase tracking-wide text-green-900 flex items-center justify-between">
+                      <span>A cargo de: {delegatedName}</span>
+                      <button onClick={() => setDelegation(task.key, undefined)} className="text-green-900 underline">Retirar</button>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-1.5">
+                    <button onClick={() => setDelegation(task.key, undefined)}
+                      className={`px-3 py-2 text-[9px] font-black uppercase rounded-sm border transition-all ${!delegatedId ? 'bg-[#3a4a3a] text-white border-[#2a3a2a] shadow-md' : 'bg-white text-slate-600 border-[#a0b0a0] hover:bg-[#f2f7f2]'}`}>
+                      Tú
+                    </button>
+                    {candidates.map(s => (
+                      <button key={s.id} onClick={() => setDelegation(task.key, s.id)}
+                        className={`px-3 py-2 text-[9px] font-black uppercase rounded-sm border transition-all ${delegatedId === s.id ? 'bg-green-700 text-white border-green-900 shadow-md' : 'bg-white text-slate-700 border-[#a0b0a0] hover:border-[#3a4a3a] hover:bg-[#f2f7f2]'}`}>
+                        {s.name}
+                      </button>
+                    ))}
+                    {candidates.length === 0 && (
+                      <span className="text-[9px] text-slate-400 italic">No hay empleados aptos para esta tarea.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col bg-slate-300">
-      <header className="mb-6 border-b border-slate-400 pb-4">
-        <h2 className="text-2xl font-black text-slate-950 uppercase italic tracking-tighter">Cuerpo Técnico</h2>
-        <p className="text-slate-600 text-xs font-bold uppercase tracking-widest">Los empleados que hacen funcionar al club.</p>
+    <div className="p-4 md:p-6 h-full flex flex-col bg-[#d4dcd4]" style={{ fontFamily: 'Verdana, sans-serif' }}>
+      <header className="mb-4 border-b border-[#a0b0a0] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Cuerpo Técnico</h2>
+          <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">Los empleados que hacen funcionar al club.</p>
+        </div>
+        <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] self-start sm:self-auto shadow-sm">
+          <button onClick={() => setActiveTab('PERSONAL')} className={`px-4 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${activeTab === 'PERSONAL' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>
+            <Users size={12} /> Personal
+          </button>
+          <button onClick={() => setActiveTab('DELEGACION')} className={`px-4 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${activeTab === 'DELEGACION' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>
+            <ClipboardList size={12} /> Delegación
+          </button>
+        </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto flex-1 pb-20 custom-scroll">
+      {activeTab === 'PERSONAL' ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto flex-1 pb-24 custom-scroll">
         {sortedStaff.map(s => (
           <div 
             key={s.id} 
             onClick={() => setSelectedStaff(s)}
-            className={`p-6 rounded-sm border transition-all cursor-pointer group relative overflow-hidden shadow-sm hover:shadow-md ${s.role === 'HEAD_COACH' ? 'bg-blue-100 border-blue-400 hover:bg-blue-50 hover:border-blue-600' : 'bg-slate-200 border-slate-400 hover:border-slate-600 hover:bg-slate-100'}`}
+            className={`p-5 rounded-sm border transition-all cursor-pointer group relative overflow-hidden shadow-sm hover:shadow-md ${s.role === 'HEAD_COACH' ? 'bg-blue-100 border-blue-400 hover:bg-blue-50 hover:border-blue-600' : 'bg-slate-200 border-slate-400 hover:border-slate-600 hover:bg-slate-100'}`}
           >
             <div className={`absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 ${s.role === 'HEAD_COACH' ? 'text-blue-900' : 'text-slate-900'}`}>
                <Briefcase size={64} />
             </div>
-            <h3 className="text-lg font-black text-slate-950 mb-1 uppercase italic">{s.name}</h3>
-            <p className={`${s.role === 'HEAD_COACH' ? 'text-blue-800 text-xs' : 'text-blue-700 text-[10px]'} font-black uppercase mb-4 tracking-widest`}>{getRoleLabel(s.role)}</p>
-            <div className="flex gap-4 text-[10px] text-slate-600 font-bold uppercase">
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm border-2 shrink-0 ${s.role === 'HEAD_COACH' ? 'bg-blue-700 text-white border-blue-900' : 'bg-slate-600 text-white border-slate-800'}`}>
+                {s.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-lg font-black text-slate-950 uppercase italic truncate">{s.name}</h3>
+                <p className={`${s.role === 'HEAD_COACH' ? 'text-blue-800 text-[10px]' : 'text-blue-700 text-[9px]'} font-black uppercase tracking-widest`}>{getRoleLabel(s.role)}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3 text-[10px] text-slate-600 font-bold uppercase">
                <span>{s.nationality}</span>
                <span>{s.age} años</span>
+               {s.reputation && s.role === 'HEAD_COACH' && (
+                 <span className="flex items-center gap-1 text-amber-700"><Star size={10} className="fill-amber-500" /> {s.reputation}</span>
+               )}
             </div>
+            {(club && (club.trainingDelegatedTo === s.id || club.pressDelegatedTo === s.id || club.talksDelegatedTo === s.id || club.reserveDelegatedTo === s.id || club.u20DelegatedTo === s.id || club.scoutingDelegatedTo === s.id)) && (
+              <div className="mt-3 flex flex-wrap gap-1">
+                {[
+                  club.trainingDelegatedTo === s.id && 'Entreno',
+                  club.pressDelegatedTo === s.id && 'Prensa',
+                  club.talksDelegatedTo === s.id && 'Charlas',
+                  club.reserveDelegatedTo === s.id && 'Reserva',
+                  club.u20DelegatedTo === s.id && 'Sub-20',
+                  club.scoutingDelegatedTo === s.id && 'Scouting',
+                ].filter(Boolean).map(b => (
+                  <span key={b as string} className="px-1.5 py-0.5 bg-green-100 border border-green-400 rounded-sm text-green-800 text-[8px] font-black uppercase">{b}</span>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
+      ) : renderDelegationTab()}
 
       {selectedStaff && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -224,7 +345,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff }) => {
                      <div className="space-y-1 bg-white p-4 rounded-sm border border-slate-200 shadow-sm">
                         {Object.entries(selectedStaff.attributes).map(([key, val]) => (
                            <div key={key} className="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-0 group">
-                              <span className="text-slate-600 font-bold text-[11px] uppercase tracking-wide group-hover:text-slate-900">{ATTRIBUTE_LABELS[key] || key}</span>
+                              <span className="text-slate-600 font-bold text-[11px] uppercase tracking-wide group-hover:text-slate-900">{STAFF_ATTRIBUTE_LABELS[key] || key}</span>
                               <span className={`font-black text-xs ${getAttributeColor(val as number)} bg-slate-50 px-2 py-0.5 rounded-sm min-w-[24px] text-center`}>{val as number}</span>
                            </div>
                         ))}

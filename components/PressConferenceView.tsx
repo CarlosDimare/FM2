@@ -225,6 +225,26 @@ export const PressConferenceView: React.FC<PressConferenceViewProps> = ({ club, 
       </header>
 
       <div className="flex-1 overflow-y-auto p-4">
+        {club.pressDelegatedTo && !finished && (() => {
+          const delegate = world.getStaffByClub(club.id).find(s => s.id === club.pressDelegatedTo);
+          return (
+            <div className="mb-4 px-4 py-3 bg-green-50 border border-green-400 rounded-sm flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="flex-1">
+                <p className="text-[10px] font-black uppercase tracking-wide text-green-900 flex items-center gap-2">
+                  <Mic size={12} /> Delegada a: {delegate?.name || 'Staff'}
+                </p>
+                <p className="text-[9px] text-green-800 mt-0.5">Este empleado se encarga de la conferencia de prensa. Puedes dejar que responda en tu lugar.</p>
+              </div>
+              <button onClick={() => {
+                const neutral = questions.map(q => Math.max(0, q.options.findIndex(o => o.reaction === 'NEUTRAL')));
+                applyEffects(neutral);
+                setFinished(true);
+              }} className="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-sm text-[9px] font-black uppercase tracking-widest transition-colors">
+                Que la maneje
+              </button>
+            </div>
+          );
+        })()}
         {!finished ? (
           <div>
             <div className="flex items-center gap-2 mb-6 text-[10px] text-slate-500 font-bold uppercase tracking-widest">

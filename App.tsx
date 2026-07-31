@@ -926,7 +926,7 @@ dayFixtures.forEach(f => {
       case 'ECONOMY':
         return <EconomyView club={userClub} />;
       case 'STAFF':
-        return <StaffView staff={world.getStaffByClub(userClub.id)} />;
+        return <StaffView staff={world.getStaffByClub(userClub.id)} club={userClub} />;
       case 'TRAINING':
         return <TrainingView club={userClub} players={world.getPlayersByClub(userClub.id)} staff={world.getStaffByClub(userClub.id)} />;
       case 'SCOUTING':
