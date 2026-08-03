@@ -239,9 +239,10 @@
 - Sin bugs activos pendientes
 
 ### Plan pendiente: Expansión Mundial de Ligas + Interacciones (`.kilo/plans/`)
-- Avanzado: `deepSimLeagues` activo para la liga del usuario (DEEP con RESERVE/U20 rellenados vía `ensureDeepSquads`), `relationships` en Player/Staff, `interactionLog` + `decayRelationships` en worldManager, `PeopleHub` (Jugadores/Staff/Relaciones/Directiva, también en modo selección) y `DialogueSystem` ampliado (SET_CAPTAIN, ASSIGN_TRAINING, PRESS…)
-- Pendiente: catálogo completo de ligas por continente (35-40) con simulación ligera para las no elegidas; subvistas de Prensa y Red de DT en PeopleHub; medir rendimiento del bucle diario con la liga en DEEP (~3× fixtures de esa liga)
+- Avanzado: `deepSimLeagues` activo para la liga del usuario (DEEP con RESERVE/U20 rellenados vía `ensureDeepSquads`), `relationships` en Player/Staff, `interactionLog` + `decayRelationships` en worldManager, `PeopleHub` (Jugadores/Staff/Relaciones/Directiva/Prensa/Red de DT, también en modo selección) y `DialogueSystem` ampliado (SET_CAPTAIN, ASSIGN_TRAINING, PRESS_STATEMENT, CONTACT_MANAGER…)
+- ✅ Completado: catálogo completo de 35 ligas por continente (cargadas del open-football-database), infraestructura de soporte lista (REGEN_DB +13 países, NATIONS, COUNTRY_CODES, countryEconomy, getContinentForCountry). Subvistas de Prensa y Red de DT en PeopleHub implementadas.
+- Pendiente: medir rendimiento del bucle diario con la liga en DEEP (~3× fixtures de esa liga) y optimizar si es necesario.
 
 ---
 
-*Última actualización: 2 agosto 2026*
+*Última actualización: 3 agosto 2026*
