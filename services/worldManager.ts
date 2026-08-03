@@ -319,9 +319,9 @@ export class WorldManager {
           { id: 'L_CHN_1', name: 'Chinese Super League', country: 'China', type: 'LEAGUE', tier: 1, continent: 'Asia', confederation: 'AFC', defaultPrizePool: 2000000, seasonStartMonth: 2, seasonEndMonth: 10 },
           { id: 'L_AUS_1', name: 'A-League', country: 'Australia', type: 'LEAGUE', tier: 1, continent: 'Oceanía', confederation: 'AFC', defaultPrizePool: 800000, seasonStartMonth: 9, seasonEndMonth: 4 },
        );
-       this.loadRealClubs(KOR_K_LEAGUE, 'L_KOR_1');
-       this.loadRealClubs(CHN_SUPER_LEAGUE, 'L_CHN_1');
-       this.loadRealClubs(AUS_A_LEAGUE, 'L_AUS_1');
+       try { this.loadRealClubs(KOR_K_LEAGUE, 'L_KOR_1'); } catch (e) { console.warn('[WorldManager] Failed to load K League 1:', e); }
+       try { this.loadRealClubs(CHN_SUPER_LEAGUE, 'L_CHN_1'); } catch (e) { console.warn('[WorldManager] Failed to load Chinese Super League:', e); }
+       try { this.loadRealClubs(AUS_A_LEAGUE, 'L_AUS_1'); } catch (e) { console.warn('[WorldManager] Failed to load A-League:', e); }
     }
 
   loadRealClubs(definitions: RealClubDef[], leagueId: string) {
@@ -382,6 +382,13 @@ getClub(id: string) {
     const players = this.players.filter(p => p.clubId === clubId);
     this.playersByClubCache.set(clubId, { timestamp: now, players });
     return players;
+  }
+  /** Pre-fetch squads for multiple clubs at once — reduces O(n×m) to O(m) for fixture loops */
+  preFetchSquads(clubIds: string[]): Map<string, Player[]> {
+    const map = new Map<string, Player[]>();
+    const uniqueIds = [...new Set(clubIds)];
+    uniqueIds.forEach(id => map.set(id, this.getPlayersByClub(id)));
+    return map;
   }
 getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === clubId); }
   getStaff(id: string) { return this.staff.find(s => s.id === id); }

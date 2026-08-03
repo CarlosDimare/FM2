@@ -194,6 +194,7 @@ const {
 
   const advanceTimeRef = useRef<() => void>(null as any);
   const lastChronicleMonth = useRef<number>(-1);
+  const perfSamples = useRef<number[]>([]);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
@@ -396,6 +397,9 @@ if (result.userWonLeague) gs.trackTitle('Liga');
         f.date.toDateString() === currentDate.toDateString() && !f.played
       );
       console.time('  ⚽ simular partidos');
+      // Pre-cache squads for all clubs in today's fixtures
+      const uniqueClubIds = [...new Set(dayFixtures.flatMap(f => [f.homeTeamId, f.awayTeamId]))];
+      const squads = world.preFetchSquads(uniqueClubIds);
       dayFixtures.forEach(f => {
         const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
         
@@ -414,8 +418,8 @@ if (result.userWonLeague) gs.trackTitle('Liga');
           f.played = true;
           f.homeScore = homeScore;
           f.awayScore = awayScore;
-          const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-          const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+          const hSquad = (squads.get(f.homeTeamId) || []).filter(p => p.squad === f.squadType);
+          const aSquad = (squads.get(f.awayTeamId) || []).filter(p => p.squad === f.squadType);
           MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
           const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
           const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
@@ -508,8 +512,15 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       else if (next && next.date.toDateString() === nextDay.toDateString()) setView('PRE_MATCH');
     }
     notify();
-    const elapsed = (performance.now() - t0).toFixed(1);
+    const elapsed = parseFloat((performance.now() - t0).toFixed(1));
     console.log(`  ✅ total: ${elapsed}ms`);
+    // Rolling average (last 50 days)
+    perfSamples.current.push(elapsed);
+    if (perfSamples.current.length > 50) perfSamples.current.shift();
+    if (perfSamples.current.length % 10 === 0) {
+      const avg = (perfSamples.current.reduce((a, b) => a + b, 0) / perfSamples.current.length).toFixed(1);
+      console.log(`  📊 promedio móvil (${perfSamples.current.length} días): ${avg}ms`);
+    }
     console.groupEnd();
   };
 
@@ -579,6 +590,9 @@ const startVacation = async (targetOverride?: Date) => {
       const dayFixtures = localFixtures.filter(f =>
         f.date.toDateString() === tempDate.toDateString() && !f.played
       );
+      // Pre-cache squads for all clubs in today's fixtures
+      const uniqueClubIds = [...new Set(dayFixtures.flatMap(f => [f.homeTeamId, f.awayTeamId]))];
+      const squads = world.preFetchSquads(uniqueClubIds);
       dayFixtures.forEach(f => {
         const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
         
@@ -591,8 +605,8 @@ const startVacation = async (targetOverride?: Date) => {
         } else {
           const { homeScore, awayScore, stats, events } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
           f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
-          const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-          const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+          const hSquad = (squads.get(f.homeTeamId) || []).filter(p => p.squad === f.squadType);
+          const aSquad = (squads.get(f.awayTeamId) || []).filter(p => p.squad === f.squadType);
           MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
           const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
           const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
@@ -726,6 +740,10 @@ const startVacation = async (targetOverride?: Date) => {
       const dayFixtures = localFixtures.filter(f =>
         f.date.toDateString() === tempDate.toDateString() && !f.played
       );
+      // Pre-cache squads for all clubs in today's fixtures (skip user matches)
+      const nonUserFix = dayFixtures.filter(f => !(userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)));
+      const uniqueClubIds = [...new Set(nonUserFix.flatMap(f => [f.homeTeamId, f.awayTeamId]))];
+      const squads = world.preFetchSquads(uniqueClubIds);
 dayFixtures.forEach(f => {
          const isUserMatch = userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id);
           if (isUserMatch) return;
@@ -747,8 +765,8 @@ dayFixtures.forEach(f => {
            const hName = world.getClub(f.homeTeamId)?.name || 'Equipo';
            const aName = world.getClub(f.awayTeamId)?.name || 'Equipo';
            sendMatchNotification(`${hName} ${homeScore} - ${awayScore} ${aName}`);
-           const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
-           const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
+           const hSquad = (squads.get(f.homeTeamId) || []).filter(p => p.squad === f.squadType);
+           const aSquad = (squads.get(f.awayTeamId) || []).filter(p => p.squad === f.squadType);
            MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
            const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
            const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
