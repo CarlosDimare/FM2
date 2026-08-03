@@ -5,7 +5,7 @@ import { NATIONS } from "../constants";
 import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, KOR_K_LEAGUE, CHN_SUPER_LEAGUE, AUS_A_LEAGUE, EGY_PREMIER, MAR_BOTOLA, RSA_PSL, RealClubDef } from "../data/static";
 import { REAL_PLAYERS_DB, RealPlayerDef } from "../data/realPlayers";
 import { SLOT_CONFIG } from "./engine";
-import { sendTransferNotification, sendInboxNotification } from "./notifications";
+import { sendTransferNotification, sendInboxNotification, sendInjuryNotification } from "./notifications";
 import { generatePlayer, generateRandomPlayer, getPlayerTag } from "./playerGenerator";
 import { useGameStore } from "../stores/gameStore";
 import { loadConvertedClubs, loadConvertedPlayers, loadConvertedLeagues } from "../data/convertedDataLoader";
@@ -936,7 +936,7 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
 
     const roll = Math.random();
 
-    if (roll < 0.25) {
+    if (roll < 0.16) {
       // Youth asks for veteran's number
       const veteran = squad.find(p => p.age >= 30 && p.reputation >= 3000);
       const youth = squad.find(p => p.age <= 20 && p.potentialAbility >= 150);
@@ -950,7 +950,7 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
         if (!youth.playerTensions) youth.playerTensions = {};
         youth.playerTensions[veteran.id] = (youth.playerTensions[veteran.id] || 0) + 10;
       }
-    } else if (roll < 0.50) {
+    } else if (roll < 0.32) {
       // Two stars argue over penalty
       const stars = squad.filter(p => p.currentAbility >= 150 && p.isStarter);
       if (stars.length >= 2) {
@@ -966,7 +966,7 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
         s1.playerTensions[s2.id] = (s1.playerTensions[s2.id] || 0) + 8;
         s2.playerTensions[s1.id] = (s2.playerTensions[s1.id] || 0) + 8;
       }
-    } else if (roll < 0.72) {
+    } else if (roll < 0.46) {
       // Veteran mentors youth (positive event)
       const veteran = squad.find(p => p.age >= 31 && p.leadership >= 15);
       const youth = squad.find(p => p.age <= 21 && p.potentialAbility >= 140);
@@ -988,6 +988,109 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
           clubId, isUserClubNews: true, read: false,
         });
       }
+    } else if (roll < 0.58) {
+      // Training injury
+      const victim = squad[randomInt(0, squad.length - 1)];
+      const days = randomInt(3, 21);
+      const injuryTypes = ['esguince de tobillo', 'microrrotura fibrilar', 'contusión en el gemelo', 'sobrecarga muscular', 'golpe en la rodilla'];
+      const injuryType = injuryTypes[randomInt(0, injuryTypes.length - 1)];
+      victim.injury = { type: injuryType, daysLeft: days };
+      victim.morale = Math.max(0, victim.morale - 10);
+      this.addInboxMessage('SQUAD',
+        `${victim.name} se lesiona en el entrenamiento`,
+        `Malas noticias: ${victim.name} sufrió un ${injuryType} durante la sesión de hoy. Estará aproximadamente ${days} días de baja. El cuerpo médico recomienda precaución.`,
+        date, clubId);
+      this.mediaNews.push({
+        id: generateUUID(), date,
+        type: 'CRITICISM', category: 'INJURY',
+        headline: `${victim.name}, baja sensible en ${club.name}`,
+        subheadline: `Lesión en el entrenamiento: ${days} días de baja`,
+        body: `${victim.name} se perderá los próximos partidos de ${club.name} tras sufrir un ${injuryType} en la sesión matinal. Una baja que complica los planes del entrenador.`,
+        clubId, playerId: victim.id, isUserClubNews: true, read: false,
+      });
+      sendInjuryNotification(victim.name, injuryType, days);
+    } else if (roll < 0.68) {
+      // Romance / celebrity distraction
+      const player = squad[randomInt(0, squad.length - 1)];
+      const celebNames = ['una reconocida modelo', 'una cantante pop', 'una actriz de telenovelas', 'una influencer viral'];
+      const celeb = celebNames[randomInt(0, celebNames.length - 1)];
+      // Personality affects reaction
+      const isDistracted = player.personality === 'MERCENARY' || player.personality === 'LAZY' || player.personality === 'VOLATILE';
+      if (isDistracted) {
+        player.morale = Math.min(100, player.morale + 8);
+        player.fitness = Math.max(0, player.fitness - 5);
+        this.addInboxMessage('STATEMENTS',
+          `${player.name} en el ojo mediático`,
+          `${player.name} ha sido vinculado sentimentalmente con ${celeb}. Las revistas del corazón no hablan de otra cosa. Su ánimo está por las nubes pero algunos temen que pierda el foco deportivo.`,
+          date, clubId);
+      } else {
+        this.addInboxMessage('STATEMENTS',
+          `Prensa rosa: ${player.name}`,
+          `La prensa del corazón vincula a ${player.name} con ${celeb}. El jugador ha declarado que no afectará a su rendimiento y que está centrado en el fútbol.`,
+          date, clubId);
+      }
+      this.mediaNews.push({
+        id: generateUUID(), date,
+        type: 'RUMOR', category: 'GENERAL',
+        headline: `¿${player.name} tiene nuevo amor?`,
+        subheadline: `El jugador de ${club.name} en boca de todos`,
+        body: `Las imágenes de ${player.name} con ${celeb} han dado la vuelta al mundo. En ${club.name} prefieren no hacer comentarios.`,
+        clubId, playerId: player.id, isUserClubNews: true, read: false,
+      });
+    } else if (roll < 0.77) {
+      // Conflict with board/directiva
+      const star = squad.filter(p => p.reputation >= 5000 && p.isStarter)[0];
+      if (star) {
+        club.boardConfidence = Math.max(0, club.boardConfidence - 5);
+        star.morale = Math.max(0, star.morale - 8);
+        this.addInboxMessage('STATEMENTS',
+          `${star.name} choca con la directiva`,
+          `${star.name} ha tenido un encontronazo con la directiva por unas declaraciones sobre la política de fichajes del club. La afición está dividida: ¿apoyas al jugador o a la junta?`,
+          date, clubId);
+        this.mediaNews.push({
+          id: generateUUID(), date,
+          type: 'HEADLINE', category: 'BOARD',
+          headline: `Terremoto en ${club.name}: ${star.name} carga contra la directiva`,
+          subheadline: 'El vestuario, pendiente de la resolución del conflicto',
+          body: `${star.name} no se mordió la lengua: "Este club merece más ambición". La directiva de ${club.name} estudia medidas disciplinarias mientras el entrenador intenta apaciguar los ánimos.`,
+          clubId, playerId: star.id, isUserClubNews: true, read: false,
+        });
+      }
+    } else if (roll < 0.86) {
+      // Nightclub party leaked
+      const partyGoer = squad[randomInt(0, squad.length - 1)];
+      const nights = ['viernes', 'sábado'];
+      const night = nights[randomInt(0, nights.length - 1)];
+      partyGoer.fitness = Math.max(0, partyGoer.fitness - 10);
+      partyGoer.morale = Math.max(0, partyGoer.morale - 5);
+      club.teamCohesion = Math.max(0, (club.teamCohesion || 50) - 3);
+      this.addInboxMessage('SQUAD',
+        `Escándalo: ${partyGoer.name} en una fiesta nocturna`,
+        `La prensa ha publicado fotos de ${partyGoer.name} saliendo de una discoteca a las 4 AM el ${night} por la noche, a 48 horas de un partido importante. El código disciplinario del club podría aplicarse. Su condición física se resiente.`,
+        date, clubId);
+      this.mediaNews.push({
+        id: generateUUID(), date,
+        type: 'CRITICISM', category: 'GENERAL',
+        headline: `${partyGoer.name}, cazado de fiesta a altas horas`,
+        subheadline: 'El código disciplinario del club, en entredicho',
+        body: `Exclusiva: ${partyGoer.name} fue fotografiado abandonando un conocido local nocturno en la madrugada del ${night}. En ${club.name} no ha sentado nada bien. El jugador se enfrenta a una posible sanción económica.`,
+        clubId, playerId: partyGoer.id, isUserClubNews: true, read: false,
+      });
+    } else if (roll < 0.94) {
+      // Bet between players (training challenge)
+      const p1 = squad[randomInt(0, squad.length - 1)];
+      let p2 = squad[randomInt(0, squad.length - 1)];
+      while (p2.id === p1.id) p2 = squad[randomInt(0, squad.length - 1)];
+      const betOutcome = Math.random() > 0.5;
+      const winner = betOutcome ? p1 : p2;
+      const loser = betOutcome ? p2 : p1;
+      winner.morale = Math.min(100, winner.morale + 8);
+      loser.morale = Math.max(0, loser.morale - 3);
+      club.teamCohesion = Math.min(100, (club.teamCohesion || 50) + 2);
+      this.addInboxMessage('SQUAD',
+        `Apuesta entre ${p1.name} y ${p2.name}`,
+        `${p1.name} y ${p2.name} hicieron una apuesta en el entrenamiento: quién mete más goles desde fuera del área. ${winner.name} ganó y se llevó los aplausos del grupo. Buen ambiente en el vestuario.`,
+        date, clubId);
     } else {
       // Press amplifies minor squad friction
       this.mediaNews.push({

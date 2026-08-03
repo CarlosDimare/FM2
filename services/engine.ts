@@ -101,7 +101,55 @@ export class MatchSimulator {
     }
     const familiarityMult = 0.85 + (p.tacticalFamiliarity / 100) * 0.3;
     const consistencyMult = 0.95 + (p.consistency / 20) * 0.1;
-    return Math.max(1, Math.round(base * moraleMult * fatigueMult * formMult * familiarityMult * consistencyMult));
+    const personalityMult = this.getPersonalityMultiplier(p);
+    return Math.max(1, Math.round(base * moraleMult * fatigueMult * formMult * familiarityMult * consistencyMult * personalityMult));
+  }
+
+  /**
+   * Personality-based performance multiplier.
+   * LEADER: boosts all teammates; VOLATILE: thrives under pressure, crumbles when losing;
+   * LAZY: worse on Mondays; MERCENARY: better in big games; AMBITIOUS: thrives in derbies/finals.
+   */
+  private static getPersonalityMultiplier(p: Player): number {
+    if (!p.personality) return 1.0;
+    let mult = 1.0;
+
+    switch (p.personality) {
+      case 'LEADER':
+        // Slight personal boost + team aura handled separately
+        mult = 1.03;
+        break;
+      case 'MERCENARY':
+        // Extra motivated in cup/continental matches (big-money games)
+        // We don't have match context here, but higher base + check bigMatchTemperament
+        mult = 1.0 + (p.bigMatchTemperament > 14 ? 0.05 : 0.0);
+        break;
+      case 'LOYAL':
+        // Consistent, dependable — slight boost when form is good
+        mult = 1.02;
+        break;
+      case 'VOLATILE':
+        // Highly morale-dependent: great when happy, terrible when unhappy
+        mult = 0.88 + (p.morale / 100) * 0.24; // 0.88 at 0 morale, 1.12 at 100 morale
+        break;
+      case 'PROFESSIONAL':
+        // Consistent performer regardless of external factors
+        mult = 1.04;
+        break;
+      case 'LAZY':
+        // Underperforms unless pushed — slightly lower base
+        mult = 0.93;
+        // Even worse on Mondays (day 1 of the week)
+        const today = new Date();
+        if (today.getDay() === 1) mult -= 0.05;
+        break;
+      case 'AMBITIOUS':
+        // Slightly better in high-stakes scenarios
+        mult = 1.02;
+        break;
+    }
+
+    return Math.max(0.7, Math.min(1.2, mult));
   }
 
   private static calculatePressure(actor: Player, defPlayers: Player[], ballX: number, ballY: number, actorStats: Record<string, PlayerMatchStats>, isHomeActor: boolean, closingDown: number = 10): number {
@@ -1086,7 +1134,8 @@ export class MatchSimulator {
       const formMult = 0.92 + (avgForm / 30);
       const familiarityMult = 0.85 + (p.tacticalFamiliarity / 100) * 0.3;
       const consistencyMult = 0.95 + (p.consistency / 20) * 0.1;
-      return Math.max(1, Math.round(base * moraleMult * formMult * familiarityMult * consistencyMult));
+      const personalityMult = this.getPersonalityMultiplier(p);
+      return Math.max(1, Math.round(base * moraleMult * formMult * familiarityMult * consistencyMult * personalityMult));
     }
 
     /** Pick best XI: ensures positional coverage (1 GK, 3+ DEF, 2+ MID, 1+ ATT) */
@@ -1193,6 +1242,11 @@ export class MatchSimulator {
       // ── MORALE & FORM MULTIPLIERS ──
       const hMorale = hXI.reduce((s, p) => s + p.morale, 0) / (hXI.length || 1);
       const aMorale = aXI.reduce((s, p) => s + p.morale, 0) / (aXI.length || 1);
+      // Leader aura: each LEADER on the pitch gives +2 morale to teammates
+      const hLeaders = hXI.filter(p => p.personality === 'LEADER').length;
+      const aLeaders = aXI.filter(p => p.personality === 'LEADER').length;
+      const hEffMorale = hMorale + hLeaders * 2;
+      const aEffMorale = aMorale + aLeaders * 2;
       const hForm = hXI.reduce((s, p) => {
         const avg = p.formRatings.length > 0 ? p.formRatings.slice(-3).reduce((a: number, b: number) => a + b, 0) / Math.min(3, p.formRatings.length) : 6.0;
         return s + avg;
@@ -1226,8 +1280,8 @@ export class MatchSimulator {
       const aActions = Math.round(90 + aTempo * 30 + aMent * 15);
 
       // ── SHOTS ──
-      const hShotsRaw = 4 + hAtt * 0.18 - aDef * 0.12 + hMent * 2 + (Math.random() * 4 - 2);
-      const aShotsRaw = 4 + aAtt * 0.18 - hDef * 0.12 + aMent * 2 + (Math.random() * 4 - 2);
+      const hShotsRaw = 4 + hAtt * 0.18 - aDef * 0.12 + hMent * 2 + (hEffMorale - 60) * 0.04 + (Math.random() * 4 - 2);
+      const aShotsRaw = 4 + aAtt * 0.18 - hDef * 0.12 + aMent * 2 + (aEffMorale - 60) * 0.04 + (Math.random() * 4 - 2);
       const hShots = Math.max(0, Math.round(hShotsRaw));
       const aShots = Math.max(0, Math.round(aShotsRaw));
 

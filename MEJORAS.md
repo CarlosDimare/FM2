@@ -1,6 +1,36 @@
 # FM — Estado del Proyecto
 
-## 🔵 Completado
+## ✅ Los 3 Pilares Completados
+
+### 🟢 Pilar A: Mundo Vivo (Reputación Dinámica de Ligas)
+- `dynamicReputation` en `Competition`: 0-100, fluctúa cada temporada según calidad de clubes (50%), CA promedio (30%), performance continental (20%)
+- `marketMultiplier`: 0.5-2.0. Liga ELITE (80+)=×2.0, LOCAL (<20)=×0.5. Afecta `recalculatePlayerValue()`
+- Talent migration: 8% diario — jóvenes U23 con PA>150 en ligas bajas reciben ofertas de ligas ≥10 pts más de reputación
+- Noticias económicas al final de temporada: top 3 ligas + mayores cambios en inbox
+- UI: vista `LEAGUE_RANKING` en sidebar (📊) — tabla de las 41 ligas ordenadas por reputación, tier, prize pool
+- `getLeagueTier()`: ELITE / PRESTIGE / DEVELOPING / EMERGING / LOCAL
+- `getBaseLeagueRep()`: reputaciones base por liga (Premier 92, La Liga 90, Serie A 85, etc.)
+
+### 🟡 Pilar B: Legado (Salón de la Fama + Récords Históricos)
+- `HallOfFameEntry`: top 50 DTs por win-rate y títulos, inducidos al ≥60%. Evaluación al final de cada temporada
+- `HallOfFameView`: UI con medallas 🥇🥈🥉, PJ, G, %, títulos, clubes
+- `Player.careerStats`: `totalApps`, `totalGoals`, `totalAssists`, `totalCleanSheets`, `clubsPlayedFor` — acumulativos de por vida
+- `ClubRecords.allTimeTopScorer` + `allTimeMostApps`: máximos goleadores y jugadores con más partidos en la historia del club
+- Visible en PlayerModal (pestaña Historial → "Carrera") y ClubReport (Récords Históricos)
+
+### 🎭 Pilar C: Personalidades y Drama
+- **7 personalidades de jugador** (`PlayerPersonality`): LEADER, MERCENARY, LOYAL, VOLATILE, PROFESSIONAL, LAZY, AMBITIOUS
+- Asignación según atributos: leadership, loyalty, agresividad, decision, vision
+- **Conflictos de vestuario**: detección diaria de pares conflictivos (LEADER vs VOLATILE, etc.), tensión acumulativa, mediación del capitán (leadership ≥15), filtración a prensa si tensión ≥80
+- **Pedidos de traspaso narrativos**: 3% diario, motivos contextuales por personalidad (AMBITIOUS quiere Champions, MERCENARY más dinero, LOYAL familia, VOLATILE odia al DT...)
+- Nuevo diálogo `CONVINCE_TO_STAY`: intentar convencer al jugador de que retire su pedido
+- **10+ eventos narrativos**: juvenil pide dorsal, pelea por penal, veterano mentor (+1 CA), lesión en entrenamiento, romance mediático, conflicto con directiva, fiesta nocturna filtrada, apuesta entre jugadores, prensa amplifica fricción
+- **Personalidad afecta rendimiento en partido**: VOLATILE depende de moral (0.88-1.12×), LAZY rinde -7% (extra -5% los lunes), PROFESSIONAL +4% consistente, LEADER +3% + aura al equipo (+2 moral a compañeros), MERCENARY +5% en partidos grandes, AMBITIOUS +2%
+- `PlayerModal` actualizado con etiqueta de personalidad + descripción completa
+
+---
+
+## 🔵 Completado (histórico)
 
 ### Motor de Partido
 - Sustituciones (5 cambios máximo, modal 2 pasos)
@@ -20,6 +50,7 @@
 - Marcación hombre vs zona, target man, pases filtrados, centro, fuera de juego, penales
 - Rating mejorado (clean sheet, pass completion, bonus posición), ventaja local (+0.15 rating)
 - Quick sim mejorado (forma + tácticas + habilidad), auto-sub por lesión, big match temperament
+- Multiplicador de personalidad en `getEffectiveAttribute` y `getQuickAttr`
 
 ### Partido UI
 - Charla en descanso (min 45: motivar/exigir/calmar)
@@ -42,206 +73,91 @@
 - `NationalTeamView` (plantilla con filtro por posición, fixtures, estadísticas, banderas)
 - `MatchSimulator.simulateNationalTeamMatch()` con reputación y CA
 - Sidebar "Selecciones" con top 10
+- Carrera modo CLUB / NATIONAL / BOTH
 
 ### Scouting
 - Vista con CA/PA, fortalezas, debilidades, personalidad
 - Buscador por nombre y solicitar informe
 - Filtros por posición, edad, CA mínimo
 - Lista de seguimiento (bookmark)
-- Presupuesto de escouting por club
-- Rol de SCOUT generado automáticamente
 
 ### Inteligencia Artificial
 - Compra en posiciones débiles (mínimos: 2 GK, 5 DEF, 4 MID, 2 FWD)
 - Venta de excedentes
 - Ofertas: aceptación/rechazo/contraoferta según valor/precio + reputación
 - Renovación automática / liberación
-- Jóvenes (16-22) PA≥140 para desarrollo futuro
-- Reemplazo por edad (≥32 con decline → transferible)
-- Cesiones ofrecidas/solicitadas
-
-### Traspasos y Contratos
-- Negociación con intentos limitados (3), aceptación según lealtad + salario
-- Salario al cambiar de club y duración
-- Contract Negotiation Modal para renovación
-- Cesiones: `loanDetails`, `completeLoan`, `processLoanReturns`
-- Cláusula de rescisión (3× valor, activable pagando)
-- Agentes: 15% probabilidad, comisión 5-15%
-- Prima de fichaje: 8% del traspaso + CA×200
-- Cesión con opción de compra (`LOAN_TO_BUY`)
-- Deadline Day: 31 enero, 31 agosto (actividad IA intensificada, inbox especial)
+- Cross-league transfers (20% entre ligas DEEP)
+- Deadline Day expandido a todas las ligas DEEP
 
 ### Plantilla (Squad)
-- `formRatings[]` con puntos de color (verde≥8, ama≥6, rojo<5) en columna "Forma"
+- `formRatings[]` con puntos de color
 - Ordenamiento: posición, nombre, edad, tendencia, salario, física, moral, valor
 - Iconos de estado: lesión, suspensión, transferible, contrato
-- Negrita para titulares
 - Barra sub-21 (progreso minutos)
 
 ### Cantera y Desarrollo
-- Hornada anual el 1 de agosto según instalaciones (`youthRecruitment`, `youthFacilities` 1-20)
-- Regiones de captación (`scoutingRegion`)
-- Préstamos de jóvenes U17-U21 por IA
-- Curvas de desarrollo: 6 fases (EARLY_WITH/YOUTH/EARLY_PRIME/PRIME/LATE_PRIME/VETERAN)
-- Promoción automática al primer equipo (CA≥100) y liberación (PA<100)
-- Desarrollo mensual (`developYouthPlayers`)
-
-### Rueda de Prensa
-- Pre-partido: 5 preguntas (objetivo, rival, planteamiento, jugador estrella, derbi)
-- Post-partido: 4 preguntas (resultado, actuación, próximo, rumores)
-- Efecto en moral de equipo y confianza de directiva
-- Detección automática de mejor goleador
+- Hornada anual el 1 de agosto
+- Regiones de captación
+- Curvas de desarrollo: 6 fases
+- Promoción automática y liberación
 
 ### Crónicas Automatizadas
-- Crónica de partido (3-4 líneas tras cada partido)
-- Crónica mensual (5-7 líneas al cambio de mes)
-- Crónica de carrera (10-15 líneas al finalizar partida)
-- `ChronicleView` con filtros (Todos/Partido/Mensual/Carrera)
-- Sidebar: botón "Crónicas" (BookOpen)
-- Generación en paths: avance diario, vacaciones, hacia próximo partido
-- Persistencia: guardado y cargado con la partida
+- Crónica de partido, mensual, de carrera
+- `ChronicleView` con filtros
 
 ### Ficha de Entrenador (Manager Profile)
-- SETUP_USER con nacionalidad (15 países), origen (exjugador/cantras/jornalista), fecha nacimiento
-- Actualización tras cada partido: W/D/L, goles, jugador clave
-- Actualización tras fin de temporada: temporada+1, títulos, relaciones (directiva/prensa/afición), objetivo
-- `ManagerProfileView` con stats, títulos, relaciones, historial de clubes
-- Objetivo según reputación relativa del club vs liga
-- Sidebar: "Mi Carrera" (User icon)
-- `clubHistory` se popula: seasons incrementado cada temporada, títulos al ganar
+- Actualización tras cada partido y temporada
+- `ManagerProfileView` con stats, títulos, relaciones, historial
 
 ### Staff / Empleados
-- Perfil de empleado con biografía, reseña generada por atributos, perfil táctico (formación, estilo, presión, enfoque), reputación, palmarés y clubes anteriores
-- Atributos de staff en español (STAFF_ATTRIBUTE_LABELS)
-- Cards estilo jugador con iniciales, reputación y badges de tareas delegadas
-- Pestaña "Delegación": 6 tareas delegables (Entrenamiento, Prensa, Charlas, Reserva, Sub-20, Scouting) con selector de empleado
-- Efectos: prensa delegada (respuesta automática neutral), charla de descanso delegada (+moral, inbox), entrenamiento delegado (TrainingView)
+- Perfil con biografía, perfil táctico, reputación, palmarés
+- Delegación de 6 tareas
 
 ### Tácticas
-- Fichas en el campo con dorsales estilo FM08 (sin nombres propios, tooltip al pasar)
-- Modal "ELEGIR 11" responsive: tap jugador → tap casilla; tap titular → banquillo; contador 11/11; auto-selección integrada
+- Fichas en el campo con dorsales estilo FM08
+- Modal "ELEGIR 11" responsive
 
 ### Directiva (Board)
 - BoardView con confianza, saldo, presupuesto
-- Mejora de instalaciones de entrenamiento/juveniles
-- Aumento de presupuesto extra si confianza alta
-- `evaluateBoardConfidence` según objetivos, liga, copas, selecciones
-
-### Mensajes (Inbox)
-- 6 categorías: MARKET, SQUAD, STATEMENTS, FINANCE, COMPETITION, SCOUTING
-- Acciones: botón "Acción Requerida" con destino según categoría
+- Mejora de instalaciones
+- `evaluateBoardConfidence`
 
 ### Prensa y Medios
 - `MediaView` con portada de periódico
 - Tipos: HEADLINE, FEATURE, RUMOR, CRITICISM, PRAISE
-- Generación automática en eventos de partidos
+- `PeopleHub`: pestañas PRENSA + RED DE DT
 
 ### UI/UX
-- Tema oscuro (toggle sol/luna, CSS variables, persistencia)
-- Onboarding 8 pasos (`OnboardingTour`)
-- Responsive (vista tablet en SquadView/LeagueTable, BottomNav)
-- Teclas rápidas: Space, Esc, M, T, S
-- Auto-save (toggle), lotes de 7 días en vacaciones
-- Notificaciones push del navegador
-- Múltiples slots de guardado IndexedDB
-- Loading skeletón
-- FM Steel-Gray homogeneizado (todas las vistas migradas)
-- FMLoadingOverlay con spinner, progress bar, cancel button (vacaciones)
-- Selección de liga 2 pasos: país con bandera → liga filtrada
-- ClubReport: vista de información del club (equipación, palmarés, presupuestos)
+- Tema oscuro, Onboarding 8 pasos, Responsive, Teclas rápidas
+- Auto-save, Notificaciones push, Múltiples slots IndexedDB
+- FM Steel-Gray homogeneizado
 
 ### Open‑Football‑Database
-- 54,645 jugadores reales, 570 clubes, 35 ligas en 30+ países
-- Atributos FM posiciones convertidos a Position enum
-- CA/PA convertidos a 1-20 (Fórmula weighted por posición)
-- JSON servidos estáticamente (fetch al arranque, no bund)
-- Selección de liga al crear partida (las 35 disponibles)
-- 33 países con banderas (COUNTRY_CODES), 26 nacionalidades (NATIONS)
-- Performance: club caching con TTL, invalidación en mutaciones de clubId
+- 54,645 jugadores reales, 570 clubes, 35+ ligas en 30+ países
+- 41 ligas totales (35 DB + 6 manuales)
 
 ---
 
-## 🟡 Recientemente Completado
-- **Carrera de Selecciones Nacionales (modo internacional)**
-  - `CareerMode`: CLUB / NATIONAL / BOTH — al crear la partida eliges si diriges club, selección o ambos
-  - `NationalTeamManager`: asumir control de una selección (`assumeControl`), convocatoria de 23 jugadores, planteamiento táctico propio que el motor aplica al simular
-  - Partidos de selección simulados con tu convocatoria y táctica (`getNationalMatchOptions`)
-  - Crónicas de partidos internacionales (`generateNationalTeamChronicle`) y vista HOME de selección
-  - Cambio de selección vía oferta de federación (solicitar → aceptar/rechazar)
-  - Guardado/carga integrado (validateControlledState al cargar) y auto-save con nombre de la selección
-- **Pantalla de selección con vistas separadas como el modo club**
-  - `NT_<selección>_SQUAD` · `NT_<selección>_TACTICS` · `NT_<selección>_SCHEDULE` · `NT_<selección>_STATS`: Plantel, Tácticas, Partidos y Estadísticas en pantallas independientes, navegables desde el sidebar (submenú "Mi selección") y con navegador de sección en el encabezado
-  - `NationalTeamView` usa el mismo `FMTable` ordenable, banderas, puntos de forma, iconos de estado, fitness y valor que la `SquadView` de club
-  - Columnas estilo FM08: `#` · Nombre · Pos · Edad · Club · PJ · Gol · Forma · Fis · Valor, con variantes responsive móvil/escritorio
-  - Pantalla de Tácticas: planteamiento (mentalidad, presión, pase, enfoque, contraataque) + once probable por capacidad
-  - Componentes compartidos nuevos: `PlayerBadges.tsx` (`PlayerFormDots` + `PlayerStatusIcons`), ahora usados por club y selección
-  - Ficha de jugador (`PlayerModal`) abierta también en modo solo-selección (userClubId opcional)
-- **Selecciones en español + banderas completas**
-  - Las 45 selecciones renombradas a nombres y países en español (Brasil, España, Inglaterra, Alemania, Italia, Países Bajos…) para que la asignación de jugadores coincida con los países reales de los clubes
-  - `COUNTRY_CODES` ampliado (Serbia, Canadá, Australia, Marruecos, Senegal, Nigeria, Egipto, Ghana, Camerún, Costa de Marfil, Túnez, Corea del Sur, Estados Unidos) y `getFlagUrl` sin acentos/mayúsculas ('Peru' = 'Perú')
-  - Fix regex de normalización en `nationalTeamManager` (los diacríticos no se eliminaban y España/Brasil/etc. quedaban sin jugadores)
-- **Simulación profunda de la liga del usuario (avance plan multi-liga)**
-  - Al elegir liga en el setup se activa `deepSimLeagues` (liga del usuario = DEEP → genera fixtures de SENIOR + RESERVE + U20)
-  - Nuevo método `WorldManager.ensureDeepSquads(leagueId)`: rellena los planteles de reserva/sub-20 de los clubes de esa liga (solo los que faltan) e invalida el caché, evitando partidos degenerados
-  - Al cargar partida se revalida y rellena la liga profunda guardada
-- **PeopleHub también en modo selección**
-  - El Centro de Personas ahora funciona sin club: lista tus convocados y permite interacciones DT↔jugador (elogiar, criticar, exigir, capitanía) sobre la convocatoria internacional
-  - En modo selección se ocultan las pestañas de Staff y Directiva; en modo club se mantienen todas
-  - Sidebar: "Personas" siempre visible (club y selección)
-- **Limpieza de TypeScript (26 errores)**
-  - `worldManager`: literal de `Player` alineado con la interfaz (campos sobrantes eliminados, requeridos añadidos), `replaceHeadCoach` usa fecha real
-  - `LeagueTable`: `Position.AMC/FW` inexistentes → `Position.AM/ST/STR/STL`
-  - `MatchView`: tipado explícito de `Object.entries(playerStats)`
-  - `PressConferenceView`: `p.goals` → `p.seasonStats.goals`
-  - `TournamentHub`: import `UserCheck`; `lifecycleManager`: import `LeagueStanding`
-- Motor de partido refinado (3 fases):
-  - Pase inteligente (peso por proximidad, focusPassing, usePlaymaker, targetMan)
-  - Distribución GK (short/long/clearance), saque de banda (THROW_IN)
-  - Gol + momentum (cambio moral), tácticas activadas (defensiveLine, timeWasting, longShots)
-  - Marcación hombre vs zona, target man, pases filtrados, centro, fuera de juego, penales
-  - Rating mejorado (clean sheet, pass completion, bonus posición), ventaja local (+0.15 rating)
-  - Quick sim mejorado (forma + tácticas + habilidad), auto-sub por lesión, big match temperament
-- Homogeneización visual FM Steel-Gray (`bg-[#d4dcd4]`, `border-[#a0b0a0]`, `bg-white`)
-  - Todas las vistas migradas: MatchView, PreMatchView, PressConferenceView, MediaView
-  - ChronicleView, ManagerProfileView, Sidebar, BottomNav, TrainingView, StaffView
-  - FMUI: FMSpinner, FMProgressBar, FMLoadingOverlay
-- Vacaciones async con progreso visual (FMLoadingOverlay, cancel button, día actual)
-- Selección de liga 2 pasos: país → liga (SETUP_COUNTRY con banderas, SETUP_LEAGUE filtrado)
-- Player flags: COUNTRY_CODES 33 países, NATIONS 26 países, Perú normalizado con tilde
-- Performance: club caching con TTL (`playersByClubCache`, `clubByIdCache`), `invalidateClubCache()`
-- **Elegir Manager Existente al inicio:** nueva pantalla SETUP_EXISTING_MANAGER con ~22 DTs reales de las ligas del juego (Guardiola, Ancelotti, Simeone, Flick, Klopp-like Slot, Arteta, Mourinho, Farioli, Gallardo, Abel Ferreira, etc.). Cada uno con atributos personalizados (coaching, tacticalKnowledge, manManagement, motivation, etc.), personalidad, reputación e historial. Click → si tiene club, toma posesión directa (skipea selección de país/liga/equipo); si está desempleado (Simeone, Gallardo), va al flujo normal de selección de club. Nuevo método `createExistingManager` en WorldManager reemplaza al HEAD_COACH AI con los datos del manager real. Helpers: `AttrBar` component, datos en `REAL_MANAGERS` array en data/static.ts
-- **8 Features nuevos:**
-  - League Stats: pestaña con goleadores, asistencias y mejor XI por posición en LeagueTable
-  - Formaciones UI: grid visual de mini-canchas en TacticsView (reemplaza dropdown)
-  - Comparar jugadores: modal lado a lado con atributos, stats, forma y barras de comparación
-  - Bracket visual: árbol de eliminación directa en TournamentHub para copas/knockouts
-  - Free agents: pestaña "Libres" en MarketView con pool de jugadores sin club
-  - Awards: pestaña "Premios" en TournamentHub (goleador, asistidor, mejor calificación, mejor joven)
-  - Historial financiero: tabla de últimos 12 meses en EconomyView (ingresos, egresos, neto, balance)
-  - Match speed: botones 1x/2x/4x en barra del partido para controlar velocidad de simulación
-- Fix ClubReport no conectado en App.tsx (case 'CLUB_REPORT' agregado)
-- Fix `primaryPosition` añadida a interfaz Player (asignada en worldManager pero invisible a TS)
-- Fix staff.history: se popula al final de cada temporada en processEndOfSeason
-- Fix managerProfile.clubHistory: `seasons` se incrementa cada temporada (no solo al ganar títulos)
-- Fix import muerto TacticalReport eliminado de engine.ts
-- Fix `isInVacation` no destructurado en App.tsx
-- Fix `player.secondaryPositions?.map` optional chaining en PlayerModal
-- Fix `widthSetting` scoping en engine.ts (declaración movida antes, duplicados eliminados)
-- Fix `wouldDropBelowMinimums` implementado en WorldManager
-- Fix `ChevronLeft` import faltante en App.tsx
-- GitHub push a https://github.com/CarlosDimare/FM2
+## 📊 Total acumulado
+
+| Métrica | Valor |
+|---|---|
+| Ligas | 41 (CONMEBOL 7, UEFA 21, CONCACAF 3, AFC 5, CAF 3, OFC 1) |
+| Clubes | ~618 |
+| Jugadores | ~55,000 |
+| Personalidades | 7 tipos con efectos en partido |
+| Eventos narrativos | 10+ tipos |
+| Competiciones | Ligas + Copas domésticas + Continentales + Mundiales |
 
 ---
 
-## ⚠️ Faltan / Bugs
+## ⚠️ Próximos pasos
 
-### Bugs activos
-- Sin bugs activos pendientes
-
-### Plan pendiente: Expansión Mundial de Ligas + Interacciones (`.kilo/plans/`)
-- Avanzado: `deepSimLeagues` activo para la liga del usuario (DEEP con RESERVE/U20 rellenados vía `ensureDeepSquads`), `relationships` en Player/Staff, `interactionLog` + `decayRelationships` en worldManager, `PeopleHub` (Jugadores/Staff/Relaciones/Directiva/Prensa/Red de DT, también en modo selección) y `DialogueSystem` ampliado (SET_CAPTAIN, ASSIGN_TRAINING, PRESS_STATEMENT, CONTACT_MANAGER…)
-- ✅ Completado: catálogo completo de 35 ligas por continente (cargadas del open-football-database), infraestructura de soporte lista (REGEN_DB +13 países, NATIONS, COUNTRY_CODES, countryEconomy, getContinentForCountry). Subvistas de Prensa y Red de DT en PeopleHub implementadas.
-- Pendiente: medir rendimiento del bucle diario con la liga en DEEP (~3× fixtures de esa liga) y optimizar si es necesario.
+- Mejorar IA de partido (sustituciones inteligentes, ajustes tácticos dinámicos)
+- Modo online / multijugador
+- Editor de datos (clubes, jugadores, competiciones)
+- Historial entre temporadas completo
+- Modo espectador (simular sin intervenir)
 
 ---
 
