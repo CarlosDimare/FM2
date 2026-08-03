@@ -424,10 +424,28 @@ if (result.userWonLeague) gs.trackTitle('Liga');
           MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
           const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
           const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-          LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-          world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
-          world.trackU21Minutes(f.homeTeamId, hSquad, stats, currentDate);
-          world.trackU21Minutes(f.awayTeamId, aSquad, stats, currentDate);
+          if (f.competitionId === 'FRIENDLY') {
+            // Friendlies: no suspensions, no U21 tracking, income + team benefits
+            world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
+            if (f.homeTeamId === userClub?.id || f.awayTeamId === userClub?.id) {
+              const userClubId = userClub?.id || '';
+              if (userClubId) {
+                const club = world.getClub(userClubId);
+                if (club) club.teamCohesion = Math.min(100, (club.teamCohesion || 50) + 2);
+                // Only players who played get the boost
+                const userSquad = f.homeTeamId === userClubId ? hSquad : aSquad;
+                userSquad.forEach(p => {
+                  p.tacticalFamiliarity = Math.min(100, p.tacticalFamiliarity + 3);
+                  p.fitness = Math.min(100, p.fitness + 5);
+                });
+              }
+            }
+          } else {
+            LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+            world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
+            world.trackU21Minutes(f.homeTeamId, hSquad, stats, currentDate);
+            world.trackU21Minutes(f.awayTeamId, aSquad, stats, currentDate);
+          }
           if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
             const us = f.homeTeamId === userClub.id ? homeScore : awayScore;
             const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
@@ -622,10 +640,14 @@ const startVacation = async (targetOverride?: Date) => {
           MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
           const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
           const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-          LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-          world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+          if (f.competitionId === 'FRIENDLY') {
+            world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+          } else {
+            LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+            world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
             world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
             world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+          }
             if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
               const us = f.homeTeamId === userClub.id ? homeScore : awayScore;
               const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
@@ -782,10 +804,14 @@ dayFixtures.forEach(f => {
            MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
            const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
            const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-           LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-           world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-           world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-           world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+           if (f.competitionId === 'FRIENDLY') {
+             world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+           } else {
+             LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
+             world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
+             world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
+             world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
+           }
          }
          world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
        });

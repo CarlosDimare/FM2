@@ -311,6 +311,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
       allFixtures.push(...world.nationalTeamManager.generateWorldCupFinalTournament(qualifiedTeams, wcYear));
     }
 
+    // ── Preseason friendlies for user's club ────────────────────────
+    if (clubId) {
+      const userClub = world.getClub(clubId);
+      if (userClub) {
+        const friendlyFixtures = world.generatePreseasonFriendlies(clubId, startFrom);
+        allFixtures.push(...friendlyFixtures);
+        if (friendlyFixtures.length > 0) {
+          const total = allFixtures.length;
+          console.log(`  ⚽ ${friendlyFixtures.length} amistosos de pretemporada para ${userClub.name}`);
+        }
+      }
+    }
+
     // ── Performance: fixture breakdown ──────────────────────────────
     const deepIds = new Set(deepLeagueIds);
     const leagueFixCounts: string[] = [];

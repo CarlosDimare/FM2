@@ -221,7 +221,7 @@ export interface Club {
   teamCohesion?: number; // 0-100, affects match performance
 }
 
-export type CompetitionType = 'LEAGUE' | 'CUP' | 'CONTINENTAL_ELITE' | 'CONTINENTAL_SMALL' | 'GLOBAL';
+export type CompetitionType = 'LEAGUE' | 'CUP' | 'CONTINENTAL_ELITE' | 'CONTINENTAL_SMALL' | 'GLOBAL' | 'FRIENDLY';
 
 export interface LeagueStanding {
   clubId: string;

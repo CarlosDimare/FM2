@@ -303,7 +303,7 @@ export class WorldManager {
           { id: 'COPA', name: 'Copa América', country: 'América del Sur', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'América del Sur', confederation: 'CONMEBOL', defaultPrizePool: 10000000, seasonStartMonth: 5, seasonEndMonth: 7 },
           { id: 'EURO', name: 'UEFA Euro', country: 'Europa', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'Europa', confederation: 'UEFA', defaultPrizePool: 15000000, seasonStartMonth: 5, seasonEndMonth: 7 },
           { id: 'AFCON', name: 'Africa Cup of Nations', country: 'África', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'África', confederation: 'CAF', defaultPrizePool: 5000000, seasonStartMonth: 0, seasonEndMonth: 1 },
-          { id: 'WC_FINAL', name: 'Copa Mundial', country: 'Global', type: 'GLOBAL', tier: 1, continent: 'Global', confederation: 'FIFA', defaultPrizePool: 50000000, seasonStartMonth: 5, seasonEndMonth: 7 },
+          { id: 'FRIENDLY', name: 'Amistosos de Pretemporada', country: 'Global', type: 'FRIENDLY', tier: 0, continent: 'Global', confederation: 'FIFA', defaultPrizePool: 0 },
        );
 
        // Domestic cups
@@ -1105,6 +1105,78 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
   }
 
   // ─── End Pilar C ──────────────────────────────────────────────────────────
+
+  /**
+   * Generate 3-5 preseason friendly fixtures for a club before its league starts.
+   * Opponents are clubs of similar reputation from different leagues.
+   */
+  generatePreseasonFriendlies(clubId: string, seasonStart: Date): Fixture[] {
+    const club = this.getClub(clubId);
+    if (!club) return [];
+
+    const league = this.competitions.find(c => c.id === club.leagueId);
+    const leagueStartMonth = league?.seasonStartMonth ?? 0;
+
+    const count = 3 + randomInt(0, 2); // 3-5 friendlies
+    const fixtures: Fixture[] = [];
+
+    // Find suitable opponents: similar reputation (±30%), different league, different country preferred
+    const repRange = club.reputation * 0.3;
+    const candidates = this.clubs
+      .filter(c =>
+        c.id !== clubId &&
+        c.leagueId !== club.leagueId &&
+        Math.abs(c.reputation - club.reputation) <= repRange
+      )
+      .sort((a, b) => b.reputation - a.reputation);
+
+    if (candidates.length < count) {
+      // Relax criteria: allow same country, wider rep range
+      const fallback = this.clubs
+        .filter(c => c.id !== clubId && c.leagueId !== club.leagueId)
+        .sort((a, b) => Math.abs(a.reputation - club.reputation) - Math.abs(b.reputation - club.reputation));
+      for (const c of fallback) {
+        if (!candidates.includes(c)) candidates.push(c);
+        if (candidates.length >= count) break;
+      }
+    }
+
+    if (candidates.length === 0) return [];
+
+    // Space friendlies across 3 weeks before season starts
+    const firstFriendlyDate = new Date(seasonStart);
+    firstFriendlyDate.setDate(firstFriendlyDate.getDate() - 21);
+
+    // Pick count opponents
+    const selected = candidates.slice(0, Math.min(count, candidates.length));
+
+    for (let i = 0; i < selected.length; i++) {
+      const matchDate = new Date(firstFriendlyDate);
+      matchDate.setDate(matchDate.getDate() + i * 4 + randomInt(0, 2)); // every ~4 days
+
+      const isHome = i % 2 === 0; // alternate home/away
+      fixtures.push({
+        id: generateUUID(),
+        competitionId: 'FRIENDLY',
+        homeTeamId: isHome ? clubId : selected[i].id,
+        awayTeamId: isHome ? selected[i].id : clubId,
+        date: matchDate,
+        played: false,
+        squadType: 'SENIOR',
+        stage: 'REGULAR',
+      });
+    }
+
+    // Notify user
+    this.addInboxMessage('COMPETITION',
+      'Pretemporada: amistosos programados',
+      `Se han programado ${fixtures.length} partidos amistosos de pretemporada para ${club.name}. Los rivales son:\n${selected.map((c, i) => `${i + 1}. ${c.name} (${c.country}) — ${fixtures[i].date.toLocaleDateString('es-ES')} (${fixtures[i].homeTeamId === clubId ? 'Local' : 'Visitante'})`).join('\n')}\n\nLos amistosos no afectan la tabla ni generan sanciones. Sirven para ganar forma física, probar tácticas y mejorar la química del equipo.`,
+      fixtures[0].date);
+
+    return fixtures;
+  }
+
+  // ─── End Pretemporada ─────────────────────────────────────────────────────
 
   /** Evaluate all HEAD_COACHes and induct worthy ones into the Hall of Fame */
   updateHallOfFame(currentYear: number) {
