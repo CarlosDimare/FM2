@@ -7,7 +7,8 @@ export const NATIONS = [
   "Argentina", "Brasil", "Uruguay", "Chile", "Colombia", "Perú", "Ecuador", "Paraguay", "Bolivia", "Venezuela",
   "España", "Inglaterra", "Francia", "Alemania", "Italia", "Portugal", "Países Bajos", "Bélgica",
   "México", "USA", "Japón", "Croacia", "Suiza", "Dinamarca", "Suecia", "Noruega", "Polonia", "Austria",
-  "Turquía", "Rusia", "Ucrania", "Grecia", "Arabia Saudita"
+  "Turquía", "Rusia", "Ucrania", "Grecia", "Arabia Saudita",
+  "Egipto", "Marruecos", "Sudáfrica", "Nigeria", "Ghana"
 ];
 
 export const GAME_SPEED_MS = 200; // ms per match minute simulation

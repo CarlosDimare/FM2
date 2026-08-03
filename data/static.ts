@@ -57,6 +57,7 @@ export const COUNTRY_CODES: Record<string, string> = {
   "Camerún": "cm",
   "Costa de Marfil": "ci",
   "Túnez": "tn",
+  "Sudáfrica": "za",
   "Corea del Sur": "kr",
   "Estados Unidos": "us",
   "Peru": "pe",
@@ -200,6 +201,26 @@ export const REGEN_DB: any = {
    "arabiasaudita": {
      "nombres": ["Mohammed", "Fahad", "Abdullah", "Ali", "Hussein", "Khaled", "Yahya", "Tariq", "Nawaf", "Bader", "Mansour", "Sultan", "Majed", "Ahmed", "Omar", "Rashid", "Hassan", "Jassim", "Waheed", "Sami"],
      "apellidos": ["Al-Harbi", "Al-Shammari", "Al-Mutairi", "Al-Rashidi", "Al-Otaibi", "Al-Dosari", "Al-Ghamdi", "Al-Qahtani", "Al-Ansari", "Al-Zahrani", "Abusahmain", "Al-Johani", "Al-Saleh", "Al-Nemer", "Al-Faraj", "Al-Shehri", "Al-Muwallad", "Al-Khobar", "Al-Moosa", "Al-Tamimi"]
+   },
+   "egipto": {
+     "nombres": ["Mohamed", "Ahmed", "Mahmoud", "Omar", "Mostafa", "Ali", "Amr", "Karim", "Tarek", "Hassan", "Sherif", "Yasser", "Ibrahim", "Khaled", "Ramy", "Hany", "Ayman", "Eslam", "Walid", "Ashraf"],
+     "apellidos": ["Salah", "El Shenawy", "Fathy", "Hegazy", "Trezeguet", "Zizo", "Elneny", "Hamdy", "Sobhi", "Abdelmonem", "Koka", "Mostafa Mohamed", "Alaa", "Rabia", "Soliman", "Marmoush", "Gaber", "Fotouh", "Ashour", "Abou Gabal"]
+   },
+   "marruecos": {
+     "nombres": ["Achraf", "Hakim", "Noussair", "Sofyan", "Romain", "Nayef", "Youssef", "Azzedine", "Bilal", "Yassine", "Faycal", "Walid", "Ismael", "Sofiane", "Adam", "Anas", "Oussama", "Mehdi", "Abdelhamid", "Ayoub"],
+     "apellidos": ["Hakimi", "Ziyech", "Mazraoui", "Amrabat", "Saïss", "Aguerd", "En-Nesyri", "Ounahi", "El Khannouss", "Bounou", "Boufal", "Chair", "Sibari", "Harit", "Tagnaouti", "Rahimi", "El Kaabi", "Jabrane", "Banoun", "Dari"]
+   },
+   "sudafrica": {
+     "nombres": ["Percy", "Ronwen", "Khuliso", "Themba", "Lyle", "Grant", "Bongani", "Thapelo", "Teboho", "Sipho", "Thulani", "Andile", "Keagan", "Kamohelo", "Lebo", "Mothobi", "Bradley", "Njabulo", "Nyiko", "Sphephelo"],
+     "apellidos": ["Tau", "Williams", "Mudau", "Zwane", "Foster", "Kekana", "Zungu", "Morena", "Mokoena", "Mbatha", "Hlatshwayo", "Jali", "Dolly", "Mothiba", "Moseamedi", "Mvala", "Ndlovu", "Blom", "Goss", "Sithole"]
+   },
+   "nigeria": {
+     "nombres": ["Victor", "Kelechi", "Samuel", "Wilfred", "Alex", "Calvin", "Frank", "Emmanuel", "Taiwo", "Moses", "Paul", "Ademola", "Ola", "Chidozie", "Terem", "Joe", "Umar", "Nwankwo", "Semi", "Bright"],
+     "apellidos": ["Osimhen", "Iheanacho", "Chukwueze", "Ndidi", "Iwobi", "Bassey", "Ajayi", "Onyekuru", "Awoniyi", "Simon", "Onyedika", "Lookman", "Aina", "Awaziem", "Moffi", "Aribo", "Sadiq", "Kalu", "Boniface", "Ejuke"]
+   },
+   "ghana": {
+     "nombres": ["Thomas", "Jordan", "Mohammed", "Andre", "Daniel", "Inaki", "Antoine", "Gideon", "Kamaldeen", "Joseph", "Tariq", "Alexander", "Ernest", "Felix", "Alidu", "Salis", "Jonathan", "Iddrisu", "Osman", "Kwasi"],
+     "apellidos": ["Partey", "Ayew", "Kudus", "Salisu", "Amoah", "Williams", "Semenyo", "Djiku", "Paintsil", "Sulemana", "Lamptey", "Owusu", "Nuamah", "Nsiah", "Seidu", "Abdul Samed", "Mensah", "Baba", "Yeboah", "Ofori"]
    }
  };
 
