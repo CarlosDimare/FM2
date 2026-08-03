@@ -189,6 +189,7 @@ export interface Club {
   shortlistedPlayerIds: string[];
   u21MinutesThisSeason: number;
   records: ClubRecords;
+  teamCohesion?: number; // 0-100, affects match performance
 }
 
 export type CompetitionType = 'LEAGUE' | 'CUP' | 'CONTINENTAL_ELITE' | 'CONTINENTAL_SMALL' | 'GLOBAL';

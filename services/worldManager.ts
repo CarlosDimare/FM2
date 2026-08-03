@@ -2,7 +2,7 @@
 import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle, ManagerProfile, ManagerOrigin, ClubHistoryEntry, RelationshipState, RealManager, ManagerNetworkEntry } from "../types";
 import { generateUUID, randomInt, weightedRandom } from "./utils";
 import { NATIONS } from "../constants";
-import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, KOR_K_LEAGUE, CHN_SUPER_LEAGUE, AUS_A_LEAGUE, RealClubDef } from "../data/static";
+import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, KOR_K_LEAGUE, CHN_SUPER_LEAGUE, AUS_A_LEAGUE, EGY_PREMIER, MAR_BOTOLA, RSA_PSL, RealClubDef } from "../data/static";
 import { REAL_PLAYERS_DB, RealPlayerDef } from "../data/realPlayers";
 import { SLOT_CONFIG } from "./engine";
 import { sendTransferNotification, sendInboxNotification } from "./notifications";
@@ -322,6 +322,17 @@ export class WorldManager {
        try { this.loadRealClubs(KOR_K_LEAGUE, 'L_KOR_1'); } catch (e) { console.warn('[WorldManager] Failed to load K League 1:', e); }
        try { this.loadRealClubs(CHN_SUPER_LEAGUE, 'L_CHN_1'); } catch (e) { console.warn('[WorldManager] Failed to load Chinese Super League:', e); }
        try { this.loadRealClubs(AUS_A_LEAGUE, 'L_AUS_1'); } catch (e) { console.warn('[WorldManager] Failed to load A-League:', e); }
+       // CAF leagues
+       this.competitions.push(
+          { id: 'L_EGY_1', name: 'Egyptian Premier League', country: 'Egipto', type: 'LEAGUE', tier: 1, continent: 'África', confederation: 'CAF', defaultPrizePool: 1000000, seasonStartMonth: 8, seasonEndMonth: 4 },
+          { id: 'L_MAR_1', name: 'Botola Pro', country: 'Marruecos', type: 'LEAGUE', tier: 1, continent: 'África', confederation: 'CAF', defaultPrizePool: 800000, seasonStartMonth: 8, seasonEndMonth: 5 },
+          { id: 'L_RSA_1', name: 'DStv Premiership', country: 'Sudáfrica', type: 'LEAGUE', tier: 1, continent: 'África', confederation: 'CAF', defaultPrizePool: 900000, seasonStartMonth: 7, seasonEndMonth: 4 },
+       );
+       try { this.loadRealClubs(EGY_PREMIER, 'L_EGY_1'); } catch (e) { console.warn('[WorldManager] Failed to load Egyptian PL:', e); }
+       try { this.loadRealClubs(MAR_BOTOLA, 'L_MAR_1'); } catch (e) { console.warn('[WorldManager] Failed to load Botola Pro:', e); }
+       try { this.loadRealClubs(RSA_PSL, 'L_RSA_1'); } catch (e) { console.warn('[WorldManager] Failed to load DStv Premiership:', e); }
+       // Init team cohesion for all clubs
+       this.clubs.forEach(c => { if (!c.teamCohesion) c.teamCohesion = 40 + randomInt(0, 30); });
     }
 
   loadRealClubs(definitions: RealClubDef[], leagueId: string) {
@@ -355,7 +366,8 @@ export class WorldManager {
               seasonObjective: def.rep > 4000 ? 'TOP_4' : def.rep > 2500 ? 'TOP_HALF' : 'AVOID_RELEGATION',
               shortlistedPlayerIds: [],
               u21MinutesThisSeason: 0,
-              records: { biggestVictory: null, biggestDefeat: null, longestWinStreak: 0, currentWinStreak: 0, highestScoringMatch: null, bestPlayerSeason: null }
+              records: { biggestVictory: null, biggestDefeat: null, longestWinStreak: 0, currentWinStreak: 0, highestScoringMatch: null, bestPlayerSeason: null },
+             teamCohesion: 40 + randomInt(0, 30),
           };
         this.clubs.push(club);
         this.injectRealPlayers(club);
@@ -363,6 +375,18 @@ export class WorldManager {
         this.generateStaffForClub(club.id);
         this.updateClubMonthlyExpenses(club.id);
      });
+  }
+
+  /** Recompute team cohesion based on squad stability and player relationships */
+  computeTeamCohesion(clubId: string) {
+    const club = this.getClub(clubId);
+    if (!club) return;
+    const squad = this.getPlayersByClub(clubId).filter(p => p.squad === 'SENIOR');
+    if (squad.length < 11) { club.teamCohesion = Math.max(10, (club.teamCohesion || 50) - 5); return; }
+    // Factors: avg tactical familiarity, squad stability, cross-player relationships
+    const avgFamiliarity = squad.reduce((s, p) => s + (p.tacticalFamiliarity || 50), 0) / squad.length;
+    const stabilityBonus = Math.min(20, squad.filter(p => p.history && p.history.length > 0).length);
+    club.teamCohesion = Math.max(0, Math.min(100, Math.round(avgFamiliarity * 0.6 + stabilityBonus * 0.4 + randomInt(-3, 3))));
   }
 
 getClub(id: string) {
@@ -1088,8 +1112,25 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
 
   processAIActivity(date: Date) {
     this.processPendingOffers(date);
-    if (Math.random() > 0.1) return;
+    if (Math.random() > 0.15) return;
     const allClubs = this.clubs;
+    const deepIds = new Set(useGameStore.getState().deepSimLeagues);
+    // Cross-league: DEEP clubs can make offers to any DEEP league club, not just same-league
+    if (Math.random() < 0.2) {
+      const deepClubs = allClubs.filter(c => deepIds.has(c.leagueId) && c.finances.transferBudget > 20000);
+      if (deepClubs.length >= 2) {
+        const buyer = deepClubs[Math.floor(Math.random() * deepClubs.length)];
+        const targets = this.players.filter(p =>
+          p.clubId !== buyer.id && deepIds.has(this.getClub(p.clubId)?.leagueId || '') &&
+          (p.isTransferListed || p.transferStatus === 'TRANSFERABLE') &&
+          p.value <= buyer.finances.transferBudget * 0.4
+        );
+        if (targets.length > 0) {
+          const target = targets[Math.floor(Math.random() * targets.length)];
+          this.makeTransferOffer(target.id, buyer.id, Math.round(target.value * (0.8 + Math.random() * 0.4)), 'PURCHASE', date);
+        }
+      }
+    }
 
     // AI sell phase: list surplus players
     allClubs.forEach(club => {
@@ -1442,8 +1483,11 @@ offer.status = 'REJECTED';
   processDeadlineDay(date: Date) {
     if (!WorldManager.isTransferDeadlineDay(date)) return;
 
-    // AI clubs make last-minute offers
-    const sellingClubs = this.clubs.filter(c => c.finances.transferBudget > 10000);
+    const deepIds = new Set(useGameStore.getState().deepSimLeagues);
+    // AI clubs make last-minute offers — all DEEP league clubs get deadline activity
+    const sellingClubs = this.clubs.filter(c => 
+      c.finances.transferBudget > 5000 && deepIds.has(c.leagueId)
+    );
     const transferablePlayers = this.players.filter(p => 
       p.transferStatus === 'TRANSFERABLE' || p.isTransferListed
     );
@@ -1497,10 +1541,10 @@ offer.status = 'REJECTED';
     if (!WorldManager.isDeadlineWeek(date)) return;
     const daysLeft = WorldManager.getDaysUntilDeadline(date);
 
-    // Increased AI activity as deadline approaches
-    if (Math.random() > 0.5) return; // 50% chance per day during deadline week
-
-    const clubs = this.clubs.filter(c => c.finances.transferBudget > 10000);
+    // Increased AI activity as deadline approaches — all DEEP league clubs
+    if (Math.random() > 0.4) return;
+    const deepIds = new Set(useGameStore.getState().deepSimLeagues);
+    const clubs = this.clubs.filter(c => c.finances.transferBudget > 5000 && deepIds.has(c.leagueId));
     const club = clubs[Math.floor(Math.random() * clubs.length)];
     if (!club) return;
 
@@ -1641,12 +1685,14 @@ offer.status = 'REJECTED';
   }
 
   checkManagerJobOffers(date: Date, userClubId: string, managerReputation: number): void {
-    if (managerReputation < 60) return;
-    if (Math.random() > 0.05) return;
+    if (managerReputation < 50) return;
+    if (Math.random() > 0.06) return;
     const userClub = this.getClub(userClubId);
     if (!userClub) return;
+    const deepIds = new Set(useGameStore.getState().deepSimLeagues);
     const candidateClubs = this.clubs
-      .filter(c => c.id !== userClubId && c.reputation > userClub.reputation * 1.2 && c.reputation <= userClub.reputation * 2.5)
+      .filter(c => c.id !== userClubId && c.reputation > userClub.reputation * 1.1 && c.reputation <= userClub.reputation * 2.5)
+      .filter(c => deepIds.has(c.leagueId)) // Prefer DEEP league clubs for visibility
       .slice(0, 5);
     if (candidateClubs.length === 0) return;
     const target = candidateClubs[randomInt(0, candidateClubs.length - 1)];

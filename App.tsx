@@ -459,7 +459,11 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       world.generateYouthIntake(nextDay.getFullYear());
       if (userClub) world.addInboxMessage('SQUAD', 'Cosecha de cantera', `Los juveniles de ${userClub.name} se han incorporado al club. Revisa los nuevos talentos en el equipo sub-20.`, nextDay);
     }
-    if (nextDay.getDate() === 1) world.recalculateAllPlayerValues();
+    if (nextDay.getDate() === 1) {
+      world.recalculateAllPlayerValues();
+      // Recompute team cohesion for user's club + DEEP league clubs
+      if (userClub) world.computeTeamCohesion(userClub.id);
+    }
 
     // Monthly chronicle generation
     if (userClub && nextDay.getDate() === 1 && lastChronicleMonth.current !== nextDay.getMonth()) {

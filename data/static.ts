@@ -950,6 +950,63 @@ export const AUS_A_LEAGUE: RealClubDef[] = [
     { name: "Western United", short: "WUN", pCol: "bg-green-700", sCol: "text-white", stadium: "Mars Stadium", rep: 6200, country: "Australia" }
 ];
 
+export const EGY_PREMIER: RealClubDef[] = [
+    { name: "Al-Ahly", short: "AHL", pCol: "bg-red-700", sCol: "text-white", stadium: "Cairo International", rep: 7800, country: "Egipto" },
+    { name: "Zamalek", short: "ZAM", pCol: "bg-white", sCol: "text-red-700", stadium: "Cairo International", rep: 7600, country: "Egipto" },
+    { name: "Pyramids FC", short: "PYR", pCol: "bg-blue-800", sCol: "text-white", stadium: "30 June Stadium", rep: 7000, country: "Egipto" },
+    { name: "Al-Masry", short: "MAS", pCol: "bg-green-700", sCol: "text-white", stadium: "Borg El Arab", rep: 6500, country: "Egipto" },
+    { name: "ENPPI", short: "ENP", pCol: "bg-blue-800", sCol: "text-white", stadium: "Petro Sport", rep: 6200, country: "Egipto" },
+    { name: "Ismaily", short: "ISM", pCol: "bg-yellow-400", sCol: "text-blue-900", stadium: "Ismailia Stadium", rep: 6600, country: "Egipto" },
+    { name: "Ceramica Cleopatra", short: "CER", pCol: "bg-red-800", sCol: "text-white", stadium: "Osman Ahmed Osman", rep: 6100, country: "Egipto" },
+    { name: "National Bank", short: "NBE", pCol: "bg-green-800", sCol: "text-white", stadium: "Cairo International", rep: 5800, country: "Egipto" },
+    { name: "El-Gouna", short: "GOU", pCol: "bg-orange-600", sCol: "text-white", stadium: "El-Gouna Stadium", rep: 5500, country: "Egipto" },
+    { name: "Smouha", short: "SMO", pCol: "bg-blue-700", sCol: "text-white", stadium: "Alexandria Stadium", rep: 5900, country: "Egipto" },
+    { name: "Talaea El-Geish", short: "TAL", pCol: "bg-red-700", sCol: "text-white", stadium: "Gehaz El Reyada", rep: 5600, country: "Egipto" },
+    { name: "Pharco FC", short: "PHA", pCol: "bg-purple-700", sCol: "text-white", stadium: "Alexandria Stadium", rep: 5400, country: "Egipto" },
+    { name: "Future FC", short: "FUT", pCol: "bg-sky-400", sCol: "text-blue-900", stadium: "30 June Stadium", rep: 6000, country: "Egipto" },
+    { name: "Baladeyet", short: "BAL", pCol: "bg-green-600", sCol: "text-white", stadium: "El-Mahalla Stadium", rep: 5200, country: "Egipto" },
+    { name: "Al-Ittihad", short: "ITT", pCol: "bg-green-800", sCol: "text-white", stadium: "Alexandria Stadium", rep: 5700, country: "Egipto" },
+    { name: "Arab Contractors", short: "ARB", pCol: "bg-yellow-400", sCol: "text-black", stadium: "Osman Ahmed Osman", rep: 5500, country: "Egipto" }
+];
+
+export const MAR_BOTOLA: RealClubDef[] = [
+    { name: "Wydad Casablanca", short: "WYD", pCol: "bg-red-700", sCol: "text-white", stadium: "Mohammed V", rep: 7600, country: "Marruecos" },
+    { name: "Raja Casablanca", short: "RAJ", pCol: "bg-green-800", sCol: "text-white", stadium: "Mohammed V", rep: 7500, country: "Marruecos" },
+    { name: "AS FAR", short: "FAR", pCol: "bg-black", sCol: "text-white", stadium: "Prince Moulay Abdellah", rep: 7000, country: "Marruecos" },
+    { name: "FUS Rabat", short: "FUS", pCol: "bg-blue-800", sCol: "text-white", stadium: "FUS Stadium", rep: 6400, country: "Marruecos" },
+    { name: "RS Berkane", short: "RSB", pCol: "bg-orange-600", sCol: "text-white", stadium: "Berkane Municipal", rep: 6800, country: "Marruecos" },
+    { name: "MAS Fès", short: "MAS", pCol: "bg-yellow-400", sCol: "text-black", stadium: "Fès Stadium", rep: 6200, country: "Marruecos" },
+    { name: "OC Safi", short: "OCS", pCol: "bg-red-800", sCol: "text-white", stadium: "El Massira", rep: 5800, country: "Marruecos" },
+    { name: "Hassania Agadir", short: "HUS", pCol: "bg-red-700", sCol: "text-white", stadium: "Adrar Stadium", rep: 5900, country: "Marruecos" },
+    { name: "Difaa El Jadida", short: "DHJ", pCol: "bg-green-900", sCol: "text-white", stadium: "El Abdi", rep: 6000, country: "Marruecos" },
+    { name: "Moghreb Tétouan", short: "MAT", pCol: "bg-white", sCol: "text-red-700", stadium: "Saniat Rmel", rep: 6100, country: "Marruecos" },
+    { name: "IR Tanger", short: "IRT", pCol: "bg-blue-700", sCol: "text-white", stadium: "Ibn Batouta", rep: 6200, country: "Marruecos" },
+    { name: "Chabab Mohammedia", short: "SCCM", pCol: "bg-red-700", sCol: "text-white", stadium: "El Bachir", rep: 5600, country: "Marruecos" },
+    { name: "Olympique Khouribga", short: "OCK", pCol: "bg-green-700", sCol: "text-white", stadium: "Khouribga Complex", rep: 5400, country: "Marruecos" },
+    { name: "Rapide Oued Zem", short: "RCOZ", pCol: "bg-blue-900", sCol: "text-white", stadium: "Oued Zem Municipal", rep: 5200, country: "Marruecos" },
+    { name: "Jeunesse Salé", short: "JSS", pCol: "bg-red-800", sCol: "text-white", stadium: "Bouregreg", rep: 5300, country: "Marruecos" },
+    { name: "US Touarga", short: "UST", pCol: "bg-blue-900", sCol: "text-white", stadium: "Moulay Hassan", rep: 5100, country: "Marruecos" }
+];
+
+export const RSA_PSL: RealClubDef[] = [
+    { name: "Mamelodi Sundowns", short: "SUN", pCol: "bg-yellow-400", sCol: "text-green-900", stadium: "Loftus Versfeld", rep: 7400, country: "Sudáfrica" },
+    { name: "Kaizer Chiefs", short: "KAI", pCol: "bg-yellow-400", sCol: "text-black", stadium: "FNB Stadium", rep: 7300, country: "Sudáfrica" },
+    { name: "Orlando Pirates", short: "ORL", pCol: "bg-black", sCol: "text-white", stadium: "Orlando Stadium", rep: 7200, country: "Sudáfrica" },
+    { name: "SuperSport United", short: "SSU", pCol: "bg-blue-800", sCol: "text-white", stadium: "Lucas Moripe", rep: 6600, country: "Sudáfrica" },
+    { name: "Cape Town City", short: "CTC", pCol: "bg-sky-400", sCol: "text-white", stadium: "Cape Town Stadium", rep: 6400, country: "Sudáfrica" },
+    { name: "Stellenbosch FC", short: "STE", pCol: "bg-red-800", sCol: "text-white", stadium: "Danie Craven", rep: 6200, country: "Sudáfrica" },
+    { name: "AmaZulu FC", short: "AMA", pCol: "bg-green-800", sCol: "text-white", stadium: "Moses Mabhida", rep: 6300, country: "Sudáfrica" },
+    { name: "TS Galaxy", short: "TSG", pCol: "bg-blue-700", sCol: "text-white", stadium: "Mbombela Stadium", rep: 5900, country: "Sudáfrica" },
+    { name: "Golden Arrows", short: "GOL", pCol: "bg-green-700", sCol: "text-yellow-400", stadium: "Sugar Ray Xulu", rep: 5700, country: "Sudáfrica" },
+    { name: "Royal AM", short: "RAM", pCol: "bg-purple-700", sCol: "text-white", stadium: "Harry Gwala", rep: 5800, country: "Sudáfrica" },
+    { name: "Sekhukhune United", short: "SEK", pCol: "bg-red-700", sCol: "text-white", stadium: "Peter Mokaba", rep: 6000, country: "Sudáfrica" },
+    { name: "Maritzburg United", short: "MAR", pCol: "bg-blue-900", sCol: "text-white", stadium: "Harry Gwala", rep: 5600, country: "Sudáfrica" },
+    { name: "Chippa United", short: "CHI", pCol: "bg-red-800", sCol: "text-white", stadium: "Nelson Mandela Bay", rep: 5500, country: "Sudáfrica" },
+    { name: "Richards Bay", short: "RIC", pCol: "bg-blue-800", sCol: "text-white", stadium: "Richards Bay Stadium", rep: 5300, country: "Sudáfrica" },
+    { name: "Polokwane City", short: "POL", pCol: "bg-blue-700", sCol: "text-white", stadium: "Peter Mokaba", rep: 5400, country: "Sudáfrica" },
+    { name: "Moroka Swallows", short: "SWA", pCol: "bg-red-800", sCol: "text-white", stadium: "Dobsonville", rep: 5500, country: "Sudáfrica" }
+];
+
 const DEFAULT_TACTIC_SETTINGS: TacticSettings = {
   mentality: 10,
   creativeFreedom: 10,
