@@ -1,22 +1,23 @@
 import React, { useState, useMemo } from 'react';
-import { Player, Staff, Club } from '../types';
+import { Player, Staff, Club, ManagerNetworkEntry, PressStatementTopic } from '../types';
 import { world } from '../services/worldManager';
 import { DialogueSystem } from '../services/dialogueSystem';
 import { FMBox, FMButton } from './FMUI';
 import { useUIStore } from '../stores/uiStore';
-import { Users, MessageSquare, AlertTriangle, Heart, Swords, Briefcase, Building2, X, DollarSign, Dumbbell } from 'lucide-react';
+import { Users, MessageSquare, AlertTriangle, Heart, Swords, Briefcase, Building2, X, DollarSign, Dumbbell, Newspaper, Radio, Handshake } from 'lucide-react';
 
 interface PeopleHubProps {
   userClub?: Club;
   currentDate: Date;
 }
 
-type Tab = 'PLAYERS' | 'STAFF' | 'RELATIONSHIPS' | 'BOARD';
+type Tab = 'PLAYERS' | 'STAFF' | 'RELATIONSHIPS' | 'BOARD' | 'PRESS' | 'MANAGERS';
 
 export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) => {
   const [tab, setTab] = useState<Tab>('PLAYERS');
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [selectedManager, setSelectedManager] = useState<ManagerNetworkEntry | null>(null);
   const [interactionType, setInteractionType] = useState<string | null>(null);
   const [interactionTone, setInteractionTone] = useState<'MILD' | 'MODERATE' | 'AGGRESSIVE'>('MILD');
   const [lastResult, setLastResult] = useState<string | null>(null);
@@ -39,7 +40,12 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
       })();
   const staff: Staff[] = userClub ? world.getStaffByClub(userClub.id) : [];
   const coach = staff.find(s => s.role === 'HEAD_COACH');
-  const tabs: Tab[] = userClub ? ['PLAYERS', 'STAFF', 'RELATIONSHIPS', 'BOARD'] : ['PLAYERS', 'RELATIONSHIPS'];
+  const tabs: Tab[] = userClub
+    ? ['PLAYERS', 'STAFF', 'RELATIONSHIPS', 'PRESS', 'MANAGERS', 'BOARD']
+    : ['PLAYERS', 'RELATIONSHIPS', 'PRESS', 'MANAGERS'];
+
+  const managerNetwork = useMemo(() => world.getManagerNetwork(userClub?.id), [world.staff.length, userClub?.id]);
+  const latestNews = useMemo(() => world.getAllNews(12), [world.mediaNews.length]);
 
   const recentInteractions = useMemo(() => {
     return world.interactionLog
@@ -64,6 +70,19 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
     const result = DialogueSystem.resolveBoardInteraction(userClub.id, topic as any, interactionTone, currentDate);
     setLastResult(result.text);
     setInteractionType(null);
+  };
+
+  const handlePressStatement = (topic: PressStatementTopic) => {
+    const result = DialogueSystem.resolvePressStatement(topic, interactionTone, currentDate);
+    setLastResult(result.text);
+  };
+
+  const handleManagerContact = (entry: ManagerNetworkEntry) => {
+    const manager = world.getStaff(entry.managerId);
+    if (!manager) return;
+    const result = DialogueSystem.resolveManagerContact(manager, interactionTone, currentDate);
+    setLastResult(result.text);
+    setSelectedManager(entry);
   };
 
   const getRelationshipLabel = (rel: { trust: number; respect: number; tension: number } | undefined) => {
@@ -103,7 +122,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
               tab === t ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
-            {t === 'PLAYERS' ? 'Jugadores' : t === 'STAFF' ? 'Cuerpo Técnico' : t === 'RELATIONSHIPS' ? 'Relaciones' : 'Directiva'}
+            {t === 'PLAYERS' ? 'Jugadores' : t === 'STAFF' ? 'Cuerpo Técnico' : t === 'RELATIONSHIPS' ? 'Relaciones' : t === 'PRESS' ? 'Prensa' : t === 'MANAGERS' ? 'Red de DT' : 'Directiva'}
           </button>
         ))}
       </div>
@@ -159,6 +178,68 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
               </div>
             );
           })}
+        </div>
+      )}
+
+      {tab === 'PRESS' && (
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4">
+          <FMBox title="Sala de Prensa">
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {([['EXPECTATIONS', 'Expectativas'], ['RIVAL', 'Rival'], ['SQUAD_CONFIDENCE', 'Vestuario'], ['TRANSFER_RUMOUR', 'Rumores']] as const).map(([topic, label]) => (
+                <FMButton key={topic} onClick={() => handlePressStatement(topic)} className="text-[10px]" variant={topic === 'EXPECTATIONS' ? 'primary' : 'secondary'}>
+                  <Radio size={12} /> {label}
+                </FMButton>
+              ))}
+            </div>
+            <div className="space-y-2">
+              {latestNews.map(news => (
+                <div key={news.id} className="bg-white border border-slate-200 p-3 rounded-sm">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-[9px] font-black uppercase text-slate-500">{news.type} · {news.category}</span>
+                    <span className="text-[9px] text-slate-400">{new Date(news.date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="text-[11px] font-black text-slate-900 mt-1">{news.headline}</div>
+                  <div className="text-[10px] text-slate-600 mt-1">{news.subheadline}</div>
+                </div>
+              ))}
+              {latestNews.length === 0 && <div className="text-center text-slate-400 text-[10px] italic py-8">Todavía no hay noticias de prensa.</div>}
+            </div>
+          </FMBox>
+          <FMBox title="Tono público">
+            <div className="space-y-2">
+              {(['MILD', 'MODERATE', 'AGGRESSIVE'] as const).map(tone => (
+                <button key={tone} onClick={() => setInteractionTone(tone)} className={`w-full py-2 border-2 text-[10px] font-black uppercase ${interactionTone === tone ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-slate-300 text-slate-600'}`}>
+                  {tone === 'MILD' ? 'Sereno' : tone === 'MODERATE' ? 'Profesional' : 'Desafiante'}
+                </button>
+              ))}
+              {lastResult && <div className="mt-3 bg-slate-100 border border-slate-200 p-3 text-[10px] text-slate-700">{lastResult}</div>}
+            </div>
+          </FMBox>
+        </div>
+      )}
+
+      {tab === 'MANAGERS' && (
+        <div className="space-y-3">
+          <FMBox title="Red de Entrenadores">
+            <p className="text-[10px] text-slate-500 mb-3">Construye reputación, alianzas y rivalidades con los técnicos de tu entorno.</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              {managerNetwork.map(manager => (
+                <div key={manager.managerId} className="bg-white border border-slate-300 p-3 rounded-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-black text-slate-900 text-sm">{manager.managerName}</div>
+                      <div className="text-[10px] text-slate-500 font-bold uppercase">{manager.clubName} · {manager.country}</div>
+                      <div className="text-[9px] text-slate-500 uppercase mt-1">Reputación {Math.round(manager.reputation)} · Relación {getRelationshipLabel(manager.relationship)}</div>
+                    </div>
+                    <Handshake size={18} className={getRelationshipColor(manager.relationship)} />
+                  </div>
+                  <FMButton onClick={() => handleManagerContact(manager)} className="text-[10px] mt-3" variant="secondary"><Handshake size={12} /> Contactar</FMButton>
+                </div>
+              ))}
+              {managerNetwork.length === 0 && <div className="text-center text-slate-400 text-[10px] italic py-8">No hay otros entrenadores disponibles todavía.</div>}
+            </div>
+          </FMBox>
+          {selectedManager && lastResult && <div className="bg-white border-2 border-slate-400 p-4 text-[11px] text-slate-700"><b>{selectedManager.managerName}:</b> {lastResult}</div>}
         </div>
       )}
 

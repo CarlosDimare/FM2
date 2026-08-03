@@ -653,7 +653,20 @@ export const POSITION_ORDER: Record<string, number> = {
   'P': 0, 'LIB': 1, 'DFC': 2, 'LD': 3, 'LI': 4, 'CD': 6, 'CI': 7, 'MCD': 5, 'MC': 8, 'MD': 9, 'MI': 10, 'MPC': 11, 'ED': 12, 'EI': 13, 'DC': 14, 'WD': 15, 'WI': 16
 };
 
-export type DialogueType = 'PRAISE_FORM' | 'CRITICIZE_FORM' | 'PRAISE_TRAINING' | 'DEMAND_MORE' | 'WARN_CONDUCT' | 'SET_CAPTAIN' | 'CHANGE_POSITION' | 'INDIVIDUAL_TRAINING_FOCUS' | 'THREATEN_TRANSFER' | 'GRANT_CAPTANCY' | 'ASSIGN_TRAINING' | 'DELEGATE_MATCH' | 'REPRIMAND' | 'PROMISE_RESOURCES' | 'SCOUTING_FOCUS';
+export type DialogueType = 'PRAISE_FORM' | 'CRITICIZE_FORM' | 'PRAISE_TRAINING' | 'DEMAND_MORE' | 'WARN_CONDUCT' | 'SET_CAPTAIN' | 'CHANGE_POSITION' | 'INDIVIDUAL_TRAINING_FOCUS' | 'THREATEN_TRANSFER' | 'GRANT_CAPTANCY' | 'ASSIGN_TRAINING' | 'DELEGATE_MATCH' | 'REPRIMAND' | 'PROMISE_RESOURCES' | 'SCOUTING_FOCUS' | 'PRESS_STATEMENT' | 'CONTACT_MANAGER';
+
+export type PressStatementTopic = 'EXPECTATIONS' | 'RIVAL' | 'SQUAD_CONFIDENCE' | 'TRANSFER_RUMOUR';
+
+export interface ManagerNetworkEntry {
+  managerId: string;
+  managerName: string;
+  clubId: string;
+  clubName: string;
+  country: string;
+  reputation: number;
+  tacticalStyle?: Staff['tacticalStyle'];
+  relationship: { trust: number; respect: number; tension: number };
+}
 
 export type InteractionChannel = 'COACH_PLAYER' | 'COACH_STAFF' | 'COACH_MANAGER' | 'COACH_PRESS' | 'COACH_BOARD';
 

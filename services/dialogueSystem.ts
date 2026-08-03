@@ -97,6 +97,18 @@ export class DialogueSystem {
           MODERATE: "Quiero informes completos de las joyas de tu zona.",
           AGGRESSIVE: "Traé nombres concretos de prospectos esta semana."
         };
+      case 'PRESS_STATEMENT':
+        return {
+          MILD: "Transmitiré calma y confianza antes del próximo partido.",
+          MODERATE: "El equipo está preparado y esperamos competir al máximo.",
+          AGGRESSIVE: "Que hablen en el campo: vamos a por todas."
+        };
+      case 'CONTACT_MANAGER':
+        return {
+          MILD: "Me gustaría intercambiar impresiones sobre fútbol y táctica.",
+          MODERATE: "Te propongo mantener una relación profesional y directa.",
+          AGGRESSIVE: "Nos veremos en el campo; que quede claro quién manda."
+        };
     }
   }
 
@@ -268,6 +280,46 @@ export class DialogueSystem {
     }
 
     return { text, moraleChange, reactionType };
+  }
+
+  static resolvePressStatement(topic: string, tone: DialogueTone, currentDate?: Date): DialogueResult {
+    const topicText: Record<string, string> = {
+      EXPECTATIONS: 'las expectativas del próximo partido',
+      RIVAL: 'el respeto por el rival',
+      SQUAD_CONFIDENCE: 'la confianza en el vestuario',
+      TRANSFER_RUMOUR: 'los rumores del mercado',
+    };
+    const moraleChange = tone === 'AGGRESSIVE' ? 2 : tone === 'MILD' ? 1 : 0;
+    const text = `${this.getTopicOptions('PRESS_STATEMENT')[tone]} El mensaje se centra en ${topicText[topic] || 'la actualidad del equipo'}.`;
+    if (currentDate) {
+      world.addInboxMessage('STATEMENTS', 'Declaración ante la prensa', text, currentDate);
+      world.recordInteraction({
+        id: generateUUID(), date: currentDate, channel: 'COACH_PRESS', actorId: 'COACH', targetId: 'PRESS',
+        type: 'PRESS_STATEMENT', tone, result: moraleChange > 0 ? 'POSITIVE' : 'NEUTRAL', moraleChange, tensionChange: 0, description: text
+      });
+      world.addReputationalBuff('COACH', `PRESS_${topic}`, tone === 'AGGRESSIVE' ? 3 : 1, 14, currentDate);
+      if (world.managerProfile) {
+        world.managerProfile.pressRelationship = tone === 'AGGRESSIVE' ? 'HAPPY' : 'CALM';
+      }
+    }
+    return { text, moraleChange, reactionType: moraleChange > 0 ? 'POSITIVE' : 'NEUTRAL' };
+  }
+
+  static resolveManagerContact(target: Staff, tone: DialogueTone, currentDate?: Date): DialogueResult {
+    const targetClub = world.getClub(target.clubId);
+    const text = `${target.name} (${targetClub?.name || 'club desconocido'}) recibe tu contacto. ${this.getTopicOptions('CONTACT_MANAGER')[tone]}`;
+    const relation = world.getRelationship('COACH', target.id);
+    const tensionChange = tone === 'AGGRESSIVE' ? 8 : tone === 'MILD' ? -2 : 1;
+    const result = tone === 'AGGRESSIVE' ? 'NEGATIVE' : tone === 'MILD' ? 'POSITIVE' : 'NEUTRAL';
+    if (currentDate) {
+      world.adjustRelationship('COACH', target.id, result === 'POSITIVE' ? 3 : 0, result === 'POSITIVE' ? 2 : 0, tensionChange);
+      world.recordInteraction({
+        id: generateUUID(), date: currentDate, channel: 'COACH_MANAGER', actorId: 'COACH', targetId: target.id,
+        type: 'CONTACT_MANAGER', tone, result, moraleChange: 0, tensionChange, description: text
+      });
+      world.addInboxMessage('PEOPLE', 'Contacto con otro entrenador', text, currentDate, target.id);
+    }
+    return { text, moraleChange: 0, reactionType: result };
   }
 
   static checkManagerMotives(manager: Staff, currentDate: Date): string | null {

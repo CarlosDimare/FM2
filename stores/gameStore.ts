@@ -117,12 +117,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       clubsByLeague[l.id] = clubs;
     });
 
+    const userLeagueId = clubId ? world.getClub(clubId)?.leagueId : undefined;
+    const deepLeagueIds = LeagueEngine.resolveDeepLeagueIds(userLeagueId, world.competitions, get().deepSimLeagues);
+    if (deepLeagueIds.length > 0 && deepLeagueIds.some(id => !get().deepSimLeagues.includes(id))) {
+      set({ deepSimLeagues: deepLeagueIds });
+    }
+
     world.competitions.filter(c => c.type === 'LEAGUE').forEach(l => {
       const clubs = clubsByLeague[l.id] || [];
-      const squads = (['SENIOR', 'RESERVE', 'U20'] as any[]);
-      const depth = get().deepSimLeagues.includes(l.id) ? 'DEEP' : 'LIGHT';
-      const squadTypes = depth === 'DEEP' ? squads : ['SENIOR'];
-      squadTypes.forEach((st: any) => {
+      if (deepLeagueIds.includes(l.id)) world.ensureDeepSquads(l.id);
+      const depth = deepLeagueIds.includes(l.id) ? 'DEEP' : 'LIGHT';
+      const squadTypes = depth === 'DEEP' ? (['SENIOR', 'RESERVE', 'U20'] as const) : (['SENIOR'] as const);
+      squadTypes.forEach(st => {
         allFixtures.push(...LeagueEngine.generateFixturesForLeague(world.clubs, l.id, startFrom, st, clubsByLeague));
       });
     });

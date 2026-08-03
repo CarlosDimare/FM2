@@ -35,6 +35,7 @@ import { generateMatchChronicle, generateMonthlyChronicle, generateNationalTeamC
 import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager, NationalTeamMatchOptions, NationalTeamChronicleContext, CareerMode } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID, randomInt } from './services/utils';
 import { MatchSimulator } from './services/engine';
+import { LeagueEngine } from './services/leagueEngine';
 import { requestNotificationPermission, sendMatchNotification, sendInjuryNotification, sendTransferNotification, sendInboxNotification } from './services/notifications';
 import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, ChevronLeft, User, ArrowLeft, Save, HardDrive, Trash2, X, Briefcase, Flag } from 'lucide-react';
 import { OnboardingTour, isOnboarded } from './components/OnboardingTour';
@@ -286,11 +287,13 @@ const {
         id, label: `Auto: ${currentDate.toLocaleDateString()}`, lastPlayed: new Date(),
         metaTeamName: managedName,
         metaManagerName: `${userName} ${userSurname}`,
-        gameState: { currentDate, userName, userSurname, userClubId: userClub?.id || null, selectedNationalTeamId, careerMode, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
+        gameState: { currentDate, userName, userSurname, userClubId: userClub?.id || null, selectedNationalTeamId, careerMode, fixtures, seasonEndDate, deepSimLeagues: useGameStore.getState().deepSimLeagues, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
           scoutingReports: world.scoutingReports, chronicles: world.chronicles,
+          interactionLog: world.interactionLog, activeReputationalBuffs: world.activeReputationalBuffs,
+          relationshipWeb: world.relationshipWeb, mediaNews: world.mediaNews,
           managerProfile: world.managerProfile,
           nationalTeamManager: world.nationalTeamManager
         }
@@ -805,11 +808,13 @@ dayFixtures.forEach(f => {
         id, label: saveNameInput, lastPlayed: new Date(),
         metaTeamName: managedName,
         metaManagerName: `${userName} ${userSurname}`,
-        gameState: { currentDate, userName, userSurname, userClubId: userClub?.id || null, selectedNationalTeamId, careerMode, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
+        gameState: { currentDate, userName, userSurname, userClubId: userClub?.id || null, selectedNationalTeamId, careerMode, fixtures, seasonEndDate, deepSimLeagues: useGameStore.getState().deepSimLeagues, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
           scoutingReports: world.scoutingReports, chronicles: world.chronicles,
+          interactionLog: world.interactionLog, activeReputationalBuffs: world.activeReputationalBuffs,
+          relationshipWeb: world.relationshipWeb, mediaNews: world.mediaNews,
           managerProfile: world.managerProfile,
           nationalTeamManager: world.nationalTeamManager
         }
@@ -847,6 +852,10 @@ dayFixtures.forEach(f => {
       world.offers = data.worldState.offers;
       world.inbox = data.worldState.inbox;
       if (data.worldState.scoutingReports) world.scoutingReports = data.worldState.scoutingReports;
+      world.interactionLog = data.worldState.interactionLog || [];
+      world.activeReputationalBuffs = data.worldState.activeReputationalBuffs || [];
+      world.relationshipWeb = data.worldState.relationshipWeb || {};
+      world.mediaNews = data.worldState.mediaNews || [];
 
       world.players.forEach(p => {
         if (!p.relationships) p.relationships = {};
@@ -873,6 +882,7 @@ dayFixtures.forEach(f => {
       if (!world.interactionLog) world.interactionLog = [];
       if (!world.activeReputationalBuffs) world.activeReputationalBuffs = [];
       if (!world.relationshipWeb) world.relationshipWeb = {};
+      if (!world.mediaNews) world.mediaNews = [];
       if (data.worldState.chronicles) world.chronicles = data.worldState.chronicles;
       else world.chronicles = [];
       if (data.worldState.managerProfile) world.managerProfile = data.worldState.managerProfile;
@@ -893,13 +903,13 @@ dayFixtures.forEach(f => {
         world.nationalTeamManager.validateControlledState(world.players, world.clubs);
       }
 
-      if (!useGameStore.getState().deepSimLeagues?.length) {
-        const userLeague = world.getClub(data.gameState.userClubId)?.leagueId;
-        useGameStore.getState().setDeepSimLeagues(userLeague ? [userLeague] : []);
-      }
-      if (useGameStore.getState().deepSimLeagues?.length) {
-        useGameStore.getState().deepSimLeagues.forEach((lid: string) => world.ensureDeepSquads(lid));
-      }
+      const savedUserLeague = world.getClub(data.gameState.userClubId)?.leagueId;
+      const savedDeepLeagues = Array.isArray(data.gameState.deepSimLeagues) && data.gameState.deepSimLeagues.length > 0
+        ? data.gameState.deepSimLeagues
+        : (savedUserLeague ? [savedUserLeague] : []);
+      const migratedDeepLeagues = LeagueEngine.resolveDeepLeagueIds(savedUserLeague, world.competitions, savedDeepLeagues);
+      useGameStore.getState().setDeepSimLeagues(migratedDeepLeagues);
+      migratedDeepLeagues.forEach((lid: string) => world.ensureDeepSquads(lid));
 
       setCurrentDate(data.gameState.currentDate);
       setUserName(data.gameState.userName);

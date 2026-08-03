@@ -1,5 +1,5 @@
 
-import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle, ManagerProfile, ManagerOrigin, ClubHistoryEntry, RelationshipState, RealManager } from "../types";
+import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle, ManagerProfile, ManagerOrigin, ClubHistoryEntry, RelationshipState, RealManager, ManagerNetworkEntry } from "../types";
 import { generateUUID, randomInt, weightedRandom } from "./utils";
 import { NATIONS } from "../constants";
 import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, RealClubDef } from "../data/static";
@@ -372,6 +372,25 @@ getClub(id: string) {
   }
 getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === clubId); }
   getStaff(id: string) { return this.staff.find(s => s.id === id); }
+  getManagerNetwork(userClubId?: string): ManagerNetworkEntry[] {
+    return this.staff
+      .filter(s => s.role === 'HEAD_COACH' && s.clubId && s.clubId !== userClubId)
+      .map(manager => {
+        const club = this.getClub(manager.clubId);
+        const relationship = this.getRelationship('COACH', manager.id);
+        return {
+          managerId: manager.id,
+          managerName: manager.name,
+          clubId: manager.clubId,
+          clubName: club?.name || 'Club desconocido',
+          country: club?.country || manager.nationality,
+          reputation: manager.reputation || 50,
+          tacticalStyle: manager.tacticalStyle,
+          relationship: { ...relationship },
+        };
+      })
+      .sort((a, b) => b.reputation - a.reputation);
+  }
   getLeagues() { return this.competitions.filter(c => c.type === 'LEAGUE'); }
   getTactics() { return this.tactics; }
 

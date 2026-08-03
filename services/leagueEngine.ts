@@ -26,29 +26,54 @@ export interface SimulatedResult {
 
 export class LeagueEngine {
   static resolveDepth(deepLeagues: string[], userLeagueId: string, competition: Competition): SimulationDepth {
-    if (!deepLeagues.length) return 'DEEP';
-    if (competition.id === userLeagueId) return 'DEEP';
-    if (deepLeagues.includes(competition.id)) return 'DEEP';
-    if (competition.type === 'CONTINENTAL_ELITE' || competition.type === 'CONTINENTAL_SMALL' || competition.type === 'GLOBAL') {
-      const relatedLeague = deepLeagues.find(l => l.startsWith('L_'));
-      if (relatedLeague) return relatedLeague.startsWith(competition.country) ? 'DEEP' : 'LIGHT';
-      return deepLeagues.length <= 4 ? 'DEEP' : 'LIGHT';
+    const deepIds = new Set(deepLeagues.filter(Boolean));
+    if (competition.id === userLeagueId || deepIds.has(competition.id)) return 'DEEP';
+
+    // Continental competitions connected to a deep domestic cluster retain the
+    // detailed path; unrelated competitions remain quick-simulated.
+    if (competition.type === 'CONTINENTAL_ELITE' || competition.type === 'CONTINENTAL_SMALL') {
+      const deepCompetition = deepLeagues.some(id => id === competition.id);
+      return deepCompetition || deepLeagues.length <= 6 ? 'DEEP' : 'LIGHT';
     }
+    if (competition.type === 'GLOBAL') return deepLeagues.length <= 3 ? 'DEEP' : 'LIGHT';
     return 'LIGHT';
   }
 
+  static resolveDeepLeagueIds(userLeagueId: string | undefined, competitions: Competition[], requested: string[] = []): string[] {
+    const userLeague = competitions.find(c => c.id === userLeagueId);
+    if (!userLeagueId || !userLeague) return requested.filter(Boolean);
+
+    const ids = new Set<string>([userLeagueId, ...requested.filter(Boolean)]);
+    // Same-country divisions are cheap enough to keep detailed and make
+    // promotion/relegation and transfers feel coherent.
+    competitions
+      .filter(c => c.type === 'LEAGUE' && c.country === userLeague.country)
+      .sort((a, b) => a.tier - b.tier)
+      .slice(0, 2)
+      .forEach(c => ids.add(c.id));
+
+    // Keep the deep cluster bounded: the user's country plus up to two
+    // continental tier-one leagues provide context without exploding fixtures.
+    competitions
+      .filter(c => c.type === 'LEAGUE' && c.continent === userLeague.continent && c.tier === 1 && c.country !== userLeague.country)
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .slice(0, 2)
+      .forEach(c => ids.add(c.id));
+
+    return [...ids];
+  }
+
   static buildCluster(deepLeagues: string[], userLeagueId: string, userClubId: string, clubs: any [], competitions: Competition[]): LeagueCluster[] {
-    const userCompetition = clubs.find(c => c.id === userClubId);
     const userLeague = competitions.find(c => c.id === userLeagueId);
     const userContinent = userLeague?.continent || 'América del Sur';
     const userCountry = userLeague?.country || 'Argentina';
 
-    const selectedLeagueIds = new Set(deepLeagues.length > 0 ? deepLeagues : [userLeagueId].filter(Boolean) as string[]);
+    const effectiveDeepLeagues = this.resolveDeepLeagueIds(userLeagueId, competitions, deepLeagues);
 
     return competitions
       .filter(c => c.type === 'LEAGUE')
       .map(comp => {
-        const depth = this.resolveDepth(deepLeagues.length > 0 ? deepLeagues : [userLeagueId].filter((id): id is string => Boolean(id)), userLeagueId, comp);
+        const depth = this.resolveDepth(effectiveDeepLeagues, userLeagueId, comp);
         let relatedComps = competitions
           .filter(c => c.type !== 'LEAGUE' && (
             c.country === comp.country ||
