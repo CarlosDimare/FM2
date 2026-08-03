@@ -15,7 +15,7 @@ import { useUIStore } from '../stores/uiStore';
 interface PlayerModalProps {
   player: Player | null;
   onClose: () => void;
-  userClubId: string;
+  userClubId?: string;
   currentDate: Date;
 }
 

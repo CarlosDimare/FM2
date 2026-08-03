@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Inbox, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User } from 'lucide-react';
+import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Inbox, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User, Star } from 'lucide-react';
 import { Club, SquadType, Competition } from '../types';
 import { world } from '../services/worldManager';
 import { SettingsModal } from './SettingsModal';
@@ -8,31 +8,27 @@ import { SettingsModal } from './SettingsModal';
 interface SidebarProps {
   currentView: string;
   setView: (view: string) => void;
-  club: Club;
+  club: Club | null;
   onVacation: () => void;
   onSave: () => void;
+  nationalTeamId?: string | null;
   isSidebarOpen: boolean;
   setIsSidebarOpen: (open: boolean) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, onVacation, onSave, isSidebarOpen, setIsSidebarOpen }) => {
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    'SENIOR': true,
-    'RESERVE': false,
-    'U20': false,
-    'MARKET': false,
-    'TORNEOS': false
-  });
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, nationalTeamId, onVacation, onSave, isSidebarOpen, setIsSidebarOpen }) => {
+  const isNationalOnly = !club && Boolean(nationalTeamId);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({'SENIOR': true,'RESERVE': false,'U20': false,'MARKET': false,'TORNEOS': false,'NATIONAL': true});
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const unreadMessages = world.inbox.filter(m => !m.isRead).length;
 
-  const clubTournaments = world.competitions.filter(comp => {
+  const clubTournaments = club ? world.competitions.filter(comp => {
      if (comp.id === club.leagueId) return true;
      if (comp.type === 'CUP' && comp.country === world.competitions.find(l => l.id === club.leagueId)?.country) return true;
      if (comp.type.startsWith('CONTINENTAL')) return true;
      return false;
-  });
+  }) : [];
 
   const toggleMenu = (key: string) => {
     setOpenMenus(prev => ({ ...prev, [key]: !prev[key] }));
@@ -77,13 +73,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
 
           <div className="h-px bg-[#a0b0a0] mx-4 my-2"></div>
 
-          {renderSquadSubMenu('SENIOR', 'Primer Equipo')}
-          {renderSquadSubMenu('RESERVE', 'Reserva')}
-          {renderSquadSubMenu('U20', 'Sub 20')}
+          {!isNationalOnly && <>
+            {renderSquadSubMenu('SENIOR', 'Primer Equipo')}
+            {renderSquadSubMenu('RESERVE', 'Reserva')}
+            {renderSquadSubMenu('U20', 'Sub 20')}
+            <div className="h-px bg-[#a0b0a0] mx-4 my-2"></div>
+          </>}
 
-          <div className="h-px bg-[#a0b0a0] mx-4 my-2"></div>
-
-          <div className="mb-1">
+          {!isNationalOnly && <div className="mb-1">
             <button onClick={() => toggleMenu('TORNEOS')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
               <div className="flex items-center gap-2"><Trophy size={14} /> Competiciones</div>
               {openMenus['TORNEOS'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -95,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
                 ))}
               </div>
             )}
-          </div>
+          </div>}
 
           {world.nationalTeamManager && (
             <div className="mb-1">
@@ -105,7 +102,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
               </button>
               {openMenus['NATIONAL'] && (
                 <div className="mt-1 ml-4 space-y-1 border-l border-[#a0b0a0]">
-                  {world.nationalTeamManager.nationalTeams.slice(0, 10).map((team: any) => (
+                  {nationalTeamId && (
+                    <>
+                      <div className="px-4 py-1 text-[8px] font-black uppercase tracking-widest text-slate-400">Mi selección</div>
+                      <SubNavItem id={`NT_${nationalTeamId}_SQUAD`} label="Plantel" icon={Users} active={currentView === `NT_${nationalTeamId}_SQUAD` || currentView === `NT_${nationalTeamId}`} onClick={() => setView(`NT_${nationalTeamId}_SQUAD`)} />
+                      <SubNavItem id={`NT_${nationalTeamId}_TACTICS`} label="Tácticas" icon={Clipboard} active={currentView === `NT_${nationalTeamId}_TACTICS`} onClick={() => setView(`NT_${nationalTeamId}_TACTICS`)} />
+                      <SubNavItem id={`NT_${nationalTeamId}_SCHEDULE`} label="Partidos" icon={Calendar} active={currentView === `NT_${nationalTeamId}_SCHEDULE`} onClick={() => setView(`NT_${nationalTeamId}_SCHEDULE`)} />
+                      <SubNavItem id={`NT_${nationalTeamId}_STATS`} label="Estadísticas" icon={Star} active={currentView === `NT_${nationalTeamId}_STATS`} onClick={() => setView(`NT_${nationalTeamId}_STATS`)} />
+                      {!isNationalOnly && <div className="h-px bg-[#a0b0a0] mx-2 my-1"></div>}
+                    </>
+                  )}
+                  {!isNationalOnly && world.nationalTeamManager.nationalTeams.slice(0, 10).map((team: any) => (
                     <SubNavItem key={team.id} id={`NT_${team.id}`} label={`${team.name}`} icon={Flag} active={currentView === `NT_${team.id}`} onClick={() => setView(`NT_${team.id}`)} />
                   ))}
                 </div>
@@ -113,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
             </div>
           )}
 
-          <div className="mb-1">
+          {!isNationalOnly && <div className="mb-1">
             <button onClick={() => toggleMenu('MARKET')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
               <div className="flex items-center gap-2"><Globe size={14} /> Ojeo y Fichajes</div>
               {openMenus['MARKET'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -126,18 +133,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, on
                  <SubNavItem id="CLUBS_LIST" label="Clubes" icon={Building2} active={currentView === 'CLUBS_LIST'} onClick={() => setView('CLUBS_LIST')} />
               </div>
             )}
-          </div>
+          </div>}
 
           <div className="h-px bg-[#a0b0a0] mx-4 my-2"></div>
 
-           <NavItem id="ECONOMY" label="Economía" icon={Wallet} active={currentView === 'ECONOMY'} onClick={() => setView('ECONOMY')} />
-           <NavItem id="STAFF" label="Empleados" icon={Briefcase} active={currentView === 'STAFF'} onClick={() => setView('STAFF')} />
+           {!isNationalOnly && <>
+             <NavItem id="ECONOMY" label="Economía" icon={Wallet} active={currentView === 'ECONOMY'} onClick={() => setView('ECONOMY')} />
+             <NavItem id="STAFF" label="Empleados" icon={Briefcase} active={currentView === 'STAFF'} onClick={() => setView('STAFF')} />
+             <NavItem id="TRAINING" label="Entrenamiento" icon={Dumbbell} active={currentView === 'TRAINING'} onClick={() => setView('TRAINING')} />
+             <NavItem id="CLUB_REPORT" label="Información Club" icon={Info} active={currentView === 'CLUB_REPORT'} onClick={() => setView('CLUB_REPORT')} />
+           </>}
            <NavItem id="PEOPLE_HUB" label="Personas" icon={Users} active={currentView === 'PEOPLE_HUB'} onClick={() => setView('PEOPLE_HUB')} />
-           <NavItem id="TRAINING" label="Entrenamiento" icon={Dumbbell} active={currentView === 'TRAINING'} onClick={() => setView('TRAINING')} />
-           <NavItem id="CLUB_REPORT" label="Información Club" icon={Info} active={currentView === 'CLUB_REPORT'} onClick={() => setView('CLUB_REPORT')} />
-            <NavItem id="MEDIA" label="Prensa" icon={Newspaper} active={currentView === 'MEDIA'} onClick={() => setView('MEDIA')} />
-            <NavItem id="CHRONICLES" label="Crónicas" icon={BookOpen} active={currentView === 'CHRONICLES'} onClick={() => setView('CHRONICLES')} />
-            <NavItem id="MANAGER_PROFILE" label="Mi Carrera" icon={User} active={currentView === 'MANAGER_PROFILE'} onClick={() => setView('MANAGER_PROFILE')} />
+           <NavItem id="MEDIA" label="Prensa" icon={Newspaper} active={currentView === 'MEDIA'} onClick={() => setView('MEDIA')} />
+           <NavItem id="CHRONICLES" label="Crónicas" icon={BookOpen} active={currentView === 'CHRONICLES'} onClick={() => setView('CHRONICLES')} />
+           <NavItem id="MANAGER_PROFILE" label="Mi Carrera" icon={User} active={currentView === 'MANAGER_PROFILE'} onClick={() => setView('MANAGER_PROFILE')} />
 
           <div className="mt-auto pt-6 px-4 pb-4 space-y-2">
              <button onClick={onVacation} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-[#f2f7f2] text-slate-700 hover:text-slate-900 rounded border border-[#a0b0a0] shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">

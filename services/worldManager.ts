@@ -176,30 +176,31 @@ export class WorldManager {
             fitness: 85 + randomInt(0, 15),
             morale: 60 + randomInt(0, 30),
             injury: null,
-            yellowCards: 0,
-            redCards: 0,
-            goals: 0,
-            assists: 0,
-            matchesPlayed: 0,
             developmentTrend: 'STABLE',
             history: [],
             relationships: {},
+            secondaryPositions: [],
+            isStarter: false,
+            loyalty: randomInt(10, 20),
+            negotiationAttempts: 0,
+            isUnhappyWithContract: false,
+            yellowCardsAccumulated: 0,
+            injuryHistory: [],
+            injuryProneness: randomInt(1, 15),
+            isTransferListed: false,
             transferStatus: 'NONE',
             releaseClause: p.value * 1.5,
             height: p.height,
             weight: p.weight,
             birthDate: new Date(p.birthDate),
             reputation: p.ca * 45,
-            form: [],
             formRatings: [],
             tacticalFamiliarity: 50,
-            personality: 'PROFESSIONAL',
             leadership: randomInt(5, 20),
             consistency: randomInt(5, 20),
             bigMatchTemperament: randomInt(5, 20),
             seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 },
             statsByCompetition: {},
-            tags: [],
          };
          this.players.push(player);
       }
@@ -504,6 +505,14 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
         player.squad = squadType;
         this.players.push(player);
       });
+    });
+  }
+
+  ensureDeepSquads(leagueId: string) {
+    const clubs = this.getClubsByLeague(leagueId);
+    clubs.forEach(club => {
+      this.generateSquadsForClub(club.id);
+      this.invalidateClubCache(club.id);
     });
   }
 
@@ -823,7 +832,7 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
       clubId,
       attributes: { ...managerData.attributes },
       salary: fired ? 10000 : 15000, // Reduced salary if fired
-      contractExpiry: new Date(this.currentDate.getFullYear() + 2, 5, 30), // 2-year contract
+      contractExpiry: new Date(new Date().getFullYear() + 2, 5, 30), // 2-year contract
       history: [...managerData.history],
       personality: managerData.personality,
       morale: fired ? 60 : 100, // Lower morale if fired
@@ -845,14 +854,18 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
     this.staff.unshift(manager);
   }
 
-  createManagerProfile(clubId: string, name: string, surname: string, nationality: string, origin: ManagerOrigin, birthDate: Date, startDate: Date): ManagerProfile {
-    const club = this.getClub(clubId);
-    const clubName = club ? club.name : 'Desconocido';
-    const objective = this.getClubObjective(clubId);
+  createManagerProfile(clubId: string | null, name: string, surname: string, nationality: string, origin: ManagerOrigin, birthDate: Date, startDate: Date, nationalTeamId: string | null = null): ManagerProfile {
+    const club = clubId ? this.getClub(clubId) : undefined;
+    const clubName = club?.name || 'Sin club';
+    const nationalTeam = nationalTeamId ? this.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === nationalTeamId) : undefined;
+    const objective = clubId ? this.getClubObjective(clubId) : nationalTeam ? `Clasificar y competir con ${nationalTeam.name}` : 'Construir una carrera internacional';
     this.managerProfile = {
       name, surname, fullName: `${name} ${surname}`,
       nationality, birthDate, careerStartDate: startDate, origin,
       currentClubId: clubId, currentClubName: clubName,
+      currentNationalTeamId: nationalTeamId,
+      currentNationalTeamName: nationalTeam?.name,
+      careerMode: clubId && nationalTeamId ? 'BOTH' : nationalTeamId ? 'NATIONAL' : 'CLUB',
       seasonInClub: 1, yearsInClub: 0,
       totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
       goalsFor: 0, goalsAgainst: 0,
@@ -860,7 +873,7 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
       biggestSale: null,
       currentObjective: objective,
       boardRelationship: 'CALM', pressRelationship: 'CALM', fansRelationship: 'CALM',
-      clubHistory: [{ clubId, clubName, startDate: new Date(startDate), seasons: 0, titles: [] }],
+      clubHistory: clubId ? [{ clubId, clubName, startDate: new Date(startDate), seasons: 0, titles: [] }] : [],
       legacy: '',
     };
     return this.managerProfile;
@@ -957,7 +970,7 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
     p.currentObjective = this.getClubObjective(p.currentClubId);
   }
 
-  getClubObjective(clubId: string): string {
+  getClubObjective(clubId: string | null): string {
     const club = this.getClub(clubId);
     if (!club) return 'Permanecer en la categoría';
     const league = this.competitions.find(c => c.id === club.leagueId);
@@ -2026,7 +2039,7 @@ generateYouthIntake(year: number) {
   }
 
   getUserClub() {
-    const userClubId = useGameStore.getState().userClubId;
+    const userClubId = this.managerProfile?.currentClubId;
     return userClubId ? this.getClub(userClubId) : undefined;
   }
 }

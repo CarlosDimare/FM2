@@ -27,7 +27,7 @@ export enum Zone {
 }
 
 export type TransitionPhase = 'ORGANIZED' | 'COUNTER' | 'DISORGANIZED';
-export type BallState = 'KICKOFF' | 'IN_PLAY' | 'OUT_OF_BOUNDS' | 'CORNER' | 'FREE_KICK' | 'GOAL_CELEBRATION' | 'HALF_TIME' | 'FINISHED';
+export type BallState = 'KICKOFF' | 'IN_PLAY' | 'OUT_OF_BOUNDS' | 'CORNER' | 'FREE_KICK' | 'PENALTY' | 'GOAL_CELEBRATION' | 'HALF_TIME' | 'FINISHED';
 
 export type SquadType = 'SENIOR' | 'RESERVE' | 'U20';
 
@@ -315,6 +315,9 @@ export interface TacticSettings {
   usePlaymaker: boolean;
   playOffside: boolean;
   counterAttack: boolean;
+  longShots?: 'RARELY' | 'MIXED' | 'OFTEN';
+  throughBalls?: 'RARELY' | 'MIXED' | 'OFTEN';
+  crossBall?: 'RARELY' | 'MIXED' | 'OFTEN';
   setPieces: {
     cornersLeft: string;
     cornersRight: string;
@@ -323,6 +326,20 @@ export interface TacticSettings {
     throwInsLeft: string;
     throwInsRight: string;
   };
+}
+
+export interface NationalTeamMatchOptions {
+  homeSquadIds?: string[];
+  awaySquadIds?: string[];
+  homeTactic?: TacticSettings;
+  awayTactic?: TacticSettings;
+}
+
+export interface NationalTeamChronicleContext {
+  controlled: boolean;
+  squadSize: number;
+  squadIds?: string[];
+  tactic?: TacticSettings;
 }
 
 export interface Tactic {
@@ -512,6 +529,8 @@ export interface RealManager {
   internationalReputation?: number;
   careerHonours?: string[];
   previousClubs?: StaffPreviousClub[];
+  dataSource?: 'CURATED' | 'WIKIDATA';
+  wikidataId?: string;
 }
 
 export type MessageCategory = 'MARKET' | 'SQUAD' | 'STATEMENTS' | 'FINANCE' | 'COMPETITION' | 'SCOUTING' | 'PEOPLE';
@@ -685,12 +704,20 @@ export interface Chronicle {
   body: string;
   fixtureId?: string;
   clubId?: string;
+  nationalTeamId?: string;
   month?: number;
   year?: number;
 }
 
 export type ManagerOrigin = 'EX_PLAYER' | 'YOUTH_COACH' | 'JOURNALIST';
+export type CareerMode = 'CLUB' | 'NATIONAL' | 'BOTH';
 export type RelationshipState = 'ANGRY' | 'WORRIED' | 'CALM' | 'HAPPY';
+
+export interface CareerAssignment {
+  mode: CareerMode;
+  clubId?: string | null;
+  nationalTeamId?: string | null;
+}
 
 export interface ClubHistoryEntry {
   clubId: string;
@@ -711,8 +738,11 @@ export interface ManagerProfile {
   origin: ManagerOrigin;
   photo?: string;
 
-  currentClubId: string;
+  currentClubId: string | null;
   currentClubName: string;
+  currentNationalTeamId?: string | null;
+  currentNationalTeamName?: string;
+  careerMode?: CareerMode;
   seasonInClub: number;
   yearsInClub: number;
 

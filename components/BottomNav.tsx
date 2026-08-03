@@ -28,16 +28,17 @@ interface BottomNavProps {
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({ advanceTime, simulateToNextMatch, isSimulating, isPreMatchView }) => {
-  const { currentView, setView, userClub } = useUIStore();
+  const { currentView, setView, userClub, selectedNationalTeamId } = useUIStore();
 
   const [showMore, setShowMore] = React.useState(false);
 
-  if (!userClub) return null;
+  if (!userClub && !selectedNationalTeamId) return null;
 
+  const isNationalOnly = !userClub && Boolean(selectedNationalTeamId);
   const isActive = (tabId: string) => {
     if (tabId === currentView) return true;
-    if (tabId === 'SENIOR_SQUAD' && currentView.endsWith('_SQUAD')) return true;
-    if (tabId === 'SENIOR_TACTICS' && currentView.endsWith('_TACTICS')) return true;
+    if (!isNationalOnly && tabId === 'SENIOR_SQUAD' && currentView.endsWith('_SQUAD')) return true;
+    if (!isNationalOnly && tabId === 'SENIOR_TACTICS' && currentView.endsWith('_TACTICS')) return true;
     if (tabId === 'PRE_MATCH' && (currentView === 'MATCH' || currentView === 'PRE_MATCH')) return true;
     return false;
   };
@@ -50,6 +51,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({ advanceTime, simulateToNex
     setShowMore(false);
     setView(id);
   };
+
+  const nationalTabs = [
+    { id: `NT_${selectedNationalTeamId}`, label: 'Selección', icon: Users },
+    { id: 'CHRONICLES', label: 'Crónicas', icon: Trophy },
+    { id: 'MANAGER_PROFILE', label: 'Carrera', icon: Briefcase },
+    { id: '__MORE__', label: 'Más', icon: MoreHorizontal },
+  ];
 
   return (
     <>
@@ -78,7 +86,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ advanceTime, simulateToNex
           </button>
         </div>
         <div className="flex items-center justify-around h-14">
-          {tabs.map(tab => {
+          {(isNationalOnly ? nationalTabs : tabs).map(tab => {
             const Icon = tab.icon;
             const active = isActive(tab.id);
             return (
@@ -103,7 +111,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ advanceTime, simulateToNex
            <div className="fixed bottom-26 left-0 right-0 z-[200] bg-[#3a4a3a] border-t border-[#2a3a2a] rounded-t-xl p-4 lg:hidden animate-slide-up"
                style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
             <div className="grid grid-cols-3 gap-3">
-              {moreItems.map(item => {
+              {(isNationalOnly ? [
+                { id: `NT_${selectedNationalTeamId}`, label: 'Gestionar selección', icon: Users },
+                { id: 'CHRONICLES', label: 'Crónicas', icon: Trophy },
+                { id: 'MANAGER_PROFILE', label: 'Mi carrera', icon: Briefcase },
+              ] : moreItems).map(item => {
                 const Icon = item.icon;
                 return (
                   <button

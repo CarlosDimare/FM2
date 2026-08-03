@@ -1,4 +1,4 @@
-import { Player, Club, NationalTeam, Competition, Fixture, LeagueStanding } from '../types';
+import { Player, Club, NationalTeam, Competition, Fixture, LeagueStanding, TacticSettings } from '../types';
 import { generateUUID, randomInt } from './utils';
 
 export interface NationalTeamDef {
@@ -13,61 +13,65 @@ export interface NationalTeamDef {
 export class NationalTeamManager {
   private nationalTeams: NationalTeam[] = [];
   private playerAssignments: Record<string, string[]> = {};
+  controlledTeamId: string | null = null;
+  controlledSquadIds: Record<string, string[]> = {};
+  controlledTactics: Record<string, TacticSettings> = {};
+  nationalTeamOffers: { teamId: string; status: 'PENDING' | 'ACCEPTED' | 'REJECTED'; date: Date }[] = [];
 
   static NATIONAL_TEAMS: NationalTeamDef[] = [
     // CONMEBOL (10 teams)
     { id: 'ARG', name: 'Argentina', country: 'Argentina', confederation: 'CONMEBOL', reputation: 9500, formation: '4-3-3' },
-    { id: 'BRA', name: 'Brazil', country: 'Brasil', confederation: 'CONMEBOL', reputation: 9400, formation: '4-3-3' },
+    { id: 'BRA', name: 'Brasil', country: 'Brasil', confederation: 'CONMEBOL', reputation: 9400, formation: '4-3-3' },
     { id: 'URU', name: 'Uruguay', country: 'Uruguay', confederation: 'CONMEBOL', reputation: 9000, formation: '4-4-2' },
     { id: 'COL', name: 'Colombia', country: 'Colombia', confederation: 'CONMEBOL', reputation: 8800, formation: '4-2-3-1' },
     { id: 'CHL', name: 'Chile', country: 'Chile', confederation: 'CONMEBOL', reputation: 8500, formation: '4-3-3' },
     { id: 'ECU', name: 'Ecuador', country: 'Ecuador', confederation: 'CONMEBOL', reputation: 8200, formation: '4-4-2' },
     { id: 'PAR', name: 'Paraguay', country: 'Paraguay', confederation: 'CONMEBOL', reputation: 8000, formation: '4-4-2' },
-    { id: 'PER', name: 'Peru', country: 'Peru', confederation: 'CONMEBOL', reputation: 7800, formation: '4-4-2' },
+    { id: 'PER', name: 'Perú', country: 'Perú', confederation: 'CONMEBOL', reputation: 7800, formation: '4-4-2' },
     { id: 'BOL', name: 'Bolivia', country: 'Bolivia', confederation: 'CONMEBOL', reputation: 7500, formation: '4-4-2' },
     { id: 'VEN', name: 'Venezuela', country: 'Venezuela', confederation: 'CONMEBOL', reputation: 7300, formation: '4-4-2' },
 
     // UEFA (major teams)
-    { id: 'FRA', name: 'France', country: 'Francia', confederation: 'UEFA', reputation: 9600, formation: '4-3-3' },
-    { id: 'ESP', name: 'Spain', country: 'España', confederation: 'UEFA', reputation: 9500, formation: '4-3-3' },
-    { id: 'ENG', name: 'England', country: 'Inglaterra', confederation: 'UEFA', reputation: 9300, formation: '4-2-3-1' },
-    { id: 'DEU', name: 'Germany', country: 'Alemania', confederation: 'UEFA', reputation: 9200, formation: '4-2-3-1' },
-    { id: 'ITA', name: 'Italy', country: 'Italia', confederation: 'UEFA', reputation: 9000, formation: '4-3-3' },
-    { id: 'NLD', name: 'Netherlands', country: 'Países Bajos', confederation: 'UEFA', reputation: 8900, formation: '4-3-3' },
-    { id: 'BEL', name: 'Belgium', country: 'Bélgica', confederation: 'UEFA', reputation: 8700, formation: '4-2-3-1' },
+    { id: 'FRA', name: 'Francia', country: 'Francia', confederation: 'UEFA', reputation: 9600, formation: '4-3-3' },
+    { id: 'ESP', name: 'España', country: 'España', confederation: 'UEFA', reputation: 9500, formation: '4-3-3' },
+    { id: 'ENG', name: 'Inglaterra', country: 'Inglaterra', confederation: 'UEFA', reputation: 9300, formation: '4-2-3-1' },
+    { id: 'DEU', name: 'Alemania', country: 'Alemania', confederation: 'UEFA', reputation: 9200, formation: '4-2-3-1' },
+    { id: 'ITA', name: 'Italia', country: 'Italia', confederation: 'UEFA', reputation: 9000, formation: '4-3-3' },
+    { id: 'NLD', name: 'Países Bajos', country: 'Países Bajos', confederation: 'UEFA', reputation: 8900, formation: '4-3-3' },
+    { id: 'BEL', name: 'Bélgica', country: 'Bélgica', confederation: 'UEFA', reputation: 8700, formation: '4-2-3-1' },
     { id: 'PRT', name: 'Portugal', country: 'Portugal', confederation: 'UEFA', reputation: 8800, formation: '4-3-3' },
-    { id: 'HRV', name: 'Croatia', country: 'Croacia', confederation: 'UEFA', reputation: 8500, formation: '4-3-3' },
-    { id: 'CHE', name: 'Switzerland', country: 'Suiza', confederation: 'UEFA', reputation: 8200, formation: '4-2-3-1' },
+    { id: 'HRV', name: 'Croacia', country: 'Croacia', confederation: 'UEFA', reputation: 8500, formation: '4-3-3' },
+    { id: 'CHE', name: 'Suiza', country: 'Suiza', confederation: 'UEFA', reputation: 8200, formation: '4-2-3-1' },
     { id: 'AUT', name: 'Austria', country: 'Austria', confederation: 'UEFA', reputation: 8000, formation: '4-2-3-1' },
-    { id: 'DNK', name: 'Denmark', country: 'Dinamarca', confederation: 'UEFA', reputation: 8100, formation: '4-3-3' },
-    { id: 'SWE', name: 'Sweden', country: 'Suecia', confederation: 'UEFA', reputation: 7900, formation: '4-4-2' },
-    { id: 'NOR', name: 'Norway', country: 'Noruega', confederation: 'UEFA', reputation: 7800, formation: '4-3-3' },
-    { id: 'POL', name: 'Poland', country: 'Polonia', confederation: 'UEFA', reputation: 7700, formation: '4-4-2' },
-    { id: 'UKR', name: 'Ukraine', country: 'Ucrania', confederation: 'UEFA', reputation: 7600, formation: '4-2-3-1' },
+    { id: 'DNK', name: 'Dinamarca', country: 'Dinamarca', confederation: 'UEFA', reputation: 8100, formation: '4-3-3' },
+    { id: 'SWE', name: 'Suecia', country: 'Suecia', confederation: 'UEFA', reputation: 7900, formation: '4-4-2' },
+    { id: 'NOR', name: 'Noruega', country: 'Noruega', confederation: 'UEFA', reputation: 7800, formation: '4-3-3' },
+    { id: 'POL', name: 'Polonia', country: 'Polonia', confederation: 'UEFA', reputation: 7700, formation: '4-4-2' },
+    { id: 'UKR', name: 'Ucrania', country: 'Ucrania', confederation: 'UEFA', reputation: 7600, formation: '4-2-3-1' },
     { id: 'SRB', name: 'Serbia', country: 'Serbia', confederation: 'UEFA', reputation: 7500, formation: '4-4-2' },
-    { id: 'TUR', name: 'Turkey', country: 'Turquía', confederation: 'UEFA', reputation: 7400, formation: '4-2-3-1' },
-    { id: 'RUS', name: 'Russia', country: 'Rusia', confederation: 'UEFA', reputation: 7300, formation: '4-4-2' },
+    { id: 'TUR', name: 'Turquía', country: 'Turquía', confederation: 'UEFA', reputation: 7400, formation: '4-2-3-1' },
+    { id: 'RUS', name: 'Rusia', country: 'Rusia', confederation: 'UEFA', reputation: 7300, formation: '4-4-2' },
 
     // CONCACAF
-    { id: 'MEX', name: 'Mexico', country: 'México', confederation: 'CONCACAF', reputation: 8200, formation: '4-3-3' },
-    { id: 'USA', name: 'United States', country: 'Estados Unidos', confederation: 'CONCACAF', reputation: 8000, formation: '4-3-3' },
-    { id: 'CAN', name: 'Canada', country: 'Canadá', confederation: 'CONCACAF', reputation: 7500, formation: '4-4-2' },
+    { id: 'MEX', name: 'México', country: 'México', confederation: 'CONCACAF', reputation: 8200, formation: '4-3-3' },
+    { id: 'USA', name: 'Estados Unidos', country: 'USA', confederation: 'CONCACAF', reputation: 8000, formation: '4-3-3' },
+    { id: 'CAN', name: 'Canadá', country: 'Canadá', confederation: 'CONCACAF', reputation: 7500, formation: '4-4-2' },
 
     // AFC
-    { id: 'JPN', name: 'Japan', country: 'Japón', confederation: 'AFC', reputation: 8000, formation: '4-2-3-1' },
-    { id: 'KOR', name: 'South Korea', country: 'Corea del Sur', confederation: 'AFC', reputation: 7800, formation: '4-4-2' },
+    { id: 'JPN', name: 'Japón', country: 'Japón', confederation: 'AFC', reputation: 8000, formation: '4-2-3-1' },
+    { id: 'KOR', name: 'Corea del Sur', country: 'Corea del Sur', confederation: 'AFC', reputation: 7800, formation: '4-4-2' },
     { id: 'AUS', name: 'Australia', country: 'Australia', confederation: 'AFC', reputation: 7600, formation: '4-4-2' },
-    { id: 'SAU', name: 'Saudi Arabia', country: 'Arabia Saudita', confederation: 'AFC', reputation: 7200, formation: '4-2-3-1' },
+    { id: 'SAU', name: 'Arabia Saudita', country: 'Arabia Saudita', confederation: 'AFC', reputation: 7200, formation: '4-2-3-1' },
 
     // CAF
-    { id: 'MAR', name: 'Morocco', country: 'Marruecos', confederation: 'CAF', reputation: 8200, formation: '4-2-3-1' },
+    { id: 'MAR', name: 'Marruecos', country: 'Marruecos', confederation: 'CAF', reputation: 8200, formation: '4-2-3-1' },
     { id: 'SEN', name: 'Senegal', country: 'Senegal', confederation: 'CAF', reputation: 7800, formation: '4-4-2' },
     { id: 'NGA', name: 'Nigeria', country: 'Nigeria', confederation: 'CAF', reputation: 7700, formation: '4-3-3' },
-    { id: 'EGY', name: 'Egypt', country: 'Egipto', confederation: 'CAF', reputation: 7600, formation: '4-4-2' },
+    { id: 'EGY', name: 'Egipto', country: 'Egipto', confederation: 'CAF', reputation: 7600, formation: '4-4-2' },
     { id: 'GHA', name: 'Ghana', country: 'Ghana', confederation: 'CAF', reputation: 7500, formation: '4-4-2' },
-    { id: 'CMR', name: 'Cameroon', country: 'Camerún', confederation: 'CAF', reputation: 7400, formation: '4-4-2' },
-    { id: 'CIV', name: 'Ivory Coast', country: 'Costa de Marfil', confederation: 'CAF', reputation: 7300, formation: '4-3-3' },
-    { id: 'TUN', name: 'Tunisia', country: 'Túnez', confederation: 'CAF', reputation: 7200, formation: '4-4-2' },
+    { id: 'CMR', name: 'Camerún', country: 'Camerún', confederation: 'CAF', reputation: 7400, formation: '4-4-2' },
+    { id: 'CIV', name: 'Costa de Marfil', country: 'Costa de Marfil', confederation: 'CAF', reputation: 7300, formation: '4-3-3' },
+    { id: 'TUN', name: 'Túnez', country: 'Túnez', confederation: 'CAF', reputation: 7200, formation: '4-4-2' },
   ];
 
   static WORLD_CUP_GROUPS: { name: string; teams: string[] }[] = [
@@ -106,6 +110,84 @@ export class NationalTeamManager {
 
   static getNationalTeamsByConfederation(confederation: string): NationalTeamDef[] {
     return this.NATIONAL_TEAMS.filter(t => t.confederation === confederation);
+  }
+
+  assumeControl(teamId: string, squadIds: string[], tactic: TacticSettings, eligibleIds: string[]): boolean {
+    const eligible = new Set(eligibleIds);
+    const uniqueIds = [...new Set(squadIds)].filter(id => eligible.has(id)).slice(0, 23);
+    if (!this.nationalTeams.some(team => team.id === teamId) || uniqueIds.length < 11) return false;
+    this.controlledTeamId = teamId;
+    this.controlledSquadIds[teamId] = uniqueIds;
+    this.controlledTactics[teamId] = { ...tactic };
+    return true;
+  }
+
+  setControlledSquad(teamId: string, squadIds: string[], eligibleIds: string[]): boolean {
+    if (this.controlledTeamId !== teamId) return false;
+    const eligible = new Set(eligibleIds);
+    const uniqueIds = [...new Set(squadIds)].filter(id => eligible.has(id)).slice(0, 23);
+    if (uniqueIds.length < 11) return false;
+    this.controlledSquadIds[teamId] = uniqueIds;
+    return true;
+  }
+
+  setControlledTactic(teamId: string, tactic: TacticSettings) {
+    if (this.controlledTeamId !== teamId) return;
+    this.controlledTactics[teamId] = { ...tactic };
+  }
+
+  getControlledSquadIds(teamId: string): string[] {
+    return this.controlledSquadIds?.[teamId] || [];
+  }
+
+  getControlledTactic(teamId: string): TacticSettings | undefined {
+    return this.controlledTactics?.[teamId];
+  }
+
+  isControlled(teamId: string): boolean {
+    return this.controlledTeamId === teamId;
+  }
+
+  requestNationalTeamOffer(teamId: string): boolean {
+    if (this.controlledTeamId === teamId || !this.nationalTeams.some(team => team.id === teamId)) return false;
+    this.nationalTeamOffers = this.nationalTeamOffers.filter(offer => offer.status !== 'PENDING');
+    this.nationalTeamOffers.push({ teamId, status: 'PENDING', date: new Date() });
+    return true;
+  }
+
+  resolveNationalTeamOffer(teamId: string, accepted: boolean): void {
+    const offer = this.nationalTeamOffers.find(candidate => candidate.teamId === teamId && candidate.status === 'PENDING');
+    if (offer) offer.status = accepted ? 'ACCEPTED' : 'REJECTED';
+  }
+
+  getPendingNationalTeamOffer(): { teamId: string; status: 'PENDING' | 'ACCEPTED' | 'REJECTED'; date: Date } | undefined {
+    return this.nationalTeamOffers.find(offer => offer.status === 'PENDING');
+  }
+
+  validateControlledState(players: Player[], clubs: Club[]) {
+    if (!this.controlledTeamId) return;
+    const eligibleIds = new Set(this.getEligiblePlayers(this.controlledTeamId, players, clubs).map(player => player.id));
+    const validSavedIds = (this.controlledSquadIds[this.controlledTeamId] || []).filter(id => eligibleIds.has(id)).slice(0, 23);
+    const fallbackIds = this.getEligiblePlayers(this.controlledTeamId, players, clubs).slice(0, 23).map(player => player.id);
+    this.controlledSquadIds[this.controlledTeamId] = (validSavedIds.length >= 11 ? validSavedIds : fallbackIds);
+    if (this.controlledSquadIds[this.controlledTeamId].length < 11) this.controlledTeamId = null;
+  }
+
+  getEligiblePlayers(teamId: string, players: Player[], clubs: Club[]): Player[] {
+    const team = this.nationalTeams.find(t => t.id === teamId);
+    if (!team) return [];
+    const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const country = normalize(team.country);
+    return players
+      .filter(player => {
+        const club = clubs.find(candidate => candidate.id === player.clubId);
+        return club && normalize(club.country) === country;
+      })
+      .sort((a, b) => {
+        const aOverall = (a.stats.visible.fisico + a.stats.visible.mental + a.stats.visible.tecnica) / 3;
+        const bOverall = (b.stats.visible.fisico + b.stats.visible.mental + b.stats.visible.tecnica) / 3;
+        return bOverall - aOverall;
+      });
   }
 
   assignPlayersToNationalTeams(players: Player[], clubs: Club[]) {
@@ -170,7 +252,8 @@ export class NationalTeamManager {
         }
         
         const club = clubs.find(c => c && c.id === p.clubId);
-        return club && club.country === team.country;
+        const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        return club && normalize(club.country) === normalize(team.country);
       });
 
       // Sort by overall ability and take top 23 players

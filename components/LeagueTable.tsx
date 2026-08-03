@@ -59,8 +59,8 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
        const posMap: Record<string, Position[]> = {
           GK: [Position.GK],
           DF: [Position.DC, Position.DL, Position.DR, Position.SW],
-          MF: [Position.DM, Position.MC, Position.ML, Position.MR, Position.AMC, Position.AML, Position.AMR],
-          FW: [Position.ST, Position.FW],
+          MF: [Position.DM, Position.MC, Position.ML, Position.MR, Position.AM, Position.AML, Position.AMR],
+          FW: [Position.ST, Position.STR, Position.STL],
        };
        const best: Player[] = [];
        Object.entries(posMap).forEach(([, positions]) => {
@@ -71,7 +71,7 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
           }
        });
        return best.sort((a, b) => {
-          const order = [Position.GK, Position.DC, Position.DL, Position.DR, Position.DM, Position.MC, Position.ML, Position.MR, Position.AMC, Position.AML, Position.AMR, Position.ST, Position.FW];
+          const order = [Position.GK, Position.DC, Position.DL, Position.DR, Position.DM, Position.MC, Position.ML, Position.MR, Position.AM, Position.AML, Position.AMR, Position.ST, Position.STR, Position.STL];
           return order.indexOf(a.positions[0]) - order.indexOf(b.positions[0]);
        }).slice(0, 11);
     }, [leaguePlayers, currentLeagueId]);

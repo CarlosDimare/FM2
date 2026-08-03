@@ -327,8 +327,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   finishSeason: (fixtures, userClubId, dateOverride) => {
     const { currentDate, seasonEndDate } = get();
     const refDate = dateOverride || currentDate;
-    const summaries = LifecycleManager.processEndOfSeason(fixtures, userClubId, refDate);
-    const userWonLeague = userClubId ? summaries.some((s: any) => s.championId === userClubId) : false;
+    const managedTeamId = userClubId || world.nationalTeamManager?.controlledTeamId;
+    const summaries = LifecycleManager.processEndOfSeason(fixtures, managedTeamId, refDate);
+    const userWonLeague = managedTeamId ? summaries.some((s: any) => s.championId === managedTeamId) : false;
 
     const currentYear = refDate.getFullYear();
     const nextSeasonStart = new Date(currentYear, 6, 20);
@@ -339,7 +340,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       currentDate: nextSeasonStart,
     });
 
-    const newFixtures = get().initSeasonFixtures(nextSeasonStart, userClubId);
+    const newFixtures = get().initSeasonFixtures(nextSeasonStart, managedTeamId);
 
     return { summaries, userWonLeague, newFixtures, nextSeasonStart, nextSeasonEnd };
   },

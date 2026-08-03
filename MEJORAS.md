@@ -162,6 +162,38 @@
 ---
 
 ## 🟡 Recientemente Completado
+- **Carrera de Selecciones Nacionales (modo internacional)**
+  - `CareerMode`: CLUB / NATIONAL / BOTH — al crear la partida eliges si diriges club, selección o ambos
+  - `NationalTeamManager`: asumir control de una selección (`assumeControl`), convocatoria de 23 jugadores, planteamiento táctico propio que el motor aplica al simular
+  - Partidos de selección simulados con tu convocatoria y táctica (`getNationalMatchOptions`)
+  - Crónicas de partidos internacionales (`generateNationalTeamChronicle`) y vista HOME de selección
+  - Cambio de selección vía oferta de federación (solicitar → aceptar/rechazar)
+  - Guardado/carga integrado (validateControlledState al cargar) y auto-save con nombre de la selección
+- **Pantalla de selección con vistas separadas como el modo club**
+  - `NT_<selección>_SQUAD` · `NT_<selección>_TACTICS` · `NT_<selección>_SCHEDULE` · `NT_<selección>_STATS`: Plantel, Tácticas, Partidos y Estadísticas en pantallas independientes, navegables desde el sidebar (submenú "Mi selección") y con navegador de sección en el encabezado
+  - `NationalTeamView` usa el mismo `FMTable` ordenable, banderas, puntos de forma, iconos de estado, fitness y valor que la `SquadView` de club
+  - Columnas estilo FM08: `#` · Nombre · Pos · Edad · Club · PJ · Gol · Forma · Fis · Valor, con variantes responsive móvil/escritorio
+  - Pantalla de Tácticas: planteamiento (mentalidad, presión, pase, enfoque, contraataque) + once probable por capacidad
+  - Componentes compartidos nuevos: `PlayerBadges.tsx` (`PlayerFormDots` + `PlayerStatusIcons`), ahora usados por club y selección
+  - Ficha de jugador (`PlayerModal`) abierta también en modo solo-selección (userClubId opcional)
+- **Selecciones en español + banderas completas**
+  - Las 45 selecciones renombradas a nombres y países en español (Brasil, España, Inglaterra, Alemania, Italia, Países Bajos…) para que la asignación de jugadores coincida con los países reales de los clubes
+  - `COUNTRY_CODES` ampliado (Serbia, Canadá, Australia, Marruecos, Senegal, Nigeria, Egipto, Ghana, Camerún, Costa de Marfil, Túnez, Corea del Sur, Estados Unidos) y `getFlagUrl` sin acentos/mayúsculas ('Peru' = 'Perú')
+  - Fix regex de normalización en `nationalTeamManager` (los diacríticos no se eliminaban y España/Brasil/etc. quedaban sin jugadores)
+- **Simulación profunda de la liga del usuario (avance plan multi-liga)**
+  - Al elegir liga en el setup se activa `deepSimLeagues` (liga del usuario = DEEP → genera fixtures de SENIOR + RESERVE + U20)
+  - Nuevo método `WorldManager.ensureDeepSquads(leagueId)`: rellena los planteles de reserva/sub-20 de los clubes de esa liga (solo los que faltan) e invalida el caché, evitando partidos degenerados
+  - Al cargar partida se revalida y rellena la liga profunda guardada
+- **PeopleHub también en modo selección**
+  - El Centro de Personas ahora funciona sin club: lista tus convocados y permite interacciones DT↔jugador (elogiar, criticar, exigir, capitanía) sobre la convocatoria internacional
+  - En modo selección se ocultan las pestañas de Staff y Directiva; en modo club se mantienen todas
+  - Sidebar: "Personas" siempre visible (club y selección)
+- **Limpieza de TypeScript (26 errores)**
+  - `worldManager`: literal de `Player` alineado con la interfaz (campos sobrantes eliminados, requeridos añadidos), `replaceHeadCoach` usa fecha real
+  - `LeagueTable`: `Position.AMC/FW` inexistentes → `Position.AM/ST/STR/STL`
+  - `MatchView`: tipado explícito de `Object.entries(playerStats)`
+  - `PressConferenceView`: `p.goals` → `p.seasonStats.goals`
+  - `TournamentHub`: import `UserCheck`; `lifecycleManager`: import `LeagueStanding`
 - Motor de partido refinado (3 fases):
   - Pase inteligente (peso por proximidad, focusPassing, usePlaymaker, targetMan)
   - Distribución GK (short/long/clearance), saque de banda (THROW_IN)
@@ -206,6 +238,10 @@
 ### Bugs activos
 - Sin bugs activos pendientes
 
+### Plan pendiente: Expansión Mundial de Ligas + Interacciones (`.kilo/plans/`)
+- Avanzado: `deepSimLeagues` activo para la liga del usuario (DEEP con RESERVE/U20 rellenados vía `ensureDeepSquads`), `relationships` en Player/Staff, `interactionLog` + `decayRelationships` en worldManager, `PeopleHub` (Jugadores/Staff/Relaciones/Directiva, también en modo selección) y `DialogueSystem` ampliado (SET_CAPTAIN, ASSIGN_TRAINING, PRESS…)
+- Pendiente: catálogo completo de ligas por continente (35-40) con simulación ligera para las no elegidas; subvistas de Prensa y Red de DT en PeopleHub; medir rendimiento del bucle diario con la liga en DEEP (~3× fixtures de esa liga)
+
 ---
 
-*Última actualización: 30 julio 2026*
+*Última actualización: 2 agosto 2026*

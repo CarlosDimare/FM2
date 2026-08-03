@@ -1,0 +1,4881 @@
+{
+  "source": "https://www.wikidata.org/",
+  "license": "CC0 1.0",
+  "query": "Humans with occupation association football coach (Q628099)",
+  "complete": false,
+  "cursor": "Q10518166",
+  "retrievedAt": "2026-07-31T20:48:39.080088+00:00",
+  "managers": [
+    {
+      "wikidataId": "Q10399302",
+      "name": "John",
+      "surname": "'Tune' Kristiansen"
+    },
+    {
+      "wikidataId": "Q100145767",
+      "name": "Wubetu",
+      "surname": "Abate"
+    },
+    {
+      "wikidataId": "Q10476550",
+      "name": "Miguel",
+      "surname": "Abrigo"
+    },
+    {
+      "wikidataId": "Q10430131",
+      "name": "Trevor",
+      "surname": "Adair"
+    },
+    {
+      "wikidataId": "Q101001021",
+      "name": "Folke",
+      "surname": "Adamsson"
+    },
+    {
+      "wikidataId": "Q10431272",
+      "name": "Islam",
+      "surname": "Adel Aït Ali Yahia"
+    },
+    {
+      "wikidataId": "Q10348005",
+      "name": "Pelegrino",
+      "surname": "Adelmo Begliomini"
+    },
+    {
+      "wikidataId": "Q10392070",
+      "name": "Vitalino",
+      "surname": "Adolfo Barzotto"
+    },
+    {
+      "wikidataId": "Q104912728",
+      "name": "Arkadi",
+      "surname": "Afanasiev"
+    },
+    {
+      "wikidataId": "Q10514520",
+      "name": "Human",
+      "surname": "Afazeli"
+    },
+    {
+      "wikidataId": "Q10494747",
+      "name": "Nikolai",
+      "surname": "Agafonov"
+    },
+    {
+      "wikidataId": "Q102193036",
+      "name": "Paul",
+      "surname": "Aigbogun"
+    },
+    {
+      "wikidataId": "Q105109634",
+      "name": "Margaret",
+      "surname": "Aka"
+    },
+    {
+      "wikidataId": "Q10514881",
+      "name": "Mirghani",
+      "surname": "Al Zain"
+    },
+    {
+      "wikidataId": "Q1042666",
+      "name": "Carlos",
+      "surname": "Aldabe"
+    },
+    {
+      "wikidataId": "Q10379682",
+      "name": "Rowan",
+      "surname": "Alexander"
+    },
+    {
+      "wikidataId": "Q10367588",
+      "name": "Sandro",
+      "surname": "Alexandre Forner"
+    },
+    {
+      "wikidataId": "Q1042676",
+      "name": "Carlos",
+      "surname": "Alhinho"
+    },
+    {
+      "wikidataId": "Q10508752",
+      "name": "Marvin",
+      "surname": "Allen"
+    },
+    {
+      "wikidataId": "Q100801322",
+      "name": "Aarão",
+      "surname": "Alves"
+    },
+    {
+      "wikidataId": "Q10376096",
+      "name": "Sérgio",
+      "surname": "Alves de Lima"
+    },
+    {
+      "wikidataId": "Q10308760",
+      "name": "José",
+      "surname": "Amadeu Elvino"
+    },
+    {
+      "wikidataId": "Q104902535",
+      "name": "Júlio",
+      "surname": "Amador"
+    },
+    {
+      "wikidataId": "Q102229793",
+      "name": "Imama",
+      "surname": "Amapakabo"
+    },
+    {
+      "wikidataId": "Q101866769",
+      "name": "Artyom",
+      "surname": "Amirdzhanov"
+    },
+    {
+      "wikidataId": "Q10268294",
+      "name": "Donizete",
+      "surname": "Amorim"
+    },
+    {
+      "wikidataId": "Q10313505",
+      "name": "Júnior",
+      "surname": "Amorim"
+    },
+    {
+      "wikidataId": "Q10308765",
+      "name": "José",
+      "surname": "Amoroso Filho"
+    },
+    {
+      "wikidataId": "Q10383190",
+      "name": "Toninho",
+      "surname": "Andrade"
+    },
+    {
+      "wikidataId": "Q10293289",
+      "name": "Gérson",
+      "surname": "Andreotti"
+    },
+    {
+      "wikidataId": "Q10419544",
+      "name": "Martín",
+      "surname": "Andrizzi"
+    },
+    {
+      "wikidataId": "Q10334283",
+      "name": "Márcio",
+      "surname": "André Correia Cantanhede"
+    },
+    {
+      "wikidataId": "Q101088442",
+      "name": "Constantin",
+      "surname": "Anghelache"
+    },
+    {
+      "wikidataId": "Q10439714",
+      "name": "Luis",
+      "surname": "Antonio Regalado"
+    },
+    {
+      "wikidataId": "Q104532420",
+      "name": "Jozef",
+      "surname": "Antoš"
+    },
+    {
+      "wikidataId": "Q10304188",
+      "name": "Itamar",
+      "surname": "Antônio Bellasalma"
+    },
+    {
+      "wikidataId": "Q10308019",
+      "name": "Jorcey",
+      "surname": "Anísio Garcia Santos"
+    },
+    {
+      "wikidataId": "Q10379786",
+      "name": "Zigor",
+      "surname": "Aranalde"
+    },
+    {
+      "wikidataId": "Q10425991",
+      "name": "Jorge",
+      "surname": "Araujo"
+    },
+    {
+      "wikidataId": "Q10283050",
+      "name": "Flávio",
+      "surname": "Araújo"
+    },
+    {
+      "wikidataId": "Q10334287",
+      "name": "Márcio",
+      "surname": "Araújo"
+    },
+    {
+      "wikidataId": "Q10379400",
+      "name": "Neal",
+      "surname": "Ardley"
+    },
+    {
+      "wikidataId": "Q100325119",
+      "name": "Ahmet",
+      "surname": "Arslaner"
+    },
+    {
+      "wikidataId": "Q10396268",
+      "name": "Édson",
+      "surname": "Ataliba Cândido"
+    },
+    {
+      "wikidataId": "Q10329719",
+      "name": "Miguel",
+      "surname": "Avelar"
+    },
+    {
+      "wikidataId": "Q10397938",
+      "name": "Yegor",
+      "surname": "Azovskiy"
+    },
+    {
+      "wikidataId": "Q10412804",
+      "name": "Mohd",
+      "surname": "Azraai Khor Abdullah"
+    },
+    {
+      "wikidataId": "Q10493939",
+      "name": "Walid",
+      "surname": "Aïchour"
+    },
+    {
+      "wikidataId": "Q10513740",
+      "name": "Gideon",
+      "surname": "Baah"
+    },
+    {
+      "wikidataId": "Q10505653",
+      "name": "Ray",
+      "surname": "Bachelor"
+    },
+    {
+      "wikidataId": "Q105088289",
+      "name": "Paviel",
+      "surname": "Baciuta"
+    },
+    {
+      "wikidataId": "Q10447891",
+      "name": "Ionuț",
+      "surname": "Badea"
+    },
+    {
+      "wikidataId": "Q10514260",
+      "name": "Stelian",
+      "surname": "Badea"
+    },
+    {
+      "wikidataId": "Q10502891",
+      "name": "Harry",
+      "surname": "Bagge"
+    },
+    {
+      "wikidataId": "Q1027361",
+      "name": "Alan",
+      "surname": "Bahia"
+    },
+    {
+      "wikidataId": "Q10513968",
+      "name": "Siegfried",
+      "surname": "Bahner"
+    },
+    {
+      "wikidataId": "Q10304980",
+      "name": "Jair",
+      "surname": "Bala"
+    },
+    {
+      "wikidataId": "Q101018258",
+      "name": "China",
+      "surname": "Balbino"
+    },
+    {
+      "wikidataId": "Q10379434",
+      "name": "Kevin",
+      "surname": "Ball"
+    },
+    {
+      "wikidataId": "Q1024153",
+      "name": "Dino",
+      "surname": "Ballacci"
+    },
+    {
+      "wikidataId": "Q1024163",
+      "name": "Bruno",
+      "surname": "Ballante"
+    },
+    {
+      "wikidataId": "Q1024171",
+      "name": "Davide",
+      "surname": "Ballardini"
+    },
+    {
+      "wikidataId": "Q1042467",
+      "name": "Bruno",
+      "surname": "Ballarini"
+    },
+    {
+      "wikidataId": "Q1042654",
+      "name": "Costanzo",
+      "surname": "Balleri"
+    },
+    {
+      "wikidataId": "Q1044616",
+      "name": "Elvio",
+      "surname": "Banchero"
+    },
+    {
+      "wikidataId": "Q1044850",
+      "name": "Adriano",
+      "surname": "Banelli"
+    },
+    {
+      "wikidataId": "Q10367587",
+      "name": "Sandro",
+      "surname": "Barbosa"
+    },
+    {
+      "wikidataId": "Q10505265",
+      "name": "Marin",
+      "surname": "Barbu"
+    },
+    {
+      "wikidataId": "Q10308057",
+      "name": "Jorge",
+      "surname": "Barcellos"
+    },
+    {
+      "wikidataId": "Q103820556",
+      "name": "Shai",
+      "surname": "Barda"
+    },
+    {
+      "wikidataId": "Q1010483",
+      "name": "Giles",
+      "surname": "Barnes"
+    },
+    {
+      "wikidataId": "Q10377104",
+      "name": "Graham",
+      "surname": "Barrow"
+    },
+    {
+      "wikidataId": "Q10305365",
+      "name": "Jarbas",
+      "surname": "Batista"
+    },
+    {
+      "wikidataId": "Q10311147",
+      "name": "João",
+      "surname": "Batista Lopes Abelha"
+    },
+    {
+      "wikidataId": "Q101054458",
+      "name": "Klaus-Willi",
+      "surname": "Baumanns"
+    },
+    {
+      "wikidataId": "Q10427513",
+      "name": "Stephen",
+      "surname": "Baxter"
+    },
+    {
+      "wikidataId": "Q101246590",
+      "name": "Vahid",
+      "surname": "Bayatlou"
+    },
+    {
+      "wikidataId": "Q10292713",
+      "name": "Guido",
+      "surname": "Baztarrica"
+    },
+    {
+      "wikidataId": "Q10340740",
+      "name": "Olivério",
+      "surname": "Bazzani Filho"
+    },
+    {
+      "wikidataId": "Q10437804",
+      "name": "Marek",
+      "surname": "Bažík"
+    },
+    {
+      "wikidataId": "Q10449958",
+      "name": "Harry",
+      "surname": "Beadles"
+    },
+    {
+      "wikidataId": "Q10513927",
+      "name": "Ralph",
+      "surname": "Bean"
+    },
+    {
+      "wikidataId": "Q1029486",
+      "name": "Uffe",
+      "surname": "Bech"
+    },
+    {
+      "wikidataId": "Q10483796",
+      "name": "Þór",
+      "surname": "Beck"
+    },
+    {
+      "wikidataId": "Q10407374",
+      "name": "Billy",
+      "surname": "Behan"
+    },
+    {
+      "wikidataId": "Q101611654",
+      "name": "Kemal",
+      "surname": "Beharić"
+    },
+    {
+      "wikidataId": "Q10448984",
+      "name": "Norman",
+      "surname": "Bell"
+    },
+    {
+      "wikidataId": "Q104641569",
+      "name": "Antonio",
+      "surname": "Belmonte"
+    },
+    {
+      "wikidataId": "Q10326563",
+      "name": "Marjan",
+      "surname": "Belčev"
+    },
+    {
+      "wikidataId": "Q10279176",
+      "name": "Fabrício",
+      "surname": "Bento da Cunha"
+    },
+    {
+      "wikidataId": "Q10422058",
+      "name": "Sebastián",
+      "surname": "Bini"
+    },
+    {
+      "wikidataId": "Q10389652",
+      "name": "John",
+      "surname": "Bird"
+    },
+    {
+      "wikidataId": "Q10387701",
+      "name": "Sam",
+      "surname": "Bishop"
+    },
+    {
+      "wikidataId": "Q101109039",
+      "name": "Anton",
+      "surname": "Blajs"
+    },
+    {
+      "wikidataId": "Q103940162",
+      "name": "Ihor",
+      "surname": "Bobovych"
+    },
+    {
+      "wikidataId": "Q10419100",
+      "name": "Norman",
+      "surname": "Bodell"
+    },
+    {
+      "wikidataId": "Q10410527",
+      "name": "Harold",
+      "surname": "Bodle"
+    },
+    {
+      "wikidataId": "Q103825869",
+      "name": "Franko",
+      "surname": "Bogdan"
+    },
+    {
+      "wikidataId": "Q102346407",
+      "name": "Anatoli",
+      "surname": "Bogdanov"
+    },
+    {
+      "wikidataId": "Q10452982",
+      "name": "Aibek",
+      "surname": "Bokoev"
+    },
+    {
+      "wikidataId": "Q101590549",
+      "name": "Viktor",
+      "surname": "Bondin"
+    },
+    {
+      "wikidataId": "Q100273094",
+      "name": "Mark",
+      "surname": "Bonner"
+    },
+    {
+      "wikidataId": "Q104828642",
+      "name": "Francesc",
+      "surname": "Bosch"
+    },
+    {
+      "wikidataId": "Q1029982",
+      "name": "Peter",
+      "surname": "Bosz"
+    },
+    {
+      "wikidataId": "Q100325191",
+      "name": "Serdar",
+      "surname": "Bozkurt"
+    },
+    {
+      "wikidataId": "Q1042761",
+      "name": "Carlos",
+      "surname": "Bracamontes"
+    },
+    {
+      "wikidataId": "Q10477507",
+      "name": "Joseph",
+      "surname": "Bradshaw"
+    },
+    {
+      "wikidataId": "Q10507499",
+      "name": "Pepe",
+      "surname": "Brand"
+    },
+    {
+      "wikidataId": "Q10514145",
+      "name": "Gerardo",
+      "surname": "Bravo"
+    },
+    {
+      "wikidataId": "Q101542200",
+      "name": "Tommy",
+      "surname": "Breheny"
+    },
+    {
+      "wikidataId": "Q1034156",
+      "name": "Daniel",
+      "surname": "Briceño Jalabert"
+    },
+    {
+      "wikidataId": "Q10423888",
+      "name": "Carsten",
+      "surname": "Broe"
+    },
+    {
+      "wikidataId": "Q1030588",
+      "name": "Ruud",
+      "surname": "Brood"
+    },
+    {
+      "wikidataId": "Q10456471",
+      "name": "Michael",
+      "surname": "Brown"
+    },
+    {
+      "wikidataId": "Q10393543",
+      "name": "Jimmy",
+      "surname": "Brownlie"
+    },
+    {
+      "wikidataId": "Q10470443",
+      "name": "Harry",
+      "surname": "Bruce"
+    },
+    {
+      "wikidataId": "Q101113022",
+      "name": "Toon",
+      "surname": "Bruins Slot"
+    },
+    {
+      "wikidataId": "Q10325068",
+      "name": "Marcelo",
+      "surname": "Buarque"
+    },
+    {
+      "wikidataId": "Q1032643",
+      "name": "Pavel",
+      "surname": "Bugalo"
+    },
+    {
+      "wikidataId": "Q10483086",
+      "name": "Maksim",
+      "surname": "Bukatkin"
+    },
+    {
+      "wikidataId": "Q10516231",
+      "name": "Jim",
+      "surname": "Bullions"
+    },
+    {
+      "wikidataId": "Q105170405",
+      "name": "Michaël",
+      "surname": "Bunel"
+    },
+    {
+      "wikidataId": "Q10488599",
+      "name": "Mirko",
+      "surname": "Bunjevčević"
+    },
+    {
+      "wikidataId": "Q1045514",
+      "name": "Carsten",
+      "surname": "Busch"
+    },
+    {
+      "wikidataId": "Q10509565",
+      "name": "Jesper",
+      "surname": "Bøge Pedersen"
+    },
+    {
+      "wikidataId": "Q101871707",
+      "name": "Werner",
+      "surname": "Bürgler"
+    },
+    {
+      "wikidataId": "Q10312893",
+      "name": "Julinho",
+      "surname": "Camargo"
+    },
+    {
+      "wikidataId": "Q10389728",
+      "name": "Ventura",
+      "surname": "Cambom"
+    },
+    {
+      "wikidataId": "Q10468938",
+      "name": "Jock",
+      "surname": "Cameron"
+    },
+    {
+      "wikidataId": "Q10386815",
+      "name": "John",
+      "surname": "Cameron"
+    },
+    {
+      "wikidataId": "Q104570975",
+      "name": "Willie",
+      "surname": "Cameron"
+    },
+    {
+      "wikidataId": "Q10336588",
+      "name": "Newton",
+      "surname": "Canegal"
+    },
+    {
+      "wikidataId": "Q102027",
+      "name": "Fabio",
+      "surname": "Cannavaro"
+    },
+    {
+      "wikidataId": "Q100380247",
+      "name": "Alejandro",
+      "surname": "Cappuccio"
+    },
+    {
+      "wikidataId": "Q1011888",
+      "name": "Gonzalo",
+      "surname": "Cardozo"
+    },
+    {
+      "wikidataId": "Q102822658",
+      "name": "Juan",
+      "surname": "Carlos Amorós"
+    },
+    {
+      "wikidataId": "Q10419524",
+      "name": "Juan",
+      "surname": "Carlos Blengio"
+    },
+    {
+      "wikidataId": "Q10321340",
+      "name": "Luís",
+      "surname": "Carlos Goiano"
+    },
+    {
+      "wikidataId": "Q10320675",
+      "name": "Luiz",
+      "surname": "Carlos Tavares Franco"
+    },
+    {
+      "wikidataId": "Q10421285",
+      "name": "Juan",
+      "surname": "Carlos Zubczuk"
+    },
+    {
+      "wikidataId": "Q10389710",
+      "name": "Paul",
+      "surname": "Carlyle"
+    },
+    {
+      "wikidataId": "Q105098520",
+      "name": "Ilie",
+      "surname": "Carp"
+    },
+    {
+      "wikidataId": "Q102347132",
+      "name": "Andrés",
+      "surname": "Carrasco"
+    },
+    {
+      "wikidataId": "Q1042799",
+      "name": "Carlos",
+      "surname": "Carvalhal"
+    },
+    {
+      "wikidataId": "Q10308315",
+      "name": "Jorginho",
+      "surname": "Carvoeiro"
+    },
+    {
+      "wikidataId": "Q101402386",
+      "name": "Sixto",
+      "surname": "Casabona"
+    },
+    {
+      "wikidataId": "Q10353737",
+      "name": "Preto",
+      "surname": "Casagrande"
+    },
+    {
+      "wikidataId": "Q101436557",
+      "name": "Marc",
+      "surname": "Castellsagué"
+    },
+    {
+      "wikidataId": "Q10427238",
+      "name": "Mirko",
+      "surname": "Castillo"
+    },
+    {
+      "wikidataId": "Q10263686",
+      "name": "Dado",
+      "surname": "Cavalcanti"
+    },
+    {
+      "wikidataId": "Q10363323",
+      "name": "Roberto",
+      "surname": "Cavalo"
+    },
+    {
+      "wikidataId": "Q101577546",
+      "name": "Iñaki",
+      "surname": "Caña"
+    },
+    {
+      "wikidataId": "Q1043577",
+      "name": "Carmelo",
+      "surname": "Cedrún"
+    },
+    {
+      "wikidataId": "Q10514424",
+      "name": "Julio",
+      "surname": "Cengarle"
+    },
+    {
+      "wikidataId": "Q1042039",
+      "name": "Carlo",
+      "surname": "Ceresoli"
+    },
+    {
+      "wikidataId": "Q10450755",
+      "name": "Armando",
+      "surname": "Chacón"
+    },
+    {
+      "wikidataId": "Q10425306",
+      "name": "Roy",
+      "surname": "Chapman"
+    },
+    {
+      "wikidataId": "Q10478909",
+      "name": "Vernon",
+      "surname": "Chapman"
+    },
+    {
+      "wikidataId": "Q104534979",
+      "name": "Mounir",
+      "surname": "Chebil"
+    },
+    {
+      "wikidataId": "Q10399110",
+      "name": "Hung",
+      "surname": "Chin-chang"
+    },
+    {
+      "wikidataId": "Q10379483",
+      "name": "Mubarike",
+      "surname": "Chisoni"
+    },
+    {
+      "wikidataId": "Q104890854",
+      "name": "Valeri",
+      "surname": "Chistyakov"
+    },
+    {
+      "wikidataId": "Q10433111",
+      "name": "Harrison",
+      "surname": "Chongo"
+    },
+    {
+      "wikidataId": "Q104630169",
+      "name": "Otto",
+      "surname": "Cinadler"
+    },
+    {
+      "wikidataId": "Q10393679",
+      "name": "William",
+      "surname": "Clark"
+    },
+    {
+      "wikidataId": "Q10513903",
+      "name": "Henrik",
+      "surname": "Clausen"
+    },
+    {
+      "wikidataId": "Q10469527",
+      "name": "John",
+      "surname": "Clayton"
+    },
+    {
+      "wikidataId": "Q10378529",
+      "name": "Simon",
+      "surname": "Clifford"
+    },
+    {
+      "wikidataId": "Q102357942",
+      "name": "Freddy",
+      "surname": "Clément"
+    },
+    {
+      "wikidataId": "Q10464613",
+      "name": "Héctor",
+      "surname": "Codevila"
+    },
+    {
+      "wikidataId": "Q102341418",
+      "name": "Paul",
+      "surname": "Coggins"
+    },
+    {
+      "wikidataId": "Q10379999",
+      "name": "John",
+      "surname": "Coleman"
+    },
+    {
+      "wikidataId": "Q105024775",
+      "name": "David",
+      "surname": "Colpaert"
+    },
+    {
+      "wikidataId": "Q10346510",
+      "name": "Paulo",
+      "surname": "Comelli"
+    },
+    {
+      "wikidataId": "Q10317334",
+      "name": "Leonardo",
+      "surname": "Condé"
+    },
+    {
+      "wikidataId": "Q10379681",
+      "name": "Marian",
+      "surname": "Constantinescu"
+    },
+    {
+      "wikidataId": "Q10508564",
+      "name": "Jeff",
+      "surname": "Cook"
+    },
+    {
+      "wikidataId": "Q10395775",
+      "name": "Álvaro",
+      "surname": "Cordeiro da Rocha Werneck"
+    },
+    {
+      "wikidataId": "Q105110091",
+      "name": "Carlos",
+      "surname": "Cortijo"
+    },
+    {
+      "wikidataId": "Q10376120",
+      "name": "Sérgio",
+      "surname": "Cosme"
+    },
+    {
+      "wikidataId": "Q1029156",
+      "name": "Camille",
+      "surname": "Cottin"
+    },
+    {
+      "wikidataId": "Q10388472",
+      "name": "Brian",
+      "surname": "Coyne"
+    },
+    {
+      "wikidataId": "Q10396853",
+      "name": "John",
+      "surname": "Cozens"
+    },
+    {
+      "wikidataId": "Q10376359",
+      "name": "Sílvio",
+      "surname": "Criciúma"
+    },
+    {
+      "wikidataId": "Q10514288",
+      "name": "Tommy",
+      "surname": "Crilly"
+    },
+    {
+      "wikidataId": "Q10272374",
+      "name": "Emerson",
+      "surname": "Cris Hartkopp"
+    },
+    {
+      "wikidataId": "Q10379401",
+      "name": "Malcolm",
+      "surname": "Crosby"
+    },
+    {
+      "wikidataId": "Q10463912",
+      "name": "Nicky",
+      "surname": "Cross"
+    },
+    {
+      "wikidataId": "Q10437951",
+      "name": "Everald",
+      "surname": "Cummings"
+    },
+    {
+      "wikidataId": "Q101088360",
+      "name": "Ștefan",
+      "surname": "Cârjan"
+    },
+    {
+      "wikidataId": "Q100729340",
+      "name": "Julio",
+      "surname": "César Fuentes"
+    },
+    {
+      "wikidataId": "Q10361251",
+      "name": "Ricardo",
+      "surname": "da Cruz Cerqueira"
+    },
+    {
+      "wikidataId": "Q10295054",
+      "name": "Heriberto",
+      "surname": "da Cunha"
+    },
+    {
+      "wikidataId": "Q10368653",
+      "name": "Saulo",
+      "surname": "da Fé Freitas"
+    },
+    {
+      "wikidataId": "Q10336633",
+      "name": "Ney",
+      "surname": "da Matta"
+    },
+    {
+      "wikidataId": "Q10378402",
+      "name": "Tavares",
+      "surname": "da Silva"
+    },
+    {
+      "wikidataId": "Q104631540",
+      "name": "Bernardo",
+      "surname": "da Velha"
+    },
+    {
+      "wikidataId": "Q10410590",
+      "name": "Jimmy",
+      "surname": "Dailey"
+    },
+    {
+      "wikidataId": "Q101444751",
+      "name": "Giorgos",
+      "surname": "Daispangos"
+    },
+    {
+      "wikidataId": "Q10289610",
+      "name": "Gilmar",
+      "surname": "Dal Pozzo"
+    },
+    {
+      "wikidataId": "Q105076852",
+      "name": "Mustafa",
+      "surname": "Dalcı"
+    },
+    {
+      "wikidataId": "Q10463528",
+      "name": "José",
+      "surname": "Daniel García"
+    },
+    {
+      "wikidataId": "Q10513414",
+      "name": "Vassilis",
+      "surname": "Daniil"
+    },
+    {
+      "wikidataId": "Q10463400",
+      "name": "Józef",
+      "surname": "Dankowski"
+    },
+    {
+      "wikidataId": "Q10363480",
+      "name": "Roberval",
+      "surname": "Davino"
+    },
+    {
+      "wikidataId": "Q101810214",
+      "name": "Ian",
+      "surname": "Dawes"
+    },
+    {
+      "wikidataId": "Q10364106",
+      "name": "Rogério",
+      "surname": "de Albuquerque Corrêa"
+    },
+    {
+      "wikidataId": "Q10334352",
+      "name": "Márcio",
+      "surname": "de Azevedo"
+    },
+    {
+      "wikidataId": "Q10391249",
+      "name": "Nicanor",
+      "surname": "de Carvalho"
+    },
+    {
+      "wikidataId": "Q10335634",
+      "name": "Natal",
+      "surname": "de Carvalho Baroni"
+    },
+    {
+      "wikidataId": "Q10299860",
+      "name": "Ifigênio",
+      "surname": "de Freitas Bahiense"
+    },
+    {
+      "wikidataId": "Q104921108",
+      "name": "Henk",
+      "surname": "de Jonge"
+    },
+    {
+      "wikidataId": "Q104787898",
+      "name": "Antonio",
+      "surname": "de la Merced"
+    },
+    {
+      "wikidataId": "Q10313225",
+      "name": "Juventino",
+      "surname": "de Lima Júnior"
+    },
+    {
+      "wikidataId": "Q1043320",
+      "name": "Carlos",
+      "surname": "de los Cobos"
+    },
+    {
+      "wikidataId": "Q102032779",
+      "name": "Rik",
+      "surname": "De Mil"
+    },
+    {
+      "wikidataId": "Q10393837",
+      "name": "Wilson",
+      "surname": "de Oliveira Riça"
+    },
+    {
+      "wikidataId": "Q10342229",
+      "name": "Osires",
+      "surname": "de Paiva"
+    },
+    {
+      "wikidataId": "Q10505886",
+      "name": "Philippe",
+      "surname": "De Ridder"
+    },
+    {
+      "wikidataId": "Q10364026",
+      "name": "Roger",
+      "surname": "De Sá"
+    },
+    {
+      "wikidataId": "Q101208139",
+      "name": "Florijan",
+      "surname": "Debenjak"
+    },
+    {
+      "wikidataId": "Q10292883",
+      "name": "Guillermo",
+      "surname": "Delgado"
+    },
+    {
+      "wikidataId": "Q10493864",
+      "name": "Hovhannes",
+      "surname": "Demirchyan"
+    },
+    {
+      "wikidataId": "Q10320295",
+      "name": "Luciano",
+      "surname": "Dias"
+    },
+    {
+      "wikidataId": "Q10294849",
+      "name": "Marcos",
+      "surname": "Dias"
+    },
+    {
+      "wikidataId": "Q104859132",
+      "name": "Dimitris",
+      "surname": "Dimitriou"
+    },
+    {
+      "wikidataId": "Q10281320",
+      "name": "Fernando",
+      "surname": "Diniz"
+    },
+    {
+      "wikidataId": "Q10387565",
+      "name": "Marian",
+      "surname": "Dinu"
+    },
+    {
+      "wikidataId": "Q10284727",
+      "name": "Francisco",
+      "surname": "Diá"
+    },
+    {
+      "wikidataId": "Q10514068",
+      "name": "Zoheïr",
+      "surname": "Djelloul"
+    },
+    {
+      "wikidataId": "Q10395476",
+      "name": "Zé",
+      "surname": "do Carmo"
+    },
+    {
+      "wikidataId": "Q10388097",
+      "name": "Paul",
+      "surname": "Doolin"
+    },
+    {
+      "wikidataId": "Q104872076",
+      "name": "Hemanta",
+      "surname": "Dora"
+    },
+    {
+      "wikidataId": "Q10379938",
+      "name": "Daryl",
+      "surname": "Doran"
+    },
+    {
+      "wikidataId": "Q10340771",
+      "name": "Olávio",
+      "surname": "Dorico Vieira"
+    },
+    {
+      "wikidataId": "Q10342268",
+      "name": "Osmar",
+      "surname": "dos Santos Machado"
+    },
+    {
+      "wikidataId": "Q10313501",
+      "name": "Júlio",
+      "surname": "dos Santos Ângelo"
+    },
+    {
+      "wikidataId": "Q10379848",
+      "name": "Jimmy",
+      "surname": "Douglas"
+    },
+    {
+      "wikidataId": "Q10389163",
+      "name": "Greg",
+      "surname": "Downs"
+    },
+    {
+      "wikidataId": "Q10396806",
+      "name": "Slobodan",
+      "surname": "Drapić"
+    },
+    {
+      "wikidataId": "Q100818131",
+      "name": "Radim",
+      "surname": "Dresler"
+    },
+    {
+      "wikidataId": "Q100517",
+      "name": "Werner",
+      "surname": "Dreßel"
+    },
+    {
+      "wikidataId": "Q10361116",
+      "name": "Ricardo",
+      "surname": "Drubscky"
+    },
+    {
+      "wikidataId": "Q10309280",
+      "name": "José",
+      "surname": "Duarte"
+    },
+    {
+      "wikidataId": "Q10304417",
+      "name": "Ivanildo",
+      "surname": "Duarte Pereira"
+    },
+    {
+      "wikidataId": "Q10480796",
+      "name": "Sergey",
+      "surname": "Dubrovin"
+    },
+    {
+      "wikidataId": "Q1027403",
+      "name": "Ernesto",
+      "surname": "Duchini"
+    },
+    {
+      "wikidataId": "Q10457316",
+      "name": "Martin",
+      "surname": "Dugas"
+    },
+    {
+      "wikidataId": "Q10405780",
+      "name": "Mehmet",
+      "surname": "Durakovic"
+    },
+    {
+      "wikidataId": "Q102931841",
+      "name": "Alain",
+      "surname": "Durand"
+    },
+    {
+      "wikidataId": "Q10371261",
+      "name": "Shpëtim",
+      "surname": "Duro"
+    },
+    {
+      "wikidataId": "Q10438453",
+      "name": "Jasmin",
+      "surname": "Džeko"
+    },
+    {
+      "wikidataId": "Q10379525",
+      "name": "Nicky",
+      "surname": "Eaden"
+    },
+    {
+      "wikidataId": "Q10505673",
+      "name": "Morteza",
+      "surname": "Ebrahimi"
+    },
+    {
+      "wikidataId": "Q10424320",
+      "name": "Mansour",
+      "surname": "Ebrahimzadeh"
+    },
+    {
+      "wikidataId": "Q102088392",
+      "name": "Gerald",
+      "surname": "Egger"
+    },
+    {
+      "wikidataId": "Q103332984",
+      "name": "Bernd",
+      "surname": "Eibler"
+    },
+    {
+      "wikidataId": "Q101402334",
+      "name": "Driss",
+      "surname": "El Mrabet"
+    },
+    {
+      "wikidataId": "Q10268048",
+      "name": "Domingos",
+      "surname": "Elias Alves Pedra"
+    },
+    {
+      "wikidataId": "Q10387503",
+      "name": "Bill",
+      "surname": "Ellerington"
+    },
+    {
+      "wikidataId": "Q1027502",
+      "name": "Calum",
+      "surname": "Elliot"
+    },
+    {
+      "wikidataId": "Q10443410",
+      "name": "Obed",
+      "surname": "Enamorado"
+    },
+    {
+      "wikidataId": "Q104438991",
+      "name": "Carlos",
+      "surname": "Encinas"
+    },
+    {
+      "wikidataId": "Q10475872",
+      "name": "Mihail",
+      "surname": "Eramchuk"
+    },
+    {
+      "wikidataId": "Q101095846",
+      "name": "Axel",
+      "surname": "Ericsson"
+    },
+    {
+      "wikidataId": "Q100718040",
+      "name": "Sergio",
+      "surname": "Escobar Cabus"
+    },
+    {
+      "wikidataId": "Q104665566",
+      "name": "Luis",
+      "surname": "Espinel"
+    },
+    {
+      "wikidataId": "Q104141900",
+      "name": "Júlio",
+      "surname": "Espinosa"
+    },
+    {
+      "wikidataId": "Q10387122",
+      "name": "Ubiratã",
+      "surname": "Espírito Santo"
+    },
+    {
+      "wikidataId": "Q10391630",
+      "name": "Vinícius",
+      "surname": "Eutrópio"
+    },
+    {
+      "wikidataId": "Q10514727",
+      "name": "Wyndham",
+      "surname": "Evans"
+    },
+    {
+      "wikidataId": "Q10396682",
+      "name": "Fred",
+      "surname": "Everiss"
+    },
+    {
+      "wikidataId": "Q10514479",
+      "name": "Mike",
+      "surname": "Everitt"
+    },
+    {
+      "wikidataId": "Q1016271",
+      "name": "Burhan",
+      "surname": "Eşer"
+    },
+    {
+      "wikidataId": "Q103400",
+      "name": "Ferdinand",
+      "surname": "Fabra"
+    },
+    {
+      "wikidataId": "Q101502",
+      "name": "Marc",
+      "surname": "Fascher"
+    },
+    {
+      "wikidataId": "Q104639349",
+      "name": "Joyce",
+      "surname": "Fawcett"
+    },
+    {
+      "wikidataId": "Q101246485",
+      "name": "Vahid",
+      "surname": "Fazeli"
+    },
+    {
+      "wikidataId": "Q101827216",
+      "name": "Peter",
+      "surname": "Feher"
+    },
+    {
+      "wikidataId": "Q10437928",
+      "name": "Hossein",
+      "surname": "Fekri"
+    },
+    {
+      "wikidataId": "Q10401955",
+      "name": "Brown",
+      "surname": "Ferguson"
+    },
+    {
+      "wikidataId": "Q10387055",
+      "name": "Mike",
+      "surname": "Ferguson"
+    },
+    {
+      "wikidataId": "Q10327571",
+      "name": "Mauro",
+      "surname": "Fernandes"
+    },
+    {
+      "wikidataId": "Q10334300",
+      "name": "Márcio",
+      "surname": "Fernandes"
+    },
+    {
+      "wikidataId": "Q10264362",
+      "name": "Davi",
+      "surname": "Ferreira"
+    },
+    {
+      "wikidataId": "Q10508813",
+      "name": "Kelly",
+      "surname": "Findley"
+    },
+    {
+      "wikidataId": "Q1029046",
+      "name": "Guðjón",
+      "surname": "Finnbogason"
+    },
+    {
+      "wikidataId": "Q104051313",
+      "name": "Hermann",
+      "surname": "Fischer"
+    },
+    {
+      "wikidataId": "Q1001718",
+      "name": "László",
+      "surname": "Fischer"
+    },
+    {
+      "wikidataId": "Q10510082",
+      "name": "Albert",
+      "surname": "Fisher"
+    },
+    {
+      "wikidataId": "Q1001756",
+      "name": "József",
+      "surname": "Fitos"
+    },
+    {
+      "wikidataId": "Q104828639",
+      "name": "Scott",
+      "surname": "Fitterer"
+    },
+    {
+      "wikidataId": "Q105107290",
+      "name": "Luis",
+      "surname": "Flores Villena"
+    },
+    {
+      "wikidataId": "Q1002303",
+      "name": "Imre",
+      "surname": "Fodor"
+    },
+    {
+      "wikidataId": "Q1028024",
+      "name": "Gueïda",
+      "surname": "Fofana"
+    },
+    {
+      "wikidataId": "Q10346581",
+      "name": "Paulo",
+      "surname": "Foiani"
+    },
+    {
+      "wikidataId": "Q10327570",
+      "name": "Mauro",
+      "surname": "Fonseca"
+    },
+    {
+      "wikidataId": "Q10346582",
+      "name": "Paulo",
+      "surname": "Fonseca"
+    },
+    {
+      "wikidataId": "Q10363340",
+      "name": "Roberto",
+      "surname": "Fonseca"
+    },
+    {
+      "wikidataId": "Q10384745",
+      "name": "Richie",
+      "surname": "Foran"
+    },
+    {
+      "wikidataId": "Q10458830",
+      "name": "Ian",
+      "surname": "Foster"
+    },
+    {
+      "wikidataId": "Q101123105",
+      "name": "Guido",
+      "surname": "Frank"
+    },
+    {
+      "wikidataId": "Q103533151",
+      "name": "Markus",
+      "surname": "Frank Kobler"
+    },
+    {
+      "wikidataId": "Q10263949",
+      "name": "Daniel",
+      "surname": "Frasson"
+    },
+    {
+      "wikidataId": "Q10379331",
+      "name": "Telêmaco",
+      "surname": "Frazão de Lima"
+    },
+    {
+      "wikidataId": "Q10513421",
+      "name": "Niels",
+      "surname": "Frederiksen"
+    },
+    {
+      "wikidataId": "Q102378102",
+      "name": "Ray",
+      "surname": "Freeman"
+    },
+    {
+      "wikidataId": "Q10501054",
+      "name": "Mike",
+      "surname": "Freitag"
+    },
+    {
+      "wikidataId": "Q102181093",
+      "name": "Luigi",
+      "surname": "Fresco"
+    },
+    {
+      "wikidataId": "Q104890214",
+      "name": "Lars",
+      "surname": "Friis"
+    },
+    {
+      "wikidataId": "Q10434439",
+      "name": "Jack",
+      "surname": "Froggatt"
+    },
+    {
+      "wikidataId": "Q105105496",
+      "name": "Vladimir",
+      "surname": "Frolenkov"
+    },
+    {
+      "wikidataId": "Q10436504",
+      "name": "Gianluca",
+      "surname": "Frontino"
+    },
+    {
+      "wikidataId": "Q1004110",
+      "name": "Antal",
+      "surname": "Frontz"
+    },
+    {
+      "wikidataId": "Q10288595",
+      "name": "Gedalyahu",
+      "surname": "Fuchs"
+    },
+    {
+      "wikidataId": "Q1004263",
+      "name": "Ferenc",
+      "surname": "Fujsz"
+    },
+    {
+      "wikidataId": "Q10503384",
+      "name": "William",
+      "surname": "Fullarton"
+    },
+    {
+      "wikidataId": "Q101402614",
+      "name": "Jan",
+      "surname": "Furlepa"
+    },
+    {
+      "wikidataId": "Q1004403",
+      "name": "Kamill",
+      "surname": "Fuszek"
+    },
+    {
+      "wikidataId": "Q1005985",
+      "name": "Lajos",
+      "surname": "Földesi"
+    },
+    {
+      "wikidataId": "Q1005990",
+      "name": "János",
+      "surname": "Földessy"
+    },
+    {
+      "wikidataId": "Q1006366",
+      "name": "Antal",
+      "surname": "Füle"
+    },
+    {
+      "wikidataId": "Q100933359",
+      "name": "László",
+      "surname": "Fülöp"
+    },
+    {
+      "wikidataId": "Q1007133",
+      "name": "Ferenc",
+      "surname": "Gabala"
+    },
+    {
+      "wikidataId": "Q1007139",
+      "name": "Krisztián",
+      "surname": "Gabala"
+    },
+    {
+      "wikidataId": "Q10470208",
+      "name": "Marcel",
+      "surname": "Gaillard"
+    },
+    {
+      "wikidataId": "Q100718213",
+      "name": "John",
+      "surname": "Galas"
+    },
+    {
+      "wikidataId": "Q100329468",
+      "name": "Angelo",
+      "surname": "Galfano"
+    },
+    {
+      "wikidataId": "Q104125568",
+      "name": "Gabor",
+      "surname": "Gallai"
+    },
+    {
+      "wikidataId": "Q102158468",
+      "name": "Claudio",
+      "surname": "Gallicchio"
+    },
+    {
+      "wikidataId": "Q1007763",
+      "name": "Tibor",
+      "surname": "Gallowich"
+    },
+    {
+      "wikidataId": "Q10493312",
+      "name": "Steve",
+      "surname": "Gammon"
+    },
+    {
+      "wikidataId": "Q10476170",
+      "name": "Goran",
+      "surname": "Gančev"
+    },
+    {
+      "wikidataId": "Q1008180",
+      "name": "József",
+      "surname": "Garami"
+    },
+    {
+      "wikidataId": "Q1008250",
+      "name": "Lajos",
+      "surname": "Garamvölgyi"
+    },
+    {
+      "wikidataId": "Q1042945",
+      "name": "Carlos",
+      "surname": "García Badías"
+    },
+    {
+      "wikidataId": "Q10473318",
+      "name": "Ian",
+      "surname": "Gardiner"
+    },
+    {
+      "wikidataId": "Q1033755",
+      "name": "Ryan",
+      "surname": "Garry"
+    },
+    {
+      "wikidataId": "Q10263789",
+      "name": "Dalmo",
+      "surname": "Gaspar"
+    },
+    {
+      "wikidataId": "Q10396959",
+      "name": "Tommy",
+      "surname": "Gaynor"
+    },
+    {
+      "wikidataId": "Q10270535",
+      "name": "Edson",
+      "surname": "Gaúcho"
+    },
+    {
+      "wikidataId": "Q10367595",
+      "name": "Sandro",
+      "surname": "Gaúcho"
+    },
+    {
+      "wikidataId": "Q1008896",
+      "name": "Károly",
+      "surname": "Gelei"
+    },
+    {
+      "wikidataId": "Q10510031",
+      "name": "Imre",
+      "surname": "Gellei"
+    },
+    {
+      "wikidataId": "Q1009087",
+      "name": "Dezső",
+      "surname": "Gencsy"
+    },
+    {
+      "wikidataId": "Q1009279",
+      "name": "Ferenc",
+      "surname": "Genzwein"
+    },
+    {
+      "wikidataId": "Q10299188",
+      "name": "Hélio",
+      "surname": "Geraldo Caxambu"
+    },
+    {
+      "wikidataId": "Q104205665",
+      "name": "Kostadin",
+      "surname": "Gerganchev"
+    },
+    {
+      "wikidataId": "Q1009761",
+      "name": "Károly",
+      "surname": "Gergely"
+    },
+    {
+      "wikidataId": "Q102104866",
+      "name": "Reto",
+      "surname": "Gertschen"
+    },
+    {
+      "wikidataId": "Q10389306",
+      "name": "Vasco",
+      "surname": "Gervásio"
+    },
+    {
+      "wikidataId": "Q104092999",
+      "name": "Antoni",
+      "surname": "Giedrys"
+    },
+    {
+      "wikidataId": "Q10307189",
+      "name": "Joaquim",
+      "surname": "Gilberto da Silva"
+    },
+    {
+      "wikidataId": "Q10381298",
+      "name": "John",
+      "surname": "Gill"
+    },
+    {
+      "wikidataId": "Q1010497",
+      "name": "Ferenc",
+      "surname": "Gillemot"
+    },
+    {
+      "wikidataId": "Q101003150",
+      "name": "Sture",
+      "surname": "Gillström"
+    },
+    {
+      "wikidataId": "Q1010567",
+      "name": "Dénes",
+      "surname": "Ginzery"
+    },
+    {
+      "wikidataId": "Q10513412",
+      "name": "Matt",
+      "surname": "Glaeser"
+    },
+    {
+      "wikidataId": "Q10396753",
+      "name": "Lee",
+      "surname": "Glover"
+    },
+    {
+      "wikidataId": "Q105041058",
+      "name": "German",
+      "surname": "Glukhovskoy"
+    },
+    {
+      "wikidataId": "Q1011165",
+      "name": "Róbert",
+      "surname": "Glázer"
+    },
+    {
+      "wikidataId": "Q10419222",
+      "name": "Malcolm",
+      "surname": "Goldie"
+    },
+    {
+      "wikidataId": "Q10342400",
+      "name": "Oswaldo",
+      "surname": "Gomes"
+    },
+    {
+      "wikidataId": "Q1011835",
+      "name": "Tibor",
+      "surname": "Gondos"
+    },
+    {
+      "wikidataId": "Q1007187",
+      "name": "Gabriel",
+      "surname": "González"
+    },
+    {
+      "wikidataId": "Q1028592",
+      "name": "John",
+      "surname": "Goodall"
+    },
+    {
+      "wikidataId": "Q10462819",
+      "name": "Revaz",
+      "surname": "Gotsiridze"
+    },
+    {
+      "wikidataId": "Q10379831",
+      "name": "Gerry",
+      "surname": "Gow"
+    },
+    {
+      "wikidataId": "Q10470819",
+      "name": "John",
+      "surname": "Granville"
+    },
+    {
+      "wikidataId": "Q100325165",
+      "name": "Alexandre",
+      "surname": "Grasseli"
+    },
+    {
+      "wikidataId": "Q10451726",
+      "name": "John",
+      "surname": "Green"
+    },
+    {
+      "wikidataId": "Q102117987",
+      "name": "Luis",
+      "surname": "Grimaldi"
+    },
+    {
+      "wikidataId": "Q101577999",
+      "name": "Slobodan",
+      "surname": "Grubor"
+    },
+    {
+      "wikidataId": "Q10474691",
+      "name": "Niels",
+      "surname": "Guldbjerg"
+    },
+    {
+      "wikidataId": "Q10508543",
+      "name": "Jeremy",
+      "surname": "Gunn"
+    },
+    {
+      "wikidataId": "Q1008587",
+      "name": "Gavin",
+      "surname": "Gunning"
+    },
+    {
+      "wikidataId": "Q10485100",
+      "name": "Igor",
+      "surname": "Gusev"
+    },
+    {
+      "wikidataId": "Q1029493",
+      "name": "László",
+      "surname": "Gyetvai"
+    },
+    {
+      "wikidataId": "Q1029562",
+      "name": "László",
+      "surname": "Gyimesi"
+    },
+    {
+      "wikidataId": "Q104622128",
+      "name": "Georgi",
+      "surname": "Gyurov"
+    },
+    {
+      "wikidataId": "Q1030651",
+      "name": "László",
+      "surname": "Győrfi"
+    },
+    {
+      "wikidataId": "Q1030961",
+      "name": "Béla",
+      "surname": "Gál"
+    },
+    {
+      "wikidataId": "Q1031054",
+      "name": "György",
+      "surname": "Gálhidi"
+    },
+    {
+      "wikidataId": "Q1031160",
+      "name": "József",
+      "surname": "Gáspár"
+    },
+    {
+      "wikidataId": "Q105081927",
+      "name": "Joaquín",
+      "surname": "Gómez"
+    },
+    {
+      "wikidataId": "Q1031855",
+      "name": "Sándor",
+      "surname": "Gőcze"
+    },
+    {
+      "wikidataId": "Q10508412",
+      "name": "Mike",
+      "surname": "Haas"
+    },
+    {
+      "wikidataId": "Q104553447",
+      "name": "Nicola",
+      "surname": "Hadwa"
+    },
+    {
+      "wikidataId": "Q10379997",
+      "name": "Frank",
+      "surname": "Haffey"
+    },
+    {
+      "wikidataId": "Q10408135",
+      "name": "Jim",
+      "surname": "Hagan"
+    },
+    {
+      "wikidataId": "Q1032588",
+      "name": "Imre",
+      "surname": "Hajas"
+    },
+    {
+      "wikidataId": "Q1032638",
+      "name": "József",
+      "surname": "Hajdú"
+    },
+    {
+      "wikidataId": "Q1026901",
+      "name": "Jukka",
+      "surname": "Hakala"
+    },
+    {
+      "wikidataId": "Q10434252",
+      "name": "Ken",
+      "surname": "Hale"
+    },
+    {
+      "wikidataId": "Q10451750",
+      "name": "Sead",
+      "surname": "Halilagić"
+    },
+    {
+      "wikidataId": "Q101627345",
+      "name": "Loek",
+      "surname": "Hamers"
+    },
+    {
+      "wikidataId": "Q10415201",
+      "name": "Ken",
+      "surname": "Hancock"
+    },
+    {
+      "wikidataId": "Q102357913",
+      "name": "Jozef",
+      "surname": "Hanák"
+    },
+    {
+      "wikidataId": "Q102340348",
+      "name": "Lenny",
+      "surname": "Harbinson"
+    },
+    {
+      "wikidataId": "Q10423625",
+      "name": "Paul",
+      "surname": "Hardyman"
+    },
+    {
+      "wikidataId": "Q1034044",
+      "name": "József",
+      "surname": "Harmat"
+    },
+    {
+      "wikidataId": "Q1018476",
+      "name": "Neil",
+      "surname": "Harris"
+    },
+    {
+      "wikidataId": "Q1034161",
+      "name": "József",
+      "surname": "Harsády"
+    },
+    {
+      "wikidataId": "Q1034214",
+      "name": "Gábor",
+      "surname": "Hartyáni"
+    },
+    {
+      "wikidataId": "Q10397392",
+      "name": "Harold",
+      "surname": "Hassall"
+    },
+    {
+      "wikidataId": "Q102241",
+      "name": "Klaus",
+      "surname": "Havenstein"
+    },
+    {
+      "wikidataId": "Q1034605",
+      "name": "Sándor",
+      "surname": "Haász"
+    },
+    {
+      "wikidataId": "Q1034611",
+      "name": "Ferenc",
+      "surname": "Haáz"
+    },
+    {
+      "wikidataId": "Q10387985",
+      "name": "Paul",
+      "surname": "Hegarty"
+    },
+    {
+      "wikidataId": "Q1034921",
+      "name": "Imre",
+      "surname": "Hegyi"
+    },
+    {
+      "wikidataId": "Q1034932",
+      "name": "Sándor",
+      "surname": "Hegyi"
+    },
+    {
+      "wikidataId": "Q10435838",
+      "name": "Mohamed",
+      "surname": "Helmy"
+    },
+    {
+      "wikidataId": "Q1008088",
+      "name": "Ezra",
+      "surname": "Hendrickson"
+    },
+    {
+      "wikidataId": "Q1035318",
+      "name": "Géza",
+      "surname": "Henni"
+    },
+    {
+      "wikidataId": "Q10398900",
+      "name": "Nick",
+      "surname": "Henry"
+    },
+    {
+      "wikidataId": "Q10515352",
+      "name": "Joan",
+      "surname": "Henríquez"
+    },
+    {
+      "wikidataId": "Q103822081",
+      "name": "Bela",
+      "surname": "Herczeg"
+    },
+    {
+      "wikidataId": "Q104772822",
+      "name": "Mariano",
+      "surname": "Hernán"
+    },
+    {
+      "wikidataId": "Q1035810",
+      "name": "Attila",
+      "surname": "Herédi"
+    },
+    {
+      "wikidataId": "Q105071486",
+      "name": "José",
+      "surname": "Hevia"
+    },
+    {
+      "wikidataId": "Q10379528",
+      "name": "Frank",
+      "surname": "Hill"
+    },
+    {
+      "wikidataId": "Q10402170",
+      "name": "Jack",
+      "surname": "Hill"
+    },
+    {
+      "wikidataId": "Q10379449",
+      "name": "Ricky",
+      "surname": "Hill"
+    },
+    {
+      "wikidataId": "Q100453869",
+      "name": "Masahiro",
+      "surname": "Hirano"
+    },
+    {
+      "wikidataId": "Q1036783",
+      "name": "Elemér",
+      "surname": "Hirsch"
+    },
+    {
+      "wikidataId": "Q1036844",
+      "name": "Ferenc",
+      "surname": "Hirzer"
+    },
+    {
+      "wikidataId": "Q1037116",
+      "name": "György",
+      "surname": "Hlavay"
+    },
+    {
+      "wikidataId": "Q10412143",
+      "name": "Billy",
+      "surname": "Hodgson"
+    },
+    {
+      "wikidataId": "Q1037300",
+      "name": "József",
+      "surname": "Hoffer"
+    },
+    {
+      "wikidataId": "Q1037468",
+      "name": "Sándor",
+      "surname": "Holdampf"
+    },
+    {
+      "wikidataId": "Q1037596",
+      "name": "Ödön",
+      "surname": "Holits"
+    },
+    {
+      "wikidataId": "Q104825854",
+      "name": "Brad",
+      "surname": "Holmes"
+    },
+    {
+      "wikidataId": "Q10514876",
+      "name": "Mykola",
+      "surname": "Holovko"
+    },
+    {
+      "wikidataId": "Q10395121",
+      "name": "John",
+      "surname": "Holt"
+    },
+    {
+      "wikidataId": "Q10421962",
+      "name": "Timothy",
+      "surname": "Hotte"
+    },
+    {
+      "wikidataId": "Q10513781",
+      "name": "Vladimír",
+      "surname": "Hruška"
+    },
+    {
+      "wikidataId": "Q10491514",
+      "name": "Ivan",
+      "surname": "Hucko"
+    },
+    {
+      "wikidataId": "Q10449723",
+      "name": "Ján",
+      "surname": "Hucko"
+    },
+    {
+      "wikidataId": "Q10404732",
+      "name": "Jack",
+      "surname": "Hynes"
+    },
+    {
+      "wikidataId": "Q10483702",
+      "name": "Nguyễn",
+      "surname": "Hồng Sơn"
+    },
+    {
+      "wikidataId": "Q101041465",
+      "name": "Gheorghe",
+      "surname": "Iamandi"
+    },
+    {
+      "wikidataId": "Q10499949",
+      "name": "Martín",
+      "surname": "Ibarreche"
+    },
+    {
+      "wikidataId": "Q104414589",
+      "name": "Yago",
+      "surname": "Iglesias"
+    },
+    {
+      "wikidataId": "Q10486992",
+      "name": "Maksim",
+      "surname": "Igoshin"
+    },
+    {
+      "wikidataId": "Q100710268",
+      "name": "Alberto",
+      "surname": "Illanes"
+    },
+    {
+      "wikidataId": "Q10381338",
+      "name": "John",
+      "surname": "Impey"
+    },
+    {
+      "wikidataId": "Q10514011",
+      "name": "Marin",
+      "surname": "Ion"
+    },
+    {
+      "wikidataId": "Q10513525",
+      "name": "Ion",
+      "surname": "Ionescu"
+    },
+    {
+      "wikidataId": "Q10289618",
+      "name": "Gilmar",
+      "surname": "Iser"
+    },
+    {
+      "wikidataId": "Q10491207",
+      "name": "Blagoje",
+      "surname": "Istatov"
+    },
+    {
+      "wikidataId": "Q10492979",
+      "name": "Lucian",
+      "surname": "Itu"
+    },
+    {
+      "wikidataId": "Q10515145",
+      "name": "Jure",
+      "surname": "Ivanković"
+    },
+    {
+      "wikidataId": "Q104666634",
+      "name": "Evgeni",
+      "surname": "Ivanov"
+    },
+    {
+      "wikidataId": "Q104622155",
+      "name": "Alexander",
+      "surname": "Ivanovich Sinkovets"
+    },
+    {
+      "wikidataId": "Q101444686",
+      "name": "Oleg",
+      "surname": "Izmaylov"
+    },
+    {
+      "wikidataId": "Q10312618",
+      "name": "Juan",
+      "surname": "Jacinto Rodrigues Araújo"
+    },
+    {
+      "wikidataId": "Q100324362",
+      "name": "Ranko",
+      "surname": "Jakovljević"
+    },
+    {
+      "wikidataId": "Q10514448",
+      "name": "Marko",
+      "surname": "Jakšić"
+    },
+    {
+      "wikidataId": "Q10396938",
+      "name": "Majid",
+      "surname": "Jalali"
+    },
+    {
+      "wikidataId": "Q10393767",
+      "name": "Nico",
+      "surname": "Jalink"
+    },
+    {
+      "wikidataId": "Q10510353",
+      "name": "Tony",
+      "surname": "James"
+    },
+    {
+      "wikidataId": "Q104854384",
+      "name": "Vladimir",
+      "surname": "Janković"
+    },
+    {
+      "wikidataId": "Q10359210",
+      "name": "Remo",
+      "surname": "Januzzi"
+    },
+    {
+      "wikidataId": "Q105064351",
+      "name": "Vladimir",
+      "surname": "Japalau"
+    },
+    {
+      "wikidataId": "Q104839506",
+      "name": "Philippe",
+      "surname": "Jean"
+    },
+    {
+      "wikidataId": "Q104518231",
+      "name": "Christian",
+      "surname": "Jecker"
+    },
+    {
+      "wikidataId": "Q10513480",
+      "name": "Veselin",
+      "surname": "Jelušić"
+    },
+    {
+      "wikidataId": "Q104882652",
+      "name": "Morten",
+      "surname": "Jensen"
+    },
+    {
+      "wikidataId": "Q10419916",
+      "name": "Frank",
+      "surname": "Jericho Nagbe"
+    },
+    {
+      "wikidataId": "Q10394898",
+      "name": "Mamia",
+      "surname": "Jikia"
+    },
+    {
+      "wikidataId": "Q101225721",
+      "name": "Krzysztof",
+      "surname": "Job"
+    },
+    {
+      "wikidataId": "Q10444908",
+      "name": "Keith",
+      "surname": "Jobling"
+    },
+    {
+      "wikidataId": "Q100941",
+      "name": "Christoph",
+      "surname": "John"
+    },
+    {
+      "wikidataId": "Q10288955",
+      "name": "George",
+      "surname": "Johnson"
+    },
+    {
+      "wikidataId": "Q10448696",
+      "name": "Omer",
+      "surname": "Joldić"
+    },
+    {
+      "wikidataId": "Q10387537",
+      "name": "Nathan",
+      "surname": "Jones"
+    },
+    {
+      "wikidataId": "Q10379398",
+      "name": "Neil",
+      "surname": "Jones"
+    },
+    {
+      "wikidataId": "Q10441659",
+      "name": "Richard",
+      "surname": "Jones"
+    },
+    {
+      "wikidataId": "Q104869966",
+      "name": "Tommy",
+      "surname": "Jordan"
+    },
+    {
+      "wikidataId": "Q10298712",
+      "name": "Hudson",
+      "surname": "José Coutinho"
+    },
+    {
+      "wikidataId": "Q104144327",
+      "name": "Wardy",
+      "surname": "Joubert"
+    },
+    {
+      "wikidataId": "Q1027459",
+      "name": "Igor",
+      "surname": "Jovićević"
+    },
+    {
+      "wikidataId": "Q104622140",
+      "name": "Viktar",
+      "surname": "Jujko"
+    },
+    {
+      "wikidataId": "Q10426189",
+      "name": "Marinko",
+      "surname": "Jurendic"
+    },
+    {
+      "wikidataId": "Q10327882",
+      "name": "Mazola",
+      "surname": "Júnior"
+    },
+    {
+      "wikidataId": "Q10504364",
+      "name": "Michael",
+      "surname": "Kadosh"
+    },
+    {
+      "wikidataId": "Q104839541",
+      "name": "Jan",
+      "surname": "Kameník"
+    },
+    {
+      "wikidataId": "Q1009479",
+      "name": "George",
+      "surname": "Kay"
+    },
+    {
+      "wikidataId": "Q104622194",
+      "name": "Vitaĺ",
+      "surname": "Kaziak"
+    },
+    {
+      "wikidataId": "Q104536641",
+      "name": "Bernhard",
+      "surname": "Kellerhoff"
+    },
+    {
+      "wikidataId": "Q10493131",
+      "name": "Khaled",
+      "surname": "Kemas"
+    },
+    {
+      "wikidataId": "Q10443017",
+      "name": "Shay",
+      "surname": "Keogh"
+    },
+    {
+      "wikidataId": "Q100337563",
+      "name": "Oleg",
+      "surname": "Khabi"
+    },
+    {
+      "wikidataId": "Q102329619",
+      "name": "Jamel",
+      "surname": "Khcharem"
+    },
+    {
+      "wikidataId": "Q104622092",
+      "name": "Vladimir",
+      "surname": "Khodin"
+    },
+    {
+      "wikidataId": "Q104519055",
+      "name": "Elgudzha",
+      "surname": "Khutsishvili"
+    },
+    {
+      "wikidataId": "Q10394862",
+      "name": "Zakaria",
+      "surname": "Kibona"
+    },
+    {
+      "wikidataId": "Q10387529",
+      "name": "Steffen",
+      "surname": "Kielstrup"
+    },
+    {
+      "wikidataId": "Q10514025",
+      "name": "Lee",
+      "surname": "Kilday"
+    },
+    {
+      "wikidataId": "Q104681291",
+      "name": "Igor",
+      "surname": "Kister"
+    },
+    {
+      "wikidataId": "Q100234706",
+      "name": "Lothar",
+      "surname": "Kleim"
+    },
+    {
+      "wikidataId": "Q1006445",
+      "name": "Valeri",
+      "surname": "Kleymyonov"
+    },
+    {
+      "wikidataId": "Q10434185",
+      "name": "Nikica",
+      "surname": "Klinčarski"
+    },
+    {
+      "wikidataId": "Q10424586",
+      "name": "Jimmi",
+      "surname": "Klitland"
+    },
+    {
+      "wikidataId": "Q100822130",
+      "name": "Petr",
+      "surname": "Koblovský"
+    },
+    {
+      "wikidataId": "Q104789213",
+      "name": "Gothard",
+      "surname": "Kokott"
+    },
+    {
+      "wikidataId": "Q10313609",
+      "name": "Kaido",
+      "surname": "Koppel"
+    },
+    {
+      "wikidataId": "Q101081823",
+      "name": "Aleksandr",
+      "surname": "Korepanov"
+    },
+    {
+      "wikidataId": "Q10475094",
+      "name": "Jan",
+      "surname": "Korte"
+    },
+    {
+      "wikidataId": "Q100408306",
+      "name": "Thomas",
+      "surname": "Kost"
+    },
+    {
+      "wikidataId": "Q10514553",
+      "name": "Yevgeni",
+      "surname": "Kotelnikov"
+    },
+    {
+      "wikidataId": "Q10487814",
+      "name": "Nikolai",
+      "surname": "Kotovets"
+    },
+    {
+      "wikidataId": "Q105144652",
+      "name": "Ulrich",
+      "surname": "Kowalczyk"
+    },
+    {
+      "wikidataId": "Q102323044",
+      "name": "Grzegorz",
+      "surname": "Kowalski"
+    },
+    {
+      "wikidataId": "Q102790",
+      "name": "Rainer",
+      "surname": "Kraft"
+    },
+    {
+      "wikidataId": "Q104622130",
+      "name": "Paviel",
+      "surname": "Krečyn"
+    },
+    {
+      "wikidataId": "Q102067995",
+      "name": "Gerhard",
+      "surname": "Krois"
+    },
+    {
+      "wikidataId": "Q104830104",
+      "name": "Vladimir",
+      "surname": "Kulik"
+    },
+    {
+      "wikidataId": "Q10479137",
+      "name": "Đorđe",
+      "surname": "Kunovac"
+    },
+    {
+      "wikidataId": "Q100158637",
+      "name": "Aleksander",
+      "surname": "Kupcewicz"
+    },
+    {
+      "wikidataId": "Q104622139",
+      "name": "Alieh",
+      "surname": "Kuźmianok"
+    },
+    {
+      "wikidataId": "Q105046399",
+      "name": "Paa",
+      "surname": "Kwesi Fabin"
+    },
+    {
+      "wikidataId": "Q1015498",
+      "name": "Tom",
+      "surname": "Kåre Staurvik"
+    },
+    {
+      "wikidataId": "Q1042577",
+      "name": "Carlo",
+      "surname": "l'Ami"
+    },
+    {
+      "wikidataId": "Q10311713",
+      "name": "João",
+      "surname": "Lacerda Filho"
+    },
+    {
+      "wikidataId": "Q100793928",
+      "name": "André",
+      "surname": "Ladner"
+    },
+    {
+      "wikidataId": "Q10389601",
+      "name": "Mika",
+      "surname": "Lahtinen"
+    },
+    {
+      "wikidataId": "Q1045602",
+      "name": "Carsten",
+      "surname": "Lakies"
+    },
+    {
+      "wikidataId": "Q10512242",
+      "name": "Benyamin",
+      "surname": "Lam"
+    },
+    {
+      "wikidataId": "Q10266189",
+      "name": "Diede",
+      "surname": "Lameiro"
+    },
+    {
+      "wikidataId": "Q100604528",
+      "name": "John",
+      "surname": "Laponder"
+    },
+    {
+      "wikidataId": "Q1042694",
+      "name": "Carlos",
+      "surname": "Lara"
+    },
+    {
+      "wikidataId": "Q10455977",
+      "name": "Nelson",
+      "surname": "Larios"
+    },
+    {
+      "wikidataId": "Q103819386",
+      "name": "Olivier",
+      "surname": "Laviolette"
+    },
+    {
+      "wikidataId": "Q10471124",
+      "name": "Franklin",
+      "surname": "Lawson"
+    },
+    {
+      "wikidataId": "Q104553120",
+      "name": "Victor",
+      "surname": "Lazarenko"
+    },
+    {
+      "wikidataId": "Q10513738",
+      "name": "Igor",
+      "surname": "Lazić"
+    },
+    {
+      "wikidataId": "Q104858016",
+      "name": "Luciano",
+      "surname": "Leandro"
+    },
+    {
+      "wikidataId": "Q10502775",
+      "name": "Jim",
+      "surname": "Lefkos"
+    },
+    {
+      "wikidataId": "Q10428282",
+      "name": "Hector",
+      "surname": "Leonardo Marinaro"
+    },
+    {
+      "wikidataId": "Q10513945",
+      "name": "Tracey",
+      "surname": "Leone"
+    },
+    {
+      "wikidataId": "Q1032781",
+      "name": "Volodymyr",
+      "surname": "Levchenko"
+    },
+    {
+      "wikidataId": "Q10495488",
+      "name": "Jack",
+      "surname": "Lewis"
+    },
+    {
+      "wikidataId": "Q101916707",
+      "name": "Makesi",
+      "surname": "Lewis"
+    },
+    {
+      "wikidataId": "Q10510649",
+      "name": "Iván",
+      "surname": "León"
+    },
+    {
+      "wikidataId": "Q104622167",
+      "name": "Raman",
+      "surname": "Liavicki"
+    },
+    {
+      "wikidataId": "Q10314516",
+      "name": "Kleiton",
+      "surname": "Lima"
+    },
+    {
+      "wikidataId": "Q10456920",
+      "name": "Tom",
+      "surname": "Liner"
+    },
+    {
+      "wikidataId": "Q101136150",
+      "name": "Hermann",
+      "surname": "Lippusch"
+    },
+    {
+      "wikidataId": "Q104178068",
+      "name": "József",
+      "surname": "Liszkai"
+    },
+    {
+      "wikidataId": "Q10283079",
+      "name": "Flávio",
+      "surname": "Lopes"
+    },
+    {
+      "wikidataId": "Q10412366",
+      "name": "Frank",
+      "surname": "Lord"
+    },
+    {
+      "wikidataId": "Q100299341",
+      "name": "Manfred",
+      "surname": "Lorenz"
+    },
+    {
+      "wikidataId": "Q101527",
+      "name": "Markus",
+      "surname": "Lotter"
+    },
+    {
+      "wikidataId": "Q10453060",
+      "name": "José",
+      "surname": "Luis Pineda"
+    },
+    {
+      "wikidataId": "Q10309809",
+      "name": "José",
+      "surname": "Luiz Plein"
+    },
+    {
+      "wikidataId": "Q104622126",
+      "name": "Andrey",
+      "surname": "Lukashevich"
+    },
+    {
+      "wikidataId": "Q10482327",
+      "name": "Nenad",
+      "surname": "Lukić"
+    },
+    {
+      "wikidataId": "Q10346668",
+      "name": "Paulo",
+      "surname": "Lumumba"
+    },
+    {
+      "wikidataId": "Q10513778",
+      "name": "Tommy",
+      "surname": "Lynch"
+    },
+    {
+      "wikidataId": "Q104884000",
+      "name": "Oleg",
+      "surname": "Lyovin"
+    },
+    {
+      "wikidataId": "Q10388299",
+      "name": "Patrick",
+      "surname": "Mabedi"
+    },
+    {
+      "wikidataId": "Q10516410",
+      "name": "George",
+      "surname": "Mackie"
+    },
+    {
+      "wikidataId": "Q10414622",
+      "name": "Dave",
+      "surname": "MacLaren"
+    },
+    {
+      "wikidataId": "Q10292807",
+      "name": "Guilherme",
+      "surname": "Macuglia"
+    },
+    {
+      "wikidataId": "Q10475050",
+      "name": "Hernán",
+      "surname": "Madrid"
+    },
+    {
+      "wikidataId": "Q1030142",
+      "name": "Günter",
+      "surname": "Mahlmann"
+    },
+    {
+      "wikidataId": "Q10392508",
+      "name": "John",
+      "surname": "Mahoney"
+    },
+    {
+      "wikidataId": "Q10434784",
+      "name": "Hernán",
+      "surname": "Maisterra"
+    },
+    {
+      "wikidataId": "Q104622158",
+      "name": "Dmitry",
+      "surname": "Makarenko"
+    },
+    {
+      "wikidataId": "Q10479474",
+      "name": "Maksim",
+      "surname": "Malakhovskiy"
+    },
+    {
+      "wikidataId": "Q10429483",
+      "name": "Kostas",
+      "surname": "Malekkos"
+    },
+    {
+      "wikidataId": "Q101013567",
+      "name": "Ariel",
+      "surname": "Mamede"
+    },
+    {
+      "wikidataId": "Q10407744",
+      "name": "Javier",
+      "surname": "Mandaluniz"
+    },
+    {
+      "wikidataId": "Q10390249",
+      "name": "Moosa",
+      "surname": "Manik"
+    },
+    {
+      "wikidataId": "Q10471219",
+      "name": "Héctor",
+      "surname": "Manuel González"
+    },
+    {
+      "wikidataId": "Q102291188",
+      "name": "Marcel",
+      "surname": "Mao"
+    },
+    {
+      "wikidataId": "Q10281431",
+      "name": "Fernando",
+      "surname": "Marchiori Lavagnoli"
+    },
+    {
+      "wikidataId": "Q10294614",
+      "name": "Hemerson",
+      "surname": "Maria"
+    },
+    {
+      "wikidataId": "Q104346705",
+      "name": "Luis",
+      "surname": "Marotte"
+    },
+    {
+      "wikidataId": "Q10334476",
+      "name": "Mário",
+      "surname": "Marques"
+    },
+    {
+      "wikidataId": "Q10430770",
+      "name": "Henry",
+      "surname": "Martin"
+    },
+    {
+      "wikidataId": "Q104562000",
+      "name": "David",
+      "surname": "Martindale"
+    },
+    {
+      "wikidataId": "Q10321550",
+      "name": "Luís",
+      "surname": "Martins da Rocha"
+    },
+    {
+      "wikidataId": "Q10346695",
+      "name": "Paulo",
+      "surname": "Martorano"
+    },
+    {
+      "wikidataId": "Q101814422",
+      "name": "Iván",
+      "surname": "Martínez Puyol"
+    },
+    {
+      "wikidataId": "Q105103028",
+      "name": "Jesús",
+      "surname": "María Collado Fernández"
+    },
+    {
+      "wikidataId": "Q104398975",
+      "name": "František",
+      "surname": "Masarovič"
+    },
+    {
+      "wikidataId": "Q10444457",
+      "name": "Neil",
+      "surname": "Masters"
+    },
+    {
+      "wikidataId": "Q104815597",
+      "name": "Sergey",
+      "surname": "Matukhno"
+    },
+    {
+      "wikidataId": "Q10513990",
+      "name": "Nedelcho",
+      "surname": "Matushev"
+    },
+    {
+      "wikidataId": "Q10414774",
+      "name": "Nelson",
+      "surname": "Mauricio Ancheta"
+    },
+    {
+      "wikidataId": "Q10471355",
+      "name": "Jim",
+      "surname": "May"
+    },
+    {
+      "wikidataId": "Q1042327",
+      "name": "Carlo",
+      "surname": "Mazzone"
+    },
+    {
+      "wikidataId": "Q103758552",
+      "name": "Dan",
+      "surname": "Mazzulla"
+    },
+    {
+      "wikidataId": "Q104117376",
+      "name": "Włodzimierz",
+      "surname": "Małowiejski"
+    },
+    {
+      "wikidataId": "Q10405755",
+      "name": "Jimmy",
+      "surname": "McAlinden"
+    },
+    {
+      "wikidataId": "Q10384105",
+      "name": "Pat",
+      "surname": "McBride"
+    },
+    {
+      "wikidataId": "Q10379941",
+      "name": "John",
+      "surname": "McDonnell"
+    },
+    {
+      "wikidataId": "Q10478640",
+      "name": "Joe",
+      "surname": "McGrath"
+    },
+    {
+      "wikidataId": "Q10412408",
+      "name": "Frank",
+      "surname": "McGrellis"
+    },
+    {
+      "wikidataId": "Q10403594",
+      "name": "Jimmy",
+      "surname": "McIntosh"
+    },
+    {
+      "wikidataId": "Q10379491",
+      "name": "Jim",
+      "surname": "McIntyre"
+    },
+    {
+      "wikidataId": "Q10478058",
+      "name": "Jimmy",
+      "surname": "McLaren"
+    },
+    {
+      "wikidataId": "Q102262440",
+      "name": "Lachie",
+      "surname": "McMillan"
+    },
+    {
+      "wikidataId": "Q10396837",
+      "name": "David",
+      "surname": "McNiven"
+    },
+    {
+      "wikidataId": "Q104417674",
+      "name": "Johann",
+      "surname": "Medweczuk"
+    },
+    {
+      "wikidataId": "Q10471613",
+      "name": "Nicky",
+      "surname": "Megaloudis"
+    },
+    {
+      "wikidataId": "Q10415808",
+      "name": "Merlyn",
+      "surname": "Membreño"
+    },
+    {
+      "wikidataId": "Q10263798",
+      "name": "Daltro",
+      "surname": "Menezes"
+    },
+    {
+      "wikidataId": "Q102914212",
+      "name": "Štefan",
+      "surname": "Mezőlaky"
+    },
+    {
+      "wikidataId": "Q100233809",
+      "name": "Hicham",
+      "surname": "Miftah"
+    },
+    {
+      "wikidataId": "Q104132756",
+      "name": "Božidar",
+      "surname": "Milenković"
+    },
+    {
+      "wikidataId": "Q10496547",
+      "name": "Milan",
+      "surname": "Milijaš"
+    },
+    {
+      "wikidataId": "Q10514936",
+      "name": "John",
+      "surname": "Millar"
+    },
+    {
+      "wikidataId": "Q10514851",
+      "name": "Kieran",
+      "surname": "Millar"
+    },
+    {
+      "wikidataId": "Q10384678",
+      "name": "Lee",
+      "surname": "Mills"
+    },
+    {
+      "wikidataId": "Q1043074",
+      "name": "Carlos",
+      "surname": "Miloc"
+    },
+    {
+      "wikidataId": "Q104153508",
+      "name": "Miloš",
+      "surname": "Milojević"
+    },
+    {
+      "wikidataId": "Q100605578",
+      "name": "Andreas",
+      "surname": "Milot"
+    },
+    {
+      "wikidataId": "Q10422631",
+      "name": "Pedro",
+      "surname": "Mingote"
+    },
+    {
+      "wikidataId": "Q10510917",
+      "name": "Yosuke",
+      "surname": "Miyaji"
+    },
+    {
+      "wikidataId": "Q10422081",
+      "name": "Eugen",
+      "surname": "Mladin"
+    },
+    {
+      "wikidataId": "Q1003170",
+      "name": "Bujorel",
+      "surname": "Mocanu"
+    },
+    {
+      "wikidataId": "Q104054452",
+      "name": "Magdy",
+      "surname": "Mohamed Ali Abdelaty"
+    },
+    {
+      "wikidataId": "Q10473206",
+      "name": "Morteza",
+      "surname": "Mohasses"
+    },
+    {
+      "wikidataId": "Q10459412",
+      "name": "Ion",
+      "surname": "Moldovan"
+    },
+    {
+      "wikidataId": "Q10350586",
+      "name": "Plácido",
+      "surname": "Monsores"
+    },
+    {
+      "wikidataId": "Q104523474",
+      "name": "Martín",
+      "surname": "Monteagudo"
+    },
+    {
+      "wikidataId": "Q104007611",
+      "name": "Horacio",
+      "surname": "Montemurro"
+    },
+    {
+      "wikidataId": "Q101446549",
+      "name": "Marconne",
+      "surname": "Montenegro"
+    },
+    {
+      "wikidataId": "Q104203499",
+      "name": "Fábio",
+      "surname": "Moreno"
+    },
+    {
+      "wikidataId": "Q10378627",
+      "name": "Mark",
+      "surname": "Morris"
+    },
+    {
+      "wikidataId": "Q101089558",
+      "name": "Laurent",
+      "surname": "Mortel"
+    },
+    {
+      "wikidataId": "Q102926",
+      "name": "Erhard",
+      "surname": "Mosert"
+    },
+    {
+      "wikidataId": "Q10380639",
+      "name": "Adie",
+      "surname": "Moses"
+    },
+    {
+      "wikidataId": "Q10383193",
+      "name": "Toninho",
+      "surname": "Moura"
+    },
+    {
+      "wikidataId": "Q101087534",
+      "name": "Ionuț",
+      "surname": "Moșteanu"
+    },
+    {
+      "wikidataId": "Q105072416",
+      "name": "Jean-Paul",
+      "surname": "Mpila"
+    },
+    {
+      "wikidataId": "Q102162349",
+      "name": "Pavel",
+      "surname": "Mráz"
+    },
+    {
+      "wikidataId": "Q10499159",
+      "name": "Lucky",
+      "surname": "Msiska"
+    },
+    {
+      "wikidataId": "Q10411800",
+      "name": "Jock",
+      "surname": "Mulraney"
+    },
+    {
+      "wikidataId": "Q10465141",
+      "name": "Narat",
+      "surname": "Munin-noppamart"
+    },
+    {
+      "wikidataId": "Q10394954",
+      "name": "Gerry",
+      "surname": "Murphy"
+    },
+    {
+      "wikidataId": "Q10379870",
+      "name": "Malcolm",
+      "surname": "Musgrove"
+    },
+    {
+      "wikidataId": "Q10471818",
+      "name": "Cristián",
+      "surname": "Muñoz Corrales"
+    },
+    {
+      "wikidataId": "Q10390291",
+      "name": "Maciej",
+      "surname": "Mysiak"
+    },
+    {
+      "wikidataId": "Q1032102",
+      "name": "Ángel",
+      "surname": "Médici"
+    },
+    {
+      "wikidataId": "Q104839731",
+      "name": "Martin",
+      "surname": "Müller"
+    },
+    {
+      "wikidataId": "Q1039308",
+      "name": "József",
+      "surname": "Nagy"
+    },
+    {
+      "wikidataId": "Q10512893",
+      "name": "Joseph",
+      "surname": "Nalbandian"
+    },
+    {
+      "wikidataId": "Q10514218",
+      "name": "Goderdzi",
+      "surname": "Natroshvili"
+    },
+    {
+      "wikidataId": "Q104622136",
+      "name": "Viktar",
+      "surname": "Navumaŭ"
+    },
+    {
+      "wikidataId": "Q10510585",
+      "name": "Masoud",
+      "surname": "Nazarzadeh"
+    },
+    {
+      "wikidataId": "Q10497288",
+      "name": "Ivan",
+      "surname": "Nedeljković"
+    },
+    {
+      "wikidataId": "Q10514837",
+      "name": "Ozren",
+      "surname": "Nedoklan"
+    },
+    {
+      "wikidataId": "Q10382123",
+      "name": "Valentin",
+      "surname": "Negru"
+    },
+    {
+      "wikidataId": "Q10323797",
+      "name": "Manoel",
+      "surname": "Neto"
+    },
+    {
+      "wikidataId": "Q10336894",
+      "name": "Nilo",
+      "surname": "Neves"
+    },
+    {
+      "wikidataId": "Q10316789",
+      "name": "Leandro",
+      "surname": "Niehues"
+    },
+    {
+      "wikidataId": "Q104822007",
+      "name": "Jyri",
+      "surname": "Nieminen"
+    },
+    {
+      "wikidataId": "Q10482010",
+      "name": "Yevgeni",
+      "surname": "Nikolayevich Frolov"
+    },
+    {
+      "wikidataId": "Q10478562",
+      "name": "Sergei",
+      "surname": "Nikolayevich Miroshnichenko"
+    },
+    {
+      "wikidataId": "Q10436109",
+      "name": "Nenad",
+      "surname": "Nikolić"
+    },
+    {
+      "wikidataId": "Q10320237",
+      "name": "Lucho",
+      "surname": "Nizzo"
+    },
+    {
+      "wikidataId": "Q10387517",
+      "name": "Mark",
+      "surname": "Noon"
+    },
+    {
+      "wikidataId": "Q10488701",
+      "name": "Jyler",
+      "surname": "Noviello"
+    },
+    {
+      "wikidataId": "Q104903802",
+      "name": "Jana",
+      "surname": "Nováková"
+    },
+    {
+      "wikidataId": "Q10477703",
+      "name": "Viktor",
+      "surname": "Nozdrin"
+    },
+    {
+      "wikidataId": "Q10516106",
+      "name": "Jules",
+      "surname": "Nyongha"
+    },
+    {
+      "wikidataId": "Q101427922",
+      "name": "Olle",
+      "surname": "Nyström"
+    },
+    {
+      "wikidataId": "Q10282384",
+      "name": "Filpo",
+      "surname": "Núñez"
+    },
+    {
+      "wikidataId": "Q100704993",
+      "name": "Turlough",
+      "surname": "O'Brien"
+    },
+    {
+      "wikidataId": "Q100653825",
+      "name": "Jimmy",
+      "surname": "Obleda"
+    },
+    {
+      "wikidataId": "Q10515544",
+      "name": "Frank",
+      "surname": "Odoi"
+    },
+    {
+      "wikidataId": "Q102968",
+      "name": "Jörg",
+      "surname": "Ohm"
+    },
+    {
+      "wikidataId": "Q10363408",
+      "name": "Roberto",
+      "surname": "Oliveira"
+    },
+    {
+      "wikidataId": "Q10368639",
+      "name": "Saul",
+      "surname": "Oliveira"
+    },
+    {
+      "wikidataId": "Q10347662",
+      "name": "Pedro",
+      "surname": "Omar Machado"
+    },
+    {
+      "wikidataId": "Q10509610",
+      "name": "Mirsad",
+      "surname": "Omerhodžić"
+    },
+    {
+      "wikidataId": "Q1022455",
+      "name": "Fernando",
+      "surname": "Orsi"
+    },
+    {
+      "wikidataId": "Q100371019",
+      "name": "Fatai",
+      "surname": "Osho"
+    },
+    {
+      "wikidataId": "Q104847432",
+      "name": "Armando",
+      "surname": "Osma"
+    },
+    {
+      "wikidataId": "Q10508896",
+      "name": "Jake",
+      "surname": "Ouimet"
+    },
+    {
+      "wikidataId": "Q10327591",
+      "name": "Mauro",
+      "surname": "Ovelha"
+    },
+    {
+      "wikidataId": "Q1035032",
+      "name": "Heinrich",
+      "surname": "Paal"
+    },
+    {
+      "wikidataId": "Q10444254",
+      "name": "Juan",
+      "surname": "Pablo Reyes"
+    },
+    {
+      "wikidataId": "Q104524446",
+      "name": "Renato",
+      "surname": "Paiva"
+    },
+    {
+      "wikidataId": "Q1025599",
+      "name": "Juan",
+      "surname": "Pajuelo"
+    },
+    {
+      "wikidataId": "Q1043454",
+      "name": "Carlton",
+      "surname": "Palmer"
+    },
+    {
+      "wikidataId": "Q10515493",
+      "name": "Ian",
+      "surname": "Palmer"
+    },
+    {
+      "wikidataId": "Q10429495",
+      "name": "Nikos",
+      "surname": "Panayiotou"
+    },
+    {
+      "wikidataId": "Q1042372",
+      "name": "don",
+      "surname": "panini"
+    },
+    {
+      "wikidataId": "Q10388737",
+      "name": "Valdir",
+      "surname": "Papel"
+    },
+    {
+      "wikidataId": "Q1039338",
+      "name": "Pedro",
+      "surname": "Parages"
+    },
+    {
+      "wikidataId": "Q10446843",
+      "name": "Sasho",
+      "surname": "Pargov"
+    },
+    {
+      "wikidataId": "Q10345562",
+      "name": "Jorge",
+      "surname": "Parraga"
+    },
+    {
+      "wikidataId": "Q100596773",
+      "name": "John",
+      "surname": "Pascarella"
+    },
+    {
+      "wikidataId": "Q10366874",
+      "name": "Said",
+      "surname": "Paulo Arges"
+    },
+    {
+      "wikidataId": "Q10505031",
+      "name": "Marco",
+      "surname": "Paulo Paiva Rocha"
+    },
+    {
+      "wikidataId": "Q10430544",
+      "name": "Serghei",
+      "surname": "Pașcenco"
+    },
+    {
+      "wikidataId": "Q10382956",
+      "name": "Tommy",
+      "surname": "Pearson"
+    },
+    {
+      "wikidataId": "Q10513373",
+      "name": "Jesper",
+      "surname": "Pedersen"
+    },
+    {
+      "wikidataId": "Q101429482",
+      "name": "Eudes",
+      "surname": "Pedro"
+    },
+    {
+      "wikidataId": "Q10505411",
+      "name": "Manuel",
+      "surname": "Pedro Gomes"
+    },
+    {
+      "wikidataId": "Q104040384",
+      "name": "Pablo",
+      "surname": "Peirano"
+    },
+    {
+      "wikidataId": "Q100872872",
+      "name": "Dale",
+      "surname": "Pelayo Sr."
+    },
+    {
+      "wikidataId": "Q104853253",
+      "name": "Javier",
+      "surname": "Pereira"
+    },
+    {
+      "wikidataId": "Q10320930",
+      "name": "Lula",
+      "surname": "Pereira"
+    },
+    {
+      "wikidataId": "Q10514650",
+      "name": "Ilče",
+      "surname": "Pereski"
+    },
+    {
+      "wikidataId": "Q10482245",
+      "name": "Nebojša",
+      "surname": "Petrović"
+    },
+    {
+      "wikidataId": "Q10309073",
+      "name": "Carlos",
+      "surname": "Pinto"
+    },
+    {
+      "wikidataId": "Q100600929",
+      "name": "Ben",
+      "surname": "Pirmann"
+    },
+    {
+      "wikidataId": "Q104624219",
+      "name": "Josef",
+      "surname": "Piskáček"
+    },
+    {
+      "wikidataId": "Q104482273",
+      "name": "Michel",
+      "surname": "Polrot"
+    },
+    {
+      "wikidataId": "Q10477768",
+      "name": "Vladimir",
+      "surname": "Pomeshchikov"
+    },
+    {
+      "wikidataId": "Q10448114",
+      "name": "Prapol",
+      "surname": "Pongpanich"
+    },
+    {
+      "wikidataId": "Q10441114",
+      "name": "John",
+      "surname": "Poole"
+    },
+    {
+      "wikidataId": "Q101445591",
+      "name": "Evgeni",
+      "surname": "Popov"
+    },
+    {
+      "wikidataId": "Q10346756",
+      "name": "Paulo",
+      "surname": "Porto"
+    },
+    {
+      "wikidataId": "Q102180348",
+      "name": "Vadym",
+      "surname": "Postovoy"
+    },
+    {
+      "wikidataId": "Q10397810",
+      "name": "Mansour",
+      "surname": "Pourheidari"
+    },
+    {
+      "wikidataId": "Q10422922",
+      "name": "Barry",
+      "surname": "Powell"
+    },
+    {
+      "wikidataId": "Q101362178",
+      "name": "Andrzej",
+      "surname": "Prawda"
+    },
+    {
+      "wikidataId": "Q101197719",
+      "name": "Adolf",
+      "surname": "Preschern"
+    },
+    {
+      "wikidataId": "Q104099010",
+      "name": "Leonid",
+      "surname": "Pribylovsky"
+    },
+    {
+      "wikidataId": "Q10459711",
+      "name": "Neil",
+      "surname": "Price"
+    },
+    {
+      "wikidataId": "Q100981296",
+      "name": "Beverly",
+      "surname": "Priestman"
+    },
+    {
+      "wikidataId": "Q10409906",
+      "name": "Bernard",
+      "surname": "Purdie"
+    },
+    {
+      "wikidataId": "Q10454570",
+      "name": "Ed",
+      "surname": "Puskarich"
+    },
+    {
+      "wikidataId": "Q10409100",
+      "name": "I",
+      "surname": "Putu Gede"
+    },
+    {
+      "wikidataId": "Q102123065",
+      "name": "Marcel",
+      "surname": "Pușcaș"
+    },
+    {
+      "wikidataId": "Q10476020",
+      "name": "Ionas",
+      "surname": "Pyatrawskas"
+    },
+    {
+      "wikidataId": "Q104626387",
+      "name": "Lajos",
+      "surname": "Páli"
+    },
+    {
+      "wikidataId": "Q10408030",
+      "name": "Ibón",
+      "surname": "Pérez Arrieta"
+    },
+    {
+      "wikidataId": "Q102419934",
+      "name": "Hernán",
+      "surname": "Pérez Cuesta"
+    },
+    {
+      "wikidataId": "Q104834477",
+      "name": "Carlos",
+      "surname": "Quiroga"
+    },
+    {
+      "wikidataId": "Q10380977",
+      "name": "José",
+      "surname": "Quitongo"
+    },
+    {
+      "wikidataId": "Q10402023",
+      "name": "Joe",
+      "surname": "Raduka"
+    },
+    {
+      "wikidataId": "Q10515429",
+      "name": "Mikuláš",
+      "surname": "Radványi"
+    },
+    {
+      "wikidataId": "Q10376212",
+      "name": "Sérgio",
+      "surname": "Ramirez d'Ávila"
+    },
+    {
+      "wikidataId": "Q10283118",
+      "name": "Flávio",
+      "surname": "Ramos"
+    },
+    {
+      "wikidataId": "Q10474141",
+      "name": "Juan",
+      "surname": "Ramón Sánchez"
+    },
+    {
+      "wikidataId": "Q104622114",
+      "name": "Vitali",
+      "surname": "Rashkevich"
+    },
+    {
+      "wikidataId": "Q10422511",
+      "name": "Harry",
+      "surname": "Ratican"
+    },
+    {
+      "wikidataId": "Q10357357",
+      "name": "Ramón",
+      "surname": "Raya"
+    },
+    {
+      "wikidataId": "Q10293535",
+      "name": "Haim",
+      "surname": "Reich"
+    },
+    {
+      "wikidataId": "Q10396747",
+      "name": "Paul",
+      "surname": "Reid"
+    },
+    {
+      "wikidataId": "Q10379927",
+      "name": "John",
+      "surname": "Relish"
+    },
+    {
+      "wikidataId": "Q101962",
+      "name": "Armin",
+      "surname": "Reutershahn"
+    },
+    {
+      "wikidataId": "Q10387539",
+      "name": "Eugenijus",
+      "surname": "Riabovas"
+    },
+    {
+      "wikidataId": "Q100324188",
+      "name": "Helmut",
+      "surname": "Richert"
+    },
+    {
+      "wikidataId": "Q10314428",
+      "name": "Kire",
+      "surname": "Ristevski"
+    },
+    {
+      "wikidataId": "Q10312139",
+      "name": "João",
+      "surname": "Roberto Basílio"
+    },
+    {
+      "wikidataId": "Q10325489",
+      "name": "Marcos",
+      "surname": "Roberto Pereira Basílio"
+    },
+    {
+      "wikidataId": "Q10346785",
+      "name": "Paulo",
+      "surname": "Roberto Santos"
+    },
+    {
+      "wikidataId": "Q10369142",
+      "name": "Sebastião",
+      "surname": "Rocha"
+    },
+    {
+      "wikidataId": "Q10342366",
+      "name": "Osvaldo",
+      "surname": "Rodolpho da Silva"
+    },
+    {
+      "wikidataId": "Q1034160",
+      "name": "Matías",
+      "surname": "Rodrigo Pérez"
+    },
+    {
+      "wikidataId": "Q10393241",
+      "name": "Washington",
+      "surname": "Rodrigues"
+    },
+    {
+      "wikidataId": "Q10513505",
+      "name": "Maciej",
+      "surname": "Rogalski"
+    },
+    {
+      "wikidataId": "Q10307395",
+      "name": "Joaquim",
+      "surname": "Rolão Preto"
+    },
+    {
+      "wikidataId": "Q10485355",
+      "name": "Vadim",
+      "surname": "Romanov"
+    },
+    {
+      "wikidataId": "Q104180238",
+      "name": "Carlos",
+      "surname": "Romero"
+    },
+    {
+      "wikidataId": "Q10486932",
+      "name": "Nikolai",
+      "surname": "Ronzhin"
+    },
+    {
+      "wikidataId": "Q102386835",
+      "name": "Léonard",
+      "surname": "Roufosse"
+    },
+    {
+      "wikidataId": "Q10396896",
+      "name": "Brian",
+      "surname": "Rowland"
+    },
+    {
+      "wikidataId": "Q10490242",
+      "name": "Borja",
+      "surname": "Rubiato"
+    },
+    {
+      "wikidataId": "Q1045662",
+      "name": "Carsten",
+      "surname": "Rump"
+    },
+    {
+      "wikidataId": "Q10381179",
+      "name": "Tim",
+      "surname": "Ryan"
+    },
+    {
+      "wikidataId": "Q102524936",
+      "name": "Yahia",
+      "surname": "Saadi"
+    },
+    {
+      "wikidataId": "Q10478526",
+      "name": "Nikolai",
+      "surname": "Safronidi"
+    },
+    {
+      "wikidataId": "Q10502695",
+      "name": "Lou",
+      "surname": "Sagastume"
+    },
+    {
+      "wikidataId": "Q10491198",
+      "name": "Muharrem",
+      "surname": "Sahiti"
+    },
+    {
+      "wikidataId": "Q10433124",
+      "name": "Zeddy",
+      "surname": "Saileti"
+    },
+    {
+      "wikidataId": "Q10516473",
+      "name": "Satoru",
+      "surname": "Sakuma"
+    },
+    {
+      "wikidataId": "Q10518166",
+      "name": "Mauricio",
+      "surname": "Salazar"
+    },
+    {
+      "wikidataId": "Q10398023",
+      "name": "Jorge",
+      "surname": "Salcedo"
+    },
+    {
+      "wikidataId": "Q10505512",
+      "name": "Oleg",
+      "surname": "Salnikov"
+    },
+    {
+      "wikidataId": "Q104650228",
+      "name": "Alfredo",
+      "surname": "Sampaio Filho"
+    },
+    {
+      "wikidataId": "Q10342412",
+      "name": "Oswaldo",
+      "surname": "Sampaio Júnior"
+    },
+    {
+      "wikidataId": "Q103817684",
+      "name": "San",
+      "surname": "San Thein"
+    },
+    {
+      "wikidataId": "Q1029065",
+      "name": "Camilla",
+      "surname": "Sand Andersen"
+    },
+    {
+      "wikidataId": "Q10500811",
+      "name": "João",
+      "surname": "Santos"
+    },
+    {
+      "wikidataId": "Q10447248",
+      "name": "Stavros",
+      "surname": "Sarafis"
+    },
+    {
+      "wikidataId": "Q10281520",
+      "name": "Fernando",
+      "surname": "Sarney"
+    },
+    {
+      "wikidataId": "Q10285148",
+      "name": "Francisco",
+      "surname": "Sarno"
+    },
+    {
+      "wikidataId": "Q100325125",
+      "name": "Zinnur",
+      "surname": "Sarı"
+    },
+    {
+      "wikidataId": "Q102266554",
+      "name": "Patrice",
+      "surname": "Sauvaget"
+    },
+    {
+      "wikidataId": "Q10396963",
+      "name": "Patricio",
+      "surname": "Sayegh"
+    },
+    {
+      "wikidataId": "Q101242850",
+      "name": "Giovanni",
+      "surname": "Scanu"
+    },
+    {
+      "wikidataId": "Q10365459",
+      "name": "Ruy",
+      "surname": "Scarpino"
+    },
+    {
+      "wikidataId": "Q1016494",
+      "name": "Burkhard",
+      "surname": "Schacht"
+    },
+    {
+      "wikidataId": "Q10423785",
+      "name": "Willy",
+      "surname": "Schaller"
+    },
+    {
+      "wikidataId": "Q105158581",
+      "name": "Uwe",
+      "surname": "Schubert"
+    },
+    {
+      "wikidataId": "Q104839975",
+      "name": "Matthias",
+      "surname": "Schulz"
+    },
+    {
+      "wikidataId": "Q100251369",
+      "name": "Bernd",
+      "surname": "Schumm"
+    },
+    {
+      "wikidataId": "Q10304192",
+      "name": "Itamar",
+      "surname": "Schülle"
+    },
+    {
+      "wikidataId": "Q10380495",
+      "name": "Attila",
+      "surname": "Sekerlioglu"
+    },
+    {
+      "wikidataId": "Q104177974",
+      "name": "Conor",
+      "surname": "Sellars"
+    },
+    {
+      "wikidataId": "Q10380022",
+      "name": "Adrian",
+      "surname": "Senin"
+    },
+    {
+      "wikidataId": "Q10489278",
+      "name": "Mikhail",
+      "surname": "Senyurin"
+    },
+    {
+      "wikidataId": "Q101828542",
+      "name": "Micael",
+      "surname": "Sequeira"
+    },
+    {
+      "wikidataId": "Q10396728",
+      "name": "John",
+      "surname": "Sewell"
+    },
+    {
+      "wikidataId": "Q10478156",
+      "name": "Rustem",
+      "surname": "Shaymukhametov"
+    },
+    {
+      "wikidataId": "Q10514282",
+      "name": "Jock",
+      "surname": "Shearer"
+    },
+    {
+      "wikidataId": "Q10514102",
+      "name": "Lai",
+      "surname": "Shiu Wing"
+    },
+    {
+      "wikidataId": "Q10472489",
+      "name": "James",
+      "surname": "Siang'a"
+    },
+    {
+      "wikidataId": "Q100706",
+      "name": "Hans",
+      "surname": "Siemensmeyer"
+    },
+    {
+      "wikidataId": "Q1035688",
+      "name": "Hernán",
+      "surname": "Silva"
+    },
+    {
+      "wikidataId": "Q10504661",
+      "name": "Romeu",
+      "surname": "Silva"
+    },
+    {
+      "wikidataId": "Q10396779",
+      "name": "Jimmy",
+      "surname": "Simpson"
+    },
+    {
+      "wikidataId": "Q10379553",
+      "name": "Paul",
+      "surname": "Simpson"
+    },
+    {
+      "wikidataId": "Q10329860",
+      "name": "Miguel",
+      "surname": "Siska"
+    },
+    {
+      "wikidataId": "Q10465599",
+      "name": "Paul",
+      "surname": "Sixsmith"
+    },
+    {
+      "wikidataId": "Q102122557",
+      "name": "Rehanne",
+      "surname": "Skinner"
+    },
+    {
+      "wikidataId": "Q102349629",
+      "name": "Dmitri",
+      "surname": "Skryabin"
+    },
+    {
+      "wikidataId": "Q10506914",
+      "name": "Kevin",
+      "surname": "Sloan"
+    },
+    {
+      "wikidataId": "Q1029223",
+      "name": "Arne",
+      "surname": "Slot"
+    },
+    {
+      "wikidataId": "Q1043240",
+      "name": "Charlie",
+      "surname": "Slusher"
+    },
+    {
+      "wikidataId": "Q10415606",
+      "name": "Branko",
+      "surname": "Smiljanić"
+    },
+    {
+      "wikidataId": "Q104869500",
+      "name": "Jack",
+      "surname": "Smith"
+    },
+    {
+      "wikidataId": "Q1051631",
+      "name": "Joe",
+      "surname": "Smith"
+    },
+    {
+      "wikidataId": "Q10337411",
+      "name": "Norman",
+      "surname": "Smith"
+    },
+    {
+      "wikidataId": "Q10293299",
+      "name": "Gérson",
+      "surname": "Sodré"
+    },
+    {
+      "wikidataId": "Q104199406",
+      "name": "Aleksandr",
+      "surname": "Sokovnin"
+    },
+    {
+      "wikidataId": "Q10301339",
+      "name": "Ilias",
+      "surname": "Solakis"
+    },
+    {
+      "wikidataId": "Q104625377",
+      "name": "Vladimir",
+      "surname": "Soldatchenko"
+    },
+    {
+      "wikidataId": "Q10467174",
+      "name": "Yuri",
+      "surname": "Solntsev"
+    },
+    {
+      "wikidataId": "Q101424710",
+      "name": "Maurício",
+      "surname": "Souza"
+    },
+    {
+      "wikidataId": "Q10445873",
+      "name": "Henri",
+      "surname": "Speville"
+    },
+    {
+      "wikidataId": "Q102513779",
+      "name": "Erwin",
+      "surname": "Spiegel"
+    },
+    {
+      "wikidataId": "Q10401417",
+      "name": "Dean",
+      "surname": "Spink"
+    },
+    {
+      "wikidataId": "Q10384789",
+      "name": "Milutin",
+      "surname": "Sredojević"
+    },
+    {
+      "wikidataId": "Q10384328",
+      "name": "Robert",
+      "surname": "Ssejjemba"
+    },
+    {
+      "wikidataId": "Q10445043",
+      "name": "Dejan",
+      "surname": "Stamenković"
+    },
+    {
+      "wikidataId": "Q10439937",
+      "name": "Nenad",
+      "surname": "Starovlah"
+    },
+    {
+      "wikidataId": "Q10410275",
+      "name": "Johnny",
+      "surname": "Steele"
+    },
+    {
+      "wikidataId": "Q10454702",
+      "name": "Rudolf",
+      "surname": "Steinbauer"
+    },
+    {
+      "wikidataId": "Q10379753",
+      "name": "Milan",
+      "surname": "Stojanoski"
+    },
+    {
+      "wikidataId": "Q10516389",
+      "name": "Igor",
+      "surname": "Stojanov"
+    },
+    {
+      "wikidataId": "Q10400492",
+      "name": "Paul",
+      "surname": "Stoneman"
+    },
+    {
+      "wikidataId": "Q101081454",
+      "name": "Alfred",
+      "surname": "Strasser"
+    },
+    {
+      "wikidataId": "Q101247364",
+      "name": "Alexander",
+      "surname": "Straus"
+    },
+    {
+      "wikidataId": "Q10438067",
+      "name": "David",
+      "surname": "Stride"
+    },
+    {
+      "wikidataId": "Q100276951",
+      "name": "Bernd",
+      "surname": "Sturm"
+    },
+    {
+      "wikidataId": "Q105037174",
+      "name": "Horst",
+      "surname": "Stürze"
+    },
+    {
+      "wikidataId": "Q10514222",
+      "name": "Vladyslav",
+      "surname": "Sukhomlynov"
+    },
+    {
+      "wikidataId": "Q10420513",
+      "name": "Varuzhan",
+      "surname": "Sukiasyan"
+    },
+    {
+      "wikidataId": "Q10421732",
+      "name": "Woo",
+      "surname": "Sung-yong"
+    },
+    {
+      "wikidataId": "Q104558499",
+      "name": "Kimberly",
+      "surname": "Surio"
+    },
+    {
+      "wikidataId": "Q104200113",
+      "name": "Valery",
+      "surname": "Svintsov"
+    },
+    {
+      "wikidataId": "Q104804014",
+      "name": "Anatoly",
+      "surname": "Syrovatsky"
+    },
+    {
+      "wikidataId": "Q102281936",
+      "name": "Piotr",
+      "surname": "Szczechowicz"
+    },
+    {
+      "wikidataId": "Q1020916",
+      "name": "Bünyamin",
+      "surname": "Süral"
+    },
+    {
+      "wikidataId": "Q1042552",
+      "name": "Lajos",
+      "surname": "Sătmăreanu"
+    },
+    {
+      "wikidataId": "Q10392709",
+      "name": "Vílson",
+      "surname": "Taddei"
+    },
+    {
+      "wikidataId": "Q10516495",
+      "name": "Tsutomu",
+      "surname": "Takahata"
+    },
+    {
+      "wikidataId": "Q10415681",
+      "name": "Bert",
+      "surname": "Tann"
+    },
+    {
+      "wikidataId": "Q1019937",
+      "name": "Börje",
+      "surname": "Tapper"
+    },
+    {
+      "wikidataId": "Q104622116",
+      "name": "Vitaly",
+      "surname": "Tarankov"
+    },
+    {
+      "wikidataId": "Q10476067",
+      "name": "Valery",
+      "surname": "Tarasenka"
+    },
+    {
+      "wikidataId": "Q10308663",
+      "name": "Josué",
+      "surname": "Teixeira"
+    },
+    {
+      "wikidataId": "Q10310560",
+      "name": "José",
+      "surname": "Teixeira"
+    },
+    {
+      "wikidataId": "Q104541034",
+      "name": "Jorge",
+      "surname": "Teixeira Ramos"
+    },
+    {
+      "wikidataId": "Q1030341",
+      "name": "Roberto",
+      "surname": "Telch"
+    },
+    {
+      "wikidataId": "Q101112683",
+      "name": "Flavio",
+      "surname": "Tenius"
+    },
+    {
+      "wikidataId": "Q10395466",
+      "name": "Zé",
+      "surname": "Teodoro"
+    },
+    {
+      "wikidataId": "Q100349739",
+      "name": "Maria",
+      "surname": "Teresa Andreu Grau"
+    },
+    {
+      "wikidataId": "Q104840217",
+      "name": "Marco",
+      "surname": "Testa"
+    },
+    {
+      "wikidataId": "Q10494567",
+      "name": "Marios",
+      "surname": "Themistokleous"
+    },
+    {
+      "wikidataId": "Q10379945",
+      "name": "Nick",
+      "surname": "Theodorakopoulos"
+    },
+    {
+      "wikidataId": "Q10391964",
+      "name": "Billy",
+      "surname": "Thomas"
+    },
+    {
+      "wikidataId": "Q10384960",
+      "name": "Neil",
+      "surname": "Thompson"
+    },
+    {
+      "wikidataId": "Q10516676",
+      "name": "Nick",
+      "surname": "Thompson"
+    },
+    {
+      "wikidataId": "Q103815013",
+      "name": "Sven",
+      "surname": "Thoß"
+    },
+    {
+      "wikidataId": "Q10470459",
+      "name": "Hugh",
+      "surname": "Tinney"
+    },
+    {
+      "wikidataId": "Q10448732",
+      "name": "Jarosław",
+      "surname": "Tkocz"
+    },
+    {
+      "wikidataId": "Q10514160",
+      "name": "John",
+      "surname": "Tlale"
+    },
+    {
+      "wikidataId": "Q1033728",
+      "name": "Ole",
+      "surname": "Tobiasen"
+    },
+    {
+      "wikidataId": "Q10476191",
+      "name": "Metodi",
+      "surname": "Tomanov"
+    },
+    {
+      "wikidataId": "Q105076362",
+      "name": "Ioan",
+      "surname": "Tomeș"
+    },
+    {
+      "wikidataId": "Q10514678",
+      "name": "Vladan",
+      "surname": "Tomić"
+    },
+    {
+      "wikidataId": "Q10418857",
+      "name": "Štefan",
+      "surname": "Tománek"
+    },
+    {
+      "wikidataId": "Q10433617",
+      "name": "Mutlu",
+      "surname": "Topçu"
+    },
+    {
+      "wikidataId": "Q10474795",
+      "name": "Sedin",
+      "surname": "Torlak"
+    },
+    {
+      "wikidataId": "Q1047564",
+      "name": "Casimiro",
+      "surname": "Torres"
+    },
+    {
+      "wikidataId": "Q101096110",
+      "name": "Ünal",
+      "surname": "Tosun"
+    },
+    {
+      "wikidataId": "Q10458655",
+      "name": "John",
+      "surname": "Townrow"
+    },
+    {
+      "wikidataId": "Q101602507",
+      "name": "Sérgio",
+      "surname": "Traguil"
+    },
+    {
+      "wikidataId": "Q10501113",
+      "name": "James",
+      "surname": "Trainer"
+    },
+    {
+      "wikidataId": "Q104622115",
+      "name": "Dzmitry",
+      "surname": "Trasko"
+    },
+    {
+      "wikidataId": "Q100324191",
+      "name": "Hans",
+      "surname": "Trittinger"
+    },
+    {
+      "wikidataId": "Q10325034",
+      "name": "Marcello",
+      "surname": "Troisi"
+    },
+    {
+      "wikidataId": "Q104177986",
+      "name": "Mark",
+      "surname": "Trueman"
+    },
+    {
+      "wikidataId": "Q10379438",
+      "name": "Lee",
+      "surname": "Tschantret"
+    },
+    {
+      "wikidataId": "Q10433309",
+      "name": "Branko",
+      "surname": "Tucak"
+    },
+    {
+      "wikidataId": "Q1014265",
+      "name": "Ljubiša",
+      "surname": "Tumbaković"
+    },
+    {
+      "wikidataId": "Q10475813",
+      "name": "Jorge",
+      "surname": "Tupinambá dos Santos"
+    },
+    {
+      "wikidataId": "Q10382185",
+      "name": "Ian",
+      "surname": "Turner"
+    },
+    {
+      "wikidataId": "Q10346857",
+      "name": "Paulo",
+      "surname": "Turra"
+    },
+    {
+      "wikidataId": "Q10436997",
+      "name": "Nedim",
+      "surname": "Tutić"
+    },
+    {
+      "wikidataId": "Q100592160",
+      "name": "Piotr",
+      "surname": "Tworek"
+    },
+    {
+      "wikidataId": "Q104432721",
+      "name": "Gennady",
+      "surname": "Tyumin"
+    },
+    {
+      "wikidataId": "Q10472603",
+      "name": "Nikolai",
+      "surname": "Tyunin"
+    },
+    {
+      "wikidataId": "Q10514166",
+      "name": "Ike",
+      "surname": "Udeh"
+    },
+    {
+      "wikidataId": "Q10396895",
+      "name": "Kaj",
+      "surname": "Uldaler"
+    },
+    {
+      "wikidataId": "Q10422577",
+      "name": "Murat",
+      "surname": "Ural"
+    },
+    {
+      "wikidataId": "Q1020698",
+      "name": "Bülent",
+      "surname": "Uygun"
+    },
+    {
+      "wikidataId": "Q10505743",
+      "name": "Sergei",
+      "surname": "Vakhteyev"
+    },
+    {
+      "wikidataId": "Q101670698",
+      "name": "Viktor",
+      "surname": "Vasilyev"
+    },
+    {
+      "wikidataId": "Q10489148",
+      "name": "Sergei",
+      "surname": "Vasyutin"
+    },
+    {
+      "wikidataId": "Q10393829",
+      "name": "Wilson",
+      "surname": "Vaterkemper"
+    },
+    {
+      "wikidataId": "Q10325178",
+      "name": "Marcelo",
+      "surname": "Veiga"
+    },
+    {
+      "wikidataId": "Q10387116",
+      "name": "Ubirajara",
+      "surname": "Veiga da Silva"
+    },
+    {
+      "wikidataId": "Q101435497",
+      "name": "Marijan",
+      "surname": "Velik"
+    },
+    {
+      "wikidataId": "Q105071491",
+      "name": "Patrick",
+      "surname": "Videira"
+    },
+    {
+      "wikidataId": "Q104900249",
+      "name": "Boris",
+      "surname": "Viktorov"
+    },
+    {
+      "wikidataId": "Q10325179",
+      "name": "Marcelo",
+      "surname": "Vilar"
+    },
+    {
+      "wikidataId": "Q10514910",
+      "name": "Nikolas",
+      "surname": "Vitorović"
+    },
+    {
+      "wikidataId": "Q10308270",
+      "name": "Jorge",
+      "surname": "Vitório Cusielo"
+    },
+    {
+      "wikidataId": "Q10513811",
+      "name": "Despot",
+      "surname": "Višković"
+    },
+    {
+      "wikidataId": "Q10469039",
+      "name": "Sergei",
+      "surname": "Vladimirovich Osipov"
+    },
+    {
+      "wikidataId": "Q102045525",
+      "name": "Florea",
+      "surname": "Voicilă"
+    },
+    {
+      "wikidataId": "Q104574757",
+      "name": "Josef",
+      "surname": "Vokáček"
+    },
+    {
+      "wikidataId": "Q10413778",
+      "name": "Miroslav",
+      "surname": "Vukašinović"
+    },
+    {
+      "wikidataId": "Q101580033",
+      "name": "Carlos",
+      "surname": "Véliz"
+    },
+    {
+      "wikidataId": "Q104840316",
+      "name": "Norbert",
+      "surname": "Wagner"
+    },
+    {
+      "wikidataId": "Q101438883",
+      "name": "Jimmy",
+      "surname": "Wallbanks"
+    },
+    {
+      "wikidataId": "Q10381861",
+      "name": "Billy",
+      "surname": "Walsh"
+    },
+    {
+      "wikidataId": "Q10274191",
+      "name": "Erwin",
+      "surname": "Walter Aal Neto"
+    },
+    {
+      "wikidataId": "Q10477648",
+      "name": "Jhoao",
+      "surname": "Ward"
+    },
+    {
+      "wikidataId": "Q10513326",
+      "name": "Pat",
+      "surname": "Ward"
+    },
+    {
+      "wikidataId": "Q10471438",
+      "name": "Nora",
+      "surname": "Watkins"
+    },
+    {
+      "wikidataId": "Q104815258",
+      "name": "Harry",
+      "surname": "Watling"
+    },
+    {
+      "wikidataId": "Q10513843",
+      "name": "Johnny",
+      "surname": "Watson"
+    },
+    {
+      "wikidataId": "Q102327951",
+      "name": "Marcus",
+      "surname": "Weiss"
+    },
+    {
+      "wikidataId": "Q100297560",
+      "name": "Herbert",
+      "surname": "Wenz"
+    },
+    {
+      "wikidataId": "Q10468949",
+      "name": "Paul",
+      "surname": "West"
+    },
+    {
+      "wikidataId": "Q101936447",
+      "name": "Benji",
+      "surname": "Whelan"
+    },
+    {
+      "wikidataId": "Q10514057",
+      "name": "Derek",
+      "surname": "Whiteford"
+    },
+    {
+      "wikidataId": "Q10416121",
+      "name": "Horace",
+      "surname": "Williams"
+    },
+    {
+      "wikidataId": "Q100299245",
+      "name": "Dieter",
+      "surname": "Winter"
+    },
+    {
+      "wikidataId": "Q104092995",
+      "name": "Piotr",
+      "surname": "Wiśnik"
+    },
+    {
+      "wikidataId": "Q10431301",
+      "name": "Simon",
+      "surname": "Wormull"
+    },
+    {
+      "wikidataId": "Q101091335",
+      "name": "Daniel",
+      "surname": "Wriessnig"
+    },
+    {
+      "wikidataId": "Q104215778",
+      "name": "Billy",
+      "surname": "Wright"
+    },
+    {
+      "wikidataId": "Q101436541",
+      "name": "Christian",
+      "surname": "Wölbl"
+    },
+    {
+      "wikidataId": "Q104900980",
+      "name": "Leon",
+      "surname": "Yagubyants"
+    },
+    {
+      "wikidataId": "Q104839569",
+      "name": "Kim",
+      "surname": "Yong-su"
+    },
+    {
+      "wikidataId": "Q10452295",
+      "name": "Gregor",
+      "surname": "Young"
+    },
+    {
+      "wikidataId": "Q100375529",
+      "name": "Abdugaffor",
+      "surname": "Yuldashev"
+    },
+    {
+      "wikidataId": "Q10478474",
+      "name": "Maksim",
+      "surname": "Yuryevich Vasilyev"
+    },
+    {
+      "wikidataId": "Q10478783",
+      "name": "Pedro",
+      "surname": "Zabála"
+    },
+    {
+      "wikidataId": "Q10444137",
+      "name": "Juan",
+      "surname": "Zacarías Ramírez"
+    },
+    {
+      "wikidataId": "Q10474301",
+      "name": "Volodymyr",
+      "surname": "Zayarnyi"
+    },
+    {
+      "wikidataId": "Q10489250",
+      "name": "Igor",
+      "surname": "Zazroyev"
+    },
+    {
+      "wikidataId": "Q10507331",
+      "name": "Noureddine",
+      "surname": "Zekri"
+    },
+    {
+      "wikidataId": "Q10472324",
+      "name": "Sergey",
+      "surname": "Zhukov"
+    },
+    {
+      "wikidataId": "Q104538323",
+      "name": "Volodymyr",
+      "surname": "Zhylin"
+    },
+    {
+      "wikidataId": "Q10478150",
+      "name": "Sergei",
+      "surname": "Zimenkov"
+    },
+    {
+      "wikidataId": "Q10396805",
+      "name": "Zoran",
+      "surname": "Zlatkovski"
+    },
+    {
+      "wikidataId": "Q102392101",
+      "name": "Vojtech",
+      "surname": "Závodský"
+    },
+    {
+      "wikidataId": "Q10514517",
+      "name": "Leonidha",
+      "surname": "Çuri"
+    },
+    {
+      "wikidataId": "Q100326683",
+      "name": "Behzat",
+      "surname": "Çınar"
+    },
+    {
+      "wikidataId": "Q102696187",
+      "name": "Güngör",
+      "surname": "Öztürk"
+    },
+    {
+      "wikidataId": "Q103867396",
+      "name": "Jón",
+      "surname": "Þór Hauksson"
+    },
+    {
+      "wikidataId": "Q10514566",
+      "name": "Josef",
+      "surname": "Čapek"
+    },
+    {
+      "wikidataId": "Q10494372",
+      "name": "Božidar",
+      "surname": "Đurković"
+    },
+    {
+      "wikidataId": "Q104622164",
+      "name": "Siarhiej",
+      "surname": "Šalaj"
+    },
+    {
+      "wikidataId": "Q10396107",
+      "name": "Ismet",
+      "surname": "Štilić"
+    },
+    {
+      "wikidataId": "Q10460270",
+      "name": "Ivo",
+      "surname": "Šušak"
+    },
+    {
+      "wikidataId": "Q10452174",
+      "name": "Valér",
+      "surname": "Švec"
+    },
+    {
+      "wikidataId": "Q10449907",
+      "name": "Miroslav",
+      "surname": "Ǵokić"
+    }
+  ],
+  "recordCount": 974
+}

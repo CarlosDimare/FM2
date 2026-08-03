@@ -1,5 +1,5 @@
 
-import { Player, Club, MatchEvent, PlayerMatchStats, Zone, Position, TacticSettings, TransitionPhase, MatchState, BallState } from '../types';
+import { Player, Club, MatchEvent, PlayerMatchStats, Zone, Position, TacticSettings, NationalTeamMatchOptions, TransitionPhase, MatchState, BallState } from '../types';
 import { randomInt } from './utils';
 import { world } from './worldManager';
 import { sendInjuryNotification } from './notifications';
@@ -1068,105 +1068,528 @@ export class MatchSimulator {
       }
 
       s.rating = Math.max(1, Math.min(10, score));
-  }
+  }    // ─── QUICK MATCH HELPERS ────────────────────────────────────────────
 
-   static simulateQuickMatch(homeId: string, awayId: string, squadType: string, homeTactic?: TacticSettings, awayTactic?: TacticSettings): { homeScore: number, awayScore: number, stats: Record<string, PlayerMatchStats> } {
-       const hS = world.getPlayersByClub(homeId).filter(p => p.squad === squadType);
-       const aS = world.getPlayersByClub(awayId).filter(p => p.squad === squadType);
-       const hRep = world.getClub(homeId)?.reputation || 5000;
-       const aRep = world.getClub(awayId)?.reputation || 5000;
+    /** Effective attribute for quick sim — uses player state directly (no MatchState needed) */
+    private static getQuickAttr(p: Player, attr: string): number {
+      const mapped = MatchSimulator.attrMap[attr] || attr;
+      const base = (p.stats.internal as any)[mapped] ?? 10;
+      const moraleMult = 0.95 + (p.morale / 1000);
+      const avgForm = p.formRatings.length > 0
+        ? p.formRatings.slice(-3).reduce((a: number, b: number) => a + b, 0) / Math.min(3, p.formRatings.length)
+        : 6.0;
+      const formMult = 0.92 + (avgForm / 30);
+      const familiarityMult = 0.85 + (p.tacticalFamiliarity / 100) * 0.3;
+      const consistencyMult = 0.95 + (p.consistency / 20) * 0.1;
+      return Math.max(1, Math.round(base * moraleMult * formMult * familiarityMult * consistencyMult));
+    }
 
-       // Factor in average ability
-       const hAvgAbility = hS.length > 0 ? hS.reduce((sum, p) => sum + p.currentAbility, 0) / hS.length : 100;
-       const aAvgAbility = aS.length > 0 ? aS.reduce((sum, p) => sum + p.currentAbility, 0) / aS.length : 100;
+    /** Pick best XI: ensures positional coverage (1 GK, 3+ DEF, 2+ MID, 1+ ATT) */
+    private static selectBestXI(players: Player[]): Player[] {
+      if (players.length <= 11) return [...players];
+      const sorted = [...players].sort((a, b) => b.currentAbility - a.currentAbility);
+      const gk = sorted.find(p => p.positions.includes(Position.GK));
+      const defs = sorted.filter(p => p.positions.some(pos => [Position.DC, Position.DR, Position.DL, Position.DM, Position.DMR, Position.DML, Position.SW].includes(pos)) && !p.positions.includes(Position.GK));
+      const mids = sorted.filter(p => p.positions.some(pos => [Position.MC, Position.MR, Position.ML, Position.AM, Position.AMR, Position.AML].includes(pos)) && !p.positions.includes(Position.GK));
+      const atts = sorted.filter(p => p.positions.some(pos => [Position.ST, Position.STR, Position.STL].includes(pos)) && !p.positions.includes(Position.GK));
+      const rest = sorted.filter(p => !gk || p.id !== gk.id).filter(p => !defs.some(d => d.id === p.id) && !mids.some(m => m.id === p.id) && !atts.some(a => a.id === p.id));
 
-       // Factor in form (last 3 ratings)
-       const hForm = hS.reduce((sum, p) => {
-         const avg = p.formRatings.length > 0 ? p.formRatings.slice(-3).reduce((a,b) => a+b, 0) / Math.min(3, p.formRatings.length) : 6.0;
-         return sum + avg;
-       }, 0) / (hS.length || 1);
-       const aForm = aS.reduce((sum, p) => {
-         const avg = p.formRatings.length > 0 ? p.formRatings.slice(-3).reduce((a,b) => a+b, 0) / Math.min(3, p.formRatings.length) : 6.0;
-         return sum + avg;
-       }, 0) / (aS.length || 1);
+      const selected: Player[] = [];
+      const used = new Set<string>();
+      const add = (arr: Player[], count: number) => {
+        for (const p of arr) {
+          if (used.has(p.id)) continue;
+          if (count <= 0) break;
+          selected.push(p);
+          used.add(p.id);
+          count--;
+        }
+      };
 
-       // Factor in tactical settings
-       const hMentality = homeTactic?.mentality ?? 10;
-       const aMentality = awayTactic?.mentality ?? 10;
-       const hTempo = homeTactic?.tempo ?? 10;
-       const aTempo = awayTactic?.tempo ?? 10;
+      if (gk) { selected.push(gk); used.add(gk.id); }
+      add(defs, 3);
+      add(mids, 2);
+      add(atts, 1);
+      // Fill remaining slots with best available (up to 11 total)
+      add(rest, 11 - selected.length);
+      add(defs, 11 - selected.length);
+      add(mids, 11 - selected.length);
+      add(atts, 11 - selected.length);
 
-       let hScore = 0, aScore = 0;
-       const repBias = (hRep - aRep) / 2500;
-       const abilityBias = (hAvgAbility - aAvgAbility) / 50;
-       const formBias = (hForm - aForm) / 20;
-       const tacticBias = ((hMentality - aMentality) * 0.02) + ((hTempo - aTempo) * 0.01);
+      return selected.slice(0, 11);
+    }
 
-       // Home advantage
-       const homeBonus = 0.03;
+    /** Weighted average of an attribute across a squad */
+    private static squadAvg(players: Player[], attr: string): number {
+      if (players.length === 0) return 10;
+      return players.reduce((s, p) => s + this.getQuickAttr(p, attr), 0) / players.length;
+    }
 
-       for(let i = 0; i < 3; i++) {
-         if (Math.random() + (repBias * 0.05) + (abilityBias * 0.04) + (formBias * 0.03) + tacticBias + homeBonus > 0.93) hScore++;
-         if (Math.random() - (repBias * 0.05) - (abilityBias * 0.04) - (formBias * 0.03) - tacticBias - homeBonus > 0.94) aScore++;
-       }
+    /** Distribute a total count among players weighted by a specific attribute */
+    private static distributeStats(
+      players: Player[], total: number, attr: string, minPerPlayer: number = 0
+    ): Record<string, number> {
+      const result: Record<string, number> = {};
+      if (players.length === 0) return result;
+      const weights = players.map(p => Math.max(1, this.getQuickAttr(p, attr)));
+      const totalWeight = weights.reduce((s, w) => s + w, 0);
+      let remaining = total;
+      const allocs = players.map((p, i) => {
+        const raw = Math.max(minPerPlayer, Math.round((weights[i] / totalWeight) * total));
+        return { id: p.id, raw };
+      });
+      // Adjust to match total
+      let sum = allocs.reduce((s, a) => s + a.raw, 0);
+      let safety = 0;
+      while (sum > total && allocs.length > 0 && safety < 1000) {
+        safety++;
+        const idx = allocs.findIndex(a => a.raw > minPerPlayer);
+        if (idx >= 0) { allocs[idx].raw--; sum--; }
+        else break;
+      }
+      safety = 0;
+      while (sum < total && allocs.length > 0 && safety < 1000) {
+        safety++;
+        const idx = randomInt(0, allocs.length - 1);
+        allocs[idx].raw++; sum++;
+      }
+      allocs.forEach(a => { result[a.id] = a.raw; });
+      return result;
+    }
 
-       // Generate meaningful stats
-       const stats = this.initMatchStats([...hS, ...aS]);
-       const hPoss = Math.round(50 + (repBias + abilityBias + formBias) * 500);
-       const homeSog = Math.round(3 + hScore * 2 + Math.random() * 3);
-       const awaySog = Math.round(3 + aScore * 2 + Math.random() * 3);
+    // ─── FULL ATTRIBUTE-DRIVEN QUICK MATCH ─────────────────────────────
 
-       hS.forEach(p => {
-         const ps = stats[p.id];
-         if (ps) {
-           ps.minutesPlayed = 90;
-           ps.passesAttempted = Math.round(20 + Math.random() * 30);
-           ps.passesCompleted = Math.round(ps.passesAttempted * (0.65 + Math.random() * 0.2));
-           ps.rating = 5.5 + (Math.random() * 3) + (hForm - 6) * 0.3;
-           if (p.positions[0] === Position.GK) {
-             ps.saves = Math.max(0, Math.round(awaySog * 0.6 + Math.random() * 2));
-           }
-         }
-       });
-       aS.forEach(p => {
-         const ps = stats[p.id];
-         if (ps) {
-           ps.minutesPlayed = 90;
-           ps.passesAttempted = Math.round(20 + Math.random() * 30);
-           ps.passesCompleted = Math.round(ps.passesAttempted * (0.65 + Math.random() * 0.2));
-           ps.rating = 5.5 + (Math.random() * 3) + (aForm - 6) * 0.3;
-           if (p.positions[0] === Position.GK) {
-             ps.saves = Math.max(0, Math.round(homeSog * 0.6 + Math.random() * 2));
-           }
-         }
-       });
+    static simulateQuickMatch(
+      homeId: string, awayId: string, squadType: string,
+      homeTactic?: TacticSettings, awayTactic?: TacticSettings
+    ): { homeScore: number; awayScore: number; stats: Record<string, PlayerMatchStats>; events: MatchEvent[] } {
+      const hAll = world.getPlayersByClub(homeId).filter(p => p.squad === squadType);
+      const aAll = world.getPlayersByClub(awayId).filter(p => p.squad === squadType);
+      const hClub = world.getClub(homeId);
+      const aClub = world.getClub(awayId);
 
-       return { homeScore: hScore, awayScore: aScore, stats };
-   }
+      const hXI = this.selectBestXI(hAll);
+      const aXI = this.selectBestXI(aAll);
+      const stats = this.initMatchStats([...hAll, ...aAll]);
 
-   static simulateNationalTeamMatch(homeTeamId: string, awayTeamId: string): { homeScore: number, awayScore: number } {
-       const homePlayers = world.getPlayersByNationalTeam(homeTeamId);
-       const awayPlayers = world.getPlayersByNationalTeam(awayTeamId);
+      // ── TEAM STRENGTH VECTORS ──
+      const hAtt = this.squadAvg(hXI, 'finishing') * 0.5 + this.squadAvg(hXI, 'technique') * 0.2 + this.squadAvg(hXI, 'dribbling') * 0.15 + this.squadAvg(hXI, 'vision') * 0.15;
+      const aAtt = this.squadAvg(aXI, 'finishing') * 0.5 + this.squadAvg(aXI, 'technique') * 0.2 + this.squadAvg(aXI, 'dribbling') * 0.15 + this.squadAvg(aXI, 'vision') * 0.15;
+      const hDef = this.squadAvg(hXI, 'tackling') * 0.3 + this.squadAvg(hXI, 'anticipation') * 0.3 + this.squadAvg(hXI, 'positioning') * 0.25 + this.squadAvg(hXI, 'heading') * 0.15;
+      const aDef = this.squadAvg(aXI, 'tackling') * 0.3 + this.squadAvg(aXI, 'anticipation') * 0.3 + this.squadAvg(aXI, 'positioning') * 0.25 + this.squadAvg(aXI, 'heading') * 0.15;
+      const hMid = this.squadAvg(hXI, 'passing') * 0.4 + this.squadAvg(hXI, 'vision') * 0.25 + this.squadAvg(hXI, 'decisions') * 0.2 + this.squadAvg(hXI, 'technique') * 0.15;
+      const aMid = this.squadAvg(aXI, 'passing') * 0.4 + this.squadAvg(aXI, 'vision') * 0.25 + this.squadAvg(aXI, 'decisions') * 0.2 + this.squadAvg(aXI, 'technique') * 0.15;
 
-       const homeRep = world.nationalTeamManager?.nationalTeams.find((t: any) => t.id === homeTeamId)?.reputation || 7000;
-       const awayRep = world.nationalTeamManager?.nationalTeams.find((t: any) => t.id === awayTeamId)?.reputation || 7000;
+      const hGK = hXI.find(p => p.positions.includes(Position.GK));
+      const aGK = aXI.find(p => p.positions.includes(Position.GK));
+      const hGkRef = hGK ? (this.getQuickAttr(hGK, 'reflexes') * 0.5 + this.getQuickAttr(hGK, 'positioning') * 0.3 + this.getQuickAttr(hGK, 'handling') * 0.2) : 10;
+      const aGkRef = aGK ? (this.getQuickAttr(aGK, 'reflexes') * 0.5 + this.getQuickAttr(aGK, 'positioning') * 0.3 + this.getQuickAttr(aGK, 'handling') * 0.2) : 10;
 
-       const homeAvg = homePlayers.length > 0
-          ? homePlayers.reduce((sum, p) => sum + p.currentAbility, 0) / homePlayers.length
-          : 100;
-       const awayAvg = awayPlayers.length > 0
-          ? awayPlayers.reduce((sum, p) => sum + p.currentAbility, 0) / awayPlayers.length
-          : 100;
+      // ── MORALE & FORM MULTIPLIERS ──
+      const hMorale = hXI.reduce((s, p) => s + p.morale, 0) / (hXI.length || 1);
+      const aMorale = aXI.reduce((s, p) => s + p.morale, 0) / (aXI.length || 1);
+      const hForm = hXI.reduce((s, p) => {
+        const avg = p.formRatings.length > 0 ? p.formRatings.slice(-3).reduce((a: number, b: number) => a + b, 0) / Math.min(3, p.formRatings.length) : 6.0;
+        return s + avg;
+      }, 0) / (hXI.length || 1);
+      const aForm = aXI.reduce((s, p) => {
+        const avg = p.formRatings.length > 0 ? p.formRatings.slice(-3).reduce((a: number, b: number) => a + b, 0) / Math.min(3, p.formRatings.length) : 6.0;
+        return s + avg;
+      }, 0) / (aXI.length || 1);
 
-       let homeScore = 0, awayScore = 0;
-       const repBias = (homeRep - awayRep) / 2000;
-       const abilityBias = (homeAvg - awayAvg) / 50;
+      // ── TACTICAL MODIFIERS ──
+      const hMent = (homeTactic?.mentality ?? 10) / 10;  // 0.1–2.0
+      const aMent = (awayTactic?.mentality ?? 10) / 10;
+      const hTempo = (homeTactic?.tempo ?? 10) / 10;
+      const aTempo = (awayTactic?.tempo ?? 10) / 10;
+      const hClosing = (homeTactic?.closingDown ?? 10) / 10;
+      const aClosing = (awayTactic?.closingDown ?? 10) / 10;
+      const hWidth = (homeTactic?.width ?? 10) / 10;
+      const aWidth = (awayTactic?.width ?? 10);  // keep raw for formula
+      const hDefLine = (homeTactic?.defensiveLine ?? 10);
+      const aDefLine = (awayTactic?.defensiveLine ?? 10);
 
-       for (let i = 0; i < 3; i++) {
-          if (Math.random() + repBias * 0.03 + abilityBias * 0.02 > 0.92) homeScore++;
-          if (Math.random() - repBias * 0.03 - abilityBias * 0.02 > 0.93) awayScore++;
-       }
+      const hRep = hClub?.reputation || 5000;
+      const aRep = aClub?.reputation || 5000;
 
-       return { homeScore, awayScore };
-   }
+      // ── POSSESSION ──
+      const hPossRaw = 50 + (hMid - aMid) * 1.8 + (hMent - aMent) * 4 + (hTempo - aTempo) * 2;
+      const hPoss = Math.max(30, Math.min(70, Math.round(hPossRaw)));
+
+      // ── TOTAL ACTIONS (driven by tempo) ──
+      const hActions = Math.round(90 + hTempo * 30 + hMent * 15);
+      const aActions = Math.round(90 + aTempo * 30 + aMent * 15);
+
+      // ── SHOTS ──
+      const hShotsRaw = 4 + hAtt * 0.18 - aDef * 0.12 + hMent * 2 + (Math.random() * 4 - 2);
+      const aShotsRaw = 4 + aAtt * 0.18 - hDef * 0.12 + aMent * 2 + (Math.random() * 4 - 2);
+      const hShots = Math.max(0, Math.round(hShotsRaw));
+      const aShots = Math.max(0, Math.round(aShotsRaw));
+
+      // ── SHOTS ON TARGET ──
+      const hSotRaw = hShots * (0.3 + hAtt * 0.015 + hMent * 0.03 - aDef * 0.01);
+      const aSotRaw = aShots * (0.3 + aAtt * 0.015 + aMent * 0.03 - hDef * 0.01);
+      const hSot = Math.max(0, Math.min(hShots, Math.round(hSotRaw)));
+      const aSot = Math.max(0, Math.min(aShots, Math.round(aSotRaw)));
+
+      // ── SIMULATE GOALS (each SOT is a duel vs GK) ──
+      let hScore = 0, aScore = 0;
+      const events: MatchEvent[] = [];
+      let eventMinute = 3;
+      const hShooters = this.distributeStats(hXI, hSot, 'finishing', 0);
+      const aShooters = this.distributeStats(aXI, aSot, 'finishing', 0);
+
+      // Process home shots
+      for (const [pid, count] of Object.entries(hShooters)) {
+        const shooter = hXI.find(p => p.id === pid);
+        if (!shooter) continue;
+        for (let i = 0; i < count; i++) {
+          const shotQ = this.getQuickAttr(shooter, 'finishing') * 0.6 + this.getQuickAttr(shooter, 'technique') * 0.25 + this.getQuickAttr(shooter, 'composure') * 0.15 + (Math.random() * 8 - 4);
+          const saveQ = aGkRef * (0.8 + Math.random() * 0.4) + (Math.random() * 3 - 1.5);
+          stats[pid].shots++;
+          eventMinute = Math.min(88, eventMinute + randomInt(1, 8));
+          if (shotQ > saveQ + 3.5) {
+            stats[pid].shotsOnTarget++;
+            stats[pid].goals++;
+            if (aGK) stats[aGK.id].conceded++;
+            hScore++;
+            events.push({ minute: eventMinute, type: 'GOAL', text: `¡GOL de ${shooter.name.split(' ').pop() || shooter.name}! ${hClub?.name || homeId} ${hScore}-${aScore} ${aClub?.name || awayId}.`, teamId: homeId, playerId: pid, importance: 'HIGH', intensity: 5 });
+          } else if (shotQ > saveQ - 1.5) {
+            stats[pid].shotsOnTarget++;
+            if (aGK) stats[aGK.id].saves++;
+          }
+        }
+      }
+
+      // Process away shots
+      for (const [pid, count] of Object.entries(aShooters)) {
+        const shooter = aXI.find(p => p.id === pid);
+        if (!shooter) continue;
+        for (let i = 0; i < count; i++) {
+          const shotQ = this.getQuickAttr(shooter, 'finishing') * 0.6 + this.getQuickAttr(shooter, 'technique') * 0.25 + this.getQuickAttr(shooter, 'composure') * 0.15 + (Math.random() * 8 - 4);
+          const saveQ = hGkRef * (0.8 + Math.random() * 0.4) + (Math.random() * 3 - 1.5);
+          stats[pid].shots++;
+          if (shotQ > saveQ + 3.5) {
+            stats[pid].shotsOnTarget++;
+            stats[pid].goals++;
+            if (hGK) stats[hGK.id].conceded++;
+            aScore++;
+            eventMinute = Math.min(88, eventMinute + randomInt(1, 8));
+            events.push({ minute: eventMinute, type: 'GOAL', text: `¡GOL de ${shooter.name.split(' ').pop() || shooter.name}! ${hClub?.name || homeId} ${hScore}-${aScore} ${aClub?.name || awayId}.`, teamId: awayId, playerId: pid, importance: 'HIGH', intensity: 5 });
+          } else if (shotQ > saveQ - 1.5) {
+            stats[pid].shotsOnTarget++;
+            if (hGK) stats[hGK.id].saves++;
+          }
+        }
+      }
+
+      // ── FOULS & CARDS ──
+      const hFouls = Math.round(8 + (20 - this.squadAvg(hXI, 'tackling')) * 0.3 + this.squadAvg(hXI, 'aggression') * 0.25 + Math.random() * 3);
+      const aFouls = Math.round(8 + (20 - this.squadAvg(aXI, 'tackling')) * 0.3 + this.squadAvg(aXI, 'aggression') * 0.25 + Math.random() * 3);
+      const hFoulDist = this.distributeStats(hXI, hFouls, 'aggression', 0);
+      const aFoulDist = this.distributeStats(aXI, aFouls, 'aggression', 0);
+
+      // Track card penalties separately (applied AFTER calcQuickRating)
+      const cardPenalties: Record<string, number> = {};
+
+      const processCards = (players: Player[], foulDist: Record<string, number>) => {
+        for (const [pid, fouls] of Object.entries(foulDist)) {
+          const p = players.find(x => x.id === pid);
+          if (!p) continue;
+          stats[pid].foulsCommitted += fouls;
+          const aggression = this.getQuickAttr(p, 'aggression');
+          const tackling = this.getQuickAttr(p, 'tackling');
+          for (let f = 0; f < fouls; f++) {
+            const severity = (20 - tackling) * 0.3 + aggression * 0.4 + Math.random() * 3;
+            if (severity > 11) {
+              stats[pid].card = 'RED';
+              cardPenalties[pid] = (cardPenalties[pid] || 0) - 2;
+              p.suspension = { matchesLeft: 2 + (p.yellowCardsAccumulated >= 10 ? 1 : 0) };
+              const cardMinute = Math.min(90, eventMinute + randomInt(-5, 15));
+              events.push({ minute: cardMinute, type: 'RED_CARD', text: `¡Tarjeta ROJA para ${p.name.split(' ').pop() || p.name}!`, teamId: p.clubId, playerId: pid, importance: 'HIGH', intensity: 5 });
+              break;
+            } else if (severity > 6) {
+              const prevCard = stats[pid].card;
+              stats[pid].card = prevCard === 'YELLOW' ? 'RED' : 'YELLOW';
+              if (stats[pid].card === 'RED') { cardPenalties[pid] = (cardPenalties[pid] || 0) - 2; const cardMinute2 = Math.min(90, eventMinute + randomInt(-5, 15)); events.push({ minute: cardMinute2, type: 'RED_CARD', text: `¡Doble amarilla y expulsión para ${p.name.split(' ').pop() || p.name}!`, teamId: p.clubId, playerId: pid, importance: 'HIGH', intensity: 5 }); break; }
+              else { cardPenalties[pid] = (cardPenalties[pid] || 0) - 0.5; p.yellowCardsAccumulated++; const cardMinute3 = Math.min(90, eventMinute + randomInt(-5, 15)); events.push({ minute: cardMinute3, type: 'YELLOW_CARD', text: `Amarilla para ${p.name.split(' ').pop() || p.name}.`, teamId: p.clubId, playerId: pid, importance: 'MEDIUM', intensity: 3 }); }
+            }
+          }
+        }
+      };
+      processCards(hXI, hFoulDist);
+      processCards(aXI, aFoulDist);
+
+      // ── CORNERS ──
+      const hCorners = Math.round(hShots * 0.35 + hWidth * 0.4 + Math.random() * 2);
+      const aCorners = Math.round(aShots * 0.35 + aWidth * 0.4 + Math.random() * 2);
+
+      // ── PER-PLAYER STATS ──
+      const genPlayerStats = (
+        players: Player[], oppPlayers: Player[],
+        actions: number, poss: number, shots: number, sot: number,
+        foulDist: Record<string, number>, isHome: boolean
+      ) => {
+        const gk = players.find(p => p.positions.includes(Position.GK));
+        const outfield = players.filter(p => !p.positions.includes(Position.GK));
+
+        // Passes: proportional to passing attribute
+        const totalPasses = Math.round(actions * 0.7 + poss * 1.5);
+        const passDist = this.distributeStats(players, totalPasses, 'passing', 2);
+        const completionBase = 0.65 + this.squadAvg(players, 'passing') * 0.015 - (isHome ? 0 : 0.03);
+
+        // Tackles: proportional to tackling, weighted toward defenders
+        const totalTackles = Math.round(actions * 0.25 + (20 - this.squadAvg(players, 'anticipation')) * 0.3);
+        const tackleDist = this.distributeStats(players, totalTackles, 'tackling', 0);
+
+        // Interceptions: proportional to anticipation
+        const totalInts = Math.round(actions * 0.15 + this.squadAvg(players, 'anticipation') * 0.8);
+        const intDist = this.distributeStats(players, totalInts, 'anticipation', 0);
+
+        // Dribbles: proportional to dribbling, weighted toward AM/wingers
+        const totalDribs = Math.round(actions * 0.12 + this.squadAvg(players, 'dribbling') * 0.4);
+        const dribDist = this.distributeStats(players, totalDribs, 'dribbling', 0);
+
+        // Headers: proportional to heading/jumping
+        const totalHeaders = Math.round(actions * 0.2 + this.squadAvg(players, 'heading') * 0.5);
+        const headDist = this.distributeStats(players, totalHeaders, 'heading', 0);
+        const headWonRate = 0.4 + this.squadAvg(players, 'heading') * 0.02;
+
+        for (const p of players) {
+          const ps = stats[p.id];
+          if (!ps) continue;
+          ps.minutesPlayed = 90;
+          ps.passesAttempted = passDist[p.id] || 0;
+          ps.passesCompleted = Math.round(ps.passesAttempted * Math.min(0.95, completionBase + (Math.random() * 0.15 - 0.075)));
+          ps.tacklesAttempted = tackleDist[p.id] || 0;
+          ps.tacklesCompleted = Math.round(ps.tacklesAttempted * (0.5 + Math.random() * 0.35));
+          ps.interceptions = intDist[p.id] || 0;
+          ps.dribblesAttempted = dribDist[p.id] || 0;
+          ps.dribblesCompleted = Math.round(ps.dribblesAttempted * (0.4 + Math.random() * 0.3));
+          ps.headersAttempted = headDist[p.id] || 0;
+          ps.headersWon = Math.round(ps.headersAttempted * headWonRate);
+          const offTheBall = this.getQuickAttr(p, 'offTheBall');
+          const offsideRate = 0.02 + offTheBall * 0.008 + (Math.random() * 0.04);
+          ps.offsides = Math.round(offsideRate * 2.5);
+          ps.shotsBlocked = Math.round(this.getQuickAttr(p, 'anticipation') * 0.15 + this.getQuickAttr(p, 'positioning') * 0.1 + Math.random() * 1);
+          // Key passes / key tackles
+          if (ps.passesCompleted > 15) ps.keyPasses = Math.round(Math.random() * 3);
+          if (ps.tacklesCompleted > 4) ps.keyTackles = Math.round(Math.random() * 2);
+          if (ps.headersWon > 4) ps.keyHeaders = Math.round(Math.random() * 1.5);
+          // GK clean sheet bonus
+          const isGK = p.positions.includes(Position.GK);
+          if (isGK) {
+            const oppScore = isHome ? aScore : hScore;
+            if (oppScore === 0) ps.rating += 0.5;
+          }
+          // Fouls received: distribute opponent fouls weighted by dribbling
+          const oppFoulDist = isHome ? aFoulDist : hFoulDist;
+          const totalOppFouls = Object.values(oppFoulDist).reduce((s: number, v: number) => s + v, 0);
+          const dribWeight = this.getQuickAttr(p, 'dribbling');
+          const teamDribSum = players.reduce((s, pl) => s + this.getQuickAttr(pl, 'dribbling'), 0);
+          const myShare = teamDribSum > 0 ? (dribWeight / teamDribSum) : (1 / Math.max(1, players.length));
+          ps.foulsReceived = Math.round(totalOppFouls * myShare * (0.7 + Math.random() * 0.6));
+          // Rating calculation
+          this.calcQuickRating(p, ps, isHome);
+        }
+      };
+
+      genPlayerStats(hXI, aXI, hActions, hPoss, hShots, hSot, hFoulDist, true);
+      genPlayerStats(aXI, hXI, aActions, 100 - hPoss, aShots, aSot, aFoulDist, false);
+
+      // Apply card penalties AFTER ratings are calculated
+      for (const [pid, penalty] of Object.entries(cardPenalties)) {
+        if (stats[pid]) stats[pid].rating = Math.max(1, Math.min(10, stats[pid].rating + penalty));
+      }
+
+      // ── GENERATE ASSISTS ──
+      for (const [pid, ps] of Object.entries(stats)) {
+        if (ps.goals > 0) {
+          // For each goal, try to assign an assist from a teammate
+          const scorer = hXI.find(p => p.id === pid) || aXI.find(p => p.id === pid);
+          if (!scorer) continue;
+          const isHomeScorer = hXI.some(p => p.id === pid);
+          const teammates = isHomeScorer ? hXI : aXI;
+          for (let g = 0; g < ps.goals; g++) {
+            const candidates = teammates.filter(p => p.id !== pid && stats[p.id] && stats[p.id].passesCompleted > 5);
+            if (candidates.length > 0 && Math.random() < 0.7) {
+              const assister = candidates[randomInt(0, candidates.length - 1)];
+              stats[assister.id].assists++;
+            }
+          }
+        }
+      }
+
+      // ── INJURIES ──
+      for (const players of [hXI, aXI]) {
+        for (const p of players) {
+          const bravery = this.getQuickAttr(p, 'bravery');
+          const injuryProne = p.injuryProneness || 0;
+          const injuryChance = Math.max(0.003, 0.04 - bravery * 0.002 + injuryProne * 0.3);
+          if (Math.random() < injuryChance) {
+            let days = randomInt(3, Math.round(7 + (20 - bravery) * 0.5));
+            if (Math.random() < 0.04) days = randomInt(30, 90);
+            else if (Math.random() < 0.12) days = randomInt(15, 30);
+            const types = days > 30 ? ['Rotura de ligamentos', 'Fractura', 'Rotura fibrilar grave'] :
+                          days > 14 ? ['Rotura fibrilar', 'Esguince grave', 'Lesión muscular'] :
+                          ['Distensión muscular', 'Esguince de tobillo', 'Golpe', 'Sobrecarga', 'Contractura'];
+            stats[p.id].sustainedInjury = { type: types[randomInt(0, types.length - 1)], days };
+            const injuryMinute = Math.min(90, eventMinute + randomInt(-5, 15));
+            events.push({ minute: injuryMinute, type: 'INJURY', text: `${p.name.split(' ').pop() || p.name} sufre ${stats[p.id].sustainedInjury!.type} y debe abandonar el campo.`, teamId: p.clubId, playerId: p.id, importance: 'HIGH', intensity: 4 });
+          }
+        }
+      }
+
+      // Bench players get 0 minutes
+      const allHIds = new Set(hXI.map(p => p.id));
+      const allAIds = new Set(aXI.map(p => p.id));
+      hAll.filter(p => !allHIds.has(p.id)).forEach(p => { if (stats[p.id]) stats[p.id].minutesPlayed = 0; });
+      aAll.filter(p => !allAIds.has(p.id)).forEach(p => { if (stats[p.id]) stats[p.id].minutesPlayed = 0; });
+
+      return { homeScore: hScore, awayScore: aScore, stats, events };
+    }
+
+    /** Quick rating calc for quick match (standalone, no MatchState needed) */
+    private static calcQuickRating(p: Player, s: PlayerMatchStats, isHome: boolean) {
+      let score = 6.0;
+      if (isHome) score += 0.15;
+      if (p.bigMatchTemperament > 16) score += 0.1;
+      score += (s.goals || 0) * 1.6;
+      score += (s.assists || 0) * 1.0;
+      score += (s.saves || 0) * 0.5;
+      score -= (s.conceded || 0) * 0.7;
+      score += (s.tacklesCompleted || 0) * 0.2;
+      score += (s.interceptions || 0) * 0.15;
+      score += (s.shotsBlocked || 0) * 0.1;
+      if (s.passesAttempted > 0) {
+        score += ((s.passesCompleted / s.passesAttempted) - 0.7) * 2;
+      }
+      score += (s.keyPasses || 0) * 0.3;
+      score += (s.dribblesCompleted || 0) * 0.15;
+      score -= (s.foulsCommitted || 0) * 0.1;
+      score += (s.keyTackles || 0) * 0.2;
+      score += (s.headersWon || 0) * 0.1;
+      // Clean sheet bonus for GK and defenders
+      const slot = SLOT_CONFIG[p.tacticalPosition || 0];
+      if (slot?.line === 'GK' && s.conceded === 0 && s.minutesPlayed > 60) score += 0.5;
+      if (slot?.line === 'DEF' && s.conceded === 0 && s.minutesPlayed > 60) score += 0.3;
+      s.rating = Math.max(1, Math.min(10, score));
+    }
+
+    // ─── FULL ATTRIBUTE-DRIVEN NATIONAL TEAM MATCH ────────────────────
+
+    static simulateNationalTeamMatch(homeTeamId: string, awayTeamId: string, options: NationalTeamMatchOptions = {}): { homeScore: number; awayScore: number; stats: Record<string, PlayerMatchStats>; events: MatchEvent[] } {
+      const manager = world.nationalTeamManager;
+      const getMatchPlayers = (teamId: string): Player[] => {
+        const controlledIds = options.homeSquadIds && teamId === homeTeamId
+          ? options.homeSquadIds
+          : options.awaySquadIds && teamId === awayTeamId
+            ? options.awaySquadIds
+            : manager?.isControlled(teamId) ? manager.getControlledSquadIds(teamId) : [];
+        if (controlledIds.length > 0) {
+          const controlled = controlledIds
+            .map(id => world.getPlayer(id))
+            .filter((player): player is Player => Boolean(player));
+          if (controlled.length >= 11) return controlled;
+        }
+        return world.getPlayersByNationalTeam(teamId);
+      };
+      const homePlayers = getMatchPlayers(homeTeamId);
+      const awayPlayers = getMatchPlayers(awayTeamId);
+      const hRep = manager?.nationalTeams.find((t: any) => t.id === homeTeamId)?.reputation || 7000;
+      const aRep = manager?.nationalTeams.find((t: any) => t.id === awayTeamId)?.reputation || 7000;
+      const hTactic = options.homeTactic || manager?.getControlledTactic(homeTeamId);
+      const aTactic = options.awayTactic || manager?.getControlledTactic(awayTeamId);
+
+      const hXI = this.selectBestXI(homePlayers);
+      const aXI = this.selectBestXI(awayPlayers);
+      const stats = this.initMatchStats([...homePlayers, ...awayPlayers]);
+
+      // Team strength
+      const tacticalAttack = (tactic?: TacticSettings) => {
+        if (!tactic) return 1;
+        const longShotBonus = tactic.longShots === 'OFTEN' ? 0.018 : tactic.longShots === 'MIXED' ? 0.008 : 0;
+        const throughBallBonus = tactic.throughBalls === 'OFTEN' ? 0.022 : tactic.throughBalls === 'MIXED' ? 0.01 : 0;
+        const counterBonus = tactic.counterAttack ? 0.018 : 0;
+        return 0.88 + tactic.mentality * 0.012 + tactic.creativeFreedom * 0.004 + (tactic.passingStyle - 10) * 0.003 + longShotBonus + throughBallBonus + counterBonus;
+      };
+      const tacticalDefense = (tactic?: TacticSettings) => {
+        if (!tactic) return 1;
+        return 0.9 + tactic.closingDown * 0.006 + tactic.tackling * 0.004 + (20 - tactic.mentality) * 0.003 + (tactic.counterAttack ? 0.006 : 0);
+      };
+      const focusBonus = (tactic?: TacticSettings) => tactic?.focusPassing && tactic.focusPassing !== 'MIXED' ? 0.012 : 0;
+      const hAtt = (this.squadAvg(hXI, 'finishing') * 0.5 + this.squadAvg(hXI, 'technique') * 0.2 + this.squadAvg(hXI, 'dribbling') * 0.15 + this.squadAvg(hXI, 'vision') * 0.15) * (tacticalAttack(hTactic) + focusBonus(hTactic));
+      const aAtt = (this.squadAvg(aXI, 'finishing') * 0.5 + this.squadAvg(aXI, 'technique') * 0.2 + this.squadAvg(aXI, 'dribbling') * 0.15 + this.squadAvg(aXI, 'vision') * 0.15) * (tacticalAttack(aTactic) + focusBonus(aTactic));
+      const hDef = (this.squadAvg(hXI, 'tackling') * 0.35 + this.squadAvg(hXI, 'anticipation') * 0.35 + this.squadAvg(hXI, 'positioning') * 0.3) * tacticalDefense(hTactic);
+      const aDef = (this.squadAvg(aXI, 'tackling') * 0.35 + this.squadAvg(aXI, 'anticipation') * 0.35 + this.squadAvg(aXI, 'positioning') * 0.3) * tacticalDefense(aTactic);
+      const hGK = hXI.find(p => p.positions.includes(Position.GK));
+      const aGK = aXI.find(p => p.positions.includes(Position.GK));
+      const hGkRef = hGK ? (this.getQuickAttr(hGK, 'reflexes') * 0.5 + this.getQuickAttr(hGK, 'positioning') * 0.3 + this.getQuickAttr(hGK, 'handling') * 0.2) : 10;
+      const aGkRef = aGK ? (this.getQuickAttr(aGK, 'reflexes') * 0.5 + this.getQuickAttr(aGK, 'positioning') * 0.3 + this.getQuickAttr(aGK, 'handling') * 0.2) : 10;
+
+      // Home advantage
+      const homeBonus = 1.06;
+
+      const hShots = Math.max(0, Math.round((4 + hAtt * 0.2 - aDef * 0.14) * homeBonus + (Math.random() * 4 - 2)));
+      const aShots = Math.max(0, Math.round(4 + aAtt * 0.2 - hDef * 0.14 + (Math.random() * 4 - 2)));
+      const hSot = Math.max(0, Math.min(hShots, Math.round(hShots * (0.3 + hAtt * 0.015 - aDef * 0.01))));
+      const aSot = Math.max(0, Math.min(aShots, Math.round(aShots * (0.3 + aAtt * 0.015 - hDef * 0.01))));
+
+      let hScore = 0, aScore = 0;
+      const hShooters = this.distributeStats(hXI, hSot, 'finishing', 0);
+      const aShooters = this.distributeStats(aXI, aSot, 'finishing', 0);
+      const ntEvents: MatchEvent[] = [];
+      let ntMinute = 3;
+
+      for (const [pid, count] of Object.entries(hShooters)) {
+        const shooter = hXI.find(p => p.id === pid);
+        if (!shooter) continue;
+        for (let i = 0; i < count; i++) {
+          const shotQ = this.getQuickAttr(shooter, 'finishing') * 0.6 + this.getQuickAttr(shooter, 'technique') * 0.25 + (Math.random() * 8 - 4);
+          const saveQ = aGkRef * (0.8 + Math.random() * 0.4);
+          stats[pid].shots++;
+          ntMinute = Math.min(88, ntMinute + randomInt(1, 8));
+          if (shotQ > saveQ + 3.5) { stats[pid].shotsOnTarget++; stats[pid].goals++; hScore++; if (aGK) stats[aGK.id].conceded++; ntEvents.push({ minute: ntMinute, type: 'GOAL', text: `¡GOL para ${homeTeamId}! ${shooter.name.split(' ').pop()}.`, teamId: homeTeamId, playerId: pid, importance: 'HIGH', intensity: 5 }); }
+          else if (shotQ > saveQ - 1.5) { stats[pid].shotsOnTarget++; if (aGK) stats[aGK.id].saves++; }
+        }
+      }
+      for (const [pid, count] of Object.entries(aShooters)) {
+        const shooter = aXI.find(p => p.id === pid);
+        if (!shooter) continue;
+        for (let i = 0; i < count; i++) {
+          const shotQ = this.getQuickAttr(shooter, 'finishing') * 0.6 + this.getQuickAttr(shooter, 'technique') * 0.25 + (Math.random() * 8 - 4);
+          const saveQ = hGkRef * (0.8 + Math.random() * 0.4);
+          stats[pid].shots++;
+          if (shotQ > saveQ + 3.5) { stats[pid].shotsOnTarget++; stats[pid].goals++; aScore++; if (hGK) stats[hGK.id].conceded++; ntEvents.push({ minute: ntMinute, type: 'GOAL', text: `¡GOL para ${awayTeamId}! ${shooter.name.split(' ').pop()}.`, teamId: awayTeamId, playerId: pid, importance: 'HIGH', intensity: 5 }); }
+          else if (shotQ > saveQ - 1.5) { stats[pid].shotsOnTarget++; if (hGK) stats[hGK.id].saves++; }
+        }
+      }
+
+      // Per-player base stats for both teams
+      const quickPlayerStats = (players: Player[], isHome: boolean, actions: number, tactic?: TacticSettings) => {
+        const focusPassBonus = tactic?.focusPassing && tactic.focusPassing !== 'MIXED' ? 0.04 : 0;
+        const counterPassPenalty = tactic?.counterAttack ? -0.025 : 0;
+        const totalPasses = Math.round(actions * (0.58 + (tactic?.passingStyle || 10) * 0.012 + (tactic?.counterAttack ? -0.035 : 0)));
+        const passDist = this.distributeStats(players, totalPasses, 'passing', 2);
+        const passBase = 0.6 + ((tactic?.passingStyle || 10) * 0.008) + focusPassBonus + counterPassPenalty;
+        for (const p of players) {
+          const ps = stats[p.id]; if (!ps) continue;
+          ps.minutesPlayed = 90;
+          ps.passesAttempted = passDist[p.id] || 0;
+          ps.passesCompleted = Math.round(ps.passesAttempted * Math.min(0.92, passBase + Math.random() * 0.2));
+          ps.tacklesAttempted = Math.round(2 + Math.random() * 6);
+          ps.tacklesCompleted = Math.round(ps.tacklesAttempted * (0.5 + Math.random() * 0.35));
+          ps.interceptions = Math.round(Math.random() * 4);
+          ps.dribblesAttempted = Math.round(Math.random() * 4);
+          ps.dribblesCompleted = Math.round(ps.dribblesAttempted * (0.4 + Math.random() * 0.3));
+          ps.headersAttempted = Math.round(2 + Math.random() * 6);
+          ps.headersWon = Math.round(ps.headersAttempted * (0.4 + Math.random() * 0.3));
+          this.calcQuickRating(p, ps, isHome);
+        }
+      };
+      quickPlayerStats(hXI, true, Math.round(80 + Math.random() * 30), hTactic);
+      quickPlayerStats(aXI, false, Math.round(80 + Math.random() * 30), aTactic);
+
+      return { homeScore: hScore, awayScore: aScore, stats, events: ntEvents };
+    }
 }

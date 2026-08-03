@@ -45,10 +45,32 @@ export const COUNTRY_CODES: Record<string, string> = {
   "Turquía": "tr",
   "Ucrania": "ua",
   "Arabia Saudita": "sa",
+  // Selecciones nacionales adicionales
+  "Serbia": "rs",
+  "Canadá": "ca",
+  "Australia": "au",
+  "Marruecos": "ma",
+  "Senegal": "sn",
+  "Nigeria": "ng",
+  "Egipto": "eg",
+  "Ghana": "gh",
+  "Camerún": "cm",
+  "Costa de Marfil": "ci",
+  "Túnez": "tn",
+  "Corea del Sur": "kr",
+  "Estados Unidos": "us",
+  "Peru": "pe",
 };
 
+// Lookup sin acentos ni mayúsculas para que 'Peru' y 'Perú', 'USA' y 'Estados Unidos' resuelvan igual.
+const normalizeCountryName = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+const COUNTRY_CODE_LOOKUP: Record<string, string> = {};
+Object.entries(COUNTRY_CODES).forEach(([name, code]) => {
+  COUNTRY_CODE_LOOKUP[normalizeCountryName(name)] = code;
+});
+
 export const getFlagUrl = (countryName: string) => {
-  const code = COUNTRY_CODES[countryName];
+  const code = COUNTRY_CODE_LOOKUP[normalizeCountryName(countryName || '')];
   // Fallback to UN flag if not found
   if (!code) return "https://flagcdn.com/w40/un.png";
   return `https://flagcdn.com/w40/${code}.png`;

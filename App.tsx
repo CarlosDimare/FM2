@@ -31,18 +31,19 @@ import { ChronicleView } from './components/ChronicleView';
 import { ManagerProfileView } from './components/ManagerProfileView';
 import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
-import { generateMatchChronicle, generateMonthlyChronicle } from './services/chronicleService';
-import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager } from './types';
+import { generateMatchChronicle, generateMonthlyChronicle, generateNationalTeamChronicle } from './services/chronicleService';
+import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager, NationalTeamMatchOptions, NationalTeamChronicleContext, CareerMode } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID, randomInt } from './services/utils';
 import { MatchSimulator } from './services/engine';
 import { requestNotificationPermission, sendMatchNotification, sendInjuryNotification, sendTransferNotification, sendInboxNotification } from './services/notifications';
-import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, ChevronLeft, User, ArrowLeft, Save, HardDrive, Trash2, X } from 'lucide-react';
+import { RefreshCw, Globe, Play, Sun, Moon, Menu, Zap, Mail, Trophy, ChevronRight, ChevronLeft, User, ArrowLeft, Save, HardDrive, Trash2, X, Briefcase, Flag } from 'lucide-react';
 import { OnboardingTour, isOnboarded } from './components/OnboardingTour';
 import { FMButton, FMLoadingOverlay, FMModal } from './components/FMUI';
 import { useWorldStore } from './stores/worldStore';
 import { useUIStore } from './stores/uiStore';
 import { useGameStore } from './stores/gameStore';
-import { getFlagUrl, REAL_MANAGERS } from './data/static';
+import { getFlagUrl, TACTIC_PRESETS } from './data/static';
+import { ALL_REAL_MANAGERS, MANAGER_DATABASE_META } from './data/managerDatabase';
 
 const AttrBar: React.FC<{ label: string; value: number; color: string }> = ({ label, value, color }) => {
   const pct = Math.min(100, Math.max(0, (value / 20) * 100));
@@ -63,6 +64,9 @@ const App: React.FC = () => {
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [showConflictModal, setShowConflictModal] = React.useState(false);
   const [managerToConfirm, setManagerToConfirm] = React.useState<RealManager | null>(null);
+  const [managerSearch, setManagerSearch] = React.useState('');
+  const [managerCountryFilter, setManagerCountryFilter] = React.useState('ALL');
+  const [managerResultLimit, setManagerResultLimit] = React.useState(120);
 
   React.useEffect(() => {
     if (!isOnboarded()) {
@@ -84,13 +88,14 @@ const App: React.FC = () => {
 const {
     gameState, currentView, selectedPlayer, contextMenu, isSidebarOpen,
     userName, userSurname, userNationality, userOrigin, userBirthDate, selectedCountry, selectedLeague, userClub, viewExternalClub,
+    careerMode, selectedNationalTeamId,
     isVacationModalOpen, vacationTargetDate, isSimulating, isInVacation,
     vacationProgress, vacationDetail, vacationCancelled, setVacationProgress, setVacationDetail, setVacationCancelled, resetVacationState,
     seasonSummary, userWonLeague, viewLeagueId, viewSquadType,
     currentDate, seasonEndDate, hasSave,
     isSaveModalOpen, saveNameInput, isLoadModalOpen, availableSaves,
     setGameState, setView, setSelectedPlayer, setContextMenu, setIsSidebarOpen,
-    setUserName, setUserSurname, setUserNationality, setUserOrigin, setUserBirthDate, setSelectedCountry, setSelectedLeague, setUserClub,
+    setUserName, setUserSurname, setUserNationality, setUserOrigin, setUserBirthDate, setSelectedCountry, setSelectedLeague, setUserClub, setCareerMode, setSelectedNationalTeamId,
     setViewExternalClub, setIsVacationModalOpen, setVacationTargetDate, setIsSimulating,
     setIsInVacation, setSeasonSummary, setUserWonLeague, setViewLeagueId, setViewSquadType,
     setCurrentDate, setSeasonEndDate, setHasSave,
@@ -108,6 +113,49 @@ const {
       setSelectedPlayer(null);
     }
   }, [selectedPlayer, comparePlayerA, comparePlayerB]);
+
+  const getClubNationalTeamId = () => {
+    const manager = world.nationalTeamManager;
+    if (!userClub || !manager?.nationalTeams) return undefined;
+    const normalizeCountry = (country: string) => country.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const userCountry = normalizeCountry(userClub.country);
+    return manager.nationalTeams.find((team: any) => normalizeCountry(team.country) === userCountry)?.id;
+  };
+
+  const getNationalChronicleTeamIds = (fixture: Fixture): string[] => {
+    const manager = world.nationalTeamManager;
+    const ids = new Set<string>();
+    if (manager?.controlledTeamId && (fixture.homeTeamId === manager.controlledTeamId || fixture.awayTeamId === manager.controlledTeamId)) {
+      ids.add(manager.controlledTeamId);
+    }
+    const clubTeamId = getClubNationalTeamId();
+    if (clubTeamId && (fixture.homeTeamId === clubTeamId || fixture.awayTeamId === clubTeamId)) ids.add(clubTeamId);
+    return [...ids];
+  };
+
+  const getNationalMatchOptions = (fixture: Fixture): NationalTeamMatchOptions => {
+    const manager = world.nationalTeamManager;
+    const teamId = manager?.controlledTeamId;
+    if (!manager || !teamId) return {};
+    const squadIds = manager.getControlledSquadIds(teamId);
+    const tactic = manager.getControlledTactic(teamId);
+    if (fixture.homeTeamId === teamId) return { homeSquadIds: squadIds, homeTactic: tactic };
+    if (fixture.awayTeamId === teamId) return { awaySquadIds: squadIds, awayTactic: tactic };
+    return {};
+  };
+
+  const activeManagedTeamId = userClub?.id || selectedNationalTeamId || undefined;
+
+  const getNationalChronicleContext = (teamId: string): NationalTeamChronicleContext | undefined => {
+    const manager = world.nationalTeamManager;
+    if (!manager?.isControlled(teamId)) return undefined;
+    return {
+      controlled: true,
+      squadSize: manager.getControlledSquadIds(teamId).length,
+      squadIds: manager.getControlledSquadIds(teamId),
+      tactic: manager.getControlledTactic(teamId),
+    };
+  };
 
   const getMatchSquad = (clubId: string) => {
     const clubPlayers = world.getPlayersByClub(clubId);
@@ -173,15 +221,72 @@ const {
     if (nextFixture) setView('MATCH');
   };
 
+  const setupNationalControl = (teamId: string): boolean => {
+    const manager = world.nationalTeamManager;
+    const team = manager?.nationalTeams?.find((candidate: any) => candidate.id === teamId);
+    if (!manager || !team) return false;
+    const eligiblePlayers = manager.getEligiblePlayers(teamId, world.players, world.clubs);
+    const eligibleIds = new Set(eligiblePlayers.map((player: Player) => player.id));
+    const savedIds = (team.playerIds || []).filter((id: string) => eligibleIds.has(id));
+    const fallbackIds = eligiblePlayers.map((player: Player) => player.id).filter((id: string) => !savedIds.includes(id));
+    const preset = TACTIC_PRESETS.find(tactic => tactic.id === team.formation) || TACTIC_PRESETS[0];
+    return manager.assumeControl(teamId, [...savedIds, ...fallbackIds].slice(0, 23), { ...preset.settings }, eligiblePlayers.map((player: Player) => player.id));
+  };
+
+  const startNationalCareer = (teamId: string, managerData?: RealManager | null, clubId: string | null = null) => {
+    if (!setupNationalControl(teamId)) {
+      alert('No hay suficientes jugadores elegibles para formar una convocatoria internacional.');
+      return;
+    }
+    const club = clubId ? world.getClub(clubId) : null;
+    setSelectedNationalTeamId(teamId);
+    setUserClub(club || null);
+    if (club) {
+      world.ensureDeepSquads(club.leagueId);
+      useGameStore.getState().setDeepSimLeagues([club.leagueId]);
+    }
+    const allFix = initSeasonFixtures(currentDate, club?.id);
+    updateNextFixture(allFix, currentDate, club?.id || teamId);
+    world.createManagerProfile(club?.id || null, managerData?.name || userName, managerData?.surname || userSurname, managerData?.nationality || userNationality, managerData ? 'EX_PLAYER' : userOrigin, managerData?.birthDate || userBirthDate, currentDate, teamId);
+    if (club) {
+      if (managerData) world.replaceHeadCoach(managerData, club.id, false);
+      else world.createHumanManager(club.id, `${userName} ${userSurname}`);
+    }
+    setGameState('PLAYING');
+    setView('HOME');
+    notify();
+  };
+
+  const createManagerAndStartGame = (manager: RealManager, clubId: string, fired: boolean) => {
+    const club = world.getClub(clubId);
+    if (!club) return;
+    if (selectedNationalTeamId && careerMode !== 'CLUB') {
+      if (!setupNationalControl(selectedNationalTeamId)) return;
+      world.replaceHeadCoach(manager, club.id, fired);
+    } else {
+      world.replaceHeadCoach(manager, club.id, fired);
+    }
+    setUserClub(club);
+    world.ensureDeepSquads(club.leagueId);
+    useGameStore.getState().setDeepSimLeagues([club.leagueId]);
+    const allFix = initSeasonFixtures(currentDate, club.id);
+    updateNextFixture(allFix, currentDate, club.id);
+    world.createManagerProfile(club.id, manager.name, manager.surname, manager.nationality, 'EX_PLAYER', manager.birthDate, currentDate, careerMode === 'BOTH' ? selectedNationalTeamId : null);
+    setGameState('PLAYING');
+    setView('HOME');
+    notify();
+  };
+
   const performAutoSave = async () => {
-    if (!isAutoSaveEnabled || !userClub) return;
+    if (!isAutoSaveEnabled) return;
     try {
       const id = `autosave_${currentDate.toISOString().slice(0, 10)}`;
+      const managedName = userClub?.name || world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === selectedNationalTeamId)?.name || 'Selección Nacional';
       const saveData = {
         id, label: `Auto: ${currentDate.toLocaleDateString()}`, lastPlayed: new Date(),
-        metaTeamName: userClub.name,
+        metaTeamName: managedName,
         metaManagerName: `${userName} ${userSurname}`,
-        gameState: { currentDate, userName, userSurname, userClubId: userClub.id, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
+        gameState: { currentDate, userName, userSurname, userClubId: userClub?.id || null, selectedNationalTeamId, careerMode, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
@@ -218,7 +323,7 @@ const {
 
     if (currentDate >= seasonEndDate) {
       world.processLoanReturns(currentDate);
-      const result = useGameStore.getState().finishSeason(fixtures, userClub?.id);
+      const result = useGameStore.getState().finishSeason(fixtures, activeManagedTeamId);
       setSeasonSummary(result.summaries);
       setUserWonLeague(result.userWonLeague);
       const gs = useGameStore.getState();
@@ -259,17 +364,22 @@ if (result.userWonLeague) gs.trackTitle('Liga');
 
     await performAutoSave();
 
-    if (userClub) {
-      const hasUserSeniorMatchToday = fixtures.some(f =>
-        !f.played &&
-        f.date.toDateString() === currentDate.toDateString() &&
-        (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) &&
-        f.squadType === 'SENIOR'
-      );
-      if (hasUserSeniorMatchToday) {
-        setView('PRE_MATCH');
-        return;
-      }
+    if (userClub || selectedNationalTeamId) {
+      const hasClubMatchToday = Boolean(userClub && fixtures.some(f =>
+      !f.played && f.date.toDateString() === currentDate.toDateString() &&
+      (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) && f.squadType === 'SENIOR'
+    ));
+    const hasNationalMatchToday = Boolean(selectedNationalTeamId && fixtures.some(f =>
+      !f.played && f.date.toDateString() === currentDate.toDateString() &&
+      (f.homeTeamId === selectedNationalTeamId || f.awayTeamId === selectedNationalTeamId) && f.squadType === 'SENIOR'
+    ));
+    if (hasClubMatchToday) {
+      setView('PRE_MATCH');
+      return;
+    }
+    // Los partidos de selección se simulan en el bloque de fixtures de abajo;
+    // no se interrumpe aquí para evitar dejar el mismo encuentro pendiente.
+
       const dayFixtures = fixtures.filter(f =>
         f.date.toDateString() === currentDate.toDateString() && !f.played
       );
@@ -278,13 +388,16 @@ if (result.userWonLeague) gs.trackTitle('Liga');
         
         if (isNationalTeamMatch) {
           // National team match simulation
-          const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId);
+          const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId, getNationalMatchOptions(f));
           f.played = true;
           f.homeScore = result.homeScore;
           f.awayScore = result.awayScore;
+          getNationalChronicleTeamIds(f).forEach(teamId => {
+            generateNationalTeamChronicle(f, result.homeScore, result.awayScore, result.stats, teamId, result.events, getNationalChronicleContext(teamId));
+          });
         } else {
           // Club match simulation
-          const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+          const { homeScore, awayScore, stats, events } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
           f.played = true;
           f.homeScore = homeScore;
           f.awayScore = awayScore;
@@ -303,7 +416,7 @@ if (result.userWonLeague) gs.trackTitle('Liga');
                 useGameStore.getState().trackMatchResult(us, os);
                 world.updateManagerProfileMatch(us, os);
                 world.updateTacticalFamiliarity(userClub.id);
-                generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
+                generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id, events);
           }
         }
         world.generateMatchNews(f, f.homeScore!, f.awayScore!, currentDate);
@@ -367,9 +480,9 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       setFixtures(allFixtures);
     }
 
-    if (userClub) {
-      const next = updateNextFixture(allFixtures, nextDay, userClub.id);
-      const userMatchTomorrow = allFixtures.find(f =>
+    if (activeManagedTeamId) {
+      const next = updateNextFixture(allFixtures, nextDay, activeManagedTeamId);
+      const userMatchTomorrow = userClub && allFixtures.find(f =>
         !f.played &&
         f.date.toDateString() === nextDay.toDateString() &&
         (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) &&
@@ -451,10 +564,13 @@ const startVacation = async (targetOverride?: Date) => {
         const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
         
         if (isNationalTeamMatch) {
-          const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId);
+          const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId, getNationalMatchOptions(f));
           f.played = true; f.homeScore = result.homeScore; f.awayScore = result.awayScore;
+          getNationalChronicleTeamIds(f).forEach(teamId => {
+            generateNationalTeamChronicle(f, result.homeScore, result.awayScore, result.stats, teamId, result.events, getNationalChronicleContext(teamId));
+          });
         } else {
-          const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+          const { homeScore, awayScore, stats, events } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
           f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
           const hSquad = world.getPlayersByClub(f.homeTeamId).filter(p => p.squad === f.squadType);
           const aSquad = world.getPlayersByClub(f.awayTeamId).filter(p => p.squad === f.squadType);
@@ -470,7 +586,7 @@ const startVacation = async (targetOverride?: Date) => {
               const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
               useGameStore.getState().trackMatchResult(us, os);
               world.updateManagerProfileMatch(us, os);
-              generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id);
+              generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id, events);
             }
         }
         world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
@@ -483,7 +599,7 @@ const startVacation = async (targetOverride?: Date) => {
 
       if (tempDate >= seasonEndDate) {
         setFixtures(localFixtures);
-        const result = useGameStore.getState().finishSeason(localFixtures, userClub?.id);
+        const result = useGameStore.getState().finishSeason(localFixtures, activeManagedTeamId);
         setSeasonSummary(result.summaries);
         setUserWonLeague(result.userWonLeague);
         const gs = useGameStore.getState();
@@ -531,7 +647,7 @@ const startVacation = async (targetOverride?: Date) => {
   };
 
   const simulateToNextMatch = async () => {
-    if (!userClub) return;
+    if (!activeManagedTeamId) return;
     setIsSimulating(true);
 
     let tempDate = new Date(currentDate);
@@ -545,13 +661,13 @@ const startVacation = async (targetOverride?: Date) => {
 
       if (tempDate >= seasonEndDate) {
         setFixtures(localFixtures);
-        const result = useGameStore.getState().finishSeason(localFixtures, userClub.id);
+        const result = useGameStore.getState().finishSeason(localFixtures, activeManagedTeamId);
         setSeasonSummary(result.summaries);
         setUserWonLeague(result.userWonLeague);
         const gs = useGameStore.getState();
         gs.setManagerHistory({ ...gs.managerHistory, seasonsCompleted: gs.managerHistory.seasonsCompleted + 1 });
         if (result.userWonLeague) gs.trackTitle('Liga');
-         const wonCups = result.summaries.filter((s: any) => s.championId === userClub.id && s.compType !== 'LEAGUE');
+         const wonCups = result.summaries.filter((s: any) => s.championId === activeManagedTeamId && s.compType !== 'LEAGUE');
          wonCups.forEach((s: any) => gs.trackTitle(s.compName));
          if (userClub) {
            const leagueTable = world.getLeagueTable(userClub.leagueId, localFixtures, 'SENIOR');
@@ -573,11 +689,20 @@ const startVacation = async (targetOverride?: Date) => {
       }
 
       const hasUserMatch = localFixtures.some(f =>
-        !f.played &&
-        f.date.toDateString() === tempDate.toDateString() &&
-        (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) &&
+        !f.played && f.date.toDateString() === tempDate.toDateString() &&
+        ((userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) ||
+          (selectedNationalTeamId && (f.homeTeamId === selectedNationalTeamId || f.awayTeamId === selectedNationalTeamId))) &&
         f.squadType === 'SENIOR'
       );
+      const hasClubMatch = Boolean(userClub && localFixtures.some(f =>
+        !f.played && f.date.toDateString() === tempDate.toDateString() &&
+        (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) &&
+        f.squadType === 'SENIOR'
+      ));
+      const hasNationalMatch = Boolean(selectedNationalTeamId && localFixtures.some(f =>
+        !f.played && f.date.toDateString() === tempDate.toDateString() &&
+        (f.homeTeamId === selectedNationalTeamId || f.awayTeamId === selectedNationalTeamId) && f.squadType === 'SENIOR'
+      ));
 
       const dayFixtures = localFixtures.filter(f =>
         f.date.toDateString() === tempDate.toDateString() && !f.played
@@ -589,13 +714,16 @@ dayFixtures.forEach(f => {
          const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
          
          if (isNationalTeamMatch) {
-           const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId);
+           const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId, getNationalMatchOptions(f));
            f.played = true; f.homeScore = result.homeScore; f.awayScore = result.awayScore;
+           getNationalChronicleTeamIds(f).forEach(teamId => {
+             generateNationalTeamChronicle(f, result.homeScore, result.awayScore, result.stats, teamId, result.events, getNationalChronicleContext(teamId));
+           });
            const hName = world.nationalTeamManager?.nationalTeams?.find((t: any) => t.id === f.homeTeamId)?.name || f.homeTeamId;
            const aName = world.nationalTeamManager?.nationalTeams?.find((t: any) => t.id === f.awayTeamId)?.name || f.awayTeamId;
            sendMatchNotification(`${hName} ${result.homeScore} - ${result.awayScore} ${aName}`);
          } else {
-           const { homeScore, awayScore, stats } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
+           const { homeScore, awayScore, stats, events } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
            f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
            const hName = world.getClub(f.homeTeamId)?.name || 'Equipo';
            const aName = world.getClub(f.awayTeamId)?.name || 'Equipo';
@@ -616,11 +744,11 @@ dayFixtures.forEach(f => {
       LifecycleManager.checkBirthdays(tempDate);
       LifecycleManager.recoverDailyFitness();
       LifecycleManager.processMonthlyFinances(tempDate);
-      world.checkRenewalTriggers(tempDate, userClub.id);
+      world.checkRenewalTriggers(tempDate, userClub?.id);
       world.processTransferDecisions(tempDate);
       world.processAIActivity(tempDate);
-      world.processDailyContracts(tempDate, userClub.id);
-      world.processDailyScouting(tempDate, userClub.id);
+      world.processDailyContracts(tempDate, userClub?.id);
+      world.processDailyScouting(tempDate, userClub?.id);
          world.generateGeneralNews(tempDate);
 
       // Transfer deadline day mechanics
@@ -644,9 +772,9 @@ dayFixtures.forEach(f => {
       if (hasUserMatch) {
         setFixtures(localFixtures);
         setCurrentDate(new Date(tempDate));
-        if (userClub) updateNextFixture(localFixtures, tempDate, userClub.id);
+        updateNextFixture(localFixtures, tempDate, activeManagedTeamId);
         setIsSimulating(false);
-        setView('PRE_MATCH');
+        setView(hasClubMatch ? 'PRE_MATCH' : hasNationalMatch ? `NT_${selectedNationalTeamId}` : 'PRE_MATCH');
         notify();
         return;
       }
@@ -654,28 +782,30 @@ dayFixtures.forEach(f => {
 
     setFixtures(localFixtures);
     setCurrentDate(new Date(tempDate));
-    if (userClub) updateNextFixture(localFixtures, tempDate, userClub.id);
+    updateNextFixture(localFixtures, tempDate, activeManagedTeamId);
     setIsSimulating(false);
     setView('HOME');
     notify();
   };
 
   const handleOpenSaveModal = async () => {
-    setSaveNameInput(`${userClub?.shortName} - ${currentDate.toLocaleDateString()}`);
+    const saveTeamName = userClub?.shortName || world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === selectedNationalTeamId)?.name || 'Selección';
+    setSaveNameInput(`${saveTeamName} - ${currentDate.toLocaleDateString()}`);
     const saves = await listSaves();
     setAvailableSaves(saves);
     setIsSaveModalOpen(true);
   };
 
   const confirmSaveGame = async () => {
-    if (!userClub || !saveNameInput.trim()) return;
+    if (!saveNameInput.trim()) return;
     try {
       const id = generateUUID();
+      const managedName = userClub?.name || world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === selectedNationalTeamId)?.name || 'Selección Nacional';
       const saveData = {
         id, label: saveNameInput, lastPlayed: new Date(),
-        metaTeamName: userClub.name,
+        metaTeamName: managedName,
         metaManagerName: `${userName} ${userSurname}`,
-        gameState: { currentDate, userName, userSurname, userClubId: userClub.id, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
+        gameState: { currentDate, userName, userSurname, userClubId: userClub?.id || null, selectedNationalTeamId, careerMode, fixtures, seasonEndDate, managerHistory: useGameStore.getState().managerHistory, managerReputation: useGameStore.getState().managerReputation, darkMode: useGameStore.getState().darkMode },
         worldState: {
           players: world.players, clubs: world.clubs, competitions: world.competitions,
           staff: world.staff, tactics: world.tactics, offers: world.offers, inbox: world.inbox,
@@ -754,24 +884,32 @@ dayFixtures.forEach(f => {
         // Validate the saved national team manager data
         world.nationalTeamManager = new NationalTeamManager();
         Object.assign(world.nationalTeamManager, data.worldState.nationalTeamManager);
-        // Reassign players to ensure consistency
+        // Reassign automatic pools, then validate the saved controlled squad.
         world.nationalTeamManager.assignPlayersToNationalTeams(world.players, world.clubs);
+        world.nationalTeamManager.validateControlledState(world.players, world.clubs);
       } else {
         world.nationalTeamManager = new NationalTeamManager();
         world.nationalTeamManager.assignPlayersToNationalTeams(world.players, world.clubs);
+        world.nationalTeamManager.validateControlledState(world.players, world.clubs);
       }
 
       if (!useGameStore.getState().deepSimLeagues?.length) {
         const userLeague = world.getClub(data.gameState.userClubId)?.leagueId;
         useGameStore.getState().setDeepSimLeagues(userLeague ? [userLeague] : []);
       }
+      if (useGameStore.getState().deepSimLeagues?.length) {
+        useGameStore.getState().deepSimLeagues.forEach((lid: string) => world.ensureDeepSquads(lid));
+      }
 
       setCurrentDate(data.gameState.currentDate);
       setUserName(data.gameState.userName);
       setUserSurname(data.gameState.userSurname);
 
-      const club = world.getClub(data.gameState.userClubId);
+      const club = data.gameState.userClubId ? world.getClub(data.gameState.userClubId) : null;
+      const savedNationalTeamId = data.gameState.selectedNationalTeamId || world.managerProfile?.currentNationalTeamId || world.nationalTeamManager?.controlledTeamId || null;
       setUserClub(club || null);
+      setSelectedNationalTeamId(savedNationalTeamId);
+      setCareerMode(data.gameState.careerMode || (club && savedNationalTeamId ? 'BOTH' : savedNationalTeamId ? 'NATIONAL' : 'CLUB'));
       setFixtures(data.gameState.fixtures);
       setSeasonEndDate(data.gameState.seasonEndDate);
 
@@ -787,6 +925,8 @@ dayFixtures.forEach(f => {
 
       if (club) {
         updateNextFixture(data.gameState.fixtures, data.gameState.currentDate, club.id);
+      } else if (savedNationalTeamId) {
+        updateNextFixture(data.gameState.fixtures, data.gameState.currentDate, savedNationalTeamId);
       }
 
       setIsLoadModalOpen(false);
@@ -810,7 +950,38 @@ dayFixtures.forEach(f => {
   };
 
   const renderCurrentView = () => {
-    if (!userClub) return null;
+    if (!userClub && !selectedNationalTeamId) return null;
+    // Vistas de selección nacional — pantallas separadas (Plantel / Tácticas / Partidos / Estadísticas) como en modo club.
+    if (currentView.startsWith('NT_')) {
+      const body = currentView.replace(/^NT_/, '');
+      const sectionMatch = body.match(/^(.*?)_(SQUAD|TACTICS|SCHEDULE|STATS)$/);
+      const teamId = sectionMatch ? sectionMatch[1] : body;
+      const section = (sectionMatch ? sectionMatch[2] : 'SQUAD') as 'SQUAD' | 'TACTICS' | 'SCHEDULE' | 'STATS';
+      return <NationalTeamView teamId={teamId} section={section} />;
+    }
+    if (!userClub && selectedNationalTeamId) {
+      if (currentView === 'CHRONICLES') return <ChronicleView onBack={() => setView('HOME')} clubId={undefined} />;
+      if (currentView === 'MANAGER_PROFILE') return <ManagerProfileView onBack={() => setView('HOME')} />;
+      if (currentView === 'INBOX') return <InboxView setView={setView} />;
+      if (currentView === 'MEDIA') return <MediaView onBack={() => setView('HOME')} />;
+      const nationalTeam = world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === selectedNationalTeamId);
+      const nationalFixture = nextFixture && (nextFixture.homeTeamId === selectedNationalTeamId || nextFixture.awayTeamId === selectedNationalTeamId) ? nextFixture : null;
+      return (
+        <div className="p-4 sm:p-8 h-full overflow-y-auto bg-[#d4dcd4]">
+          <div className="max-w-3xl mx-auto space-y-4">
+            <div className="bg-[#e8ece8] border border-[#a0b0a0] rounded-sm p-5 shadow-sm flex items-center gap-4">
+              <img src={getFlagUrl(nationalTeam?.country || selectedNationalTeamId)} alt={nationalTeam?.name || selectedNationalTeamId} className="w-12 h-8 object-cover rounded-sm border border-[#a0b0a0]" />
+              <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Cargo internacional activo</p><h2 className="text-2xl font-black uppercase italic text-slate-900">{nationalTeam?.name || selectedNationalTeamId}</h2><p className="text-[10px] text-slate-600">Convocatorias, once inicial y planteamiento táctico bajo tu responsabilidad.</p></div>
+            </div>
+            <div className="bg-white border border-[#a0b0a0] rounded-sm p-5 shadow-sm">
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-700 mb-4">Próximo compromiso</h3>
+              {nationalFixture ? <div className="flex items-center justify-between gap-3 text-sm font-black uppercase"><span>{world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === nationalFixture.homeTeamId)?.name || nationalFixture.homeTeamId}</span><span className="text-slate-400">VS</span><span>{world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === nationalFixture.awayTeamId)?.name || nationalFixture.awayTeamId}</span></div> : <p className="text-xs text-slate-500 italic">No hay un partido internacional próximo.</p>}
+              <FMButton onClick={() => setView(`NT_${selectedNationalTeamId}`)} className="mt-5"><Flag size={14} /> Gestionar selección</FMButton>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     switch (currentView) {
       case 'HOME':
@@ -936,7 +1107,7 @@ dayFixtures.forEach(f => {
       case 'CLUB_REPORT':
         return <ClubReport club={userClub} />;
       case 'PEOPLE_HUB':
-        return <PeopleHub userClub={userClub} currentDate={currentDate} />;
+        return <PeopleHub userClub={userClub || undefined} currentDate={currentDate} />;
       case 'CLUBS_LIST':
         return <ClubsListView onSelectClub={(c) => { setViewExternalClub(c); setView('EXTERNAL_CLUB'); }} />;
       case 'EXTERNAL_CLUB':
@@ -1009,7 +1180,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
-           return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats: Record<string, PlayerMatchStats>) => {
+           return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats: Record<string, PlayerMatchStats>, events) => {
               nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
               MatchSimulator.finalizeSeasonStats(
                 world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),
@@ -1026,7 +1197,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
                 world.updateManagerProfileMatch(userScore, oppScore);
                 world.updateTacticalFamiliarity(userClub.id);
                 world.updateClubRecords(nextFixture.homeTeamId, nextFixture.awayTeamId, h, a, currentDate, nextFixture.competitionId);
-                generateMatchChronicle(nextFixture, h, a, stats, userClub.id);
+                generateMatchChronicle(nextFixture, h, a, stats, userClub.id, events);
                setView('PRESS_CONFERENCE_POST');
                notify();
            }} />;
@@ -1074,10 +1245,6 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         if (currentView.startsWith('COMP_')) {
           const competition = world.competitions.find(c => c.id === currentView.replace('COMP_', ''));
           return competition ? <TournamentHub competition={competition} fixtures={fixtures} userClubId={userClub.id} /> : null;
-        }
-        if (currentView.startsWith('NT_')) {
-          const teamId = currentView.replace('NT_', '');
-          return <NationalTeamView teamId={teamId} />;
         }
         return null;
     }
@@ -1160,7 +1327,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <label className="text-[10px] font-black text-slate-600 uppercase block mb-1 tracking-widest">Fecha de nacimiento</label>
             <input type="date" className="w-full bg-slate-100 border border-slate-500 rounded-sm px-4 py-3 text-slate-950 font-bold text-sm outline-none focus:border-slate-800" value={userBirthDate.toISOString().split('T')[0]} onChange={(e) => setUserBirthDate(new Date(e.target.value))} />
           </div>
-          <FMButton onClick={() => { setGameState('SETUP_COUNTRY'); }} className="w-full py-4 mt-4">
+          <FMButton onClick={() => { setGameState('SETUP_CAREER'); }} className="w-full py-4 mt-4">
             CREAR MI MANAGER <ChevronRight size={14} />
           </FMButton>
           <FMButton onClick={() => { setGameState('SETUP_EXISTING_MANAGER'); }} variant="secondary" className="w-full py-3 mt-2 text-xs border-2 border-slate-400">
@@ -1186,31 +1353,12 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
     };
     const onSelectManager = (m: RealManager) => {
       setSelectedExistingManager(m);
+      setManagerResultLimit(120);
       setUserName(m.name);
       setUserSurname(m.surname);
       setUserNationality(m.nationality);
-      if (m.currentClubId) {
-        // If manager has a club, show conflict modal
-        setManagerToConfirm(m);
-        setShowConflictModal(true);
-      } else {
-        // If unemployed, go to country selection
-        setGameState('SETUP_COUNTRY');
-      }
+      setGameState('SETUP_CAREER');
     };
-    const createManagerAndStartGame = (manager: RealManager, clubId: string, fired: boolean) => {
-      const club = world.getClub(clubId);
-      if (club) {
-        setUserClub(club);
-        const allFix = initSeasonFixtures(currentDate, club.id);
-        updateNextFixture(allFix, currentDate, club.id);
-        world.replaceHeadCoach(manager, club.id, fired);
-        world.createManagerProfile(club.id, manager.name, manager.surname, manager.nationality, 'EX_PLAYER', manager.birthDate, currentDate);
-        setGameState('PLAYING');
-        notify();
-      }
-    };
-
     const handleTakeClub = () => {
       if (managerToConfirm && managerToConfirm.currentClubId) {
         createManagerAndStartGame(managerToConfirm, managerToConfirm.currentClubId, false);
@@ -1254,53 +1402,123 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <ChevronLeft size={12} /> Volver
           </button>
           <h1 className="text-3xl sm:text-5xl font-black text-slate-900 mb-2 tracking-tighter italic uppercase text-center">Elegir Manager</h1>
-          <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-[0.3em] mb-6">Directores técnicos reales de las ligas del juego</p>
+          <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-[0.3em] mb-2">Busca en toda la base disponible · {ALL_REAL_MANAGERS.length.toLocaleString()} perfiles cargados</p>
+          <p className="text-[9px] text-slate-400 font-bold uppercase text-center tracking-widest mb-4">{MANAGER_DATABASE_META.curatedCount} perfiles curados · {MANAGER_DATABASE_META.importedCount.toLocaleString()} importados desde Wikidata{MANAGER_DATABASE_META.importedComplete ? '' : ' · snapshot parcial'}</p>
 
-          <div className="space-y-6">
-            {countriesAvailable.map(country => {
-              const leaguesInCountry = countryLeagues.filter(l => l.country === country).map(l => l.id);
-              const managersInCountry = REAL_MANAGERS.filter(m => leaguesInCountry.includes(m.leagueId));
-              if (managersInCountry.length === 0) return null;
-              return (
-                <div key={country}>
-                  <div className="flex items-center gap-2 mb-3 border-b border-[#a0b0a0] pb-2">
-                    <img src={getFlagUrl(country)} alt={country} className="w-6 h-4 rounded-sm object-cover border border-[#a0b0a0]" />
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider italic">{country}</h3>
-                    <span className="text-[9px] text-slate-500 font-bold">{managersInCountry.length} DT{managersInCountry.length !== 1 ? 's' : ''}</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {managersInCountry.map(m => (
-                      <button key={m.id} onClick={() => onSelectManager(m)}
-                        className="p-4 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] hover:border-l-4 hover:border-l-[#3a4a3a] rounded-sm text-left transition-all shadow-sm">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <img src={getFlagUrl(m.nationality)} alt={m.nationality} className="w-5 h-4 rounded-sm object-cover border border-[#a0b0a0] shrink-0" />
-                            <div className="min-w-0">
-                              <p className="font-black text-slate-900 text-xs uppercase truncate">{m.name} {m.surname}</p>
-                              <p className="text-[9px] text-slate-500 font-bold">{m.age} años • {m.personality}</p>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-base font-black text-[#3a4a3a]">{m.reputation}</p>
-                            <p className="text-[8px] text-slate-500 uppercase font-bold">Rep</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-sm ${m.currentClubId ? 'bg-[#3a4a3a] text-white' : 'bg-slate-300 text-slate-700'}`}>
-                            {m.currentClubId ? clubName(m.currentClubId) : 'Desempleado'}
-                          </span>
-                        </div>
-                        <div className="space-y-1 mt-2">
-                          <AttrBar label="Dir." value={m.attributes.coaching} color="bg-[#3a4a3a]" />
-                          <AttrBar label="Tác." value={m.attributes.tacticalKnowledge} color="bg-[#4a5a4a]" />
-                          <AttrBar label="Gest." value={m.attributes.manManagement} color="bg-[#5a6a5a]" />
-                          <AttrBar label="Mot." value={m.attributes.motivation} color="bg-[#6a7a6a]" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_180px] gap-2 mb-5">
+            <input
+              value={managerSearch}
+              onChange={e => setManagerSearch(e.target.value)}
+              placeholder="Buscar por nombre, apellido, nacionalidad o club..."
+              className="bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm px-3 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-[#3a4a3a]"
+            />
+            <select value={managerCountryFilter} onChange={e => setManagerCountryFilter(e.target.value)} className="bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm px-3 py-2.5 text-xs font-bold text-slate-900 outline-none">
+              <option value="ALL">Todas las nacionalidades</option>
+              {Array.from(new Set(ALL_REAL_MANAGERS.map(m => m.nationality))).sort().map(country => <option key={country} value={country}>{country}</option>)}
+            </select>
+          </div>
+
+          {(() => {
+            const query = managerSearch.trim().toLocaleLowerCase();
+            const filteredManagers = ALL_REAL_MANAGERS.filter(m => {
+              const club = m.currentClubId ? clubName(m.currentClubId) : '';
+              const haystack = `${m.name} ${m.surname} ${m.nationality} ${club} ${m.personality} ${m.dataSource || ''}`.toLocaleLowerCase();
+              return (!query || haystack.includes(query)) && (managerCountryFilter === 'ALL' || m.nationality === managerCountryFilter);
+            });
+            const visibleManagers = [...filteredManagers]
+              .sort((a, b) => b.reputation - a.reputation)
+              .slice(0, managerResultLimit);
+            return (
+              <>
+                <div className="flex items-center justify-between mb-3 text-[9px] font-black uppercase text-slate-500">
+                  <span>{filteredManagers.length.toLocaleString()} resultado{filteredManagers.length !== 1 ? 's' : ''}</span>
+                  <span>Mostrando {Math.min(managerResultLimit, filteredManagers.length).toLocaleString()} · Orden: reputación</span>
                 </div>
-              );
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {visibleManagers.map(m => (
+                    <button key={m.id} onClick={() => onSelectManager(m)} className="p-4 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] hover:border-l-4 hover:border-l-[#3a4a3a] rounded-sm text-left transition-all shadow-sm">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <img src={getFlagUrl(m.nationality)} alt={m.nationality} className="w-5 h-4 rounded-sm object-cover border border-[#a0b0a0] shrink-0" />
+                          <div className="min-w-0"><p className="font-black text-slate-900 text-xs uppercase truncate">{m.name} {m.surname}</p><p className="text-[9px] text-slate-500 font-bold">{m.age} años · {m.personality}</p></div>
+                        </div>
+                        <div className="text-right shrink-0"><p className="text-base font-black text-[#3a4a3a]">{m.reputation}</p><p className="text-[8px] text-slate-500 uppercase font-bold">Rep</p></div>
+                      </div>
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-sm ${m.currentClubId ? 'bg-[#3a4a3a] text-white' : 'bg-slate-300 text-slate-700'}`}>{m.currentClubId ? clubName(m.currentClubId) : 'Desempleado'}</span>
+                      {m.dataSource === 'WIKIDATA' && <span className="ml-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-sm bg-sky-100 text-sky-800 border border-sky-200">Wikidata · datos básicos</span>}
+                      <div className="space-y-1 mt-3"><AttrBar label="Dir." value={m.attributes.coaching} color="bg-[#3a4a3a]" /><AttrBar label="Tác." value={m.attributes.tacticalKnowledge} color="bg-[#4a5a4a]" /><AttrBar label="Gest." value={m.attributes.manManagement} color="bg-[#5a6a5a]" /><AttrBar label="Mot." value={m.attributes.motivation} color="bg-[#6a7a6a]" /></div>
+                    </button>
+                  ))}
+                </div>
+                {filteredManagers.length > managerResultLimit && (
+                  <button onClick={() => setManagerResultLimit(limit => limit + 120)} className="mt-4 w-full py-2 bg-[#e2eae2] hover:bg-[#ccd9cc] border border-[#a0b0a0] rounded-sm text-[10px] font-black uppercase text-slate-700 transition-colors">
+                    Cargar más · quedan {(filteredManagers.length - managerResultLimit).toLocaleString()}
+                  </button>
+                )}
+                {filteredManagers.length === 0 && <p className="text-center text-slate-500 italic py-10">No hay managers que coincidan con la búsqueda.</p>}
+              </>
+            );
+          })()}
+        </div>
+      </div>
+    );
+  }
+
+  if (gameState === 'SETUP_CAREER') {
+    const selectedManagerLabel = selectedExistingManager ? `${selectedExistingManager.name} ${selectedExistingManager.surname}` : `${userName} ${userSurname}`;
+    const chooseMode = (mode: CareerMode) => {
+      setCareerMode(mode);
+      if (mode === 'CLUB') {
+        setSelectedNationalTeamId(null);
+        setGameState('SETUP_COUNTRY');
+      } else {
+        setGameState('SETUP_NATIONAL_TEAM');
+      }
+    };
+    return (
+      <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
+        <div className="max-w-3xl w-full bg-white rounded-sm p-5 sm:p-10 border border-[#a0b0a0] shadow-2xl">
+          <button onClick={() => setGameState(selectedExistingManager ? 'SETUP_EXISTING_MANAGER' : 'SETUP_USER')} className="text-[10px] text-slate-500 hover:text-slate-900 font-bold mb-5 flex items-center gap-1">
+            <ChevronLeft size={12} /> Volver
+          </button>
+          <div className="flex items-center gap-3 mb-2"><div className="bg-[#3a4a3a] text-white rounded-sm p-2"><Briefcase size={18} /></div><div><h1 className="text-2xl sm:text-4xl font-black text-slate-900 uppercase italic tracking-tight">Tu carrera</h1><p className="text-[10px] text-slate-500 uppercase tracking-widest">{selectedManagerLabel}</p></div></div>
+          <p className="text-xs text-slate-600 mb-6">Elige qué responsabilidad quieres asumir al comenzar. Puedes dirigir un club, una selección nacional o ambos proyectos a la vez.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {([
+              { mode: 'CLUB' as CareerMode, title: 'Solo club', text: 'Gestiona plantilla, fichajes, staff y competiciones de clubes.' },
+              { mode: 'NATIONAL' as CareerMode, title: 'Solo selección', text: 'Convoca jugadores, define el once y dirige el calendario internacional.' },
+              { mode: 'BOTH' as CareerMode, title: 'Club + selección', text: 'Una carrera dual con control formal de ambos equipos.' },
+            ]).map(option => (
+              <button key={option.mode} onClick={() => chooseMode(option.mode)} className="text-left p-4 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] hover:border-l-4 hover:border-l-[#3a4a3a] rounded-sm transition-all">
+                <div className="text-[10px] font-black uppercase text-[#3a4a3a] mb-2">{option.title}</div>
+                <p className="text-[10px] leading-relaxed text-slate-600">{option.text}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameState === 'SETUP_NATIONAL_TEAM') {
+    const nationalTeams = world.nationalTeamManager?.nationalTeams || [];
+    return (
+      <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
+        <div className="max-w-5xl w-full bg-white rounded-sm p-4 sm:p-10 border border-[#a0b0a0] shadow-2xl max-h-[90vh] overflow-y-auto">
+          <button onClick={() => setGameState('SETUP_CAREER')} className="text-[10px] text-slate-500 hover:text-slate-900 font-bold mb-4 flex items-center gap-1"><ChevronLeft size={12} /> Volver al tipo de carrera</button>
+          <div className="flex items-center justify-between gap-3 mb-5"><div><h1 className="text-2xl sm:text-4xl font-black text-slate-900 uppercase italic tracking-tight">Elegir selección</h1><p className="text-[10px] text-slate-500 uppercase tracking-widest">{careerMode === 'BOTH' ? 'Primero la selección, después el club' : 'Tu equipo nacional'}</p></div><Flag size={22} /></div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {nationalTeams.map((team: any) => {
+              const eligible = world.nationalTeamManager?.getEligiblePlayers(team.id, world.players, world.clubs).length || 0;
+              const selected = selectedNationalTeamId === team.id;
+              return <button key={team.id} onClick={() => {
+                if (careerMode === 'BOTH') { setSelectedNationalTeamId(team.id); setGameState('SETUP_COUNTRY'); }
+                else { startNationalCareer(team.id, selectedExistingManager); }
+              }} className={`p-4 text-left rounded-sm border transition-all ${selected ? 'border-[#3a4a3a] bg-[#e2eae2] border-l-4' : 'border-[#a0b0a0] bg-[#f2f7f2] hover:bg-[#e2eae2] hover:border-l-4 hover:border-l-[#3a4a3a]'}`}>
+                <div className="flex items-center gap-2 mb-2"><img src={getFlagUrl(team.country)} alt={team.country} className="w-7 h-5 object-cover rounded-sm border border-[#a0b0a0]" /><span className="text-[9px] font-black text-slate-400">{team.id}</span></div>
+                <p className="font-black text-slate-900 uppercase text-xs truncate">{team.name}</p>
+                <p className="text-[9px] text-slate-500 mt-1">{team.confederation} · {eligible} elegibles</p>
+              </button>;
             })}
           </div>
         </div>
@@ -1332,8 +1550,8 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
               </button>
             ))}
           </div>
-          <button onClick={() => setGameState('SETUP_USER')} className="mt-4 text-[10px] text-slate-500 hover:text-slate-900 font-bold flex items-center gap-1">
-            <ChevronLeft size={12} /> Volver a datos del manager
+          <button onClick={() => setGameState('SETUP_CAREER')} className="mt-4 text-[10px] text-slate-500 hover:text-slate-900 font-bold flex items-center gap-1">
+            <ChevronLeft size={12} /> Volver al tipo de carrera
           </button>
         </div>
       </div>
@@ -1357,7 +1575,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             {leagues.map(league => {
               const clubCount = world.getClubsByLeague(league.id).length;
               return (
-                <button key={league.id} onClick={() => { setSelectedLeague(league); setGameState('SETUP_TEAM'); }}
+                <button key={league.id} onClick={() => { setSelectedLeague(league); world.ensureDeepSquads(league.id); useGameStore.getState().setDeepSimLeagues([league.id]); setGameState('SETUP_TEAM'); }}
                   className="p-5 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] rounded-sm text-left transition-all shadow-sm flex flex-col">
                   <h3 className="text-base font-black text-slate-900 mb-1 italic uppercase truncate">{league.name}</h3>
                   <p className="text-[9px] text-slate-500">{clubCount} equipo{clubCount !== 1 ? 's' : ''}</p>
@@ -1398,13 +1616,14 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         <div className="space-y-8">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {leagueClubs.map(c => (
-              <button key={c.id} onClick={() => {
-                if (selectedExistingManager) {
+              <button key={c.id} onClick={() => {                if (selectedNationalTeamId && careerMode === 'BOTH') {
+                  startNationalCareer(selectedNationalTeamId, selectedExistingManager, c.id);
+                } else if (selectedExistingManager) {
                   createManagerAndStartGame(selectedExistingManager, c.id, false);
                 } else {
                   setUserClub(c);
                   world.createHumanManager(c.id, `${userName} ${userSurname}`);
-                  world.createManagerProfile(c.id, userName, userSurname, userNationality, userOrigin, userBirthDate, currentDate);
+                  world.createManagerProfile(c.id, userName, userSurname, userNationality, userOrigin, userBirthDate, currentDate, careerMode === 'BOTH' ? selectedNationalTeamId : null);
                   const allFix = initSeasonFixtures(currentDate, c.id);
                   updateNextFixture(allFix, currentDate, c.id);
                   setGameState('PLAYING');
@@ -1428,6 +1647,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
 
   const dateBg = userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-white';
   const dateText = userClub ? userClub.primaryColor.replace('bg-', 'text-') : 'text-slate-700';
+  const headerTeamName = userClub?.name || world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === selectedNationalTeamId)?.name || 'FM';
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-400 text-slate-950 overflow-hidden font-sans relative text-sm dark:bg-gray-900 dark:text-gray-100">
@@ -1493,7 +1713,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <div className="flex items-center gap-3">
               <div className={`w-1.5 h-8 ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-slate-800'} border-x border-black/10 opacity-80`}></div>
               <h1 className={`text-sm font-black uppercase tracking-tight italic drop-shadow-sm truncate max-w-[150px] sm:max-w-none ${userClub ? '' : 'text-slate-950'}`}>
-                {userClub?.name || "FM"}
+                {headerTeamName}
               </h1>
             </div>
           </div>
@@ -1514,8 +1734,8 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       )}
 
       <div className="flex flex-1 overflow-hidden relative">
-        {userClub && !isMatchView && (
-          <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
+        {(userClub || selectedNationalTeamId) && !isMatchView && (
+          <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
         )}
         <main className="flex-1 flex flex-col min-w-0 bg-[#94a3b8] relative overflow-hidden pb-[104px] lg:pb-0">
           {renderCurrentView()}
@@ -1560,7 +1780,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         </div>
       )}
 
-      {selectedPlayer && userClub && <PlayerModal player={selectedPlayer} userClubId={userClub.id} onClose={() => setSelectedPlayer(null)} currentDate={currentDate} />}
+      {selectedPlayer && (userClub || selectedNationalTeamId) && <PlayerModal player={selectedPlayer} userClubId={userClub?.id} onClose={() => setSelectedPlayer(null)} currentDate={currentDate} />}
       {comparePlayerA && comparePlayerB && <PlayerCompareModal playerA={comparePlayerA} playerB={comparePlayerB} onClose={() => { setComparePlayerA(null); setComparePlayerB(null); }} />}
       {contextMenu && <PlayerContextMenu player={contextMenu.player} x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} currentDate={currentDate} />}
       {seasonSummary && <SeasonSummaryModal summary={seasonSummary} userWonLeague={userWonLeague} onClose={() => { setSeasonSummary(null); setUserWonLeague(false); }} />}

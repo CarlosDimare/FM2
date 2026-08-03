@@ -13,7 +13,7 @@ interface MatchViewProps {
   awayTeam: Club;
   homePlayers: Player[];
   awayPlayers: Player[];
-  onFinish: (homeScore: number, awayScore: number, matchStats: Record<string, PlayerMatchStats>) => void;
+  onFinish: (homeScore: number, awayScore: number, matchStats: Record<string, PlayerMatchStats>, events: MatchEvent[]) => void;
   currentDate: Date;
   userClubId: string;
 }
@@ -453,7 +453,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
             )}
           </div>
         ) : (
-          <button onClick={() => onFinish(matchState.homeScore, matchState.awayScore, matchState.playerStats)} className="w-full max-w-sm h-12 bg-blue-700 hover:bg-blue-600 text-white rounded-sm font-black uppercase text-xs shadow-xl border-b-4 border-blue-900 transition-all active:scale-95">SALIR DEL PARTIDO</button>
+          <button onClick={() => onFinish(matchState.homeScore, matchState.awayScore, matchState.playerStats, matchState.events)} className="w-full max-w-sm h-12 bg-blue-700 hover:bg-blue-600 text-white rounded-sm font-black uppercase text-xs shadow-xl border-b-4 border-blue-900 transition-all active:scale-95">SALIR DEL PARTIDO</button>
         )}
       </footer>
 
@@ -576,7 +576,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
               <div className="text-[10px] text-slate-400 mt-1">{homeTeam.shortName} vs {awayTeam.shortName}</div>
             </div>
             {(() => {
-              const sorted = Object.entries(matchState.playerStats)
+              const sorted = (Object.entries(matchState.playerStats) as [string, PlayerMatchStats][])
                 .filter(([_, s]) => s.minutesPlayed > 0.1)
                 .sort(([, a], [, b]) => b.rating - a.rating)
                 .slice(0, 10);

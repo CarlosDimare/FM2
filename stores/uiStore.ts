@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { Player, Club, Competition, SquadType, ManagerOrigin, RealManager } from '../types';
+import { Player, Club, Competition, SquadType, ManagerOrigin, RealManager, CareerMode } from '../types';
 import { SaveMetadata } from '../services/utils';
 import { CompetitionSummary } from '../components/SeasonSummaryModal';
 
-type GameState = 'LOADING' | 'SETUP_USER' | 'SETUP_EXISTING_MANAGER' | 'SETUP_COUNTRY' | 'SETUP_LEAGUE' | 'SETUP_TEAM' | 'PLAYING';
+type GameState = 'LOADING' | 'SETUP_USER' | 'SETUP_EXISTING_MANAGER' | 'SETUP_CAREER' | 'SETUP_COUNTRY' | 'SETUP_LEAGUE' | 'SETUP_NATIONAL_TEAM' | 'SETUP_TEAM' | 'PLAYING';
 
 interface UIStore {
   gameState: GameState;
@@ -42,6 +42,8 @@ interface UIStore {
   comparePlayerA: Player | null;
   comparePlayerB: Player | null;
   selectedExistingManager: RealManager | null;
+  careerMode: CareerMode;
+  selectedNationalTeamId: string | null;
 
   setGameState: (state: GameState) => void;
   setView: (view: string) => void;
@@ -60,6 +62,10 @@ interface UIStore {
   setIsVacationModalOpen: (open: boolean) => void;
   setVacationTargetDate: (date: string) => void;
   setIsSimulating: (sim: boolean) => void;
+  setVacationProgress: (progress: number) => void;
+  setVacationDetail: (detail: string) => void;
+  setVacationCancelled: (cancelled: boolean) => void;
+  resetVacationState: () => void;
   setIsInVacation: (inVacation: boolean) => void;
   setSeasonSummary: (summary: CompetitionSummary[] | null) => void;
   setUserWonLeague: (won: boolean) => void;
@@ -76,6 +82,8 @@ interface UIStore {
   setComparePlayerA: (p: Player | null) => void;
   setComparePlayerB: (p: Player | null) => void;
   setSelectedExistingManager: (m: RealManager | null) => void;
+  setCareerMode: (mode: CareerMode) => void;
+  setSelectedNationalTeamId: (id: string | null) => void;
 }
 
 export const useUIStore = create<UIStore>((set) => ({
@@ -115,6 +123,8 @@ export const useUIStore = create<UIStore>((set) => ({
   comparePlayerA: null,
   comparePlayerB: null,
   selectedExistingManager: null,
+  careerMode: 'CLUB',
+  selectedNationalTeamId: null,
 
   setGameState: (gameState) => set({ gameState }),
   setView: (currentView) => set({ currentView }),
@@ -153,4 +163,6 @@ export const useUIStore = create<UIStore>((set) => ({
   setComparePlayerA: (comparePlayerA) => set({ comparePlayerA }),
   setComparePlayerB: (comparePlayerB) => set({ comparePlayerB }),
   setSelectedExistingManager: (selectedExistingManager) => set({ selectedExistingManager }),
+  setCareerMode: (careerMode) => set({ careerMode }),
+  setSelectedNationalTeamId: (selectedNationalTeamId) => set({ selectedNationalTeamId }),
 }));

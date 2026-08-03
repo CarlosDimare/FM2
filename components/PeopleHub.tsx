@@ -3,10 +3,11 @@ import { Player, Staff, Club } from '../types';
 import { world } from '../services/worldManager';
 import { DialogueSystem } from '../services/dialogueSystem';
 import { FMBox, FMButton } from './FMUI';
+import { useUIStore } from '../stores/uiStore';
 import { Users, MessageSquare, AlertTriangle, Heart, Swords, Briefcase, Building2, X, DollarSign, Dumbbell } from 'lucide-react';
 
 interface PeopleHubProps {
-  userClub: Club;
+  userClub?: Club;
   currentDate: Date;
 }
 
@@ -20,9 +21,25 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
   const [interactionTone, setInteractionTone] = useState<'MILD' | 'MODERATE' | 'AGGRESSIVE'>('MILD');
   const [lastResult, setLastResult] = useState<string | null>(null);
 
-  const players = world.getPlayersByClub(userClub.id).filter(p => p.squad === 'SENIOR');
-  const staff = world.getStaffByClub(userClub.id);
+  const { selectedNationalTeamId } = useUIStore();
+  const isNationalOnly = !userClub;
+
+  // En modo club se listan los jugadores del primer equipo; en modo selección, la convocatoria controlada.
+  const players: Player[] = userClub
+    ? world.getPlayersByClub(userClub.id).filter(p => p.squad === 'SENIOR')
+    : (() => {
+        const nt = world.nationalTeamManager;
+        if (!nt || !selectedNationalTeamId) return [];
+        const ids = nt.isControlled(selectedNationalTeamId)
+          ? nt.getControlledSquadIds(selectedNationalTeamId)
+          : (nt.nationalTeams?.find((t: any) => t.id === selectedNationalTeamId)?.playerIds || []);
+        return ids
+          .map(pid => world.players.find(p => p.id === pid))
+          .filter((p): p is Player => Boolean(p));
+      })();
+  const staff: Staff[] = userClub ? world.getStaffByClub(userClub.id) : [];
   const coach = staff.find(s => s.role === 'HEAD_COACH');
+  const tabs: Tab[] = userClub ? ['PLAYERS', 'STAFF', 'RELATIONSHIPS', 'BOARD'] : ['PLAYERS', 'RELATIONSHIPS'];
 
   const recentInteractions = useMemo(() => {
     return world.interactionLog
@@ -73,12 +90,12 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
           <Users size={22} /> Centro de Personas
         </h2>
         <p className="text-slate-600 font-bold text-[10px] uppercase tracking-widest">
-          Gestiona relaciones, tensiones y comunicación con jugadores, staff y directiva.
+          {isNationalOnly ? 'Gestiona relaciones y comunicación con tus convocados internacionales.' : 'Gestiona relaciones, tensiones y comunicación con jugadores, staff y directiva.'}
         </p>
       </header>
 
       <div className="flex gap-2 border-b border-slate-300">
-        {(['PLAYERS', 'STAFF', 'RELATIONSHIPS', 'BOARD'] as Tab[]).map(t => (
+        {tabs.map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -93,6 +110,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
 
       {tab === 'PLAYERS' && (
         <div className="space-y-2">
+          {players.length === 0 && <div className="text-center text-slate-400 text-[10px] italic py-8">Sin jugadores disponibles.</div>}
           {players.map(player => {
             const rel = world.getRelationship('COACH', player.id);
             const moraleColor = player.morale >= 70 ? 'text-green-700' : player.morale >= 40 ? 'text-amber-600' : 'text-red-600';
@@ -118,7 +136,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
         </div>
       )}
 
-      {tab === 'STAFF' && (
+      {tab === 'STAFF' && userClub && (
         <div className="space-y-2">
           {staff.map(member => {
             const rel = world.getRelationship('COACH', member.id);
@@ -168,7 +186,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
         </FMBox>
       )}
 
-      {tab === 'BOARD' && (
+      {tab === 'BOARD' && userClub && (
         <FMBox title="Relación con la Directiva">
           <div className="space-y-3">
             <div className="bg-white border border-slate-300 p-4 rounded-sm">
@@ -237,9 +255,9 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                 <FMButton onClick={() => handlePlayerInteraction(selectedPlayer, 'SET_CAPTAIN')} className="w-full text-[10px]" variant="secondary">
                   <Briefcase size={12} /> Asignar capitanía
                 </FMButton>
-                <FMButton onClick={() => handlePlayerInteraction(selectedPlayer, 'THREATEN_TRANSFER')} className="w-full text-[10px]" variant="danger">
+                {!isNationalOnly && <FMButton onClick={() => handlePlayerInteraction(selectedPlayer, 'THREATEN_TRANSFER')} className="w-full text-[10px]" variant="danger">
                   <AlertTriangle size={12} /> Amenazar con traspaso
-                </FMButton>
+                </FMButton>}
               </div>
               {lastResult && <div className="text-[11px] text-slate-700 bg-slate-100 p-3 rounded-sm border border-slate-200">{lastResult}</div>}
             </div>

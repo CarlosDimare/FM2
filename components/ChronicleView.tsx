@@ -6,7 +6,7 @@ import { BookOpen, ArrowLeft, Filter, Calendar, Trophy, Star, Clock, FileText } 
 
 interface ChronicleViewProps {
   onBack: () => void;
-  clubId: string;
+  clubId?: string;
 }
 
 const TYPE_ICONS: Record<ChronicleType, React.ReactNode> = {
@@ -25,8 +25,22 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onBack, clubId }) 
   const [filter, setFilter] = useState<ChronicleType | 'ALL'>('ALL');
   const [selectedChronicle, setSelectedChronicle] = useState<Chronicle | null>(null);
 
-  const allChronicles = world.chronicles.filter(c => c.clubId === clubId);
+  const userClub = clubId ? world.getClub(clubId) : undefined;
+  const normalizeCountry = (country: string) => country.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const controlledNationalTeamId = world.nationalTeamManager?.controlledTeamId;
+  const clubNationalTeamId = userClub
+    ? world.nationalTeamManager?.nationalTeams?.find((team: any) => normalizeCountry(team.country) === normalizeCountry(userClub.country))?.id
+    : undefined;
+  const visibleNationalTeamIds = new Set([controlledNationalTeamId, clubNationalTeamId].filter(Boolean));
+  const allChronicles = world.chronicles.filter(c =>
+    c.clubId === clubId || (c.nationalTeamId && visibleNationalTeamIds.has(c.nationalTeamId))
+  );
   const filtered = filter === 'ALL' ? allChronicles : allChronicles.filter(c => c.type === filter);
+
+  const getNationalTeamName = (teamId?: string) =>
+    teamId
+      ? world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === teamId)?.name || teamId
+      : undefined;
 
   const sortedChronicles = [...filtered].sort((a, b) => b.date.getTime() - a.date.getTime());
 
@@ -76,6 +90,11 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onBack, clubId }) 
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   {TYPE_LABELS[selectedChronicle.type]}
                 </span>
+                {selectedChronicle.nationalTeamId && (
+                  <span className="text-[9px] font-black uppercase text-purple-600 border border-purple-200 bg-purple-50 px-1.5 py-0.5 rounded-sm">
+                    Selección · {getNationalTeamName(selectedChronicle.nationalTeamId)}
+                  </span>
+                )}
                 <span className="text-[10px] text-slate-400 ml-auto">
                   {selectedChronicle.date.toLocaleDateString()}
                 </span>
@@ -110,6 +129,11 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onBack, clubId }) 
                     <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
                       {TYPE_LABELS[chronicle.type]}
                     </span>
+                    {chronicle.nationalTeamId && (
+                      <span className="text-[8px] font-black uppercase text-purple-600 border border-purple-200 bg-purple-50 px-1.5 py-0.5 rounded-sm">
+                        Selección · {getNationalTeamName(chronicle.nationalTeamId)}
+                      </span>
+                    )}
                     <span className="text-[9px] text-slate-400 ml-auto">
                       {chronicle.date.toLocaleDateString()}
                     </span>

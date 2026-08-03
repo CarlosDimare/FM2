@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Competition, Fixture, Club, Player, SquadType } from '../types';
 import { world } from '../services/worldManager';
 import { LeagueTable } from './LeagueTable';
-import { Calendar, ListOrdered, Goal, Trophy, ChevronRight, Zap, Star, LayoutGrid } from 'lucide-react';
+import { Calendar, ListOrdered, Goal, Trophy, ChevronRight, Zap, Star, LayoutGrid, UserCheck } from 'lucide-react';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 
 interface TournamentHubProps {
