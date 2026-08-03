@@ -333,6 +333,11 @@ export class WorldManager {
        try { this.loadRealClubs(RSA_PSL, 'L_RSA_1'); } catch (e) { console.warn('[WorldManager] Failed to load DStv Premiership:', e); }
        // Init team cohesion for all clubs
        this.clubs.forEach(c => { if (!c.teamCohesion) c.teamCohesion = 40 + randomInt(0, 30); });
+       // Init dynamic reputations for all leagues
+       this.competitions.filter(c => c.type === 'LEAGUE').forEach(c => {
+         if (!c.dynamicReputation) c.dynamicReputation = this.getBaseLeagueRep(c);
+         c.marketMultiplier = 0.5 + (c.dynamicReputation / 100) * 1.5;
+       });
     }
 
   loadRealClubs(definitions: RealClubDef[], leagueId: string) {
@@ -683,6 +688,85 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
   }
 
   getClubsByLeague(leagueId: string) { return this.clubs.filter(c => c.leagueId === leagueId); }
+
+  /** Recompute dynamic reputations for all leagues at end of season */
+  updateLeagueReputations() {
+    const leagues = this.competitions.filter(c => c.type === 'LEAGUE');
+    leagues.forEach(league => {
+      const clubs = this.getClubsByLeague(league.id);
+      if (clubs.length === 0) { league.dynamicReputation = this.getBaseLeagueRep(league); return; }
+      
+      // Factor 1: Average reputation of clubs in the league
+      const avgClubRep = clubs.reduce((s, c) => s + c.reputation, 0) / clubs.length;
+      // Factor 2: Average CA of players in the league (proxy for quality)
+      const allPlayers = clubs.flatMap(c => this.getPlayersByClub(c.id).filter(p => p.squad === 'SENIOR'));
+      const avgCA = allPlayers.length > 0 ? allPlayers.reduce((s, p) => s + p.currentAbility, 0) / allPlayers.length : 100;
+      // Factor 3: Continental performance bonus (clubs qualified for continental comps)
+      const continentalBonus = clubs.filter(c => c.qualifiedFor && ['CONT_LIB', 'UCL', 'COPA_LIB'].includes(c.qualifiedFor)).length * 3;
+      
+      const rawScore = (avgClubRep / 100) * 0.5 + (avgCA / 2) * 0.3 + continentalBonus * 0.2;
+      const baseRep = this.getBaseLeagueRep(league);
+      // Smooth transition: 70% previous + 30% new score, then clamp
+      const prevRep = league.dynamicReputation ?? baseRep;
+      league.dynamicReputation = Math.max(10, Math.min(100, Math.round(prevRep * 0.7 + rawScore * 0.3)));
+      league.marketMultiplier = 0.5 + (league.dynamicReputation / 100) * 1.5;
+    });
+  }
+
+  private getBaseLeagueRep(league: Competition): number {
+    const map: Record<string, number> = {
+      'L_ENG_1': 92, 'L_ESP_1': 90, 'L_ITA_1': 85, 'L_DEU_1': 84, 'L_FRA_1': 78,
+      'L_NLD_1': 70, 'L_PRT_1': 68, 'L_BEL_1': 58, 'L_TUR_1': 55,
+      'L_BRA_1': 75, 'L_ARG_1': 72, 'L_URY_1': 48, 'L_CHI_1': 40, 'L_COL_1': 42,
+      'L_MEX_1': 60, 'L_USA_1': 55, 'L_USA_2': 50,
+      'L_JPN_1': 52, 'L_SAU_1': 48, 'L_KOR_1': 45, 'L_CHN_1': 38,
+      'L_AUS_1': 32, 'L_EGY_1': 40, 'L_MAR_1': 35, 'L_RSA_1': 34,
+    };
+    return map[league.id] || 30;
+  }
+
+  getLeagueTier(rep: number): 'ELITE' | 'PRESTIGE' | 'DEVELOPING' | 'EMERGING' | 'LOCAL' {
+    if (rep >= 80) return 'ELITE';
+    if (rep >= 60) return 'PRESTIGE';
+    if (rep >= 40) return 'DEVELOPING';
+    if (rep >= 20) return 'EMERGING';
+    return 'LOCAL';
+  }
+
+  getMarketMultiplier(leagueId: string): number {
+    const league = this.competitions.find(c => c.id === leagueId);
+    return league?.marketMultiplier ?? 1.0;
+  }
+
+  /** Generate economic news when league reputations shift significantly */
+  generateEconomicNews(date: Date) {
+    const leagues = this.competitions.filter(c => c.type === 'LEAGUE' && c.dynamicReputation !== undefined);
+    // Find biggest movers
+    const sortedByChange = [...leagues].sort((a, b) => 
+      Math.abs((b.dynamicReputation || 0) - this.getBaseLeagueRep(b)) -
+      Math.abs((a.dynamicReputation || 0) - this.getBaseLeagueRep(a))
+    );
+    const topMovers = sortedByChange.slice(0, 3);
+    topMovers.forEach(league => {
+      const change = (league.dynamicReputation || 0) - this.getBaseLeagueRep(league);
+      const tier = this.getLeagueTier(league.dynamicReputation || 30);
+      const direction = change >= 5 ? 'asciende' : change <= -5 ? 'desciende' : 'se mantiene';
+      const tierNames: Record<string, string> = { ELITE: 'Élite', PRESTIGE: 'Prestigio', DEVELOPING: 'En Desarrollo', EMERGING: 'Emergente', LOCAL: 'Local' };
+      if (Math.abs(change) >= 5) {
+        this.addInboxMessage('STATEMENTS',
+          `${league.name}: ${direction} al tier ${tierNames[tier]}`,
+          `La reputación de la ${league.name} se sitúa en ${league.dynamicReputation}/100 (${direction} ${Math.abs(change)} pts). Tier actual: ${tierNames[tier]}.`,
+          date);
+      }
+    });
+    // Cross-league comparison headline
+    if (leagues.length >= 2) {
+      const top3 = [...leagues].sort((a, b) => (b.dynamicReputation || 0) - (a.dynamicReputation || 0)).slice(0, 3);
+      this.addInboxMessage('STATEMENTS', 'Ranking Mundial de Ligas',
+        `Top 3 ligas por reputación:\n1. ${top3[0]?.name} (${top3[0]?.dynamicReputation}/100)\n2. ${top3[1]?.name} (${top3[1]?.dynamicReputation}/100)\n3. ${top3[2]?.name} (${top3[2]?.dynamicReputation}/100)`,
+        date);
+    }
+  }
 
   selectBestEleven(clubId: string, squad: SquadType, tacticId?: string) {
     const players = this.getPlayersByClub(clubId).filter(p => p.squad === squad && !p.injury && (!p.suspension || p.suspension.matchesLeft === 0));
@@ -1128,6 +1212,27 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
         if (targets.length > 0) {
           const target = targets[Math.floor(Math.random() * targets.length)];
           this.makeTransferOffer(target.id, buyer.id, Math.round(target.value * (0.8 + Math.random() * 0.4)), 'PURCHASE', date);
+        }
+      }
+    }
+    // Talent migration: young stars (U23, PA>150) prefer rising leagues
+    if (Math.random() < 0.08) {
+      const youngStars = this.players.filter(p => p.age <= 23 && p.potentialAbility > 150 && p.clubId !== 'FREE_AGENT');
+      if (youngStars.length > 0) {
+        const star = youngStars[Math.floor(Math.random() * youngStars.length)];
+        const starClub = this.getClub(star.clubId);
+        const starLeague = this.competitions.find(c => c.id === starClub?.leagueId);
+        const risingLeagues = this.competitions.filter(c =>
+          c.type === 'LEAGUE' && c.id !== starClub?.leagueId &&
+          (c.dynamicReputation || 30) > (starLeague?.dynamicReputation || 30) + 10
+        );
+        if (risingLeagues.length > 0) {
+          const targetLeague = risingLeagues[Math.floor(Math.random() * risingLeagues.length)];
+          const targetClubs = this.clubs.filter(c => c.leagueId === targetLeague.id && c.finances.transferBudget > star.value * 0.5);
+          if (targetClubs.length > 0) {
+            const buyer = targetClubs[Math.floor(Math.random() * targetClubs.length)];
+            this.makeTransferOffer(star.id, buyer.id, Math.round(star.value * 1.2), 'PURCHASE', date);
+          }
         }
       }
     }
@@ -1857,7 +1962,9 @@ addInboxMessage(category: MessageCategory, subject: string, body: string, date: 
       ? Math.max(0, (p.contractExpiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30))
       : 12;
     const contractMult = 0.85 + Math.min(monthsLeft, 36) / 200;
-    return Math.round(base * formMult * ageMult * contractMult);
+    const club = this.getClub(p.clubId);
+    const marketMult = club ? this.getMarketMultiplier(club.leagueId) : 1.0;
+    return Math.round(base * formMult * ageMult * contractMult * marketMult);
   }
 
 recalculateAllPlayerValues() {

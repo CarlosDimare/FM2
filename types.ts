@@ -248,7 +248,11 @@ export interface Competition {
   continentalSlots?: number;
   seasonStartMonth?: number;
   seasonEndMonth?: number;
+  dynamicReputation?: number; // 0-100, fluctuates with league performance
+  marketMultiplier?: number;  // 0.5-2.0, derived from dynamicReputation
 }
+
+export type LeagueTier = 'ELITE' | 'PRESTIGE' | 'DEVELOPING' | 'EMERGING' | 'LOCAL';
 
 export type MatchStage = 'REGULAR' | 'GROUP' | 'ROUND_OF_32' | 'ROUND_OF_16' | 'QUARTER_FINAL' | 'SEMI_FINAL' | 'FINAL';
 

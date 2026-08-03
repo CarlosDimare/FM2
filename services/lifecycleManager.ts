@@ -338,6 +338,10 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
       }
     });
 
+    // ── Dynamic league reputations ──────────────────────────────────
+    world.updateLeagueReputations();
+    world.generateEconomicNews(currentDate || new Date());
+
     return summaries;
   }
 

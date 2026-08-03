@@ -1152,6 +1152,59 @@ dayFixtures.forEach(f => {
         return <ScoutingView clubId={userClub.id} onSelectPlayer={setSelectedPlayer} />;
       case 'BOARD':
         return <BoardView userClub={userClub} />;
+      case 'LEAGUE_RANKING':
+        return (
+          <div className="p-4 sm:p-8 h-full overflow-y-auto bg-[#d4dcd4]">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-xl font-black text-slate-900 uppercase italic mb-4">🌍 Ranking Mundial de Ligas</h2>
+              <div className="bg-white border border-[#a0b0a0] rounded-sm shadow-sm overflow-hidden">
+                <table className="w-full text-[10px]">
+                  <thead className="bg-slate-800 text-white">
+                    <tr>
+                      <th className="p-2 text-left w-8">#</th>
+                      <th className="p-2 text-left">Liga</th>
+                      <th className="p-2 text-left">País</th>
+                      <th className="p-2 text-center">Rep.</th>
+                      <th className="p-2 text-center">Tier</th>
+                      <th className="p-2 text-right">Prize Pool</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {world.competitions
+                      .filter(c => c.type === 'LEAGUE')
+                      .sort((a, b) => (b.dynamicReputation || 0) - (a.dynamicReputation || 0))
+                      .map((league, i) => {
+                        const tier = world.getLeagueTier(league.dynamicReputation || 30);
+                        const tierColors: Record<string, string> = {
+                          ELITE: 'bg-yellow-100 text-yellow-800',
+                          PRESTIGE: 'bg-slate-200 text-slate-700',
+                          DEVELOPING: 'bg-amber-100 text-amber-800',
+                          EMERGING: 'bg-slate-100 text-slate-600',
+                          LOCAL: 'bg-slate-50 text-slate-500',
+                        };
+                        return (
+                          <tr key={league.id} className={`border-t border-slate-200 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50'} hover:bg-blue-50`}>
+                            <td className="p-2 font-black text-slate-400">{i + 1}</td>
+                            <td className="p-2 font-black text-slate-900">{league.name}</td>
+                            <td className="p-2 text-slate-600">{league.country}</td>
+                            <td className="p-2 text-center font-black">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] ${(league.dynamicReputation || 0) >= 80 ? 'bg-green-100 text-green-800' : (league.dynamicReputation || 0) >= 60 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700'}`}>
+                                {league.dynamicReputation || '—'}
+                              </span>
+                            </td>
+                            <td className="p-2 text-center">
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${tierColors[tier] || ''}`}>{tier}</span>
+                            </td>
+                            <td className="p-2 text-right text-slate-600">${(league.defaultPrizePool || 0).toLocaleString()}</td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
       case 'CLUB_REPORT':
         return <ClubReport club={userClub} />;
       case 'PEOPLE_HUB':

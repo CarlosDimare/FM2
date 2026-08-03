@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Inbox, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User, Star } from 'lucide-react';
+import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Inbox, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User, Star, BarChart3 } from 'lucide-react';
 import { Club, SquadType, Competition } from '../types';
 import { world } from '../services/worldManager';
 import { SettingsModal } from './SettingsModal';
@@ -93,6 +93,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
               </div>
             )}
           </div>}
+
+          <SubNavItem id="LEAGUE_RANKING" label="Ranking Ligas" icon={BarChart3} active={currentView === 'LEAGUE_RANKING'} onClick={() => setView('LEAGUE_RANKING')} />
 
           {world.nationalTeamManager && (
             <div className="mb-1">
