@@ -27,6 +27,8 @@ interface UIStore {
   vacationProgress: number; // 0-100
   vacationDetail: string;
   vacationCancelled: boolean;
+  simProgress: number; // 0-100 for simulateToNextMatch
+  simProgressDetail: string;
   seasonSummary: CompetitionSummary[] | null;
   userWonLeague: boolean;
   viewLeagueId: string | null;
@@ -65,6 +67,8 @@ interface UIStore {
   setVacationProgress: (progress: number) => void;
   setVacationDetail: (detail: string) => void;
   setVacationCancelled: (cancelled: boolean) => void;
+  setSimProgress: (progress: number) => void;
+  setSimProgressDetail: (detail: string) => void;
   resetVacationState: () => void;
   setIsInVacation: (inVacation: boolean) => void;
   setSeasonSummary: (summary: CompetitionSummary[] | null) => void;
@@ -108,6 +112,8 @@ export const useUIStore = create<UIStore>((set) => ({
   vacationProgress: 0,
   vacationDetail: '',
   vacationCancelled: false,
+  simProgress: 0,
+  simProgressDetail: '',
   seasonSummary: null,
   userWonLeague: false,
   viewLeagueId: null,
@@ -147,6 +153,8 @@ export const useUIStore = create<UIStore>((set) => ({
   setVacationProgress: (progress) => set({ vacationProgress: progress }),
   setVacationDetail: (detail) => set({ vacationDetail: detail }),
   setVacationCancelled: (cancelled) => set({ vacationCancelled: cancelled }),
+  setSimProgress: (simProgress: number) => set({ simProgress }),
+  setSimProgressDetail: (simProgressDetail: string) => set({ simProgressDetail }),
   resetVacationState: () => set({ vacationProgress: 0, vacationDetail: '', vacationCancelled: false }),
   setSeasonSummary: (seasonSummary) => set({ seasonSummary }),
   setUserWonLeague: (userWonLeague) => set({ userWonLeague }),

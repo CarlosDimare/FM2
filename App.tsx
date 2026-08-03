@@ -93,6 +93,7 @@ const {
     careerMode, selectedNationalTeamId,
     isVacationModalOpen, vacationTargetDate, isSimulating, isInVacation,
     vacationProgress, vacationDetail, vacationCancelled, setVacationProgress, setVacationDetail, setVacationCancelled, resetVacationState,
+    simProgress, simProgressDetail, setSimProgress, setSimProgressDetail,
     seasonSummary, userWonLeague, viewLeagueId, viewSquadType,
     currentDate, seasonEndDate, hasSave,
     isSaveModalOpen, saveNameInput, isLoadModalOpen, availableSaves,
@@ -716,6 +717,9 @@ const startVacation = async (targetOverride?: Date) => {
   const simulateToNextMatch = async () => {
     if (!activeManagedTeamId) return;
     setIsSimulating(true);
+    setSimProgress(0);
+    setSimProgressDetail('Preparando simulación...');
+    await new Promise(r => setTimeout(r, 30));
 
     let tempDate = new Date(currentDate);
     let localFixtures = [...fixtures];
@@ -750,6 +754,7 @@ const startVacation = async (targetOverride?: Date) => {
            world.checkManagerJobOffers(tempDate, userClub.id, useGameStore.getState().managerReputation);
          }
         setIsSimulating(false);
+        setSimProgress(0);
         setCurrentDate(tempDate);
         notify();
         return;
@@ -790,15 +795,9 @@ dayFixtures.forEach(f => {
            getNationalChronicleTeamIds(f).forEach(teamId => {
              generateNationalTeamChronicle(f, result.homeScore, result.awayScore, result.stats, teamId, result.events, getNationalChronicleContext(teamId));
            });
-           const hName = world.nationalTeamManager?.nationalTeams?.find((t: any) => t.id === f.homeTeamId)?.name || f.homeTeamId;
-           const aName = world.nationalTeamManager?.nationalTeams?.find((t: any) => t.id === f.awayTeamId)?.name || f.awayTeamId;
-           sendMatchNotification(`${hName} ${result.homeScore} - ${result.awayScore} ${aName}`);
          } else {
            const { homeScore, awayScore, stats, events } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
            f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
-           const hName = world.getClub(f.homeTeamId)?.name || 'Equipo';
-           const aName = world.getClub(f.awayTeamId)?.name || 'Equipo';
-           sendMatchNotification(`${hName} ${homeScore} - ${awayScore} ${aName}`);
            const hSquad = (squads.get(f.homeTeamId) || []).filter(p => p.squad === f.squadType);
            const aSquad = (squads.get(f.awayTeamId) || []).filter(p => p.squad === f.squadType);
            MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
@@ -839,9 +838,12 @@ dayFixtures.forEach(f => {
         localFixtures = [...localFixtures, ...newCupFixtures];
       }
 
-      if (daysSimmed % 7 === 0) {
+      if (daysSimmed % 3 === 0) {
         setCurrentDate(new Date(tempDate));
-        await new Promise(r => setTimeout(r, 5));
+        const progress = Math.min(99, Math.round((daysSimmed / Math.min(maxDays, 90)) * 100));
+        setSimProgress(progress);
+        setSimProgressDetail(`Día ${daysSimmed} · ${tempDate.toLocaleDateString('es-ES')}`);
+        await new Promise(r => setTimeout(r, 30));
       }
 
       if (hasUserMatch) {
@@ -849,6 +851,7 @@ dayFixtures.forEach(f => {
         setCurrentDate(new Date(tempDate));
         updateNextFixture(localFixtures, tempDate, activeManagedTeamId);
         setIsSimulating(false);
+        setSimProgress(0);
         setView(hasClubMatch ? 'PRE_MATCH' : hasNationalMatch ? `NT_${selectedNationalTeamId}` : 'PRE_MATCH');
         notify();
         return;
@@ -859,6 +862,7 @@ dayFixtures.forEach(f => {
     setCurrentDate(new Date(tempDate));
     updateNextFixture(localFixtures, tempDate, activeManagedTeamId);
     setIsSimulating(false);
+    setSimProgress(0);
     setView('HOME');
     notify();
   };
@@ -1789,6 +1793,14 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-400 text-slate-950 overflow-hidden font-sans relative text-sm dark:bg-gray-900 dark:text-gray-100">
       <div className={`h-1 w-full ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-slate-800'}`}></div>
+
+      {isSimulating && !isInVacation && (
+        <FMLoadingOverlay
+          message="Avanzando hacia el próximo partido"
+          progress={simProgress > 0 ? { current: simProgress, total: 100, detail: simProgressDetail } : undefined}
+          showCancel={false}
+        />
+      )}
 
       {isInVacation && !vacationCancelled && (
         <FMLoadingOverlay
