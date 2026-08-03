@@ -6,7 +6,8 @@ export const POSITIONS = [Position.GK, Position.DC, Position.MC, Position.ST];
 export const NATIONS = [
   "Argentina", "Brasil", "Uruguay", "Chile", "Colombia", "Perú", "Ecuador", "Paraguay", "Bolivia", "Venezuela",
   "España", "Inglaterra", "Francia", "Alemania", "Italia", "Portugal", "Países Bajos", "Bélgica",
-  "México", "USA", "Japón", "Croacia", "Suiza", "Dinamarca", "Suecia", "Noruega", "Polonia", "Austria"
+  "México", "USA", "Japón", "Croacia", "Suiza", "Dinamarca", "Suecia", "Noruega", "Polonia", "Austria",
+  "Turquía", "Rusia", "Ucrania", "Grecia", "Arabia Saudita"
 ];
 
 export const GAME_SPEED_MS = 200; // ms per match minute simulation

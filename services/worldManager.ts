@@ -245,6 +245,7 @@ export class WorldManager {
          'Noruega': 'Europa', 'Polonia': 'Europa', 'Ucrania': 'Europa',
          'USA': 'América del Norte', 'México': 'América del Norte',
          'Japón': 'Asia', 'Arabia Saudita': 'Asia',
+         'Corea del Sur': 'Asia', 'China': 'Asia', 'Australia': 'Oceanía',
       };
       return map[country] || 'Europa';
    }
@@ -542,7 +543,10 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
       'Argentina': 0.6, 'Brasil': 0.8, 'Uruguay': 0.6, 'Chile': 0.7, 'Colombia': 0.65,
       'Inglaterra': 2.0, 'España': 1.8, 'Italia': 1.7, 'Alemania': 1.9, 'Francia': 1.8,
       'Portugal': 1.2, 'Países Bajos': 1.5, 'Bélgica': 1.3, 'Turquía': 1.0, 'Rusia': 0.9,
+      'Croacia': 0.75, 'Grecia': 0.7, 'Austria': 1.5, 'Suiza': 1.6, 'Dinamarca': 1.3,
+      'Suecia': 1.1, 'Noruega': 1.2, 'Polonia': 0.8, 'Ucrania': 0.6,
       'Estados Unidos': 2.2, 'México': 0.7, 'Japón': 1.6, 'China': 1.4, 'Arabia Saudita': 1.8,
+      'Corea del Sur': 1.3, 'Australia': 1.2,
     };
     const economyMult = club ? (countryEconomy[club.country] || 0.8) : 0.8;
 

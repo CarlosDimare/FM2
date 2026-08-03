@@ -148,6 +148,58 @@ export const REGEN_DB: any = {
    "japon": {
      "nombres": ["Takefusa", "Ritsu", "Daizen", "Kaoru", "Yuya", "Ao", "Hiroki", "Takumi", "Wataru", "Yuta", "Shoya", "Genki", "Sota", "Ryoya", "Hayao", "Kota", "Yuki", "Reo", "Keito", "Shuto"],
      "apellidos": ["Kubo", "Dōan", "Maeda", "Mitoma", "Kubo", "Tanaka", "Soma", "Minamino", "Endō", "Nakajima", "Yamaguchi", "Harada", "Shimizu", "Ito", "Takahashi", "Wakizaka", "Hayashi", "Hatate", "Sugawara", "Nakamura"]
+   },
+   "belgica": {
+     "nombres": ["Kevin", "Romelu", "Thibaut", "Youri", "Leandro", "Axel", "Hans", "Dries", "Timothy", "Leander", "Thomas", "Arthur", "Amadou", "Eden", "Yannick", "Toby", "Jan", "Charles", "Alexis", "Jérémy"],
+     "apellidos": ["De Bruyne", "Lukaku", "Courtois", "Tielemans", "Trossard", "Witsel", "Vanaken", "Mertens", "Castagne", "Dendoncker", "Meunier", "Theate", "Onana", "Hazard", "Vertonghen", "Alderweireld", "Carrasco", "De Ketelaere", "Mangala", "Doku"]
+   },
+   "turquia": {
+     "nombres": ["Emre", "Eren", "Barış", "Ferdi", "Cengiz", "Yusuf", "Arda", "Salih", "Burak", "Merih", "Ozan", "Zeki", "Kerem", "Hakan", "Orkun", "Deniz", "Can", "İsmail", "Umut", "Kaan"],
+     "apellidos": ["Kökçü", "Yılmaz", "Özcan", "Yıldırım", "Ünal", "Akbaba", "Güler", "Kabak", "Tufan", "Çalhanoğlu", "Demiral", "Çelik", "Ak", "Bayındır", "Aktürkoğlu", "Kara", "Özdemir", "Yüksel", "Şahin", "Arslan"]
+   },
+   "rusia": {
+     "nombres": ["Ivan", "Fyodor", "Andrey", "Sergey", "Mikhail", "Yuri", "Denis", "Konstantin", "Roman", "Nikolay", "Georgiy", "Vladimir", "Kirill", "Maksim", "Artyom", "Timofey", "Yegor", "Boris", "Leonid", "Evgeniy"],
+     "apellidos": ["Smirnov", "Ivanov", "Kuznetsov", "Popov", "Volkov", "Morozov", "Petrov", "Sokolov", "Kozlov", "Lebedev", "Novikov", "Fyodorov", "Mikhailov", "Vasiliev", "Orlov", "Nikolaev", "Zaytsev", "Bogdanov", "Tikhonov", "Romanov"]
+   },
+   "croacia": {
+     "nombres": ["Luka", "Mateo", "Ivan", "Borna", "Bruno", "Nikola", "Dominik", "Josip", "Darijo", "Tin", "Mario", "Marko", "Ante", "Lovro", "Lovren", "Jakov", "Kristijan", "Danijel", "Karlo", "Mihael"],
+     "apellidos": ["Kovačić", "Brozović", "Perišić", "Livaković", "Lovren", "Kramarić", "Petković", "Vlašić", "Juranović", "Sosa", "Gvardiol", "Pašalić", "Majer", "Oršić", "Šutalo", "Erlić", "Ivanušec", "Barišić", "Brekalo", "Sučić"]
+   },
+   "grecia": {
+     "nombres": ["Nikos", "Dimitris", "Petros", "Andreas", "Kostas", "Ioannis", "Vasilis", "Georgios", "Sokratis", "Christos", "Spyros", "Alexandros", "Marios", "Elias", "Lefteris", "Stathis", "Giannis", "Thanasis", "Manolis", "Anastasios"],
+     "apellidos": ["Papadopoulos", "Georgiou", "Vasilakis", "Karagounis", "Ntinos", "Samaras", "Bakas", "Lazaridis", "Manolis", "Xenakis", "Stavrou", "Athanasopoulos", "Alexiou", "Angelopoulos", "Kyriazis", "Petrakis", "Giannakopoulos", "Kalogeropoulos", "Sotiropoulos", "Charalampidis"]
+   },
+   "austria": {
+     "nombres": ["David", "Marko", "Philipp", "Bastian", "Christoph", "Andreas", "Dominik", "Jakob", "Marcel", "Florian", "Konrad", "Julian", "Kevin", "Lukas", "Maximilian", "Tobias", "Patrick", "Sebastian", "Simon", "Stefan"],
+     "apellidos": ["Gruber", "Huber", "Bauer", "Wimmer", "Pichler", "Moser", "Fischer", "Schmid", "Leitner", "Winkler", "Weber", "Schwarz", "Seidl", "Hofer", "Mayer", "Berger", "Wagner", "Eder", "Riegler", "Haas"]
+   },
+   "suiza": {
+     "nombres": ["Nico", "Noah", "Liam", "Fabian", "Remo", "Cedric", "Gabriel", "Vincent", "Manuel", "Marco", "Simon", "Eren", "Yann", "Michel", "Severin", "Alain", "Breel", "Xherdan", "Eray", "Johan"],
+     "apellidos": ["Frei", "Müller", "Meier", "Schmid", "Schneider", "Steiner", "Brunner", "Keller", "Zimmermann", "Roth", "Weber", "Bachmann", "Graf", "Hofmann", "Egli", "Hess", "Bucher", "Fischer", "Gerber", "Zürcher"]
+   },
+   "dinamarca": {
+     "nombres": ["Christian", "Pierre-Emile", "Joakim", "Jens", "Simon", "Jonas", "Mikkel", "Andreas", "Lasse", "Kasper", "Mads", "Mathias", "Rasmus", "Daniel", "Frederik", "Jacob", "Morten", "Philip", "Oliver", "Jesper"],
+     "apellidos": ["Eriksen", "Højbjerg", "Mæhle", "Stryger", "Kjær", "Wind", "Damsgaard", "Poulsen", "Schmeichel", "Dolberg", "Christensen", "Nielsen", "Jensen", "Larsen", "Sørensen", "Jørgensen", "Olsen", "Rasmussen", "Hansen", "Pedersen"]
+   },
+   "suecia": {
+     "nombres": ["Erik", "Johan", "Anders", "Niklas", "Lars", "Magnus", "Emil", "Oscar", "Karl", "Viktor", "Mattias", "Gustav", "Per", "Fredrik", "Henrik", "Axel", "Linus", "Ludvig", "Anton", "Simon"],
+     "apellidos": ["Karlsson", "Johansson", "Andersson", "Larsson", "Svensson", "Nilsson", "Gustafsson", "Eriksson", "Persson", "Olsson", "Jansson", "Pettersson", "Jönsson", "Bergström", "Henriksson", "Lindström", "Nyström", "Jakobsson", "Lundström", "Forsberg"]
+   },
+   "noruega": {
+     "nombres": ["Erling", "Martin", "Sander", "Alexander", "Stefan", "Mats", "Marius", "Ola", "Kristian", "Leo", "Jonas", "Henrik", "Fredrik", "Bjørn", "Ole", "Thomas", "Tobias", "Einar", "Tor", "Daniel"],
+     "apellidos": ["Hansen", "Olsen", "Larsen", "Haugen", "Moen", "Berg", "Pedersen", "Nilsen", "Jakobsen", "Eriksen", "Solberg", "Andersen", "Johannesen", "Halvorsen", "Strand", "Dahl", "Bakke", "Lund", "Aas", "Vik"]
+   },
+   "polonia": {
+     "nombres": ["Mateusz", "Piotr", "Kamil", "Jakub", "Błażej", "Rafał", "Tomasz", "Michał", "Pawel", "Jan", "Bartosz", "Grzegorz", "Lukasz", "Dariusz", "Robert", "Wlodzimierz", "Adrian", "Dawid", "Maciej", "Adam"],
+     "apellidos": ["Kowalski", "Nowak", "Wiśniewski", "Kaczmarek", "Lewandowski", "Wójcik", "Kamiński", "Chmiel", "Zieliński", "Kozłowski", "Szymański", "Baran", "Duda", "Pawlak", "Lis", "Adamczyk", "Walczak", "Sikora", "Mazur", "Tomczyk"]
+   },
+   "ucrania": {
+     "nombres": ["Andriy", "Taras", "Denys", "Yevhen", "Mykhailo", "Oleksandr", "Danylo", "Roman", "Vladyslav", "Sergiy", "Maxim", "Yuriy", "Ihor", "Kyrylo", "Heorhiy", "Ievgen", "Petro", "Bogdan", "Maksym", "Yaroslav"],
+     "apellidos": ["Shevchenko", "Kovalenko", "Bondarenko", "Moroz", "Tkachenko", "Kovalchuk", "Khmara", "Boyko", "Melnyk", "Lysenko", "Zinchenko", "Petrenko", "Shevchuk", "Hrytsenko", "Polishchuk", "Tereshchenko", "Mosiychuk", "Kravchuk", "Yarmolenko", "Romanchuk"]
+   },
+   "arabiasaudita": {
+     "nombres": ["Mohammed", "Fahad", "Abdullah", "Ali", "Hussein", "Khaled", "Yahya", "Tariq", "Nawaf", "Bader", "Mansour", "Sultan", "Majed", "Ahmed", "Omar", "Rashid", "Hassan", "Jassim", "Waheed", "Sami"],
+     "apellidos": ["Al-Harbi", "Al-Shammari", "Al-Mutairi", "Al-Rashidi", "Al-Otaibi", "Al-Dosari", "Al-Ghamdi", "Al-Qahtani", "Al-Ansari", "Al-Zahrani", "Abusahmain", "Al-Johani", "Al-Saleh", "Al-Nemer", "Al-Faraj", "Al-Shehri", "Al-Muwallad", "Al-Khobar", "Al-Moosa", "Al-Tamimi"]
    }
  };
 
