@@ -311,6 +311,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       allFixtures.push(...world.nationalTeamManager.generateWorldCupFinalTournament(qualifiedTeams, wcYear));
     }
 
+    // ── Performance: fixture breakdown ──────────────────────────────
+    const deepIds = new Set(deepLeagueIds);
+    const leagueFixCounts: string[] = [];
+    let totalDeepFix = 0, totalLightFix = 0, totalDeepLeagues = 0, totalLightLeagues = 0;
+    world.competitions.filter(c => c.type === 'LEAGUE').forEach(l => {
+      const count = allFixtures.filter(f => f.competitionId === l.id && f.squadType === 'SENIOR').length;
+      if (deepIds.has(l.id)) { totalDeepFix += count; totalDeepLeagues++; }
+      else { totalLightFix += count; totalLightLeagues++; }
+      leagueFixCounts.push(`${l.id}: ${count} (${deepIds.has(l.id) ? 'DEEP' : 'LIGHT'})`);
+    });
+    console.groupCollapsed(`📋 Fixtures generados: ${allFixtures.length.toLocaleString()} total · ${totalDeepFix} DEEP (${totalDeepLeagues} ligas) · ${totalLightFix} LIGHT (${totalLightLeagues} ligas)`);
+    console.table(leagueFixCounts.map(s => ({ fixtureCount: s })));
+    console.groupEnd();
+
     set({ fixtures: allFixtures });
     if (clubId) {
       const next = get().updateNextFixture(allFixtures, startFrom, clubId);

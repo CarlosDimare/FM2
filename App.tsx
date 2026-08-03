@@ -306,6 +306,13 @@ const {
   };
 
   const advanceTime = async () => {
+    const t0 = performance.now();
+    // ── Fixture stats ──────────────────────────────────────────────
+    const deepIds = new Set(useGameStore.getState().deepSimLeagues);
+    const totalFix = fixtures.filter(f => !f.played && f.date.toDateString() === currentDate.toDateString());
+    const deepFix = totalFix.filter(f => deepIds.has(world.getClub(f.homeTeamId)?.leagueId || world.getClub(f.awayTeamId)?.leagueId || ''));
+    const lightFix = totalFix.length - deepFix.length;
+    console.groupCollapsed(`📅 ${currentDate.toLocaleDateString('es-ES')} — ${totalFix.length} partidos (${deepFix.length} DEEP · ${lightFix} LIGHT) · ${fixtures.length.toLocaleString()} totales`);
     if (currentView === 'PRE_MATCH') {
       handleStartMatch();
       return;
@@ -377,6 +384,8 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       (f.homeTeamId === selectedNationalTeamId || f.awayTeamId === selectedNationalTeamId) && f.squadType === 'SENIOR'
     ));
     if (hasClubMatchToday) {
+      console.log(`  ⏸ partido del usuario hoy — pausado`);
+      console.groupEnd();
       setView('PRE_MATCH');
       return;
     }
@@ -386,6 +395,7 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       const dayFixtures = fixtures.filter(f =>
         f.date.toDateString() === currentDate.toDateString() && !f.played
       );
+      console.time('  ⚽ simular partidos');
       dayFixtures.forEach(f => {
         const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
         
@@ -424,12 +434,14 @@ if (result.userWonLeague) gs.trackTitle('Liga');
         }
         world.generateMatchNews(f, f.homeScore!, f.awayScore!, currentDate);
       });
+      console.timeEnd('  ⚽ simular partidos');
     }
 
     const nextDay = new Date(currentDate);
     nextDay.setDate(currentDate.getDate() + 1);
     setCurrentDate(nextDay);
 
+    console.time('  🔄 ciclo diario');
     LifecycleManager.checkBirthdays(nextDay);
     LifecycleManager.recoverDailyFitness();
     LifecycleManager.processMonthlyFinances(nextDay);
@@ -475,6 +487,7 @@ if (result.userWonLeague) gs.trackTitle('Liga');
     // Youth development pipeline
     world.developYouthPlayers(nextDay);
     world.autoPromoteYouthPlayers(nextDay);
+    console.timeEnd('  🔄 ciclo diario');
 
     const newCupFixtures = LifecycleManager.processCompetitionProgress(fixtures, nextDay);
     let allFixtures = fixtures;
@@ -495,6 +508,9 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       else if (next && next.date.toDateString() === nextDay.toDateString()) setView('PRE_MATCH');
     }
     notify();
+    const elapsed = (performance.now() - t0).toFixed(1);
+    console.log(`  ✅ total: ${elapsed}ms`);
+    console.groupEnd();
   };
 
   advanceTimeRef.current = advanceTime;
