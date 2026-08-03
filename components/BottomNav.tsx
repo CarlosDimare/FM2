@@ -67,8 +67,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ advanceTime, simulateToNex
           {!isPreMatchView && (
             <button
               onClick={simulateToNextMatch}
-              disabled={isSimulating}
-              className="flex items-center justify-center gap-1.5 flex-1 h-full text-slate-200 active:bg-[#2a3a2a] disabled:opacity-50 transition-colors"
+              className="flex items-center justify-center gap-1.5 flex-1 h-full text-slate-200 active:bg-[#2a3a2a] transition-colors"
             >
               <SkipForward size={18} />
               <span className="text-[10px] font-black uppercase tracking-wider">Próximo Partido</span>
@@ -76,8 +75,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ advanceTime, simulateToNex
           )}
           <button
             onClick={advanceTime}
-            disabled={isSimulating}
-            className={`flex items-center justify-center gap-1.5 flex-1 h-full text-white active:bg-[#2a3a2a] disabled:opacity-50 transition-colors ${isPreMatchView ? 'bg-[#5a6a5a] animate-pulse' : ''}`}
+            className={`flex items-center justify-center gap-1.5 flex-1 h-full text-white active:bg-[#2a3a2a] transition-colors ${isPreMatchView ? 'bg-[#5a6a5a] animate-pulse' : ''}`}
           >
             {isPreMatchView ? <Zap size={18} fill="currentColor" /> : <RefreshCw size={18} />}
             <span className="text-[10px] font-black uppercase tracking-wider">

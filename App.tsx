@@ -838,12 +838,12 @@ dayFixtures.forEach(f => {
         localFixtures = [...localFixtures, ...newCupFixtures];
       }
 
-      if (daysSimmed % 3 === 0) {
+      if (daysSimmed % 5 === 0) {
         setCurrentDate(new Date(tempDate));
         const progress = Math.min(99, Math.round((daysSimmed / Math.min(maxDays, 90)) * 100));
         setSimProgress(progress);
         setSimProgressDetail(`Día ${daysSimmed} · ${tempDate.toLocaleDateString('es-ES')}`);
-        await new Promise(r => setTimeout(r, 30));
+        await new Promise(r => setTimeout(r, 0));
       }
 
       if (hasUserMatch) {
@@ -1795,11 +1795,18 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       <div className={`h-1 w-full ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-slate-800'}`}></div>
 
       {isSimulating && !isInVacation && (
-        <FMLoadingOverlay
-          message="Avanzando hacia el próximo partido"
-          progress={simProgress > 0 ? { current: simProgress, total: 100, detail: simProgressDetail } : undefined}
-          showCancel={false}
-        />
+        <div className="fixed bottom-[7rem] lg:bottom-4 left-4 right-4 z-[300] pointer-events-none">
+          <div className="max-w-md mx-auto bg-slate-900/90 text-white rounded-lg px-4 py-2.5 shadow-2xl border border-slate-700 backdrop-blur">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">⏳ Simulando</span>
+              <span className="text-[9px] text-slate-400 ml-auto">{simProgress}%</span>
+            </div>
+            <div className="w-full bg-slate-700 h-1 rounded-full overflow-hidden">
+              <div className="h-full bg-amber-500 rounded-full transition-all duration-300" style={{ width: `${Math.max(2, simProgress)}%` }} />
+            </div>
+            <p className="text-[9px] text-slate-400 mt-1">{simProgressDetail || 'Procesando...'}</p>
+          </div>
+        </div>
       )}
 
       {isInVacation && !vacationCancelled && (
