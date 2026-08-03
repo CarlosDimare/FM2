@@ -342,7 +342,20 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
 
              {activeTab === 'HISTORY' && (
                 <div className="h-full overflow-hidden p-2 flex flex-col">
-                   <FMBox title="Historial del Jugador" className="flex-1 overflow-hidden" noPadding>
+                   {player.careerStats && player.careerStats.totalApps > 0 && (
+                 <FMBox title="Carrera" className="flex-1">
+                   <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+                     <div><span className="font-black text-slate-900 block">{player.careerStats.totalApps}</span><span className="text-slate-500">Partidos</span></div>
+                     <div><span className="font-black text-slate-900 block">{player.careerStats.totalGoals}</span><span className="text-slate-500">Goles</span></div>
+                     <div><span className="font-black text-slate-900 block">{player.careerStats.totalAssists}</span><span className="text-slate-500">Asistencias</span></div>
+                     <div><span className="font-black text-slate-900 block">{player.careerStats.totalCleanSheets}</span><span className="text-slate-500">Vallas Inv.</span></div>
+                   </div>
+                   {player.careerStats.clubsPlayedFor && player.careerStats.clubsPlayedFor.length > 1 && (
+                     <div className="mt-2 text-[9px] text-slate-500">Clubes: {player.careerStats.clubsPlayedFor.map(id => world.getClub(id)?.shortName || id).slice(0, 5).join(', ')}</div>
+                   )}
+                 </FMBox>
+               )}
+               <FMBox title="Historial del Jugador" className="flex-1 overflow-hidden" noPadding>
                       <FMTable headers={['Año', 'Club', 'Pj', 'Gls', 'Asi', 'Cal']} colWidths={['50px', 'auto', '30px', '30px', '30px', '40px']}>
                          {player.history && player.history.length > 0 ? player.history.sort((a,b) => b.year - a.year).map((h, i) => (
                            <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}>

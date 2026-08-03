@@ -986,6 +986,11 @@ export class MatchSimulator {
             s.rating = Math.min(10, s.rating + (p.bigMatchTemperament - 14) * 0.15);
           }
           p.seasonStats.appearances++; p.seasonStats.goals += s.goals; p.seasonStats.assists += s.assists; p.seasonStats.conceded += ga; p.seasonStats.totalRating += s.rating;
+          // Career stats accumulation
+          if (!p.careerStats) p.careerStats = { totalApps: 0, totalGoals: 0, totalAssists: 0, totalCleanSheets: 0, clubsPlayedFor: [p.clubId] };
+          p.careerStats.totalApps++; p.careerStats.totalGoals += s.goals; p.careerStats.totalAssists += s.assists;
+          if (ga === 0 && s.minutesPlayed > 60) p.careerStats.totalCleanSheets++;
+          if (!p.careerStats.clubsPlayedFor.includes(p.clubId)) p.careerStats.clubsPlayedFor.push(p.clubId);
           if(!p.statsByCompetition[cId]) p.statsByCompetition[cId] = { appearances:0, goals:0, assists:0, cleanSheets:0, conceded:0, totalRating:0 };
           const cs = p.statsByCompetition[cId]; cs.appearances++; cs.goals += s.goals; cs.assists += s.assists; cs.conceded += ga; cs.totalRating += s.rating;
           p.formRatings.push(s.rating);

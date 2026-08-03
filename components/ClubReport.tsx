@@ -146,6 +146,24 @@ export const ClubReport: React.FC<ClubReportProps> = ({ club }) => {
       </FMBox>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {club.records.allTimeTopScorer && (
+          <FMBox title="Récords Históricos">
+            <div className="grid grid-cols-2 gap-3 text-[10px]">
+              <div className="bg-slate-50 p-3 rounded border border-slate-200">
+                <span className="text-slate-500 uppercase text-[8px] font-black">Máximo Goleador</span>
+                <div className="font-black text-slate-900 mt-1">{club.records.allTimeTopScorer.playerName}</div>
+                <div className="text-green-700 font-bold">{club.records.allTimeTopScorer.goals} goles</div>
+              </div>
+              {club.records.allTimeMostApps && (
+                <div className="bg-slate-50 p-3 rounded border border-slate-200">
+                  <span className="text-slate-500 uppercase text-[8px] font-black">Más Partidos</span>
+                  <div className="font-black text-slate-900 mt-1">{club.records.allTimeMostApps.playerName}</div>
+                  <div className="text-blue-700 font-bold">{club.records.allTimeMostApps.apps} partidos</div>
+                </div>
+              )}
+            </div>
+          </FMBox>
+        )}
         <FMBox title="Palmarés Reciente" noPadding className="min-h-[250px]">
           <div className="flex-1 overflow-y-auto">
             <FMTable headers={['Año', 'Competición']} colWidths={['60px', 'auto']}>

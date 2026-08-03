@@ -103,6 +103,7 @@ export interface Player {
   primaryPosition?: Position;
   stats: PlayerStats;
   seasonStats: PlayerSeasonStats;
+  careerStats?: CareerStats;
   statsByCompetition: Record<string, PlayerSeasonStats>;
   history: PlayerHistoryEntry[];
   currentAbility: number;
@@ -150,6 +151,29 @@ export interface ClubRecords {
   currentWinStreak: number;
   highestScoringMatch: { goalsTotal: number; opponent: string; date: Date } | null;
   bestPlayerSeason: { playerName: string; goals: number; season: string } | null;
+  allTimeTopScorer?: { playerName: string; playerId: string; goals: number };
+  allTimeMostApps?: { playerName: string; playerId: string; apps: number };
+}
+
+export interface HallOfFameEntry {
+  id: string;
+  managerName: string;
+  nationality: string;
+  totalGames: number;
+  totalWins: number;
+  winRate: number;
+  titles: string[];
+  clubsManaged: string[];
+  era: string;
+  yearInducted: number;
+}
+
+export interface CareerStats {
+  totalApps: number;
+  totalGoals: number;
+  totalAssists: number;
+  totalCleanSheets: number;
+  clubsPlayedFor: string[];
 }
 
 export interface Club {

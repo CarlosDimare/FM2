@@ -27,6 +27,7 @@ import { TournamentHub } from './components/TournamentHub';
 import { NationalTeamView } from './components/NationalTeamView';
 import { ClubsListView } from './components/ClubsListView';
 import { BottomNav } from './components/BottomNav';
+import { HallOfFameView } from './components/HallOfFameView';
 import { ChronicleView } from './components/ChronicleView';
 import { ManagerProfileView } from './components/ManagerProfileView';
 import { world } from './services/worldManager';
@@ -1152,6 +1153,8 @@ dayFixtures.forEach(f => {
         return <ScoutingView clubId={userClub.id} onSelectPlayer={setSelectedPlayer} />;
       case 'BOARD':
         return <BoardView userClub={userClub} />;
+      case 'HALL_OF_FAME':
+        return <HallOfFameView onBack={() => setView('HOME')} />;
       case 'LEAGUE_RANKING':
         return (
           <div className="p-4 sm:p-8 h-full overflow-y-auto bg-[#d4dcd4]">

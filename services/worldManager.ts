@@ -30,6 +30,7 @@ export class WorldManager {
   nationalTeamManager: any = null;
   chronicles: Chronicle[] = [];
   managerProfile: ManagerProfile | null = null;
+  hallOfFame: import('../types').HallOfFameEntry[] = [];
 
   // Caching for performance
   private playersByClubCache: Map<string, { timestamp: number; players: Player[] }> = new Map();
@@ -200,6 +201,7 @@ export class WorldManager {
             consistency: randomInt(5, 20),
             bigMatchTemperament: randomInt(5, 20),
             seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 },
+            careerStats: { totalApps: 0, totalGoals: 0, totalAssists: 0, totalCleanSheets: 0, clubsPlayedFor: [club.id] },
             statsByCompetition: {},
          };
          this.players.push(player);
@@ -736,6 +738,53 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
   getMarketMultiplier(leagueId: string): number {
     const league = this.competitions.find(c => c.id === leagueId);
     return league?.marketMultiplier ?? 1.0;
+  }
+
+  /** Evaluate all HEAD_COACHes and induct worthy ones into the Hall of Fame */
+  updateHallOfFame(currentYear: number) {
+    const coaches = this.staff.filter(s => s.role === 'HEAD_COACH');
+    coaches.forEach(coach => {
+      if (!coach.history || coach.history.length === 0) return;
+      const totalGames = coach.history.length;
+      if (totalGames < 100) return;
+      const totalWins = coach.history.filter((h: any) => h.result === 'W').length;
+      const winRate = Math.round((totalWins / totalGames) * 100);
+      if (winRate < 55) return;
+      const club = this.getClub(coach.clubId);
+      const clubsManaged = [...new Set(coach.history.map((h: any) => h.clubName || club?.name || 'Desconocido'))];
+      const existingIdx = this.hallOfFame.findIndex(h => h.id === coach.id);
+      const entry = {
+        id: coach.id,
+        managerName: coach.name,
+        nationality: coach.nationality,
+        totalGames, totalWins, winRate,
+        titles: coach.careerHonours || [],
+        clubsManaged: clubsManaged as string[],
+        era: `${currentYear - 10}-${currentYear}`,
+        yearInducted: currentYear,
+      };
+      if (existingIdx >= 0) { this.hallOfFame[existingIdx] = entry; }
+      else if (winRate >= 60) { this.hallOfFame.push(entry); }
+    });
+    this.hallOfFame.sort((a, b) => b.winRate - a.winRate || b.titles.length - a.titles.length);
+    if (this.hallOfFame.length > 50) this.hallOfFame.length = 50;
+  }
+
+  /** Update all-time club records based on player career stats */
+  updateClubAllTimeRecords() {
+    this.clubs.forEach(club => {
+      const allPlayers = this.players.filter(p => p.clubId === club.id || p.careerStats?.clubsPlayedFor?.includes(club.id));
+      let topScorer: typeof club.records.allTimeTopScorer = undefined;
+      let mostApps: typeof club.records.allTimeMostApps = undefined;
+      allPlayers.forEach(p => {
+        const cs = p.careerStats;
+        if (!cs) return;
+        if (cs.totalGoals > (topScorer?.goals || 0)) topScorer = { playerName: p.name, playerId: p.id, goals: cs.totalGoals };
+        if (cs.totalApps > (mostApps?.apps || 0)) mostApps = { playerName: p.name, playerId: p.id, apps: cs.totalApps };
+      });
+      if (topScorer) club.records.allTimeTopScorer = topScorer;
+      if (mostApps) club.records.allTimeMostApps = mostApps;
+    });
   }
 
   /** Generate economic news when league reputations shift significantly */
