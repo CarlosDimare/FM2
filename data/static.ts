@@ -59,6 +59,7 @@ export const COUNTRY_CODES: Record<string, string> = {
   "Túnez": "tn",
   "Sudáfrica": "za",
   "Corea del Sur": "kr",
+  "China": "cn",
   "Estados Unidos": "us",
   "Peru": "pe",
 };
@@ -221,6 +222,18 @@ export const REGEN_DB: any = {
    "ghana": {
      "nombres": ["Thomas", "Jordan", "Mohammed", "Andre", "Daniel", "Inaki", "Antoine", "Gideon", "Kamaldeen", "Joseph", "Tariq", "Alexander", "Ernest", "Felix", "Alidu", "Salis", "Jonathan", "Iddrisu", "Osman", "Kwasi"],
      "apellidos": ["Partey", "Ayew", "Kudus", "Salisu", "Amoah", "Williams", "Semenyo", "Djiku", "Paintsil", "Sulemana", "Lamptey", "Owusu", "Nuamah", "Nsiah", "Seidu", "Abdul Samed", "Mensah", "Baba", "Yeboah", "Ofori"]
+   },
+   "coreadelsur": {
+     "nombres": ["Son", "Kim", "Lee", "Hwang", "Cho", "Jung", "Park", "Kang", "Yoon", "Seo", "Ji", "Woo", "Hong", "Oh", "Jeong", "Choi", "Song", "Baek", "Ahn", "Moon"],
+     "apellidos": ["Heung-min", "Min-jae", "Kang-in", "Hee-chan", "Gue-sung", "Jae-sung", "Woo-yeong", "Seung-ho", "In-beom", "Hyun-woo", "Young-gwon", "Tae-hwan", "Seung-gyu", "Ui-jo", "Yong-woo", "Min-gyu", "Hyun-seok", "Jun-ho", "Jin-su", "Du-jae"]
+   },
+   "china": {
+     "nombres": ["Zhang", "Wang", "Wu", "Liu", "Li", "Chen", "Yang", "Zhao", "Huang", "Zhou", "Xu", "Sun", "Ma", "Guo", "Lin", "Gao", "Zheng", "Feng", "Cao", "Peng"],
+     "apellidos": ["Wei", "Lei", "Xizhe", "Yuning", "Jianye", "Dabao", "Dong", "Liang", "Xin", "Chao", "Zhipeng", "Chenjie", "Haonan", "Hao", "Yifan", "Shangyuan", "Linglong", "Junmin", "Xiang", "Xiaoting"]
+   },
+   "australia": {
+     "nombres": ["Mathew", "Jackson", "Harry", "Nathaniel", "Mitchell", "Craig", "Thomas", "Trent", "Marco", "Jordan", "Callum", "Adam", "Nicholas", "Brandon", "Cameron", "Awer", "Riley", "Garang", "Daniel", "Kusini"],
+     "apellidos": ["Ryan", "Irvine", "Souttar", "Atkinson", "Duke", "Goodwin", "Boyle", "Deng", "Tilio", "Devlin", "McGree", "Taggart", "D'Agostino", "Borrello", "Metcalfe", "Mabil", "Hrustic", "Kuol", "Forneroli", "Yengi"]
    }
  };
 
@@ -886,6 +899,55 @@ export const JPN_J2: RealClubDef[] = [
     { name: "Thespakusatsu Gunma", short: "THE", pCol: "bg-red-800", sCol: "text-white", stadium: "Shoda Shoyu Stadium", rep: 5000, country: "Japón" },
     { name: "Omiya Ardija", short: "OMI", pCol: "bg-red-800", sCol: "text-white", stadium: "NACK5 Stadium Omiya", rep: 5500, country: "Japón" },
     { name: "FC Gifu", short: "FCG", pCol: "bg-blue-900", sCol: "text-white", stadium: "Gifu Nagaragawa", rep: 4900, country: "Japón" }
+];
+
+export const KOR_K_LEAGUE: RealClubDef[] = [
+    { name: "Jeonbuk Hyundai", short: "JEO", pCol: "bg-green-700", sCol: "text-white", stadium: "Jeonju World Cup", rep: 7500, country: "Corea del Sur" },
+    { name: "Ulsan HD", short: "ULS", pCol: "bg-blue-900", sCol: "text-white", stadium: "Ulsan Munsu", rep: 7800, country: "Corea del Sur" },
+    { name: "FC Seúl", short: "SEO", pCol: "bg-red-800", sCol: "text-black", stadium: "Seoul World Cup", rep: 7600, country: "Corea del Sur" },
+    { name: "Pohang Steelers", short: "POH", pCol: "bg-red-700", sCol: "text-black", stadium: "Pohang Steel Yard", rep: 7400, country: "Corea del Sur" },
+    { name: "Suwon Samsung", short: "SUW", pCol: "bg-blue-800", sCol: "text-white", stadium: "Suwon World Cup", rep: 7200, country: "Corea del Sur" },
+    { name: "Daegu FC", short: "DAE", pCol: "bg-sky-400", sCol: "text-white", stadium: "DGB Daegu Bank Park", rep: 6900, country: "Corea del Sur" },
+    { name: "Gwangju FC", short: "GWA", pCol: "bg-yellow-400", sCol: "text-green-900", stadium: "Gwangju World Cup", rep: 6700, country: "Corea del Sur" },
+    { name: "Incheon United", short: "INC", pCol: "bg-blue-900", sCol: "text-white", stadium: "Incheon Football Stadium", rep: 6800, country: "Corea del Sur" },
+    { name: "Gangwon FC", short: "GAN", pCol: "bg-orange-600", sCol: "text-white", stadium: "Chuncheon Songam", rep: 6500, country: "Corea del Sur" },
+    { name: "Jeju United", short: "JEJ", pCol: "bg-orange-500", sCol: "text-white", stadium: "Jeju World Cup", rep: 6600, country: "Corea del Sur" },
+    { name: "Daejeon Hana", short: "DAJ", pCol: "bg-purple-700", sCol: "text-white", stadium: "Daejeon World Cup", rep: 6600, country: "Corea del Sur" },
+    { name: "Gimcheon Sangmu", short: "GIM", pCol: "bg-red-800", sCol: "text-white", stadium: "Gimcheon Stadium", rep: 6400, country: "Corea del Sur" }
+];
+
+export const CHN_SUPER_LEAGUE: RealClubDef[] = [
+    { name: "Shanghái Port", short: "SHP", pCol: "bg-red-700", sCol: "text-white", stadium: "Pudong Football Stadium", rep: 7800, country: "China" },
+    { name: "Shandong Taishan", short: "SHD", pCol: "bg-orange-600", sCol: "text-white", stadium: "Jinan Olympic", rep: 7600, country: "China" },
+    { name: "Beijing Guoan", short: "BEI", pCol: "bg-green-700", sCol: "text-white", stadium: "Workers Stadium", rep: 7500, country: "China" },
+    { name: "Shanghái Shenhua", short: "SHS", pCol: "bg-blue-800", sCol: "text-white", stadium: "Shanghai Stadium", rep: 7400, country: "China" },
+    { name: "Guangzhou FC", short: "GZH", pCol: "bg-red-800", sCol: "text-white", stadium: "Tianhe Stadium", rep: 7200, country: "China" },
+    { name: "Wuhan Three Towns", short: "WUH", pCol: "bg-blue-900", sCol: "text-white", stadium: "Wuhan Sports Center", rep: 7100, country: "China" },
+    { name: "Chengdu Rongcheng", short: "CHE", pCol: "bg-red-700", sCol: "text-white", stadium: "Chengdu Phoenix Hill", rep: 6900, country: "China" },
+    { name: "Tianjin Jinmen", short: "TIJ", pCol: "bg-blue-700", sCol: "text-white", stadium: "Tianjin Olympic", rep: 6700, country: "China" },
+    { name: "Hangzhou Greentown", short: "HZH", pCol: "bg-green-600", sCol: "text-white", stadium: "Yellow Dragon Stadium", rep: 6500, country: "China" },
+    { name: "Changchun Yatai", short: "CHC", pCol: "bg-red-800", sCol: "text-white", stadium: "Changchun Stadium", rep: 6300, country: "China" },
+    { name: "Meizhou Hakka", short: "MEI", pCol: "bg-red-800", sCol: "text-white", stadium: "Huitang Stadium", rep: 6000, country: "China" },
+    { name: "Henan Longmen", short: "HEN", pCol: "bg-red-700", sCol: "text-white", stadium: "Hanghai Stadium", rep: 6100, country: "China" },
+    { name: "Dalian Pro", short: "DAL", pCol: "bg-blue-800", sCol: "text-white", stadium: "Dalian Sports Center", rep: 6400, country: "China" },
+    { name: "Nantong Zhiyun", short: "NAN", pCol: "bg-blue-700", sCol: "text-white", stadium: "Rugao Olympic", rep: 5800, country: "China" },
+    { name: "Qingdao Jonoon", short: "QIN", pCol: "bg-blue-900", sCol: "text-white", stadium: "Qingdao Youth", rep: 5900, country: "China" },
+    { name: "Shenzhen FC", short: "SHE", pCol: "bg-red-800", sCol: "text-white", stadium: "Shenzhen Universiade", rep: 6200, country: "China" }
+];
+
+export const AUS_A_LEAGUE: RealClubDef[] = [
+    { name: "Melbourne City", short: "MLC", pCol: "bg-sky-400", sCol: "text-white", stadium: "AAMI Park", rep: 7200, country: "Australia" },
+    { name: "Sydney FC", short: "SYD", pCol: "bg-sky-400", sCol: "text-blue-900", stadium: "Allianz Stadium", rep: 7400, country: "Australia" },
+    { name: "Western Sydney", short: "WSW", pCol: "bg-red-800", sCol: "text-black", stadium: "CommBank Stadium", rep: 7000, country: "Australia" },
+    { name: "Melbourne Victory", short: "MLV", pCol: "bg-blue-900", sCol: "text-white", stadium: "AAMI Park", rep: 7100, country: "Australia" },
+    { name: "Adelaide United", short: "ADE", pCol: "bg-red-700", sCol: "text-white", stadium: "Coopers Stadium", rep: 6800, country: "Australia" },
+    { name: "Brisbane Roar", short: "BRI", pCol: "bg-orange-500", sCol: "text-white", stadium: "Suncorp Stadium", rep: 6700, country: "Australia" },
+    { name: "Perth Glory", short: "PER", pCol: "bg-purple-700", sCol: "text-white", stadium: "HBF Park", rep: 6500, country: "Australia" },
+    { name: "Central Coast", short: "CCM", pCol: "bg-yellow-400", sCol: "text-blue-900", stadium: "Central Coast Stadium", rep: 6900, country: "Australia" },
+    { name: "Newcastle Jets", short: "NEW", pCol: "bg-blue-800", sCol: "text-white", stadium: "McDonald Jones Stadium", rep: 6400, country: "Australia" },
+    { name: "Wellington Phoenix", short: "WEL", pCol: "bg-yellow-400", sCol: "text-black", stadium: "Sky Stadium", rep: 6600, country: "Australia" },
+    { name: "Macarthur FC", short: "MAC", pCol: "bg-black", sCol: "text-white", stadium: "Campbelltown Stadium", rep: 6300, country: "Australia" },
+    { name: "Western United", short: "WUN", pCol: "bg-green-700", sCol: "text-white", stadium: "Mars Stadium", rep: 6200, country: "Australia" }
 ];
 
 const DEFAULT_TACTIC_SETTINGS: TacticSettings = {

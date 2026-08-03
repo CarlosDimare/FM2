@@ -2,7 +2,7 @@
 import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle, ManagerProfile, ManagerOrigin, ClubHistoryEntry, RelationshipState, RealManager, ManagerNetworkEntry } from "../types";
 import { generateUUID, randomInt, weightedRandom } from "./utils";
 import { NATIONS } from "../constants";
-import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, RealClubDef } from "../data/static";
+import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, KOR_K_LEAGUE, CHN_SUPER_LEAGUE, AUS_A_LEAGUE, RealClubDef } from "../data/static";
 import { REAL_PLAYERS_DB, RealPlayerDef } from "../data/realPlayers";
 import { SLOT_CONFIG } from "./engine";
 import { sendTransferNotification, sendInboxNotification } from "./notifications";
@@ -313,6 +313,15 @@ export class WorldManager {
           { id: 'COPA_LIB', name: 'Copa Libertadores', country: 'Sudamérica', type: 'CONTINENTAL_ELITE', tier: 1, continent: 'América del Sur', confederation: 'CONMEBOL', defaultPrizePool: 8000000 },
           { id: 'COPA_SUD', name: 'Copa Sudamericana', country: 'Sudamérica', type: 'CONTINENTAL_SMALL', tier: 2, continent: 'América del Sur', confederation: 'CONMEBOL', defaultPrizePool: 3000000 },
        );
+       // AFC leagues (generated dynamically from static data)
+       this.competitions.push(
+          { id: 'L_KOR_1', name: 'K League 1', country: 'Corea del Sur', type: 'LEAGUE', tier: 1, continent: 'Asia', confederation: 'AFC', defaultPrizePool: 1500000, seasonStartMonth: 1, seasonEndMonth: 10 },
+          { id: 'L_CHN_1', name: 'Chinese Super League', country: 'China', type: 'LEAGUE', tier: 1, continent: 'Asia', confederation: 'AFC', defaultPrizePool: 2000000, seasonStartMonth: 2, seasonEndMonth: 10 },
+          { id: 'L_AUS_1', name: 'A-League', country: 'Australia', type: 'LEAGUE', tier: 1, continent: 'Oceanía', confederation: 'AFC', defaultPrizePool: 800000, seasonStartMonth: 9, seasonEndMonth: 4 },
+       );
+       this.loadRealClubs(KOR_K_LEAGUE, 'L_KOR_1');
+       this.loadRealClubs(CHN_SUPER_LEAGUE, 'L_CHN_1');
+       this.loadRealClubs(AUS_A_LEAGUE, 'L_AUS_1');
     }
 
   loadRealClubs(definitions: RealClubDef[], leagueId: string) {
