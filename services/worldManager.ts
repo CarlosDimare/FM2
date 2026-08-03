@@ -994,7 +994,17 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
       const days = randomInt(3, 21);
       const injuryTypes = ['esguince de tobillo', 'microrrotura fibrilar', 'contusión en el gemelo', 'sobrecarga muscular', 'golpe en la rodilla'];
       const injuryType = injuryTypes[randomInt(0, injuryTypes.length - 1)];
-      victim.injury = { type: injuryType, daysLeft: days };
+      victim.injury = {
+        type: injuryType,
+        daysLeft: days,
+        totalDays: days,
+        severity: days > 14 ? 'MODERATE' : 'MINOR',
+        treatment: 'NONE',
+        injuryDate: date,
+        recoveryProgress: 0,
+        relapseRisk: days > 14 ? 15 : 5,
+        daysSinceInjury: 0,
+      };
       victim.morale = Math.max(0, victim.morale - 10);
       this.addInboxMessage('SQUAD',
         `${victim.name} se lesiona en el entrenamiento`,
@@ -1103,6 +1113,60 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
       });
     }
   }
+
+  // ─── Injury Treatment System ────────────────────────────────────────────
+
+  /** Set a treatment plan for an injured player */
+  setInjuryTreatment(playerId: string, treatment: 'CONSERVATIVE' | 'AGGRESSIVE', date: Date) {
+    const player = this.getPlayer(playerId);
+    if (!player || !player.injury) return;
+
+    player.injury.treatment = treatment;
+    // Recalculate progress based on days already healed vs remaining
+    const daysHealed = player.injury.daysSinceInjury;
+    player.injury.recoveryProgress = Math.min(99, Math.round((daysHealed / (daysHealed + player.injury.daysLeft)) * 100));
+
+    if (treatment === 'CONSERVATIVE') {
+      player.injury.relapseRisk = Math.max(0, player.injury.relapseRisk - 20);
+      player.morale = Math.max(0, player.morale - 3);
+      this.addInboxMessage('SQUAD',
+        `Tratamiento conservador: ${player.name}`,
+        `${player.name} seguirá un plan de recuperación conservador. Es más lento (~30% más) pero minimiza el riesgo de recaída. Días restantes estimados: ~${Math.round(player.injury.daysLeft * 1.3)}.`,
+        date, playerId);
+    } else {
+      player.injury.relapseRisk = Math.min(100, player.injury.relapseRisk + 25);
+      player.morale = Math.min(100, player.morale + 5);
+      this.addInboxMessage('SQUAD',
+        `Tratamiento agresivo: ${player.name}`,
+        `${player.name} seguirá un plan de recuperación intensivo. Vuelve antes (~40% más rápido) pero con mayor riesgo de recaída.`,
+        date, playerId);
+    }
+  }
+
+  /** Get a human-readable injury report for UI */
+  getInjuryReport(playerId: string): string | null {
+    const player = this.getPlayer(playerId);
+    if (!player || !player.injury) return null;
+
+    const i = player.injury;
+    const severityLabel: Record<string, string> = {
+      MINOR: 'Leve', MODERATE: 'Moderada', SERIOUS: 'Grave', SEVERE: 'Muy Grave',
+    };
+    const treatmentLabel = i.treatment === 'CONSERVATIVE' ? 'Conservador' : i.treatment === 'AGGRESSIVE' ? 'Agresivo' : 'Sin definir';
+    const progressBar = '█'.repeat(Math.floor(i.recoveryProgress / 10)) + '░'.repeat(10 - Math.floor(i.recoveryProgress / 10));
+
+    return `📋 Parte médico: ${player.name}
+━━━━━━━━━━━━━━━━━━━━
+Lesión: ${i.type}
+Gravedad: ${severityLabel[i.severity] || i.severity}
+Tratamiento: ${treatmentLabel}
+Progreso: [${progressBar}] ${Math.round(i.recoveryProgress)}%
+Días restantes: ~${i.daysLeft}
+Riesgo de recaída: ${Math.round(i.relapseRisk)}%
+Días desde la lesión: ${i.daysSinceInjury}`;
+  }
+
+  // ─── End Injury Treatment ────────────────────────────────────────────────
 
   // ─── End Pilar C ──────────────────────────────────────────────────────────
 

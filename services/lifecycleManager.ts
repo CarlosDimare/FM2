@@ -34,15 +34,72 @@ export class LifecycleManager {
         // Training injury risk (high load + low fitness)
         if (p.fitness < 60 && totalIntensity > 50 && Math.random() < 0.005 * (totalIntensity - 40) / 20) {
            if (!p.injury) {
-             p.injury = { type: 'Entrenamiento', daysLeft: randomInt(3, 10) };
+             p.injury = {
+               type: 'Lesión de entrenamiento',
+               daysLeft: randomInt(3, 10),
+               totalDays: randomInt(3, 10),
+               severity: 'MINOR',
+               treatment: 'NONE',
+               injuryDate: new Date(),
+               recoveryProgress: 0,
+               relapseRisk: 5,
+               daysSinceInjury: 0,
+             };
            }
         }
 
-        // Injury Recovery
+        // Injury Recovery (with treatment-aware progression)
         if (p.injury) {
-           p.injury.daysLeft -= 1;
-           if (p.injury.daysLeft <= 0) {
-              p.injury = undefined;
+           p.injury.daysSinceInjury++;
+           const physioBonus = physioScore / 15; // 0.33-1.33
+           let recoverySpeed = 1.0 + physioBonus * 0.2;
+
+           // Treatment effect
+           if (p.injury.treatment === 'CONSERVATIVE') {
+             recoverySpeed *= 0.7; // Slower but safer
+             p.injury.relapseRisk = Math.max(0, p.injury.relapseRisk - 1);
+           } else if (p.injury.treatment === 'AGGRESSIVE') {
+             recoverySpeed *= 1.4; // Faster but risky
+             p.injury.relapseRisk = Math.min(100, p.injury.relapseRisk + 1.5);
+           } else {
+             // No treatment chosen: default moderate
+             recoverySpeed *= 1.0;
+           }
+
+           // Apply recovery
+           p.injury.recoveryProgress = Math.min(100, p.injury.recoveryProgress + recoverySpeed * (100 / p.injury.totalDays));
+           p.injury.daysLeft = Math.max(0, Math.round(p.injury.totalDays * (1 - p.injury.recoveryProgress / 100)));
+
+           // Relapse check (only for AGGRESSIVE or if rushed back)
+           if (p.injury.treatment === 'AGGRESSIVE' && p.injury.recoveryProgress >= 75 && p.injury.recoveryProgress < 85 && Math.random() < p.injury.relapseRisk / 600) {
+             // Setback: lose progress
+             const setback = randomInt(5, 20);
+             p.injury.recoveryProgress = Math.max(0, p.injury.recoveryProgress - setback);
+             p.injury.daysLeft = Math.max(1, Math.round(p.injury.totalDays * (1 - p.injury.recoveryProgress / 100)));
+             p.injury.relapseRisk = Math.min(100, p.injury.relapseRisk + 15);
+             if (p.injury.severity === 'SERIOUS' || p.injury.severity === 'SEVERE') {
+               world.addInboxMessage('SQUAD',
+                 `Recaída: ${p.name}`,
+                 `${p.name} ha sufrido una recaída en su recuperación de ${p.injury.type}. Retrocede ${setback}% de progreso. El tratamiento agresivo tiene sus riesgos.`,
+                 new Date(), p.id);
+               world.mediaNews.push({
+                 id: generateUUID(), date: new Date(),
+                 type: 'CRITICISM', category: 'INJURY',
+                 headline: `Recaída de ${p.name} preocupa al cuerpo médico`,
+                 subheadline: `El tratamiento agresivo pasa factura`,
+                 body: `${p.name} sufrió un contratiempo en su recuperación. Fuentes del club cuestionan la decisión de acelerar su regreso.`,
+                 clubId: p.clubId, playerId: p.id, isUserClubNews: true, read: false,
+               });
+             }
+           }
+
+           // Healed
+           if (p.injury.recoveryProgress >= 100 || p.injury.daysLeft <= 0) {
+             // Long-term effect: injuryProneness increases slightly for serious injuries
+             if (p.injury.severity === 'SERIOUS' || p.injury.severity === 'SEVERE') {
+               p.injuryProneness = Math.min(0.3, p.injuryProneness + 0.02);
+             }
+             p.injury = undefined;
            }
         }
      });

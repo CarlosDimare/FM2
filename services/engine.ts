@@ -1204,7 +1204,8 @@ export class MatchSimulator {
       }
       const injuryType = injuryTypes[randomInt(0, injuryTypes.length - 1)];
 
-      state.playerStats[ballCarrier.id].sustainedInjury = { type: injuryType, days };
+      const severity = days > 60 ? ('SEVERE' as const) : days > 30 ? ('SERIOUS' as const) : days > 14 ? ('MODERATE' as const) : ('MINOR' as const);
+      state.playerStats[ballCarrier.id].sustainedInjury = { type: injuryType, days, severity };
       state.playerStats[ballCarrier.id].severe = days > 30;
       state.events.push({
         minute, second, type: 'INJURY',
@@ -1235,12 +1236,24 @@ export class MatchSimulator {
       if (stat.sustainedInjury) {
         const player = world.players.find(p => p.id === playerId);
         if (player) {
-          player.injury = { type: stat.sustainedInjury.type, daysLeft: stat.sustainedInjury.days };
+          const severity = stat.sustainedInjury.severity || (stat.sustainedInjury.days > 60 ? 'SEVERE' : stat.sustainedInjury.days > 30 ? 'SERIOUS' : stat.sustainedInjury.days > 14 ? 'MODERATE' : 'MINOR') as any;
+          player.injury = {
+            type: stat.sustainedInjury.type,
+            daysLeft: stat.sustainedInjury.days,
+            totalDays: stat.sustainedInjury.days,
+            severity,
+            treatment: 'NONE',
+            injuryDate: new Date(),
+            recoveryProgress: 0,
+            relapseRisk: severity === 'MINOR' ? 5 : severity === 'MODERATE' ? 15 : severity === 'SERIOUS' ? 30 : 50,
+            daysSinceInjury: 0,
+          };
           player.injuryHistory = player.injuryHistory || [];
           player.injuryHistory.push({
             type: stat.sustainedInjury.type,
             days: stat.sustainedInjury.days,
-            date: new Date()
+            date: new Date(),
+            severity,
           });
           if (player.injuryHistory.length > 20) player.injuryHistory.shift();
           const recentCount = player.injuryHistory.length;
@@ -1739,7 +1752,8 @@ export class MatchSimulator {
             const types = days > 30 ? ['Rotura de ligamentos', 'Fractura', 'Rotura fibrilar grave'] :
                           days > 14 ? ['Rotura fibrilar', 'Esguince grave', 'Lesión muscular'] :
                           ['Distensión muscular', 'Esguince de tobillo', 'Golpe', 'Sobrecarga', 'Contractura'];
-            stats[p.id].sustainedInjury = { type: types[randomInt(0, types.length - 1)], days };
+            const sev = days > 60 ? 'SEVERE' as const : days > 30 ? 'SERIOUS' as const : days > 14 ? 'MODERATE' as const : 'MINOR' as const;
+            stats[p.id].sustainedInjury = { type: types[randomInt(0, types.length - 1)], days, severity: sev };
             const injuryMinute = Math.min(90, eventMinute + randomInt(-5, 15));
             events.push({ minute: injuryMinute, type: 'INJURY', text: `${p.name.split(' ').pop() || p.name} sufre ${stats[p.id].sustainedInjury!.type} y debe abandonar el campo.`, teamId: p.clubId, playerId: p.id, importance: 'HIGH', intensity: 4 });
           }

@@ -87,6 +87,22 @@ export interface ManagerHistory {
   seasonsCompleted: number;
 }
 
+export type InjurySeverity = 'MINOR' | 'MODERATE' | 'SERIOUS' | 'SEVERE';
+
+export type InjuryTreatment = 'CONSERVATIVE' | 'AGGRESSIVE' | 'NONE';
+
+export interface PlayerInjury {
+  type: string;
+  daysLeft: number;
+  totalDays: number;
+  severity: InjurySeverity;
+  treatment: InjuryTreatment;
+  injuryDate: Date;
+  recoveryProgress: number; // 0-100
+  relapseRisk: number; // 0-100
+  daysSinceInjury: number;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -130,8 +146,8 @@ export interface Player {
   releaseClause?: number;
   developmentTrend?: 'RISING' | 'DECLINING' | 'STABLE';
   yellowCardsAccumulated: number;
-  injury?: { type: string; daysLeft: number };
-  injuryHistory: { type: string; days: number; date: Date }[];
+  injury?: PlayerInjury;
+  injuryHistory: { type: string; days: number; date: Date; severity?: 'MINOR' | 'MODERATE' | 'SERIOUS' | 'SEVERE'; relapse?: boolean }[];
   injuryProneness: number;
   suspension?: { matchesLeft: number };
   loanDetails?: { originalClubId: string; wageShare: number; loanToBuy?: boolean };
@@ -470,7 +486,7 @@ export interface PlayerMatchStats {
   foulsReceived: number;
   card?: 'YELLOW' | 'RED';
   participationPhrase?: string;
-  sustainedInjury?: { type: string; days: number };
+  sustainedInjury?: { type: string; days: number; severity?: InjurySeverity };
   severe?: boolean;
 }
 

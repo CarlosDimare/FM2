@@ -250,7 +250,30 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                             <div className="p-1 flex flex-col">
                                 <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors border-b border-black/5"><span className="text-[7px] font-black text-slate-500 uppercase">Condición</span><span className="text-[10px] font-black text-green-700">{Math.round(player.fitness)}%</span></div>
                                 <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors border-b border-black/5"><span className="text-[7px] font-black text-slate-500 uppercase">Moral</span><span className={`text-[10px] font-black ${player.morale > 80 ? 'text-green-700' : player.morale > 50 ? 'text-blue-700' : 'text-red-600'}`}>{player.morale > 80 ? 'MUY ALTA' : player.morale > 50 ? 'ALTA' : 'BAJA'}</span></div>
-                                <div className="flex justify-between items-center px-1.5 py-1 hover:bg-[#f0f4f0] transition-colors"><span className="text-[7px] font-black text-slate-500 uppercase">Lesión</span><span className="text-[10px] font-black text-slate-700">{player.injury ? player.injury.type + ' (' + player.injury.daysLeft + 'd)' : 'Ninguna'}</span></div>
+                                <div className="flex flex-col px-1.5 py-1">
+                                  <div className="flex justify-between items-center"><span className="text-[7px] font-black text-slate-500 uppercase">Lesión</span><span className={`text-[10px] font-black ${player.injury ? (player.injury.severity === 'SEVERE' || player.injury.severity === 'SERIOUS' ? 'text-red-700' : 'text-amber-600') : 'text-green-700'}`}>{player.injury ? `${player.injury.type} (~${player.injury.daysLeft}d)` : 'Ninguna'}</span></div>
+                                  {player.injury && (
+                                    <div className="mt-1 space-y-1">
+                                      <div className="text-[8px] text-slate-400">Progreso: {Math.round(player.injury.recoveryProgress)}% · Riesgo recaída: {Math.round(player.injury.relapseRisk)}%</div>
+                                      <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                                        <div className={`h-full rounded-full transition-all ${player.injury.treatment === 'AGGRESSIVE' ? 'bg-amber-500' : 'bg-blue-500'}`} style={{ width: `${Math.round(player.injury.recoveryProgress)}%` }} />
+                                      </div>
+                                      <div className="flex gap-1">
+                                        {player.injury.treatment === 'NONE' && (
+                                          <>
+                                            <button onClick={() => { world.setInjuryTreatment(player.id, 'CONSERVATIVE', currentDate); setDialogueResult({ text: 'Tratamiento conservador aplicado. Recuperación más lenta pero segura.', moraleChange: 0, reactionType: 'NEUTRAL' }); }} className="text-[7px] px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-sm font-bold">Conservador</button>
+                                            <button onClick={() => { world.setInjuryTreatment(player.id, 'AGGRESSIVE', currentDate); setDialogueResult({ text: 'Tratamiento agresivo aplicado. Vuelve antes pero con riesgo.', moraleChange: 0, reactionType: 'NEUTRAL' }); }} className="text-[7px] px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-sm font-bold">Agresivo</button>
+                                          </>
+                                        )}
+                                        {player.injury.treatment !== 'NONE' && (
+                                          <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded-sm ${player.injury.treatment === 'CONSERVATIVE' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`}>
+                                            {player.injury.treatment === 'CONSERVATIVE' ? '🛡️ Conservador' : '⚡ Agresivo'}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
                             </div>
                          </div>
                          <div className="bg-white border border-[#a0b0a0] shrink-0 shadow-sm overflow-hidden">
