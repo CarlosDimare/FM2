@@ -452,6 +452,235 @@ export class MatchSimulator {
     return newState;
   }
 
+  /**
+   * IA: Smart automatic substitutions based on fatigue, cards, and game state.
+   * Called at halftime and periodically during the second half.
+   */
+  private static autoSubstitute(
+    state: MatchState,
+    homeTeam: Club, awayTeam: Club,
+    allHomePlayers: Player[], allAwayPlayers: Player[],
+    phase: 'HALFTIME' | 'MID_HALF'
+  ) {
+    const processTeam = (
+      isHome: boolean,
+      club: Club,
+      allPlayers: Player[],
+      activeIds: string[],
+      benchIds: string[],
+      allOpponentPlayers: Player[],
+      oppActiveIds: string[]
+    ) => {
+      const maxSubs = 5;
+      // Read subs directly from state (not a stale parameter)
+      const subsUsed = isHome ? state.homeSubsUsed : state.awaySubsUsed;
+      if (subsUsed >= maxSubs) return;
+
+      const activeOnField = allPlayers.filter(p => activeIds.includes(p.id));
+      const bench = allPlayers.filter(p => benchIds.includes(p.id) && !p.injury);
+      if (bench.length === 0) return;
+
+      // Priority 1: Injured players
+      const injured = activeOnField.filter(p => p.injury && p.injury.daysLeft > 0);
+
+      // Priority 2: Yellow card + fatigue risk (minute > 60)
+      const carded = activeOnField.filter(p => {
+        const ps = state.playerStats[p.id];
+        return ps?.card === 'YELLOW' && state.minute > 60 && !injured.includes(p);
+      });
+
+      // Priority 3: Severe fatigue (condition < 55)
+      const fatigued = activeOnField.filter(p => {
+        const ps = state.playerStats[p.id];
+        return ps && ps.condition < 55 && !injured.includes(p) && !carded.includes(p);
+      });
+
+      // Priority 4 (halftime only): Moderate fatigue (condition < 65)
+      const tired = phase === 'HALFTIME' ? activeOnField.filter(p => {
+        const ps = state.playerStats[p.id];
+        return ps && ps.condition < 65 && !injured.includes(p) && !carded.includes(p) && !fatigued.includes(p);
+      }) : [];
+
+      // Deduplicate by player ID (priority order preserved via Set iteration)
+      const seen = new Set<string>();
+      const candidates = [...injured, ...carded, ...fatigued, ...tired].filter(p => {
+        if (seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      });
+
+      // Limit subs: 1-2 at halftime, 1 mid-half
+      const maxThisWindow = phase === 'HALFTIME' ? 2 : 1;
+      let subsThisWindow = 0;
+
+      for (const playerOff of candidates) {
+        if (subsThisWindow >= maxThisWindow) break;
+        if (state.homeSubsUsed + state.awaySubsUsed >= maxSubs * 2 - 1) break; // total sub limit
+
+        // Find best bench replacement for same position line
+        const offSlot = SLOT_CONFIG[playerOff.tacticalPosition || 0];
+        const offLine = offSlot?.line || 'MID';
+
+        const replacements = bench
+          .filter(p => {
+            const slot = SLOT_CONFIG[p.tacticalPosition || 0];
+            // Prefer same line, but allow nearby lines
+            if (slot?.line === offLine) return true;
+            if (offLine === 'DEF' && slot?.line === 'DM') return true;
+            if (offLine === 'DM' && (slot?.line === 'DEF' || slot?.line === 'MID')) return true;
+            if (offLine === 'MID' && (slot?.line === 'DM' || slot?.line === 'AM')) return true;
+            if (offLine === 'AM' && slot?.line === 'ATT') return true;
+            if (offLine === 'ATT' && slot?.line === 'AM') return true;
+            return false;
+          })
+          .sort((a, b) => b.currentAbility - a.currentAbility);
+
+        if (replacements.length === 0) continue;
+
+        const playerOn = replacements[0];
+        const pOffName = playerOff.name.split(' ').pop() || '???';
+        const pOnName = playerOn.name.split(' ').pop() || '???';
+        const reason = injured.includes(playerOff) ? 'lesionado' :
+                       carded.includes(playerOff) ? 'amonestado (riesgo)' :
+                       'por fatiga';
+
+        state.events.push({
+          minute: state.minute, second: state.second,
+          type: 'SUBSTITUTION',
+          text: `Cambio táctico en ${club.shortName}: entra ${pOnName} por ${pOffName} (${reason}).`,
+          teamId: club.id,
+          importance: 'MEDIUM', intensity: 2,
+        });
+
+        // Swap in active/bench arrays
+        const activeArr = isHome ? state.homeActiveIds : state.awayActiveIds;
+        const benchArr = isHome ? state.homeBenchIds : state.awayBenchIds;
+        const idxActive = activeArr.indexOf(playerOff.id);
+        const idxBench = benchArr.indexOf(playerOn.id);
+        if (idxActive >= 0 && idxBench >= 0) {
+          activeArr[idxActive] = playerOn.id;
+          benchArr[idxBench] = playerOff.id;
+        }
+
+        // Init stats for sub
+        state.playerStats[playerOn.id] = {
+          rating: 6.0, goals: 0, assists: 0, condition: 90, minutesPlayed: 0,
+          passesAttempted: 0, passesCompleted: 0, keyPasses: 0,
+          shots: 0, shotsOnTarget: 0, dribblesAttempted: 0, dribblesCompleted: 0, offsides: 0,
+          tacklesAttempted: 0, tacklesCompleted: 0, keyTackles: 0,
+          interceptions: 0, shotsBlocked: 0, headersAttempted: 0, headersWon: 0, keyHeaders: 0,
+          saves: 0, conceded: 0, foulsCommitted: 0, foulsReceived: 0,
+        };
+
+        if (isHome) state.homeSubsUsed++; else state.awaySubsUsed++;
+        subsThisWindow++;
+      }
+    };
+
+    processTeam(true, homeTeam, allHomePlayers, state.homeActiveIds, state.homeBenchIds, allAwayPlayers, state.awayActiveIds);
+    processTeam(false, awayTeam, allAwayPlayers, state.awayActiveIds, state.awayBenchIds, allHomePlayers, state.homeActiveIds);
+  }
+
+  /**
+   * IA: Dynamically adjust tactics based on match score, minute, and opponent.
+   * Returns a modified copy of the tactic, never mutating the original.
+   */
+  static adjustTacticsDynamically(
+    baseTactic: TacticSettings | undefined,
+    isHome: boolean,
+    homeScore: number,
+    awayScore: number,
+    minute: number,
+    opponentTactic?: TacticSettings
+  ): TacticSettings | undefined {
+    if (!baseTactic) return undefined;
+
+    const myScore = isHome ? homeScore : awayScore;
+    const oppScore = isHome ? awayScore : homeScore;
+    const diff = myScore - oppScore;
+
+    // Clone to avoid mutation
+    const t: TacticSettings = { ...baseTactic, setPieces: { ...baseTactic.setPieces } };
+
+    // ── Score-based adjustments ──
+    if (diff <= -2) {
+      // Desperate: all-out attack
+      t.mentality = Math.min(20, (t.mentality || 10) + 6);
+      t.tempo = Math.min(20, (t.tempo || 10) + 4);
+      t.defensiveLine = Math.min(20, (t.defensiveLine || 10) + 4);
+      t.closingDown = Math.min(20, (t.closingDown || 10) + 3);
+      t.timeWasting = Math.max(1, (t.timeWasting || 5) - 3);
+      t.longShots = 'OFTEN';
+    } else if (diff === -1) {
+      // Chasing: more attacking
+      t.mentality = Math.min(20, (t.mentality || 10) + 3);
+      t.tempo = Math.min(20, (t.tempo || 10) + 2);
+      t.closingDown = Math.min(20, (t.closingDown || 10) + 2);
+    } else if (diff === 0 && minute >= 75) {
+      // Drawing late: push for winner
+      t.mentality = Math.min(20, (t.mentality || 10) + 2);
+      t.tempo = Math.min(20, (t.tempo || 10) + 3);
+      t.defensiveLine = Math.min(20, (t.defensiveLine || 10) + 1);
+      t.longShots = 'MIXED';
+    } else if (diff === 1 && minute >= 75) {
+      // Protecting narrow lead
+      t.mentality = Math.max(1, (t.mentality || 10) - 3);
+      t.timeWasting = Math.min(20, (t.timeWasting || 5) + 6);
+      t.defensiveLine = Math.max(1, (t.defensiveLine || 10) - 2);
+      t.tempo = Math.max(1, (t.tempo || 10) - 3);
+      t.counterAttack = true;
+    } else if (diff >= 2 && minute >= 60) {
+      // Comfortable lead: control game
+      t.mentality = Math.max(1, (t.mentality || 10) - 2);
+      t.timeWasting = Math.min(20, (t.timeWasting || 5) + 4);
+      t.tempo = Math.max(1, (t.tempo || 10) - 2);
+    } else if (diff >= 3) {
+      // Big lead anytime: cruise
+      t.mentality = Math.max(1, (t.mentality || 10) - 3);
+      t.timeWasting = Math.min(20, (t.timeWasting || 5) + 5);
+      t.tempo = Math.max(1, (t.tempo || 10) - 3);
+      t.closingDown = Math.max(1, (t.closingDown || 10) - 2);
+    }
+
+    // ── Opponent reaction ──
+    if (opponentTactic) {
+      // Opponent playing counter-attack (low mentality) → push defensive line up
+      if ((opponentTactic.mentality || 10) <= 7) {
+        t.defensiveLine = Math.max(1, (t.defensiveLine || 10) - 3);
+        t.closingDown = Math.max(1, (t.closingDown || 10) - 2);
+      }
+      // Opponent using high press → play more direct
+      if ((opponentTactic.closingDown || 10) >= 15) {
+        t.passingStyle = Math.min(20, (t.passingStyle || 10) + 4);
+        t.tempo = Math.min(20, (t.tempo || 10) + 2);
+      }
+      // Opponent using high defensive line → through balls
+      if ((opponentTactic.defensiveLine || 10) >= 15) {
+        t.throughBalls = 'OFTEN';
+      }
+      // Opponent playing narrow (width < 8) → exploit flanks
+      if ((opponentTactic.width || 10) < 8) {
+        t.focusPassing = t.focusPassing === 'MIXED' ? 'LEFT' : t.focusPassing; // exploit wings
+        t.crossBall = 'OFTEN';
+      }
+      // Opponent time-wasting → aggressive pressing
+      if ((opponentTactic.timeWasting || 5) >= 15) {
+        t.closingDown = Math.min(20, (t.closingDown || 10) + 4);
+        t.mentality = Math.min(20, (t.mentality || 10) + 2);
+      }
+    }
+
+    // Clamp all values
+    t.mentality = Math.max(1, Math.min(20, t.mentality));
+    t.tempo = Math.max(1, Math.min(20, t.tempo || 10));
+    t.defensiveLine = Math.max(1, Math.min(20, t.defensiveLine || 10));
+    t.closingDown = Math.max(1, Math.min(20, t.closingDown || 10));
+    t.timeWasting = Math.max(1, Math.min(20, t.timeWasting || 5));
+    t.passingStyle = Math.max(1, Math.min(20, t.passingStyle || 10));
+
+    return t;
+  }
+
   static simulateStep(
     state: MatchState,
     homeTeam: Club, awayTeam: Club,
@@ -488,8 +717,11 @@ export class MatchSimulator {
       };
     };
 
-    const homeTactic = homeTacticSettings;
-    const awayTactic = awayTacticSettings || generateRandomTactic(homeTacticSettings);
+    const homeTacticBase = homeTacticSettings;
+    const awayTacticBase = awayTacticSettings || generateRandomTactic(homeTacticSettings);
+    // IA — Dynamic tactical adjustment based on current score & opponent
+    const homeTactic = this.adjustTacticsDynamically(homeTacticBase, true, newState.homeScore, newState.awayScore, newState.minute, awayTacticBase);
+    const awayTactic = this.adjustTacticsDynamically(awayTacticBase, false, newState.homeScore, newState.awayScore, newState.minute, homeTacticBase);
 
     const getPlayerById = (id: string) => allHomePlayers.find(p => p.id === id) || allAwayPlayers.find(p => p.id === id);
     const activeHome = newState.homeActiveIds.map(id => getPlayerById(id)).filter(Boolean) as Player[];
@@ -870,7 +1102,20 @@ export class MatchSimulator {
     newState.second += timeConsumed;
     while (newState.second >= 60) { newState.second -= 60; newState.minute += 1; }
 
-    if (newState.minute >= 45 && !newState.halftimeTriggered) { newState.isPlaying = false; newState.halftimeTriggered = true; newState.ballState = 'KICKOFF'; newState.events.push({ minute: 45, second: 0, type: 'WHISTLE', text: "DESCANSO", importance: 'MEDIUM', intensity: 2 }); }
+    if (newState.minute >= 45 && !newState.halftimeTriggered) {
+      newState.isPlaying = false;
+      newState.halftimeTriggered = true;
+      newState.ballState = 'KICKOFF';
+      newState.events.push({ minute: 45, second: 0, type: 'WHISTLE', text: "DESCANSO", importance: 'MEDIUM', intensity: 2 });
+      // IA — Halftime auto-subs: both teams make subs for fatigued/carded players
+      this.autoSubstitute(newState, homeTeam, awayTeam, allHomePlayers, allAwayPlayers, 'HALFTIME');
+    }
+
+    // IA — Mid-half sub check (only check every ~10 minutes, not every tick)
+    if (newState.minute > 50 && newState.minute % 7 === 0 && newState.minute < 85) {
+      this.autoSubstitute(newState, homeTeam, awayTeam, allHomePlayers, allAwayPlayers, 'MID_HALF');
+    }
+
     if (newState.minute >= 90) { newState.isPlaying = false; newState.ballState = 'FINISHED'; newState.events.push({ minute: 90, second: 0, type: 'WHISTLE', text: "FINAL DEL PARTIDO", importance: 'HIGH', intensity: 5 }); }
 
     return { nextState: newState, slowMotion };
@@ -1256,17 +1501,19 @@ export class MatchSimulator {
         return s + avg;
       }, 0) / (aXI.length || 1);
 
-      // ── TACTICAL MODIFIERS ──
-      const hMent = (homeTactic?.mentality ?? 10) / 10;  // 0.1–2.0
-      const aMent = (awayTactic?.mentality ?? 10) / 10;
-      const hTempo = (homeTactic?.tempo ?? 10) / 10;
-      const aTempo = (awayTactic?.tempo ?? 10) / 10;
-      const hClosing = (homeTactic?.closingDown ?? 10) / 10;
-      const aClosing = (awayTactic?.closingDown ?? 10) / 10;
-      const hWidth = (homeTactic?.width ?? 10) / 10;
-      const aWidth = (awayTactic?.width ?? 10);  // keep raw for formula
-      const hDefLine = (homeTactic?.defensiveLine ?? 10);
-      const aDefLine = (awayTactic?.defensiveLine ?? 10);
+      // ── TACTICAL MODIFIERS (with opponent reaction) ──
+      const hTacticAdj = this.adjustTacticsDynamically(homeTactic, true, 0, 0, 0, awayTactic) || homeTactic;
+      const aTacticAdj = this.adjustTacticsDynamically(awayTactic, false, 0, 0, 0, homeTactic) || awayTactic;
+      const hMent = (hTacticAdj?.mentality ?? 10) / 10;  // 0.1–2.0
+      const aMent = (aTacticAdj?.mentality ?? 10) / 10;
+      const hTempo = (hTacticAdj?.tempo ?? 10) / 10;
+      const aTempo = (aTacticAdj?.tempo ?? 10) / 10;
+      const hClosing = (hTacticAdj?.closingDown ?? 10) / 10;
+      const aClosing = (aTacticAdj?.closingDown ?? 10) / 10;
+      const hWidth = (hTacticAdj?.width ?? 10) / 10;
+      const aWidth = (aTacticAdj?.width ?? 10);  // keep raw for formula
+      const hDefLine = (hTacticAdj?.defensiveLine ?? 10);
+      const aDefLine = (aTacticAdj?.defensiveLine ?? 10);
 
       const hRep = hClub?.reputation || 5000;
       const aRep = aClub?.reputation || 5000;
