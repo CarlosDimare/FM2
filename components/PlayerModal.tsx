@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Player, Attribute, DialogueType, DialogueResult, ATTRIBUTE_LABELS, Position, SquadType, DialogueTone, POSITION_FULL_NAMES, PlayerHistoryEntry } from '../types';
+import { Player, Attribute, DialogueType, DialogueResult, ATTRIBUTE_LABELS, Position, SquadType, DialogueTone, POSITION_FULL_NAMES, PlayerHistoryEntry, PLAYER_PERSONALITY_LABELS, PLAYER_PERSONALITY_DESC } from '../types';
 import { world } from '../services/worldManager';
 import { ProfileNarrativeEngine } from '../services/engine';
 import { DialogueSystem } from '../services/dialogueSystem';
@@ -151,6 +151,11 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
   const clubText = club ? club.secondaryColor : 'text-blue-900';
   const isHeaderLight = clubBg === 'bg-white';
 
+  const personalityLabel = player.personality
+    ? (PLAYER_PERSONALITY_LABELS[player.personality] || ProfileNarrativeEngine.getPersonalityLabel(player))
+    : ProfileNarrativeEngine.getPersonalityLabel(player);
+  const personalityDesc = player.personality ? PLAYER_PERSONALITY_DESC[player.personality] : '';
+
   const personalMotive = ((player.morale < 40 || player.fitness < 60) && player.clubId);
 
   return (
@@ -188,7 +193,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                 </div>
 
                 <div className="flex items-center gap-2 mt-1 md:mt-2">
-                    <span className={`text-[7px] md:text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase border ${isHeaderLight ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-white/10 text-white border-white/20'}`}>{personality}</span>
+                    <span className={`text-[7px] md:text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase border ${isHeaderLight ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-white/10 text-white border-white/20'}`}>{personalityLabel}</span>
                     <div className={`ml-auto px-1.5 py-0.5 rounded-sm border ${isHeaderLight ? 'bg-[#bcc8bc] border-[#a0b0a0]' : 'bg-black/20 border-white/10'}`}>
                         <span className={`text-[7px] md:text-[9px] font-black uppercase ${isHeaderLight ? 'text-green-700' : 'text-green-400'}`}>LEAL</span>
                     </div>
@@ -285,7 +290,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                          <div className="flex items-center justify-between border-b pb-1"><div className="flex items-center gap-2 text-slate-500"><Cake size={14}/> <span className="text-[10px] font-black uppercase">Nacimiento</span></div><span className="text-xs font-bold">{player.birthDate.toLocaleDateString()} ({player.age} años)</span></div>
                          <div className="flex items-center justify-between border-b pb-1"><div className="flex items-center gap-2 text-slate-500"><Ruler size={14}/> <span className="text-[10px] font-black uppercase">Altura</span></div><span className="text-xs font-bold">{player.height} cm</span></div>
                          <div className="flex items-center justify-between border-b pb-1"><div className="flex items-center gap-2 text-slate-500"><Weight size={14}/> <span className="text-[10px] font-black uppercase">Peso</span></div><span className="text-xs font-bold">{player.weight} kg</span></div>
-                         <div className="flex items-center justify-between border-b pb-1"><div className="flex items-center gap-2 text-slate-500"><UserCircle size={14}/> <span className="text-[10px] font-black uppercase">Personalidad</span></div><span className="text-xs font-bold text-blue-800">{personality}</span></div>
+                         <div className="flex flex-col border-b pb-2"><div className="flex items-center justify-between"><div className="flex items-center gap-2 text-slate-500"><UserCircle size={14}/> <span className="text-[10px] font-black uppercase">Personalidad</span></div><span className="text-xs font-bold text-blue-800">{personalityLabel}</span></div>{personalityDesc && <p className="text-[9px] text-slate-500 italic mt-1">{personalityDesc}</p>}</div>
                       </div>
                    </FMBox>
                    <FMBox title="Contrato e Importancia">
@@ -435,7 +440,8 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                                   { id: 'CRITICIZE_FORM', label: 'Criticar Rendimiento' },
                                   { id: 'PRAISE_TRAINING', label: 'Elogiar Entreno' },
                                   { id: 'DEMAND_MORE', label: 'Exigir más Esfuerzo' },
-                                  { id: 'WARN_CONDUCT', label: 'Advertir Disciplina' }
+                                  { id: 'WARN_CONDUCT', label: 'Advertir Disciplina' },
+                                  ...(player.transferRequestReason ? [{ id: 'CONVINCE_TO_STAY' as const, label: 'Convencer que se Quede' }] : []),
                                 ].map(opt => (
                                   <button key={opt.id} onClick={() => setDialogueType(opt.id as any)} className={`px-4 py-3 text-[10px] font-black uppercase rounded-[1px] border transition-all ${dialogueType === opt.id ? 'bg-[#3a4a3a] text-white border-black' : 'bg-white text-slate-700 border-[#a0b0a0]'}`}>{opt.label}</button>
                                 ))}

@@ -496,6 +496,13 @@ if (result.userWonLeague) gs.trackTitle('Liga');
     // Youth development pipeline
     world.developYouthPlayers(nextDay);
     world.autoPromoteYouthPlayers(nextDay);
+
+    // ── Pilar C: Personality & Drama ──────────────────────────────────
+    if (userClub) {
+      world.checkDressingRoomConflicts(userClub.id, nextDay);
+      world.checkTransferRequestMotives(userClub.id, nextDay);
+      world.generateNarrativeEvents(userClub.id, nextDay);
+    }
     console.timeEnd('  🔄 ciclo diario');
 
     const newCupFixtures = LifecycleManager.processCompetitionProgress(fixtures, nextDay);

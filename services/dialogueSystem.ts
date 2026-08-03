@@ -109,6 +109,12 @@ export class DialogueSystem {
           MODERATE: "Te propongo mantener una relación profesional y directa.",
           AGGRESSIVE: "Nos veremos en el campo; que quede claro quién manda."
         };
+      case 'CONVINCE_TO_STAY':
+        return {
+          MILD: "Entiendo tus motivos. Hablemos y busquemos una solución juntos.",
+          MODERATE: "Eres importante para este proyecto. No quiero perderte.",
+          AGGRESSIVE: "Tienes contrato y te necesito aquí. No hay discusión."
+        };
     }
   }
 
@@ -200,6 +206,32 @@ export class DialogueSystem {
           ? "Se va enfadado. Ya está buscando opciones fuera."
           : "Se marcha preocupado, pero no quiere mostrar debilidad.";
         tensionChange = tone === 'AGGRESSIVE' ? 20 : 10;
+        break;
+      case 'CONVINCE_TO_STAY':
+        if (tone === 'AGGRESSIVE') {
+          moraleChange = -15;
+          reactionType = 'NEGATIVE';
+          text = "No acepta imposiciones. Se siente atrapado y su descontento crece.";
+          tensionChange = 15;
+        } else if (player.loyalty >= 14 || player.personality === 'LOYAL' || player.personality === 'PROFESSIONAL') {
+          moraleChange = 12;
+          reactionType = 'POSITIVE';
+          text = "Aprecia que valores su permanencia. Retira su pedido de traspaso y se compromete a darlo todo.";
+          player.transferRequestReason = undefined;
+          player.isTransferListed = false;
+          player.transferStatus = 'NONE';
+        } else if (tone === 'MILD' && player.personality === 'AMBITIOUS') {
+          moraleChange = 5;
+          reactionType = 'POSITIVE';
+          text = "Acepta quedarse... por ahora. Pero deja claro que espera ver progreso en el proyecto.";
+          player.transferRequestReason = undefined;
+          player.isTransferListed = false;
+          player.transferStatus = 'NONE';
+        } else {
+          moraleChange = 2;
+          reactionType = 'NEUTRAL';
+          text = "Escucha tus argumentos pero no retira su pedido. Queda en stand-by.";
+        }
         break;
       case 'INDIVIDUAL_TRAINING_FOCUS':
         moraleChange = 3;

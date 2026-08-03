@@ -1,5 +1,5 @@
 
-import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle, ManagerProfile, ManagerOrigin, ClubHistoryEntry, RelationshipState, RealManager, ManagerNetworkEntry } from "../types";
+import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle, ManagerProfile, ManagerOrigin, ClubHistoryEntry, RelationshipState, RealManager, ManagerNetworkEntry, PlayerPersonality, PLAYER_PERSONALITY_LABELS, PLAYER_PERSONALITY_DESC } from "../types";
 import { generateUUID, randomInt, weightedRandom } from "./utils";
 import { NATIONS } from "../constants";
 import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, KOR_K_LEAGUE, CHN_SUPER_LEAGUE, AUS_A_LEAGUE, EGY_PREMIER, MAR_BOTOLA, RSA_PSL, RealClubDef } from "../data/static";
@@ -203,6 +203,7 @@ export class WorldManager {
             seasonStats: { appearances: 0, goals: 0, assists: 0, cleanSheets: 0, conceded: 0, totalRating: 0 },
             careerStats: { totalApps: 0, totalGoals: 0, totalAssists: 0, totalCleanSheets: 0, clubsPlayedFor: [club.id] },
             statsByCompetition: {},
+            personality: this.assignPlayerPersonality(randomInt(5, 20), randomInt(5, 20), p.stats.internal.agresividad || 10, p.stats.internal.decision || 10, p.stats.internal.vision || 10),
          };
          this.players.push(player);
       }
@@ -548,9 +549,9 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
      player.potentialAbility = def.pa;
      player.reputation = def.ca * 45;
      player.value = Math.round(def.ca * def.ca * 2500);
-     player.salary = Math.round(def.ca * 2500 / 10) * 10;
-     player.developmentTrend = 'STABLE';
-     return player;
+     player.salary = Math.round(def.ca * 2500 / 10) * 10;      player.developmentTrend = 'STABLE';
+      player.personality = this.assignPlayerPersonality(player.leadership, player.loyalty, player.stats.internal.agresividad, player.stats.internal.decision, player.stats.internal.vision);
+      return player;
    }
 
    generateSquadsForClub(clubId: string) {
@@ -647,6 +648,7 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
     player.salary = Math.round(ca * 2000 / 12);
     player.releaseClause = Math.round(player.value * 3);
     player.agent = age >= 22 && Math.random() < 0.15 ? { name: `Agente ${lastName}`, commission: Math.round(5 + Math.random() * 10) } : undefined;
+    player.personality = this.assignPlayerPersonality(player.leadership, player.loyalty, player.stats.internal.agresividad, player.stats.internal.decision, player.stats.internal.vision);
     return player;
   }
   getLeagueTable(compId: string, fixtures: Fixture[], squadType: SquadType, groupId?: number): TableEntry[] {
@@ -739,6 +741,267 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
     const league = this.competitions.find(c => c.id === leagueId);
     return league?.marketMultiplier ?? 1.0;
   }
+
+  // ─── Pilar C: Personalidades y Drama ──────────────────────────────────────
+
+  /** Assign personality based on player's hidden mental attributes */
+  assignPlayerPersonality(leadership: number, loyalty: number, agresividad: number, decision: number, vision: number): PlayerPersonality {
+    // LEADER: high leadership + high decision
+    if (leadership >= 16 && decision >= 14) return 'LEADER';
+    // MERCENARY: low loyalty + high vision (ambitious for money/fame)
+    if (loyalty <= 7 && vision >= 14) return 'MERCENARY';
+    // LOYAL: high loyalty + moderate decision
+    if (loyalty >= 16) return 'LOYAL';
+    // VOLATILE: high aggression + low decision
+    if (agresividad >= 16 && decision <= 9) return 'VOLATILE';
+    // LAZY: low decision + low aggression (no drive)
+    if (decision <= 6 && agresividad <= 8) return 'LAZY';
+    // AMBITIOUS: high vision + moderate/low loyalty
+    if (vision >= 16 && loyalty <= 13) return 'AMBITIOUS';
+    // PROFESSIONAL: high decision, moderate everything else
+    if (decision >= 14) return 'PROFESSIONAL';
+    // Fallback based on strongest signal
+    const scores: [PlayerPersonality, number][] = [
+      ['LEADER', leadership],
+      ['LOYAL', loyalty],
+      ['MERCENARY', 20 - loyalty],
+      ['VOLATILE', agresividad],
+      ['AMBITIOUS', vision],
+      ['PROFESSIONAL', decision],
+      ['LAZY', 20 - decision],
+    ];
+    scores.sort((a, b) => b[1] - a[1]);
+    return scores[0][0];
+  }
+
+  /** Resolve personality labels for UI display */
+  getPersonalityLabel(player: Player): string {
+    if (!player.personality) return 'Equilibrado';
+    return PLAYER_PERSONALITY_LABELS[player.personality] || 'Equilibrado';
+  }
+
+  /**
+   * C2: Check dressing room conflicts based on clashing personalities.
+   * Call daily for user's club; periodically for other DEEP clubs.
+   */
+  checkDressingRoomConflicts(clubId: string, date: Date) {
+    const club = this.getClub(clubId);
+    if (!club) return;
+
+    const allSquad = this.getPlayersByClub(clubId).filter(p => p.squad === 'SENIOR');
+    if (allSquad.length < 2) return;
+
+    // Ensure all players have personality assigned (safety net for legacy saves)
+    allSquad.forEach(p => {
+      if (!p.personality) {
+        p.personality = this.assignPlayerPersonality(p.leadership, p.loyalty, p.stats.internal.agresividad, p.stats.internal.decision, p.stats.internal.vision);
+      }
+    });
+
+    // Personality clash matrix: pairs that naturally conflict
+    const clashPairs: [PlayerPersonality, PlayerPersonality][] = [
+      ['LEADER', 'VOLATILE'],
+      ['LEADER', 'LAZY'],
+      ['MERCENARY', 'LOYAL'],
+      ['VOLATILE', 'PROFESSIONAL'],
+      ['AMBITIOUS', 'LAZY'],
+      ['MERCENARY', 'LEADER'],
+    ];
+
+    const captain = allSquad.find(p => p.leadership >= 15 && p.isStarter);
+
+    for (let i = 0; i < allSquad.length; i++) {
+      for (let j = i + 1; j < allSquad.length; j++) {
+        const p1 = allSquad[i];
+        const p2 = allSquad[j];
+        if (!p1.personality || !p2.personality) continue;
+
+        const isClash = clashPairs.some(
+          ([a, b]) => (p1.personality === a && p2.personality === b) || (p1.personality === b && p2.personality === a)
+        );
+        if (!isClash) continue;
+
+        // Accumulate tension
+        if (!p1.playerTensions) p1.playerTensions = {};
+        if (!p2.playerTensions) p2.playerTensions = {};
+        p1.playerTensions[p2.id] = (p1.playerTensions[p2.id] || 0) + randomInt(1, 5);
+        p2.playerTensions[p1.id] = (p2.playerTensions[p1.id] || 0) + randomInt(1, 5);
+
+        const tension = Math.max(p1.playerTensions[p2.id] || 0, p2.playerTensions[p1.id] || 0);
+
+        // Captain mediation
+        if (captain && tension >= 40 && Math.random() < captain.leadership / 20) {
+          p1.playerTensions[p2.id] = Math.max(0, (p1.playerTensions[p2.id] || 0) - 15);
+          p2.playerTensions[p1.id] = Math.max(0, (p2.playerTensions[p1.id] || 0) - 15);
+          if (tension >= 50) {
+            this.addInboxMessage('SQUAD',
+              `${captain.name} medió en el vestuario`,
+              `El capitán ${captain.name} intervino para calmar la tensión entre ${p1.name} (${PLAYER_PERSONALITY_LABELS[p1.personality]}) y ${p2.name} (${PLAYER_PERSONALITY_LABELS[p2.personality]}).`,
+              date, clubId);
+          }
+          continue;
+        }
+
+        // Escalation: notify coach
+        if (tension >= 60 && tension < 80 && Math.random() < 0.3) {
+          this.addInboxMessage('SQUAD',
+            `Tensión en el vestuario: ${p1.name} vs ${p2.name}`,
+            `Hay fricción creciente entre ${p1.name} (${PLAYER_PERSONALITY_LABELS[p1.personality!]}) y ${p2.name} (${PLAYER_PERSONALITY_LABELS[p2.personality!]}). El ambiente se resiente.`,
+            date, clubId);
+          club.teamCohesion = Math.max(10, (club.teamCohesion || 50) - 3);
+        }
+
+        // Boiling point: media leak
+        if (tension >= 80 && Math.random() < 0.15) {
+          p1.morale = Math.max(0, p1.morale - 10);
+          p2.morale = Math.max(0, p2.morale - 10);
+          club.teamCohesion = Math.max(0, (club.teamCohesion || 50) - 8);
+          this.addInboxMessage('SQUAD',
+            `🚨 Conflicto grave: ${p1.name} y ${p2.name}`,
+            `La prensa ha filtrado una pelea entre ${p1.name} y ${p2.name} en el entrenamiento. La directiva está preocupada. Ambos jugadores han bajado su moral.`,
+            date, clubId);
+          // Generate media news
+          this.mediaNews.push({
+            id: generateUUID(), date,
+            type: 'CRITICISM', category: 'GENERAL',
+            headline: `Crisis en el vestuario de ${club.name}`,
+            subheadline: `${p1.name} y ${p2.name} protagonizan un incidente`,
+            body: `Fuentes internas confirman que la relación entre ${p1.name} (${PLAYER_PERSONALITY_LABELS[p1.personality!]}) y ${p2.name} (${PLAYER_PERSONALITY_LABELS[p2.personality!]}) es insostenible. El DT deberá tomar medidas.`,
+            clubId, isUserClubNews: true, read: false,
+          });
+        }
+      }
+    }
+  }
+
+  /**
+   * C3: Check if players want to request a transfer for narrative reasons.
+   * Call daily per user club.
+   */
+  checkTransferRequestMotives(clubId: string, date: Date) {
+    const club = this.getClub(clubId);
+    if (!club) return;
+    const players = this.getPlayersByClub(clubId).filter(p => p.squad === 'SENIOR' && !p.isTransferListed && !p.transferRequestReason);
+    if (players.length === 0 || Math.random() > 0.03) return; // 3% daily chance
+
+    const candidate = players[randomInt(0, players.length - 1)];
+    if (!candidate.personality) return;
+
+    const league = this.competitions.find(c => c.id === club.leagueId);
+    const leagueRep = league?.dynamicReputation || 50;
+    const motives: Record<PlayerPersonality, string[]> = {
+      LEADER: ['Quiere competir por títulos importantes y siente que el club no está a la altura.', 'Busca un proyecto donde su liderazgo sea valorado con fichajes de nivel.'],
+      MERCENARY: ['Recibió una oferta salarial que este club no puede igualar.', 'Su agente le ha conseguido un contrato mucho más lucrativo en otra liga.'],
+      LOYAL: ['Su familia quiere regresar a su país de origen.', 'Problemas personales requieren que esté más cerca de casa.'],
+      VOLATILE: ['No soporta más al cuerpo técnico y quiere un cambio de aires.', 'Siente que el DT lo tiene de punto y prefiere irse antes que seguir así.'],
+      PROFESSIONAL: ['Considera que su ciclo en el club ha terminado y busca un nuevo desafío.', 'Quiere probarse en una liga más competitiva antes del final de su carrera.'],
+      LAZY: ['No se siente motivado aquí. Cree que un cambio de entorno lo reactivaría.', 'Busca un club con menos exigencia donde pueda jugar sin presión.'],
+      AMBITIOUS: ['Quiere jugar Champions League y este club no se la puede garantizar.', 'Aspira a un club más grande donde pueda ganar títulos y Balones de Oro.'],
+    };
+
+    const personalityMotives = motives[candidate.personality];
+    const reason = personalityMotives[randomInt(0, personalityMotives.length - 1)];
+
+    candidate.transferRequestReason = reason;
+    candidate.isTransferListed = true;
+    candidate.transferStatus = 'TRANSFERABLE';
+    candidate.morale = Math.max(20, candidate.morale - 20);
+
+    const label = PLAYER_PERSONALITY_LABELS[candidate.personality];
+    this.addInboxMessage('SQUAD',
+      `${candidate.name} pidió ser transferido`,
+      `${candidate.name} (${label}) ha solicitado formalmente salir del club. Motivo: "${reason}"\n\nPuedes intentar convencerlo de quedarse o buscarle un destino.`,
+      date, candidate.id);
+
+    this.mediaNews.push({
+      id: generateUUID(), date,
+      type: 'RUMOR', category: 'TRANSFER',
+      headline: `${candidate.name} quiere dejar ${club.name}`,
+      subheadline: `El jugador habría pedido ser transferido`,
+      body: `Según fuentes cercanas al jugador, ${candidate.name} comunicó su deseo de abandonar ${club.name}. El motivo principal: "${reason}"`,
+      clubId, playerId: candidate.id, isUserClubNews: true, read: false,
+    });
+  }
+
+  /**
+   * C4: Generate random narrative events that add flavor to the daily cycle.
+   * Low probability, high impact moments.
+   */
+  generateNarrativeEvents(clubId: string, date: Date) {
+    const club = this.getClub(clubId);
+    if (!club || Math.random() > 0.06) return; // 6% daily chance
+
+    const squad = this.getPlayersByClub(clubId).filter(p => p.squad === 'SENIOR');
+    if (squad.length < 5) return;
+
+    const roll = Math.random();
+
+    if (roll < 0.25) {
+      // Youth asks for veteran's number
+      const veteran = squad.find(p => p.age >= 30 && p.reputation >= 3000);
+      const youth = squad.find(p => p.age <= 20 && p.potentialAbility >= 150);
+      if (veteran && youth && youth.id !== veteran.id) {
+        this.addInboxMessage('SQUAD',
+          `${youth.name} quiere la dorsal de ${veteran.name}`,
+          `El juvenil ${youth.name} ha expresado su deseo de heredar el número de ${veteran.name}, una leyenda del club. El vestuario está dividido: algunos creen que es una falta de respeto, otros ven ambición sana.`,
+          date, clubId);
+        youth.morale = Math.min(100, youth.morale + 5);
+        veteran.morale = Math.max(0, veteran.morale - 5);
+        if (!youth.playerTensions) youth.playerTensions = {};
+        youth.playerTensions[veteran.id] = (youth.playerTensions[veteran.id] || 0) + 10;
+      }
+    } else if (roll < 0.50) {
+      // Two stars argue over penalty
+      const stars = squad.filter(p => p.currentAbility >= 150 && p.isStarter);
+      if (stars.length >= 2) {
+        const s1 = stars[randomInt(0, stars.length - 1)];
+        let s2 = stars[randomInt(0, stars.length - 1)];
+        while (s2.id === s1.id && stars.length > 1) s2 = stars[randomInt(0, stars.length - 1)];
+        this.addInboxMessage('SQUAD',
+          `¿Quién tira el penal? ${s1.name} vs ${s2.name}`,
+          `${s1.name} y ${s2.name} discutieron acaloradamente sobre quién debería ser el lanzador de penaltis del equipo. Necesitas tomar una decisión antes del próximo partido.`,
+          date, clubId);
+        if (!s1.playerTensions) s1.playerTensions = {};
+        if (!s2.playerTensions) s2.playerTensions = {};
+        s1.playerTensions[s2.id] = (s1.playerTensions[s2.id] || 0) + 8;
+        s2.playerTensions[s1.id] = (s2.playerTensions[s1.id] || 0) + 8;
+      }
+    } else if (roll < 0.72) {
+      // Veteran mentors youth (positive event)
+      const veteran = squad.find(p => p.age >= 31 && p.leadership >= 15);
+      const youth = squad.find(p => p.age <= 21 && p.potentialAbility >= 140);
+      if (veteran && youth && youth.id !== veteran.id) {
+        youth.currentAbility = Math.min(youth.potentialAbility, youth.currentAbility + 1);
+        youth.morale = Math.min(100, youth.morale + 10);
+        veteran.morale = Math.min(100, veteran.morale + 5);
+        club.teamCohesion = Math.min(100, (club.teamCohesion || 50) + 3);
+        this.addInboxMessage('SQUAD',
+          `${veteran.name} apadrina a ${youth.name}`,
+          `El veterano ${veteran.name} ha tomado bajo su ala al joven ${youth.name}. Se los ve entrenando juntos y la química del equipo mejora. ${youth.name} ha ganado 1 punto de CA.`,
+          date, clubId);
+        this.mediaNews.push({
+          id: generateUUID(), date,
+          type: 'PRAISE', category: 'GENERAL',
+          headline: `${veteran.name}, el mentor de ${club.name}`,
+          subheadline: `El veterano impulsa el desarrollo de ${youth.name}`,
+          body: `En ${club.name} destacan la labor de ${veteran.name} como guía de las jóvenes promesas. ${youth.name} es el último beneficiado.`,
+          clubId, isUserClubNews: true, read: false,
+        });
+      }
+    } else {
+      // Press amplifies minor squad friction
+      this.mediaNews.push({
+        id: generateUUID(), date,
+        type: 'RUMOR', category: 'GENERAL',
+        headline: `¿Hay mal ambiente en ${club.name}?`,
+        subheadline: 'La prensa especula sobre la química del plantel',
+        body: `Varios medios señalan que no todo es armonía en el vestuario de ${club.name}. Fuentes anónimas hablan de pequeños roces que podrían escalar si no se gestionan.`,
+        clubId, isUserClubNews: true, read: false,
+      });
+    }
+  }
+
+  // ─── End Pilar C ──────────────────────────────────────────────────────────
 
   /** Evaluate all HEAD_COACHes and induct worthy ones into the Hall of Fame */
   updateHallOfFame(currentYear: number) {
@@ -1916,12 +2179,7 @@ addInboxMessage(category: MessageCategory, subject: string, body: string, date: 
       reportedCA >= 80 ? "Puede ser útil en la rotación." :
       "Jugador de relleno. No recomiendo su fichaje.";
 
-    let personality = "Equilibrado";
-    if (player.stats.internal.decision >= 17) personality = "Modelo de profesionalidad";
-    else if (player.stats.internal.decision >= 17) personality = "Muy determinado";
-    else if (player.stats.internal.vision >= 17) personality = "Muy ambicioso";
-    else if (player.stats.internal.agresividad <= 6) personality = "Volátil";
-    else if (player.stats.internal.polivalencia >= 16) personality = "Líder nato";
+    let personality = player.personality ? PLAYER_PERSONALITY_LABELS[player.personality] : "Equilibrado";
 
     const report: ScoutingReport = {
       id: generateUUID(),

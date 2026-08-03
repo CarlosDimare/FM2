@@ -141,6 +141,11 @@ export interface Player {
   formRatings: number[];
   tacticalFamiliarity: number;
   isTransferListed: boolean;
+  personality?: PlayerPersonality;
+  /** Tracks cumulative dressing-room tension with other players, keyed by playerId */
+  playerTensions?: Record<string, number>;
+  /** Narrative reason for requesting a transfer, if any */
+  transferRequestReason?: string;
   relationships: Record<string, { trust: number; respect: number; tension: number }>;
 }
 
@@ -682,7 +687,29 @@ export const POSITION_ORDER: Record<string, number> = {
   'P': 0, 'LIB': 1, 'DFC': 2, 'LD': 3, 'LI': 4, 'CD': 6, 'CI': 7, 'MCD': 5, 'MC': 8, 'MD': 9, 'MI': 10, 'MPC': 11, 'ED': 12, 'EI': 13, 'DC': 14, 'WD': 15, 'WI': 16
 };
 
-export type DialogueType = 'PRAISE_FORM' | 'CRITICIZE_FORM' | 'PRAISE_TRAINING' | 'DEMAND_MORE' | 'WARN_CONDUCT' | 'SET_CAPTAIN' | 'CHANGE_POSITION' | 'INDIVIDUAL_TRAINING_FOCUS' | 'THREATEN_TRANSFER' | 'GRANT_CAPTANCY' | 'ASSIGN_TRAINING' | 'DELEGATE_MATCH' | 'REPRIMAND' | 'PROMISE_RESOURCES' | 'SCOUTING_FOCUS' | 'PRESS_STATEMENT' | 'CONTACT_MANAGER';
+export type PlayerPersonality = 'LEADER' | 'MERCENARY' | 'LOYAL' | 'VOLATILE' | 'PROFESSIONAL' | 'LAZY' | 'AMBITIOUS';
+
+export const PLAYER_PERSONALITY_LABELS: Record<PlayerPersonality, string> = {
+  LEADER: 'Líder',
+  MERCENARY: 'Mercenario',
+  LOYAL: 'Leal',
+  VOLATILE: 'Volátil',
+  PROFESSIONAL: 'Profesional',
+  LAZY: 'Perezoso',
+  AMBITIOUS: 'Ambicioso',
+};
+
+export const PLAYER_PERSONALITY_DESC: Record<PlayerPersonality, string> = {
+  LEADER: 'Inspira a sus compañeros. Asume responsabilidad en los momentos difíciles. Ideal para capitán.',
+  MERCENARY: 'Juega por dinero y gloria personal. Leal mientras el sueldo sea competitivo.',
+  LOYAL: 'Fiel al club y a la camiseta. Difícil de tentar con ofertas externas.',
+  VOLATILE: 'Emocionalmente inestable. Puede explotar ante críticas o decisiones que no comparte.',
+  PROFESSIONAL: 'Enfoque ejemplar. Respeta la jerarquía y mantiene la disciplina.',
+  LAZY: 'Talento sin compromiso. Rinde por debajo de su potencial si no se le exige.',
+  AMBITIOUS: 'Quiere títulos, Champions y reconocimiento. Si el club no crece, buscará otro.',
+};
+
+export type DialogueType = 'PRAISE_FORM' | 'CRITICIZE_FORM' | 'PRAISE_TRAINING' | 'DEMAND_MORE' | 'WARN_CONDUCT' | 'SET_CAPTAIN' | 'CHANGE_POSITION' | 'INDIVIDUAL_TRAINING_FOCUS' | 'THREATEN_TRANSFER' | 'GRANT_CAPTANCY' | 'ASSIGN_TRAINING' | 'DELEGATE_MATCH' | 'REPRIMAND' | 'PROMISE_RESOURCES' | 'SCOUTING_FOCUS' | 'PRESS_STATEMENT' | 'CONTACT_MANAGER' | 'CONVINCE_TO_STAY';
 
 export type PressStatementTopic = 'EXPECTATIONS' | 'RIVAL' | 'SQUAD_CONFIDENCE' | 'TRANSFER_RUMOUR';
 
