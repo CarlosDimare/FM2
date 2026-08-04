@@ -1476,7 +1476,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <label className="text-[10px] font-black text-slate-600 uppercase block mb-1 tracking-widest">Fecha de nacimiento</label>
             <input type="date" className="w-full bg-slate-100 border border-slate-500 rounded-sm px-4 py-3 text-slate-950 font-bold text-sm outline-none focus:border-slate-800" value={userBirthDate.toISOString().split('T')[0]} onChange={(e) => setUserBirthDate(new Date(e.target.value))} />
           </div>
-          <FMButton onClick={() => { setGameState('SETUP_CAREER'); }} className="w-full py-4 mt-4">
+          <FMButton onClick={() => { setGameState('SETUP_COUNTRY'); }} className="w-full py-4 mt-4">
             CREAR MI MANAGER <ChevronRight size={14} />
           </FMButton>
           <FMButton onClick={() => { setGameState('SETUP_EXISTING_MANAGER'); }} variant="secondary" className="w-full py-3 mt-2 text-xs border-2 border-slate-400">
@@ -1493,20 +1493,17 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
   );
 
   if (gameState === 'SETUP_EXISTING_MANAGER') {
-    const countryLeagues = world.competitions.filter(c => c.type === 'LEAGUE');
-    const countriesAvailable = Array.from(new Set(countryLeagues.map(l => l.country))).sort();
     const clubName = (clubId: string | null): string => {
-      if (!clubId) return 'Desempleado';
+      if (!clubId) return 'Sin club';
       const club = world.getClub(clubId);
       return club ? club.name : 'Desconocido';
     };
     const onSelectManager = (m: RealManager) => {
       setSelectedExistingManager(m);
-      setManagerResultLimit(120);
       setUserName(m.name);
       setUserSurname(m.surname);
       setUserNationality(m.nationality);
-      setGameState('SETUP_CAREER');
+      setGameState('SETUP_COUNTRY');
     };
     const handleTakeClub = () => {
       if (managerToConfirm && managerToConfirm.currentClubId) {
@@ -1515,7 +1512,6 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       setShowConflictModal(false);
       setManagerToConfirm(null);
     };
-
     const handleFireAndTakeFree = () => {
       if (managerToConfirm && managerToConfirm.currentClubId) {
         createManagerAndStartGame(managerToConfirm, managerToConfirm.currentClubId, true);
@@ -1523,6 +1519,28 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       setShowConflictModal(false);
       setManagerToConfirm(null);
     };
+
+    // Group managers by country of the club they manage
+    const managersByCountry = new Map<string, { manager: RealManager; club: any }[]>();
+    ALL_REAL_MANAGERS.forEach(m => {
+      if (m.currentClubId) {
+        const club = world.getClub(m.currentClubId);
+        if (club) {
+          const country = club.country;
+          if (!managersByCountry.has(country)) managersByCountry.set(country, []);
+          managersByCountry.get(country)!.push({ manager: m, club });
+        }
+      }
+    });
+    const sortedCountries = Array.from(managersByCountry.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
+    // Search filter
+    const query = managerSearch.trim().toLocaleLowerCase();
+    const filteredBySearch = query ? ALL_REAL_MANAGERS.filter(m => {
+      const club = m.currentClubId ? clubName(m.currentClubId) : '';
+      const haystack = `${m.name} ${m.surname} ${m.nationality} ${club}`.toLocaleLowerCase();
+      return haystack.includes(query);
+    }) : [];
 
     return (
       <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
@@ -1541,7 +1559,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
               </FMButton>
             </div>
             <div className="mt-4 text-xs text-slate-500 italic text-center">
-              Advertencia: Despedir un manager puede tener consecuencias en la reputación del club y la relación con la directiva.
+              Advertencia: Despedir un manager puede tener consecuencias en la reputación del club.
             </div>
           </FMModal>
         )}
@@ -1551,63 +1569,67 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <ChevronLeft size={12} /> Volver
           </button>
           <h1 className="text-3xl sm:text-5xl font-black text-slate-900 mb-2 tracking-tighter italic uppercase text-center">Elegir Manager</h1>
-          <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-[0.3em] mb-2">Busca en toda la base disponible · {ALL_REAL_MANAGERS.length.toLocaleString()} perfiles cargados</p>
-          <p className="text-[9px] text-slate-400 font-bold uppercase text-center tracking-widest mb-4">{MANAGER_DATABASE_META.curatedCount} perfiles curados · {MANAGER_DATABASE_META.importedCount.toLocaleString()} importados desde Wikidata{MANAGER_DATABASE_META.importedComplete ? '' : ' · snapshot parcial'}</p>
+          <p className="text-[10px] text-slate-500 font-bold uppercase text-center tracking-[0.3em] mb-2">{ALL_REAL_MANAGERS.length.toLocaleString()} managers · {ALL_REAL_MANAGERS.filter(m => m.currentClubId).length.toLocaleString()} en activo</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_180px] gap-2 mb-5">
+          {/* Search input */}
+          <div className="mb-6">
             <input
               value={managerSearch}
               onChange={e => setManagerSearch(e.target.value)}
-              placeholder="Buscar por nombre, apellido, nacionalidad o club..."
-              className="bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm px-3 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-[#3a4a3a]"
+              placeholder="🔍 Buscar por nombre, apellido o club..."
+              className="w-full bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#3a4a3a]"
             />
-            <select value={managerCountryFilter} onChange={e => setManagerCountryFilter(e.target.value)} className="bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm px-3 py-2.5 text-xs font-bold text-slate-900 outline-none">
-              <option value="ALL">Todas las nacionalidades</option>
-              {Array.from(new Set(ALL_REAL_MANAGERS.map(m => m.nationality))).sort().map(country => <option key={country} value={country}>{country}</option>)}
-            </select>
           </div>
 
-          {(() => {
-            const query = managerSearch.trim().toLocaleLowerCase();
-            const filteredManagers = ALL_REAL_MANAGERS.filter(m => {
-              const club = m.currentClubId ? clubName(m.currentClubId) : '';
-              const haystack = `${m.name} ${m.surname} ${m.nationality} ${club} ${m.personality} ${m.dataSource || ''}`.toLocaleLowerCase();
-              return (!query || haystack.includes(query)) && (managerCountryFilter === 'ALL' || m.nationality === managerCountryFilter);
-            });
-            const visibleManagers = [...filteredManagers]
-              .sort((a, b) => b.reputation - a.reputation)
-              .slice(0, managerResultLimit);
-            return (
-              <>
-                <div className="flex items-center justify-between mb-3 text-[9px] font-black uppercase text-slate-500">
-                  <span>{filteredManagers.length.toLocaleString()} resultado{filteredManagers.length !== 1 ? 's' : ''}</span>
-                  <span>Mostrando {Math.min(managerResultLimit, filteredManagers.length).toLocaleString()} · Orden: reputación</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {visibleManagers.map(m => (
-                    <button key={m.id} onClick={() => onSelectManager(m)} className="p-4 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] hover:border-l-4 hover:border-l-[#3a4a3a] rounded-sm text-left transition-all shadow-sm">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <img src={getFlagUrl(m.nationality)} alt={m.nationality} className="w-5 h-4 rounded-sm object-cover border border-[#a0b0a0] shrink-0" />
-                          <div className="min-w-0"><p className="font-black text-slate-900 text-xs uppercase truncate">{m.name} {m.surname}</p><p className="text-[9px] text-slate-500 font-bold">{m.age} años · {m.personality}</p></div>
-                        </div>
-                        <div className="text-right shrink-0"><p className="text-base font-black text-[#3a4a3a]">{m.reputation}</p><p className="text-[8px] text-slate-500 uppercase font-bold">Rep</p></div>
-                      </div>
-                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-sm ${m.currentClubId ? 'bg-[#3a4a3a] text-white' : 'bg-slate-300 text-slate-700'}`}>{m.currentClubId ? clubName(m.currentClubId) : 'Desempleado'}</span>
-                      {m.dataSource === 'WIKIDATA' && <span className="ml-1 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-sm bg-sky-100 text-sky-800 border border-sky-200">Wikidata · datos básicos</span>}
-                      <div className="space-y-1 mt-3"><AttrBar label="Dir." value={m.attributes.coaching} color="bg-[#3a4a3a]" /><AttrBar label="Tác." value={m.attributes.tacticalKnowledge} color="bg-[#4a5a4a]" /><AttrBar label="Gest." value={m.attributes.manManagement} color="bg-[#5a6a5a]" /><AttrBar label="Mot." value={m.attributes.motivation} color="bg-[#6a7a6a]" /></div>
-                    </button>
-                  ))}
-                </div>
-                {filteredManagers.length > managerResultLimit && (
-                  <button onClick={() => setManagerResultLimit(limit => limit + 120)} className="mt-4 w-full py-2 bg-[#e2eae2] hover:bg-[#ccd9cc] border border-[#a0b0a0] rounded-sm text-[10px] font-black uppercase text-slate-700 transition-colors">
-                    Cargar más · quedan {(filteredManagers.length - managerResultLimit).toLocaleString()}
+          {/* Search results */}
+          {query ? (
+            <div>
+              <p className="text-[9px] font-black text-slate-500 mb-3">{filteredBySearch.length} resultado{filteredBySearch.length !== 1 ? 's' : ''}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filteredBySearch.slice(0, managerResultLimit).map(m => (
+                  <button key={m.id} onClick={() => onSelectManager(m)} className="p-4 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] hover:border-l-4 hover:border-l-[#3a4a3a] rounded-sm text-left transition-all shadow-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <img src={getFlagUrl(m.nationality)} alt={m.nationality} className="w-5 h-4 rounded-sm object-cover border border-[#a0b0a0]" />
+                      <p className="font-black text-slate-900 text-xs uppercase truncate">{m.name} {m.surname}</p>
+                    </div>
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-sm ${m.currentClubId ? 'bg-[#3a4a3a] text-white' : 'bg-slate-300 text-slate-700'}`}>{m.currentClubId ? clubName(m.currentClubId) : 'Sin club'}</span>
+                    <p className="text-[9px] text-slate-500 mt-1">Rep: {m.reputation} · {m.age} años</p>
                   </button>
-                )}
-                {filteredManagers.length === 0 && <p className="text-center text-slate-500 italic py-10">No hay managers que coincidan con la búsqueda.</p>}
-              </>
-            );
-          })()}
+                ))}
+              </div>
+              {filteredBySearch.length > managerResultLimit && (
+                <button onClick={() => setManagerResultLimit(l => l + 120)} className="mt-4 w-full py-2 bg-[#e2eae2] hover:bg-[#ccd9cc] border border-[#a0b0a0] rounded-sm text-[10px] font-black uppercase text-slate-700">
+                  Cargar más · {filteredBySearch.length - managerResultLimit} restantes
+                </button>
+              )}
+            </div>
+          ) : (
+            /* Browse by country */
+            <div>
+              <p className="text-[9px] font-black text-slate-500 mb-3">Escribí un nombre o elegí un país para ver los managers</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {sortedCountries.map(([country, entries]) => (
+                  <div key={country} className="border border-[#a0b0a0] rounded-sm overflow-hidden">
+                    <div className="bg-[#3a4a3a] px-3 py-2 flex items-center gap-2">
+                      <img src={getFlagUrl(country)} alt={country} className="w-5 h-4 rounded-sm object-cover" />
+                      <span className="font-black text-white text-[11px] uppercase">{country}</span>
+                      <span className="ml-auto text-[9px] text-slate-300 font-bold">{entries.length}</span>
+                    </div>
+                    <div className="bg-white divide-y divide-[#a0b0a0]/30">
+                      {entries.sort((a, b) => b.manager.reputation - a.manager.reputation).slice(0, 5).map(({ manager: m, club }) => (
+                        <button key={m.id} onClick={() => onSelectManager(m)} className="w-full px-3 py-2 flex items-center gap-2 hover:bg-[#e2eae2] transition-colors text-left">
+                          <span className="font-bold text-slate-900 text-[10px] uppercase truncate flex-1">{m.name} {m.surname}</span>
+                          <span className="text-[8px] font-bold text-slate-500 truncate">{club.shortName}</span>
+                          <span className="text-[9px] font-black text-[#3a4a3a]">{m.reputation}</span>
+                        </button>
+                      ))}
+                      {entries.length > 5 && <div className="px-3 py-1 text-[8px] text-slate-400 font-bold text-center">+{entries.length - 5} más</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -1654,7 +1676,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
     return (
       <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
         <div className="max-w-5xl w-full bg-white rounded-sm p-4 sm:p-10 border border-[#a0b0a0] shadow-2xl max-h-[90vh] overflow-y-auto">
-          <button onClick={() => setGameState('SETUP_CAREER')} className="text-[10px] text-slate-500 hover:text-slate-900 font-bold mb-4 flex items-center gap-1"><ChevronLeft size={12} /> Volver al tipo de carrera</button>
+          <button onClick={() => setGameState('SETUP_USER')} className="text-[10px] text-slate-500 hover:text-slate-900 font-bold mb-4 flex items-center gap-1"><ChevronLeft size={12} /> Volver</button>
           <div className="flex items-center justify-between gap-3 mb-5"><div><h1 className="text-2xl sm:text-4xl font-black text-slate-900 uppercase italic tracking-tight">Elegir selección</h1><p className="text-[10px] text-slate-500 uppercase tracking-widest">{careerMode === 'BOTH' ? 'Primero la selección, después el club' : 'Tu equipo nacional'}</p></div><Flag size={22} /></div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {nationalTeams.map((team: any) => {
@@ -1699,8 +1721,8 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
               </button>
             ))}
           </div>
-          <button onClick={() => setGameState('SETUP_CAREER')} className="mt-4 text-[10px] text-slate-500 hover:text-slate-900 font-bold flex items-center gap-1">
-            <ChevronLeft size={12} /> Volver al tipo de carrera
+          <button onClick={() => setGameState('SETUP_USER')} className="mt-4 text-[10px] text-slate-500 hover:text-slate-900 font-bold flex items-center gap-1">
+            <ChevronLeft size={12} /> Volver
           </button>
         </div>
       </div>
@@ -1710,6 +1732,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
   if (gameState === 'SETUP_LEAGUE') {
     const country = selectedCountry;
     const leagues = world.competitions.filter(c => c.type === 'LEAGUE' && c.country === country);
+    const nationalTeam = world.nationalTeamManager?.nationalTeams?.find((t: any) => t.country === country);
     return (
       <div className="h-screen w-screen bg-[#d4dcd4] flex items-center justify-center p-4" style={{ fontFamily: 'Verdana, sans-serif' }}>
         <div className="max-w-4xl w-full bg-white rounded-sm p-4 sm:p-10 border border-[#a0b0a0] shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -1721,6 +1744,14 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight italic">{country}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {nationalTeam && (
+              <button onClick={() => {
+                startNationalCareer(nationalTeam.id, selectedExistingManager);
+              }} className="p-5 bg-[#3a4a3a] hover:bg-[#2a3a2a] border border-[#2a3a2a] rounded-sm text-left transition-all shadow-sm flex flex-col">
+                <h3 className="text-base font-black text-white mb-1 italic uppercase truncate">🏳️ Selección</h3>
+                <p className="text-[9px] text-slate-300">{nationalTeam.name} · {world.nationalTeamManager?.getEligiblePlayers(nationalTeam.id, world.players, world.clubs).length || 0} elegibles</p>
+              </button>
+            )}
             {leagues.map(league => {
               const clubCount = world.getClubsByLeague(league.id).length;
               return (
@@ -1732,7 +1763,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
               );
             })}
           </div>
-          {leagues.length === 0 && (
+          {leagues.length === 0 && !nationalTeam && (
             <p className="text-sm text-slate-500 text-center py-8">No hay ligas disponibles para este país.</p>
           )}
         </div>
