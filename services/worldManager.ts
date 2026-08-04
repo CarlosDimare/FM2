@@ -126,8 +126,11 @@ export class WorldManager {
          this.clubs.push(club);
       }
 
-      // 4. Load players (batch create for performance)
+      // 4. Load players (batch create for performance, deduplicate by ID)
+      const seenPlayerIds = new Set<string>();
       for (const p of CONVERTED_PLAYERS) {
+         if (seenPlayerIds.has(p.id)) continue;
+         seenPlayerIds.add(p.id);
          const club = this.clubs.find(c => c.id === p.clubId);
          if (!club) continue;
 

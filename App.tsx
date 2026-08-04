@@ -935,7 +935,13 @@ dayFixtures.forEach(f => {
         return; 
       }
 
-      world.players = data.worldState.players;
+      // Deduplicate players by ID
+      const seenIds = new Set<string>();
+      world.players = data.worldState.players.filter((p: any) => {
+        if (seenIds.has(p.id)) return false;
+        seenIds.add(p.id);
+        return true;
+      });
       world.clubs = data.worldState.clubs;
       world.competitions = data.worldState.competitions;
       world.staff = data.worldState.staff;
