@@ -219,7 +219,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
     
     let sizeClass = "text-[11px]";
     let fontClass = "font-bold";
-    let containerClass = "bg-white/10 border-white/10";
+    let containerClass = "bg-white border-[#a0b0a0]";
     let textStyle = { color: '#333' };
 
     if (team) {
@@ -264,8 +264,8 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative" style={{ fontFamily: 'Verdana, sans-serif' }}>
-      <div className="w-full flex h-16 md:h-20 shadow-xl z-20 relative bg-white/10 border-b-2 border-white/10 shrink-0">
+    <div className="flex flex-col h-full bg-[#d4dcd4] overflow-hidden relative" style={{ fontFamily: 'Verdana, sans-serif' }}>
+      <div className="w-full flex h-16 md:h-20 shadow-xl z-20 relative bg-white border-b-2 border-[#a0b0a0] shrink-0">
         <div className={`flex-1 flex items-center justify-end pr-4 md:pr-10 relative overflow-hidden transition-colors ${hCol.bg}`}>
             <div className="relative z-10 flex flex-col items-end">
                <span className={`font-black text-xl md:text-4xl uppercase tracking-tighter text-right leading-none ${hCol.text}`}>{homeTeam.shortName}</span>
@@ -276,7 +276,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
          <div className="shrink-0 bg-[#111] px-4 md:px-10 flex items-center gap-4 border-x-4 border-yellow-500/80">
            <span key={`h-${scoreFlashKey}`} className="font-mono font-bold text-4xl md:text-6xl text-amber-600 animate-score-flash">{matchState.homeScore}</span>
            <div className="flex flex-col items-center min-w-[80px]">
-              <span className="font-mono font-bold text-xl md:text-2xl text-white/90 tracking-widest tabular-nums">
+              <span className="font-mono font-bold text-xl md:text-2xl text-slate-900 tracking-widest tabular-nums">
                  {matchState.minute < 10 ? `0${matchState.minute}` : matchState.minute}:{matchState.second < 10 ? `0${matchState.second}` : matchState.second}
               </span>
            </div>
@@ -291,17 +291,17 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         </div>
       </div>
 
-      <div className="w-full bg-white/10/10 h-1.5 shrink-0 z-10">
+      <div className="w-full bg-[#bcc8bc] h-1.5 shrink-0 z-10">
         <div className="h-full bg-gradient-to-r from-yellow-500 via-yellow-400 to-green-400 transition-all duration-300 animate-progress-pulse"
              style={{ width: `${Math.min((matchState.minute / 90) * 100, 100)}%` }}>
         </div>
       </div>
 
-      <div className="flex bg-white/10/10 border-b border-white/10 shrink-0 h-12 shadow-inner z-10">
-        <button onClick={() => setActiveTab('LOG')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'LOG' ? 'bg-[#dbe6db] text-white border-b-4 border-slate-950' : 'text-white/50 hover:bg-white/10'}`}><List size={20} /></button>
-        <button onClick={() => setActiveTab('TECH')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'TECH' ? 'bg-[#dbe6db] text-white border-b-4 border-slate-950' : 'text-white/50 hover:bg-white/10'}`}><Terminal size={20} /></button>
-        <button onClick={() => setActiveTab('STATS')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'STATS' ? 'bg-[#dbe6db] text-white border-b-4 border-slate-950' : 'text-white/50 hover:bg-white/10'}`}><BarChart3 size={20} /></button>
-        <button onClick={() => setActiveTab('PLANTILLA')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'PLANTILLA' ? 'bg-[#dbe6db] text-white border-b-4 border-slate-950' : 'text-white/50 hover:bg-white/10'}`}><Table size={20} /></button>
+      <div className="flex bg-[#bcc8bc] border-b border-[#a0b0a0] shrink-0 h-12 shadow-inner z-10">
+        <button onClick={() => setActiveTab('LOG')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'LOG' ? 'bg-[#dbe6db] text-slate-950 border-b-4 border-slate-950' : 'text-slate-500 hover:bg-[#ccd9cc]'}`}><List size={20} /></button>
+        <button onClick={() => setActiveTab('TECH')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'TECH' ? 'bg-[#dbe6db] text-slate-950 border-b-4 border-slate-950' : 'text-slate-500 hover:bg-[#ccd9cc]'}`}><Terminal size={20} /></button>
+        <button onClick={() => setActiveTab('STATS')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'STATS' ? 'bg-[#dbe6db] text-slate-950 border-b-4 border-slate-950' : 'text-slate-500 hover:bg-[#ccd9cc]'}`}><BarChart3 size={20} /></button>
+        <button onClick={() => setActiveTab('PLANTILLA')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'PLANTILLA' ? 'bg-[#dbe6db] text-slate-950 border-b-4 border-slate-950' : 'text-slate-500 hover:bg-[#ccd9cc]'}`}><Table size={20} /></button>
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col bg-[#cbd5e1]/50">
@@ -309,7 +309,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
           <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll flex flex-col items-center" ref={scrollRef}>
             {matchState.events.filter(e => !e.isTechnical).map((e, i) => renderEvent(e, i))}
             {matchState.events.length === 0 && (
-                <div className="p-20 text-center text-white/40 italic font-black uppercase text-[12px] tracking-[0.3em]">Esperando el pitido inicial...</div>
+                <div className="p-20 text-center text-slate-400 italic font-black uppercase text-[12px] tracking-[0.3em]">Esperando el pitido inicial...</div>
             )}
           </div>
         )}
@@ -317,25 +317,25 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         {activeTab === 'TECH' && (
             <div className="flex-1 flex flex-col p-4 overflow-hidden">
                 <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] font-black uppercase text-white/60 tracking-widest flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase text-slate-600 tracking-widest flex items-center gap-2">
                         <Terminal size={14} /> Log Técnico Total (Análisis de Motor)
                     </span>
                     <button 
                         onClick={copyTechLog} 
-                        className={`flex items-center gap-1 border border-white/10 px-3 py-1 text-[9px] font-black uppercase rounded shadow-sm transition-all ${copied ? 'bg-green-600 text-white/90 border-green-700' : 'bg-white hover:bg-white/5'}`}
+                        className={`flex items-center gap-1 border border-[#a0b0a0] px-3 py-1 text-[9px] font-black uppercase rounded shadow-sm transition-all ${copied ? 'bg-green-600 text-slate-900 border-green-700' : 'bg-white hover:bg-slate-50'}`}
                     >
                         {copied ? <Check size={12} /> : <Copy size={12} />}
                         {copied ? '¡Copiado!' : 'Copiar Todo'}
                     </button>
                 </div>
-                <div className="flex-1 bg-black/90 rounded border border-white/10 p-4 font-mono text-[10px] text-green-600 overflow-y-auto custom-scroll shadow-inner" ref={techScrollRef}>
+                <div className="flex-1 bg-black/90 rounded border border-[#a0b0a0] p-4 font-mono text-[10px] text-green-600 overflow-y-auto custom-scroll shadow-inner" ref={techScrollRef}>
                     <div className="mb-4 opacity-100 text-yellow-500 border-b border-yellow-500/30 pb-2">
                         analiza el log<br/>refina el motor
                     </div>
                     {matchState.events.map((e, i) => (
                         <div key={i} className="mb-1 opacity-80 border-b border-white/5 pb-1 flex gap-2">
                             <span className="text-blue-400 shrink-0">[{e.minute}:{(e.second ?? 0).toString().padStart(2, '0')}]</span> 
-                            <span className={e.importance === 'HIGH' ? 'text-amber-600 font-bold underline' : e.isTechnical ? 'text-white/40' : 'text-white/90'}>
+                            <span className={e.importance === 'HIGH' ? 'text-amber-600 font-bold underline' : e.isTechnical ? 'text-slate-400' : 'text-slate-900'}>
                                 {e.text}
                             </span>
                         </div>
@@ -345,7 +345,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         )}
 
         {activeTab === 'STATS' && (
-          <div className="flex-1 p-6 space-y-6 overflow-y-auto bg-white/10/10">
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto bg-[#e8ece8]">
                 <FMBox title="Estadísticas de Equipo">
                     <div className="space-y-6 p-4">
                        {renderStatsRow("Posesión", matchState.homeStats.possession, matchState.awayStats.possession, true)}
@@ -357,30 +357,30 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                     </div>
                 </FMBox>
 
-                <div className="bg-white/10 text-white/90 p-4 rounded-sm border border-white/10 shadow-md">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest mb-3 text-white/40 border-b border-white/10 pb-1">Relato en Vivo</h4>
+                <div className="bg-white text-slate-900 p-4 rounded-sm border border-[#a0b0a0] shadow-md">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest mb-3 text-slate-400 border-b border-[#a0b0a0] pb-1">Relato en Vivo</h4>
                     <div className="space-y-1.5 font-mono text-xs">
                         {matchState.events.filter(e => !e.isTechnical).slice(-3).reverse().map((e, i) => (
-                            <div key={i} className="flex gap-3 opacity-90 border-b border-white/10 pb-1 last:border-0">
+                            <div key={i} className="flex gap-3 opacity-90 border-b border-[#a0b0a0] pb-1 last:border-0">
                                 <span className="text-green-600 font-bold w-10 text-right shrink-0">{e.minute}'</span>
-                                <span className="text-white/90">{e.text}</span>
+                                <span className="text-slate-900">{e.text}</span>
                             </div>
                         ))}
-                        {matchState.events.filter(e => !e.isTechnical).length === 0 && <span className="text-white/50 italic">Esperando inicio...</span>}
+                        {matchState.events.filter(e => !e.isTechnical).length === 0 && <span className="text-slate-500 italic">Esperando inicio...</span>}
                     </div>
                 </div>
 
                 <FMBox title="Análisis Táctico">
-                    <div className="p-4 bg-white/10/50">
+                    <div className="p-4 bg-white/50">
                         {showAnalysis ? (
                             <div className="animate-fade-up">
                                 <div className="flex items-start gap-4 mb-4">
-                                    <div className="w-12 h-12 bg-white/10/10 rounded-full flex items-center justify-center border-2 border-white/20 shrink-0">
-                                        <Users size={24} className="text-white/60" />
+                                    <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center border-2 border-slate-300 shrink-0">
+                                        <Users size={24} className="text-slate-600" />
                                     </div>
-                                    <div className="flex-1 bg-white/10 p-3 rounded-sm border border-white/20 shadow-sm relative">
-                                        <div className="absolute top-3 -left-1.5 w-3 h-3 bg-white/10 border-l border-t border-white/20 transform -rotate-45"></div>
-                                        <p className="text-sm italic font-bold text-white/80">"{getAssistantAnalysis()}"</p>
+                                    <div className="flex-1 bg-white p-3 rounded-sm border border-slate-300 shadow-sm relative">
+                                        <div className="absolute top-3 -left-1.5 w-3 h-3 bg-white border-l border-t border-slate-300 transform -rotate-45"></div>
+                                        <p className="text-sm italic font-bold text-slate-800">"{getAssistantAnalysis()}"</p>
                                     </div>
                                 </div>
                                 <FMButton variant="secondary" onClick={() => setShowAnalysis(false)} className="w-full">Ocultar Informe</FMButton>
@@ -395,7 +395,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
           </div>
         )}
         {activeTab === 'PLANTILLA' && (
-          <div className="flex-1 overflow-y-auto p-2 md:p-4">
+          <div className="flex-1 overflow-y-auto bg-[#d4dcd4] p-2 md:p-4">
              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <MatchStatsTable players={homePlayers} stats={matchState.playerStats} club={homeTeam} />
                 <MatchStatsTable players={awayPlayers} stats={matchState.playerStats} club={awayTeam} />
@@ -404,21 +404,21 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         )}
       </div>
 
-      <footer className="bg-white/10/10 p-3 md:p-4 flex items-center justify-center gap-4 shrink-0 border-t border-white/10">
+      <footer className="bg-[#bcc8bc] p-3 md:p-4 flex items-center justify-center gap-4 shrink-0 border-t border-[#a0b0a0]">
         {matchState.minute < 90 ? (
           <div className="flex gap-4 items-center">
             <button 
                 onClick={() => setMatchState(p => ({...p, isPlaying: !p.isPlaying}))} 
-                className={`w-16 h-12 rounded-sm transition-all active:scale-95 shadow-lg border-b-4 flex items-center justify-center ${matchState.isPlaying ? 'bg-white/10 text-white/70 border-white/10' : 'bg-green-600 text-white border-green-800 hover:bg-green-500'}`}
+                className={`w-16 h-12 rounded-sm transition-all active:scale-95 shadow-lg border-b-4 flex items-center justify-center ${matchState.isPlaying ? 'bg-[#bcc8bc] text-slate-700 border-[#a0b0a0]' : 'bg-green-600 text-white border-green-800 hover:bg-green-500'}`}
                 title={matchState.isPlaying ? "Pausar" : "Reanudar"}
             >
                 {matchState.isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
             </button>
 
-            <div className="flex bg-white/10 rounded-sm border border-white/10 shadow-sm overflow-hidden">
+            <div className="flex bg-white rounded-sm border border-[#a0b0a0] shadow-sm overflow-hidden">
                {[1, 2, 4].map(speed => (
                   <button key={speed} onClick={() => { world.matchSettings.speedMultiplier = speed; }}
-                     className={`px-2.5 py-1.5 text-[9px] font-black uppercase transition-all ${world.matchSettings.speedMultiplier === speed ? 'bg-white/25 text-white' : 'text-white/60 hover:bg-white/10'}`}>
+                     className={`px-2.5 py-1.5 text-[9px] font-black uppercase transition-all ${world.matchSettings.speedMultiplier === speed ? 'bg-[#3a4a3a] text-white' : 'text-slate-600 hover:bg-[#ccd9cc]'}`}>
                      {speed}x
                   </button>
                ))}
@@ -428,7 +428,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                 <>
                     {(isUserHome ? matchState.homeSubsUsed : matchState.awaySubsUsed) < 5 && (
                       <button onClick={() => { setSubTarget(null); setShowSubModal(true); }}
-                          className="h-12 px-3 bg-amber-600 hover:bg-amber-500/100 text-white/90 rounded-sm flex items-center gap-2 border-b-4 border-amber-800 text-[10px] font-black uppercase transition-all active:scale-95 shadow-lg"
+                          className="h-12 px-3 bg-amber-600 hover:bg-amber-500 text-slate-900 rounded-sm flex items-center gap-2 border-b-4 border-amber-800 text-[10px] font-black uppercase transition-all active:scale-95 shadow-lg"
                           title="Realizar Cambio">
                           <UserPlus size={18} /> CAMBIO
                       </button>
@@ -459,37 +459,37 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
 
       {showSubModal && (
         <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setShowSubModal(false)}>
-          <div className="bg-white/10 w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-white/10 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-white/10 text-white/90 p-3 flex items-center justify-between shrink-0">
+          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-[#a0b0a0] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-white text-slate-900 p-3 flex items-center justify-between shrink-0">
               <span className="text-sm font-black uppercase tracking-wider flex items-center gap-2"><UserPlus size={16} /> Realizar Cambio</span>
               <span className="text-[10px] font-bold text-amber-400">{(isUserHome ? 5 - matchState.homeSubsUsed : 5 - matchState.awaySubsUsed)} cambios restantes</span>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {!subTarget ? (
                 <>
-                  <div className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-2">Seleccioná el jugador a reemplazar:</div>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Seleccioná el jugador a reemplazar:</div>
                   {(isUserHome ? homePlayers : awayPlayers)
                     .filter(p => (isUserHome ? matchState.homeActiveIds : matchState.awayActiveIds).includes(p.id))
                     .map(p => {
                       const pos = p.positions[0];
                       return (
                         <div key={p.id} onClick={() => setSubTarget(p.id)}
-                             className="flex items-center gap-3 p-2 bg-white/10/5 hover:bg-white/10 border border-white/10 rounded-sm cursor-pointer transition-colors">
-                          <div className="w-8 h-8 rounded-full bg-white/10/15 flex items-center justify-center font-black text-[10px]">{pos}</div>
+                             className="flex items-center gap-3 p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-sm cursor-pointer transition-colors">
+                          <div className="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center font-black text-[10px]">{pos}</div>
                           <div className="flex-1">
-                            <div className="font-bold text-xs text-white/90">{p.name}</div>
-                            <div className="text-[9px] text-white/50">
+                            <div className="font-bold text-xs text-slate-900">{p.name}</div>
+                            <div className="text-[9px] text-slate-500">
                               Cond: {Math.round(matchState.playerStats[p.id]?.condition || 0)}% | Calif: {matchState.playerStats[p.id]?.rating.toFixed(1) || '6.0'}
                             </div>
                           </div>
-                          <ArrowRightFromLine size={16} className="text-white/40" />
+                          <ArrowRightFromLine size={16} className="text-slate-400" />
                         </div>
                       );
                     })}
                 </>
               ) : (
                 <>
-                  <div className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-2">Seleccioná el sustituto:</div>
+                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Seleccioná el sustituto:</div>
                   {(isUserHome ? homePlayers : awayPlayers)
                     .filter(p => (isUserHome ? matchState.homeBenchIds : matchState.awayBenchIds).includes(p.id))
                     .map(p => (
@@ -502,16 +502,16 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                         setShowSubModal(false);
                         setSubTarget(null);
                       }}
-                           className="flex items-center gap-3 p-2 bg-amber-500/10 hover:bg-amber-100 border border-amber-200 rounded-sm cursor-pointer transition-colors">
+                           className="flex items-center gap-3 p-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-sm cursor-pointer transition-colors">
                         <div className="w-8 h-8 rounded-full bg-amber-300 flex items-center justify-center font-black text-[10px]">{p.positions[0]}</div>
                         <div className="flex-1">
-                          <div className="font-bold text-xs text-white/90">{p.name}</div>
-                          <div className="text-[9px] text-white/50">{p.positions.map(pos => pos).join(', ')}</div>
+                          <div className="font-bold text-xs text-slate-900">{p.name}</div>
+                          <div className="text-[9px] text-slate-500">{p.positions.map(pos => pos).join(', ')}</div>
                         </div>
                         <span className="text-[9px] font-bold text-amber-700">INGRESA</span>
                       </div>
                     ))}
-                  <button onClick={() => setSubTarget(null)} className="w-full py-2 text-[10px] font-bold text-white/50 hover:bg-white/10 rounded-sm transition-colors">← Volver</button>
+                  <button onClick={() => setSubTarget(null)} className="w-full py-2 text-[10px] font-bold text-slate-500 hover:bg-slate-100 rounded-sm transition-colors">← Volver</button>
                 </>
               )}
             </div>
@@ -521,22 +521,22 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
 
       {showHalfTimeTalk && (
         <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in">
-          <div className="bg-white/10 w-full max-w-md rounded-sm shadow-2xl border-2 border-white/10 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-white/10 text-white/90 p-4 text-center">
+          <div className="bg-white w-full max-w-md rounded-sm shadow-2xl border-2 border-[#a0b0a0] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-white text-slate-900 p-4 text-center">
               <span className="text-lg font-black uppercase tracking-wider flex items-center justify-center gap-2"><MessageCircle size={20} /> CHARLA TÉCNICA</span>
-              <span className="text-[10px] text-white/40 block mt-1">Descanso — {matchState.homeScore} - {matchState.awayScore}</span>
+              <span className="text-[10px] text-slate-400 block mt-1">Descanso — {matchState.homeScore} - {matchState.awayScore}</span>
             </div>
             <div className="p-4 space-y-3">
-              <p className="text-xs text-white/60 text-center">Elegí cómo motivar al equipo para el segundo tiempo:</p>
+              <p className="text-xs text-slate-600 text-center">Elegí cómo motivar al equipo para el segundo tiempo:</p>
               <button onClick={() => {
                 const userPlayers = isUserHome ? homePlayers : awayPlayers;
                 userPlayers.forEach(p => { p.morale = Math.min(100, p.morale + 15); });
                 setShowHalfTimeTalk(false);
                 setMatchState(p => ({ ...p, isPlaying: true }));
-              }} className="w-full flex items-center gap-3 p-3 bg-green-50 hover:bg-green-500/15 border border-green-200 rounded-sm transition-colors text-left">
+              }} className="w-full flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 border border-green-200 rounded-sm transition-colors text-left">
                 <Heart size={20} className="text-green-600 shrink-0" />
-                <div><div className="font-bold text-xs text-white/90">Motivar ({Math.round(matchState.homeScore)}-{Math.round(matchState.awayScore)})</div>
-                <div className="text-[9px] text-white/50">"Vamos, aún podemos ganar este partido" +15 moral</div></div>
+                <div><div className="font-bold text-xs text-slate-900">Motivar ({Math.round(matchState.homeScore)}-{Math.round(matchState.awayScore)})</div>
+                <div className="text-[9px] text-slate-500">"Vamos, aún podemos ganar este partido" +15 moral</div></div>
               </button>
               <button onClick={() => {
                 const userPlayers = isUserHome ? homePlayers : awayPlayers;
@@ -545,18 +545,18 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                 setMatchState(p => ({ ...p, isPlaying: true }));
               }} className="w-full flex items-center gap-3 p-3 bg-red-50 hover:bg-red-100 border border-red-200 rounded-sm transition-colors text-left">
                 <ShieldAlert size={20} className="text-red-600 shrink-0" />
-                <div><div className="font-bold text-xs text-white/90">Exigir más</div>
-                <div className="text-[9px] text-white/50">"Esto es inaceptable, tienen que dar más" -5 moral</div></div>
+                <div><div className="font-bold text-xs text-slate-900">Exigir más</div>
+                <div className="text-[9px] text-slate-500">"Esto es inaceptable, tienen que dar más" -5 moral</div></div>
               </button>
               <button onClick={() => {
                 const userPlayers = isUserHome ? homePlayers : awayPlayers;
                 userPlayers.forEach(p => { p.morale = Math.min(100, p.morale + 5); });
                 setShowHalfTimeTalk(false);
                 setMatchState(p => ({ ...p, isPlaying: true }));
-              }} className="w-full flex items-center gap-3 p-3 bg-blue-500/10 hover:bg-blue-500/15 border border-blue-200 rounded-sm transition-colors text-left">
-                <Shield size={20} className="text-blue-400 shrink-0" />
-                <div><div className="font-bold text-xs text-white/90">Mantener la calma</div>
-                <div className="text-[9px] text-white/50">"Concéntrense y sigan el plan" +5 moral</div></div>
+              }} className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-sm transition-colors text-left">
+                <Shield size={20} className="text-blue-600 shrink-0" />
+                <div><div className="font-bold text-xs text-slate-900">Mantener la calma</div>
+                <div className="text-[9px] text-slate-500">"Concéntrense y sigan el plan" +5 moral</div></div>
               </button>
             </div>
           </div>
@@ -565,15 +565,15 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
 
       {showPostMatch && (
         <div className="fixed inset-0 z-[500] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white/10 w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-white/10 overflow-hidden flex flex-col">
-            <div className="bg-white/10/10 text-white/90 p-4 text-center">
+          <div className="bg-white w-full max-w-lg max-h-[85vh] rounded-sm shadow-2xl border-2 border-[#a0b0a0] overflow-hidden flex flex-col">
+            <div className="bg-[#bcc8bc] text-slate-900 p-4 text-center">
               <span className="text-lg font-black uppercase tracking-wider">RESULTADO FINAL</span>
               <div className="text-4xl font-black mt-2">
                 <span className={matchState.homeScore > matchState.awayScore ? 'text-green-600' : 'text-slate-300'}>{matchState.homeScore}</span>
-                <span className="text-white/50 mx-3">-</span>
+                <span className="text-slate-500 mx-3">-</span>
                 <span className={matchState.awayScore > matchState.homeScore ? 'text-green-600' : 'text-slate-300'}>{matchState.awayScore}</span>
               </div>
-              <div className="text-[10px] text-white/40 mt-1">{homeTeam.shortName} vs {awayTeam.shortName}</div>
+              <div className="text-[10px] text-slate-400 mt-1">{homeTeam.shortName} vs {awayTeam.shortName}</div>
             </div>
             {(() => {
               const sorted = (Object.entries(matchState.playerStats) as [string, PlayerMatchStats][])
@@ -599,13 +599,13 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                     if (!p) return null;
                     const isUser = isUserHome ? homePlayers.includes(p) : awayPlayers.includes(p);
                     return (
-                      <div key={id} className={`flex items-center gap-2 p-2 rounded-sm border ${id === mvpEntry?.[0] ? 'bg-yellow-50/50 border-yellow-300' : 'bg-white/5 border-white/10'}`}>
-                        <div className="w-7 h-7 rounded-full bg-white/10/15 flex items-center justify-center font-black text-[9px] shrink-0">{p.positions[0]}</div>
+                      <div key={id} className={`flex items-center gap-2 p-2 rounded-sm border ${id === mvpEntry?.[0] ? 'bg-yellow-50/50 border-yellow-300' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="w-7 h-7 rounded-full bg-slate-300 flex items-center justify-center font-black text-[9px] shrink-0">{p.positions[0]}</div>
                         <div className="flex-1 min-w-0">
                           <div className="text-[10px] font-bold truncate">{p.name}</div>
-                          <div className="text-[8px] text-white/50">{s.goals > 0 ? `${s.goals} gol${s.goals > 1 ? 'es' : ''}` : ''} {s.assists > 0 ? `${s.assists} asist.` : ''}</div>
+                          <div className="text-[8px] text-slate-500">{s.goals > 0 ? `${s.goals} gol${s.goals > 1 ? 'es' : ''}` : ''} {s.assists > 0 ? `${s.assists} asist.` : ''}</div>
                         </div>
-                        <div className={`text-sm font-black ${s.rating >= 8 ? 'text-green-600' : s.rating >= 7 ? 'text-blue-400' : s.rating >= 6 ? 'text-amber-600' : 'text-red-600'}`}>
+                        <div className={`text-sm font-black ${s.rating >= 8 ? 'text-green-600' : s.rating >= 7 ? 'text-blue-600' : s.rating >= 6 ? 'text-amber-600' : 'text-red-600'}`}>
                           {s.rating.toFixed(1)}
                         </div>
                       </div>
@@ -614,8 +614,8 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
                 </div>
               );
             })()}
-            <div className="p-3 border-t border-white/10">
-              <button onClick={() => setShowPostMatch(false)} className="w-full py-2 bg-blue-700 hover:bg-blue-600 text-white/90 rounded-sm font-black uppercase text-[10px]">
+            <div className="p-3 border-t border-slate-200">
+              <button onClick={() => setShowPostMatch(false)} className="w-full py-2 bg-blue-700 hover:bg-blue-600 text-slate-900 rounded-sm font-black uppercase text-[10px]">
                 Cerrar resumen
               </button>
             </div>
@@ -628,12 +628,12 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
   function renderStatsRow(label: string, home: number, away: number, isPercent = false) {
     return (
         <div className="space-y-1">
-          <div className="flex justify-between items-end text-[11px] text-white/80 uppercase font-black px-1">
+          <div className="flex justify-between items-end text-[11px] text-slate-800 uppercase font-black px-1">
               <span className="text-sm md:text-base">{home}{isPercent ? '%' : ''}</span>
-              <span className="pb-1 text-[10px] text-white/50 tracking-widest">{label}</span>
+              <span className="pb-1 text-[10px] text-slate-500 tracking-widest">{label}</span>
               <span className="text-sm md:text-base">{away}{isPercent ? '%' : ''}</span>
           </div>
-          <div className="h-4 bg-white/10/10 rounded-sm flex overflow-hidden border border-white/10 shadow-inner p-[1px]">
+          <div className="h-4 bg-[#ccd5cc] rounded-sm flex overflow-hidden border border-[#a0b0a0] shadow-inner p-[1px]">
             <div 
                 className={`${homeTeam.primaryColor} rounded-l-sm transition-all duration-500 border-r border-black/10`} 
                 style={{ width: `${(home/(home+away+0.001))*100}%` }}

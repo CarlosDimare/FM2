@@ -94,36 +94,36 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
   const mobileWidths = ['45px', 'auto', '35px', '40px', '80px'];
 
   return (
-    <div className="p-2 h-full flex flex-col gap-2">
+    <div className="p-2 h-full flex flex-col gap-2 bg-[#d4dcd4]">
       {injuredPlayers.length > 0 && showInjuries && (
         <div className="shrink-0 bg-red-50 border border-red-300 rounded-sm p-2">
           <div className="flex justify-between items-center mb-1">
             <h4 className="text-[10px] font-black text-red-800 uppercase tracking-wider flex items-center gap-1">
               <X size={12} className="text-red-600" /> Parte médico ({injuredPlayers.length})
             </h4>
-            <button onClick={() => setShowInjuries(false)} className="text-[9px] text-white/50 hover:text-white/70 uppercase font-bold">Cerrar</button>
+            <button onClick={() => setShowInjuries(false)} className="text-[9px] text-slate-500 hover:text-slate-700 uppercase font-bold">Cerrar</button>
           </div>
           <div className="flex flex-wrap gap-1">
             {injuredPlayers.map(p => (
-              <div key={p.id} className="flex items-center gap-1.5 bg-white/10 border border-red-200 rounded-sm px-2 py-1 text-[10px] cursor-pointer hover:bg-red-50" onClick={() => onSelectPlayer(p)}>
-                <span className="font-bold text-white/90 truncate max-w-[100px]">{p.name}</span>
-                <span className="text-red-400">·</span>
-                <span className="text-red-400 font-medium">{p.injury!.type}</span>
+              <div key={p.id} className="flex items-center gap-1.5 bg-white border border-red-200 rounded-sm px-2 py-1 text-[10px] cursor-pointer hover:bg-red-50" onClick={() => onSelectPlayer(p)}>
+                <span className="font-bold text-slate-900 truncate max-w-[100px]">{p.name}</span>
+                <span className="text-red-700">·</span>
+                <span className="text-red-700 font-medium">{p.injury!.type}</span>
                 <span className="text-red-600 font-black">{p.injury!.daysLeft}d</span>
               </div>
             ))}
           </div>
         </div>
       )}
-      <div className="shrink-0 bg-blue-500/10 border border-blue-200 rounded-sm p-2 flex items-center gap-3">
+      <div className="shrink-0 bg-blue-50 border border-blue-200 rounded-sm p-2 flex items-center gap-3">
         <span className="text-[10px] font-black text-blue-800 uppercase tracking-wider">Min. Sub-21</span>
         <span className="text-xs font-bold text-blue-900">{Math.round(club?.u21MinutesThisSeason || 0)}</span>
-        <span className="text-[9px] text-blue-400">/ 600 mínimos</span>
-        <div className="flex-1 h-2 bg-blue-500/15 rounded-full overflow-hidden">
-          <div className="h-full bg-blue-500/100 rounded-full transition-all" style={{ width: `${Math.min(100, ((club?.u21MinutesThisSeason || 0) / 600) * 100)}%` }}></div>
+        <span className="text-[9px] text-blue-600">/ 600 mínimos</span>
+        <div className="flex-1 h-2 bg-blue-100 rounded-full overflow-hidden">
+          <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${Math.min(100, ((club?.u21MinutesThisSeason || 0) / 600) * 100)}%` }}></div>
         </div>
         {(club?.u21MinutesThisSeason || 0) >= 600 ? (
-          <span className="text-[9px] font-bold text-green-400">✓</span>
+          <span className="text-[9px] font-bold text-green-700">✓</span>
         ) : (
           <span className="text-[9px] font-bold text-amber-600">⚠</span>
         )}
@@ -142,16 +142,16 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                     onClick={() => onSelectPlayer(player)}
                     onContextMenu={(e) => onContextMenu && onContextMenu(e, player)}
                     className={`
-                        cursor-pointer transition-colors border-b border-white/10
-                        ${idx % 2 === 0 ? 'bg-white' : 'bg-white/5'}
-                        hover:bg-white/10
+                        cursor-pointer transition-colors border-b border-[#e0e0e0]
+                        ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
+                        hover:bg-[#ccd9cc]
                         ${player.isStarter ? 'font-bold' : ''}
                     `}
                     >
-                    <FMTableCell className="text-center text-white/70 font-bold">{player.positions[0]}</FMTableCell>
-                    <FMTableCell className="text-white/90">
+                    <FMTableCell className="text-center text-slate-700 font-bold">{player.positions[0]}</FMTableCell>
+                    <FMTableCell className="text-slate-900">
                         <div className="flex items-center min-w-0">
-                            <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-white/20" />
+                            <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-slate-300" />
                             <span className="truncate">{player.name}</span>
                             <PlayerStatusIcons player={player} />
                         </div>
@@ -161,7 +161,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                     <FMTableCell className="text-center"><PlayerFormDots ratings={player.formRatings} /></FMTableCell>
                     <FMTableCell className="text-right font-bold" isNumber>£{(player.salary / 1000).toFixed(0)}k</FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>
-                        <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-400'}>{Math.round(player.fitness)}%</span>
+                        <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-700'}>{Math.round(player.fitness)}%</span>
                     </FMTableCell>
                     <FMTableCell className="text-right font-black" isNumber>£{(player.value / 1000000).toFixed(1)}M</FMTableCell>
                     </tr>
@@ -182,16 +182,16 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                     onClick={() => onSelectPlayer(player)}
                     onContextMenu={(e) => onContextMenu && onContextMenu(e, player)}
                     className={`
-                        cursor-pointer transition-colors border-b border-white/10
-                        ${idx % 2 === 0 ? 'bg-white' : 'bg-white/5'}
-                        hover:bg-white/10
+                        cursor-pointer transition-colors border-b border-[#e0e0e0]
+                        ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
+                        hover:bg-[#ccd9cc]
                         ${player.isStarter ? 'font-bold' : ''}
                     `}
                     >
-                    <FMTableCell className="text-center text-white/70 font-bold">{player.positions[0]}</FMTableCell>
-                    <FMTableCell className="text-white/90">
+                    <FMTableCell className="text-center text-slate-700 font-bold">{player.positions[0]}</FMTableCell>
+                    <FMTableCell className="text-slate-900">
                         <div className="flex items-center min-w-0">
-                            <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-white/20" />
+                            <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-slate-300" />
                             <span className="truncate">{player.name}</span>
                             <PlayerStatusIcons player={player} />
                         </div>
@@ -201,7 +201,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                     <FMTableCell className="text-center"><PlayerFormDots ratings={player.formRatings} /></FMTableCell>
                     <FMTableCell className="text-right font-bold" isNumber>£{(player.salary / 1000).toFixed(0)}k</FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>
-                        <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-400'}>{Math.round(player.fitness)}%</span>
+                        <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-700'}>{Math.round(player.fitness)}%</span>
                     </FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>
                         <span className={player.morale < 40 ? 'text-red-600' : 'text-blue-700'}>{Math.round(player.morale)}%</span>
@@ -225,23 +225,23 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                     onClick={() => onSelectPlayer(player)}
                     onContextMenu={(e) => onContextMenu && onContextMenu(e, player)}
                     className={`
-                        cursor-pointer transition-colors border-b border-white/10
-                        ${idx % 2 === 0 ? 'bg-white' : 'bg-white/5'}
-                        hover:bg-white/10
+                        cursor-pointer transition-colors border-b border-[#e0e0e0]
+                        ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
+                        hover:bg-[#ccd9cc]
                         ${player.isStarter ? 'font-bold shadow-[inset_4px_0_0_0_rgba(58,74,58,1)]' : ''}
                     `}
                     >
-                    <FMTableCell className="text-center text-white/70 font-bold text-[9px] px-1">{player.positions[0]}</FMTableCell>
-                    <FMTableCell className="text-white/90 px-2">
+                    <FMTableCell className="text-center text-slate-700 font-bold text-[9px] px-1">{player.positions[0]}</FMTableCell>
+                    <FMTableCell className="text-slate-900 px-2">
                         <div className="flex items-center min-w-0">
-                            <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-3 h-2 object-cover shadow-sm rounded-[1px] mr-1.5 shrink-0 border border-white/20" />
+                            <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-3 h-2 object-cover shadow-sm rounded-[1px] mr-1.5 shrink-0 border border-slate-300" />
                             <span className="truncate max-w-[100px] text-[10px]">{player.name}</span>
                             <PlayerStatusIcons player={player} />
                         </div>
                     </FMTableCell>
                     <FMTableCell className="text-center font-bold text-[10px]" isNumber>{player.age}</FMTableCell>
                     <FMTableCell className="text-center font-bold text-[10px]" isNumber>
-                        <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-400'}>{Math.round(player.fitness)}%</span>
+                        <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-700'}>{Math.round(player.fitness)}%</span>
                     </FMTableCell>
                     <FMTableCell className="text-right font-black text-[10px]" isNumber>£{(player.value / 1000000).toFixed(1)}M</FMTableCell>
                     </tr>

@@ -37,13 +37,13 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
 
   return (
     <div className="fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center p-4 backdrop-blur-md">
-      <div className="bg-white/10/10 w-full max-w-md rounded-2xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col">
+      <div className="bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col">
         <header className="p-6 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
           <div>
             <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Realizar Oferta</h3>
-            <p className="text-white/50 text-[10px] font-black uppercase tracking-widest">{player.name}</p>
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{player.name}</p>
           </div>
-          <button onClick={onClose} className="text-white/40 hover:text-white">
+          <button onClick={onClose} className="text-slate-400 hover:text-white">
             <X size={24} />
           </button>
         </header>
@@ -54,13 +54,13 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
               <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-700">
                 <button 
                   onClick={() => { setOfferType('PURCHASE'); setAmount(player.value); }}
-                  className={`flex-1 py-2 text-xs font-black rounded transition-all uppercase tracking-widest ${offerType === 'PURCHASE' ? 'bg-blue-600 text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                  className={`flex-1 py-2 text-xs font-black rounded transition-all uppercase tracking-widest ${offerType === 'PURCHASE' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                 >
                   Fichaje
                 </button>
                 <button 
                   onClick={() => { setOfferType('LOAN'); setAmount(0); }}
-                  className={`flex-1 py-2 text-xs font-black rounded transition-all uppercase tracking-widest ${offerType === 'LOAN' ? 'bg-blue-600 text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                  className={`flex-1 py-2 text-xs font-black rounded transition-all uppercase tracking-widest ${offerType === 'LOAN' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                 >
                   Cesión
                 </button>
@@ -68,7 +68,7 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
 
               {offerType === 'PURCHASE' && (
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-white/50">
+                  <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-slate-500">
                     <span>Valor de Mercado</span>
                     <span className="text-slate-300 font-mono">£{player.value.toLocaleString()}</span>
                   </div>
@@ -80,7 +80,7 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
                   )}
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-widest block">Monto de la Oferta</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Monto de la Oferta</label>
                     <div className="relative">
                       <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" size={18} />
                       <input 
@@ -101,11 +101,11 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
 
               {offerType === 'LOAN' && (
                 <div className="space-y-4">
-                  <div className="text-center py-2 text-white/40 text-xs italic">
+                  <div className="text-center py-2 text-slate-400 text-xs italic">
                     Ofrece pagar parte del sueldo para convencer al club.
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-widest block">Contribución Salarial (%)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Contribución Salarial (%)</label>
                     <div className="relative">
                       <Percent className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" size={18} />
                       <select 
@@ -120,7 +120,7 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
                         <option value={100}>100%</option>
                       </select>
                     </div>
-                    <p className="text-[9px] text-white/50 font-bold uppercase text-right">
+                    <p className="text-[9px] text-slate-500 font-bold uppercase text-right">
                        Sueldo Estimado: £{((player.salary * wageShare) / 100).toLocaleString()}/mes
                     </p>
                   </div>
@@ -130,20 +130,20 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
               <button 
                 onClick={handleSubmit}
                 disabled={loading || !canAfford}
-                className={`w-full py-5 flex items-center justify-center gap-3 rounded-xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 ${loading || !canAfford ? 'bg-slate-700 text-white/50 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500/100 text-white'}`}
+                className={`w-full py-5 flex items-center justify-center gap-3 rounded-xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 ${loading || !canAfford ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
               >
                 {loading ? 'Procesando...' : 'Enviar Oferta'}
               </button>
             </>
           ) : (
             <div className="text-center py-8 animate-zoom-in">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-blue-500/100/10 border-4 border-blue-500 text-blue-500">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-blue-500/10 border-4 border-blue-500 text-blue-500">
                 <Clock size={40} />
               </div>
               <h4 className="text-2xl font-black uppercase italic tracking-tighter mb-2 text-white">
                 Oferta Enviada
               </h4>
-              <p className="text-white/40 text-xs leading-relaxed mb-8 uppercase font-bold tracking-widest">
+              <p className="text-slate-400 text-xs leading-relaxed mb-8 uppercase font-bold tracking-widest">
                 Espera la respuesta del club en el buzón de entrada.
               </p>
               <button 

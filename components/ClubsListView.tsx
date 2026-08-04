@@ -42,10 +42,10 @@ export const ClubsListView: React.FC<ClubsListViewProps> = ({ onSelectClub }) =>
   };
 
   return (
-    <div className="p-2 md:p-4 h-full flex flex-col gap-4 overflow-hidden">
-        <header className="border-b border-white/10 pb-3 shrink-0">
-          <h2 className="text-xl md:text-2xl font-black text-white/90 uppercase italic tracking-tighter">Base de Datos de Clubes</h2>
-          <p className="text-white/60 font-bold text-[9px] md:text-[10px] uppercase tracking-widest italic">Explora todos los equipos del mundo.</p>
+    <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-hidden">
+        <header className="border-b border-[#a0b0a0] pb-3 shrink-0">
+          <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Base de Datos de Clubes</h2>
+          <p className="text-slate-600 font-bold text-[9px] md:text-[10px] uppercase tracking-widest italic">Explora todos los equipos del mundo.</p>
         </header>
 
         <div className="flex-1 overflow-y-auto custom-scroll space-y-2 pr-1 pb-4">
@@ -54,38 +54,38 @@ export const ClubsListView: React.FC<ClubsListViewProps> = ({ onSelectClub }) =>
                 const clubCount = groupedClubs[country].length;
 
                 return (
-                    <div key={country} className="flex flex-col border border-white/10 rounded-sm bg-white/10/10 shadow-sm overflow-hidden">
+                    <div key={country} className="flex flex-col border border-[#a0b0a0] rounded-sm bg-[#e8ece8] shadow-sm overflow-hidden">
                         <button 
                             onClick={() => toggleCountry(country)}
-                            className="w-full px-3 py-2 flex justify-between items-center transition-colors hover:bg-white/10"
+                            className="w-full px-3 py-2 flex justify-between items-center transition-colors hover:bg-[#ccd9cc]"
                             style={{ background: isOpen ? 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' : 'linear-gradient(to bottom, #f0f4f0 0%, #d0d8d0 100%)' }}
                         >
                             <div className="flex items-center gap-2">
-                                <Globe size={14} className="text-white/60" />
-                                <span className="text-white/90 font-bold text-[11px] uppercase tracking-tight" style={{ fontFamily: 'Verdana, sans-serif' }}>
+                                <Globe size={14} className="text-slate-600" />
+                                <span className="text-slate-900 font-bold text-[11px] uppercase tracking-tight" style={{ fontFamily: 'Verdana, sans-serif' }}>
                                     {country}
                                 </span>
-                                <span className="text-[9px] bg-black/10 px-1.5 rounded-full text-white/70 font-bold">
+                                <span className="text-[9px] bg-black/10 px-1.5 rounded-full text-slate-700 font-bold">
                                     {clubCount}
                                 </span>
                             </div>
-                            {isOpen ? <ChevronDown size={14} className="text-white/70" /> : <ChevronRight size={14} className="text-white/70" />}
+                            {isOpen ? <ChevronDown size={14} className="text-slate-700" /> : <ChevronRight size={14} className="text-slate-700" />}
                         </button>
 
                         {isOpen && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 p-1 bg-white/10/10 animate-fade-up">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 p-1 bg-slate-200 animate-fade-up">
                                 {groupedClubs[country].sort((a,b) => b.reputation - a.reputation).map(club => (
                                     <button 
                                         key={club.id}
                                         onClick={() => onSelectClub(club)}
-                                        className="flex items-center gap-2.5 p-2 bg-white/15 border border-white/20 rounded-sm hover:bg-blue-500/10 hover:border-blue-400 transition-all text-left group shadow-sm"
+                                        className="flex items-center gap-2.5 p-2 bg-white border border-slate-300 rounded-sm hover:bg-blue-50 hover:border-blue-400 transition-all text-left group shadow-sm"
                                     >
-                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-[9px] text-white shadow-sm shrink-0 ${club.primaryColor} ${club.primaryColor === 'bg-white' ? 'text-white/90 border border-white/20' : 'border border-transparent'}`}>
+                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-[9px] text-white shadow-sm shrink-0 ${club.primaryColor} ${club.primaryColor === 'bg-white' ? 'text-slate-900 border border-slate-300' : 'border border-transparent'}`}>
                                             {club.shortName.substring(0, 2)}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-white/90 text-[10px] uppercase truncate group-hover:text-blue-800" style={{ fontFamily: 'Verdana, sans-serif' }}>{club.name}</h4>
-                                            <p className="text-[8px] text-white/40 font-bold uppercase tracking-tight truncate">
+                                            <h4 className="font-bold text-slate-900 text-[10px] uppercase truncate group-hover:text-blue-800" style={{ fontFamily: 'Verdana, sans-serif' }}>{club.name}</h4>
+                                            <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tight truncate">
                                                 {world.competitions.find(c=>c.id===club.leagueId)?.name || 'Liga Internacional'}
                                             </p>
                                         </div>

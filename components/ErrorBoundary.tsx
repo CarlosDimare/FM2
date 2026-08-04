@@ -32,18 +32,18 @@ export const ErrorBoundary: React.FC<Props> = ({ children }) => {
 
   if (hasError) {
     return (
-      <div className="h-screen w-screen bg-white/10/10 flex flex-col items-center justify-center text-white p-8">
+      <div className="h-screen w-screen bg-slate-800 flex flex-col items-center justify-center text-white p-8">
         <div className="max-w-md text-center">
           <div className="text-6xl mb-6 opacity-50">!</div>
           <h1 className="text-2xl font-black uppercase italic mb-4 tracking-tight">
             Se produjo un error
           </h1>
-          <p className="text-white/40 text-sm mb-6 font-mono">
+          <p className="text-slate-400 text-sm mb-6 font-mono">
             {error?.message || 'Error inesperado'}
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-white/10 text-white/90 px-8 py-3 rounded-sm font-black uppercase text-sm tracking-widest hover:bg-white/10 transition-colors"
+            className="bg-white text-slate-900 px-8 py-3 rounded-sm font-black uppercase text-sm tracking-widest hover:bg-slate-200 transition-colors"
           >
             Recargar
           </button>

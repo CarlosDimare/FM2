@@ -139,38 +139,38 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ active, currentV
         />
       )}
       <div
-        className="absolute bg-white/10/10 border-2 border-slate-700 rounded-md shadow-2xl p-4 w-[320px] pointer-events-auto"
+        className="absolute bg-slate-100 border-2 border-slate-700 rounded-md shadow-2xl p-4 w-[320px] pointer-events-auto"
         style={tooltipStyle}
       >
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center gap-2">
             <Sparkles size={16} className="text-amber-500" />
-            <span className="text-[10px] font-black uppercase text-white/50 tracking-wider">
+            <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
               Tutorial {stepIdx + 1}/{total}
            </span>
          </div>
-          <button onClick={finish} className="text-white/40 hover:text-white/70" aria-label="Cerrar">
+          <button onClick={finish} className="text-slate-400 hover:text-slate-700" aria-label="Cerrar">
             <X size={16} />
          </button>
        </div>
-        <h3 className="font-black text-white/90 text-sm uppercase italic mb-2">{step.title}</h3>
-        <p className="text-[11px] text-white/70 leading-snug mb-3">{step.body}</p>
+        <h3 className="font-black text-slate-900 text-sm uppercase italic mb-2">{step.title}</h3>
+        <p className="text-[11px] text-slate-700 leading-snug mb-3">{step.body}</p>
         <div className="flex justify-between items-center">
           <button
             onClick={handlePrev}
             disabled={stepIdx === 0}
-            className="text-[10px] font-bold uppercase flex items-center gap-1 text-white/50 hover:text-white/80 disabled:opacity-30"
+            className="text-[10px] font-bold uppercase flex items-center gap-1 text-slate-500 hover:text-slate-800 disabled:opacity-30"
           >
             <ChevronLeft size={12} /> Atras
          </button>
           <div className="flex gap-1">
             {steps.map((_, i) => (
-              <div key={i} className={'w-1.5 h-1.5 rounded-full ' + (i === stepIdx ? 'bg-slate-700' : 'bg-white/15')} />
+              <div key={i} className={'w-1.5 h-1.5 rounded-full ' + (i === stepIdx ? 'bg-slate-700' : 'bg-slate-300')} />
             ))}
          </div>
           <button
             onClick={handleNext}
-            className="text-[10px] font-bold uppercase flex items-center gap-1 bg-white/10/10 text-white px-3 py-1 rounded-sm hover:bg-slate-700"
+            className="text-[10px] font-bold uppercase flex items-center gap-1 bg-slate-800 text-white px-3 py-1 rounded-sm hover:bg-slate-700"
           >
             {stepIdx === total - 1 ? 'Finalizar' : 'Siguiente'}
             <ChevronRight size={12} />

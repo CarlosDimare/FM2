@@ -41,28 +41,28 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
   });
 
   return (
-    <div className="p-2 md:p-4 h-full flex flex-col gap-4 overflow-hidden">
+    <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-hidden">
       <header className="shrink-0">
-         <h2 className="text-xl md:text-2xl font-black text-white/90 uppercase italic tracking-tighter">Buscador de Jugadores</h2>
-         <p className="text-white/60 font-bold text-[10px] uppercase tracking-widest">Base de datos global de jugadores.</p>
+         <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Buscador de Jugadores</h2>
+         <p className="text-slate-600 font-bold text-[10px] uppercase tracking-widest">Base de datos global de jugadores.</p>
       </header>
 
       <FMBox title="Filtros de Búsqueda" className="shrink-0 shadow-sm">
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 p-1">
             <div className="col-span-1 lg:col-span-2">
-               <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block mb-1">Nombre del Jugador</label>
+               <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Nombre del Jugador</label>
                <input 
                   type="text" 
-                  className="w-full bg-white/10 border border-white/10 rounded-sm px-3 py-1.5 text-[11px] font-bold text-white/90 outline-none focus:border-[#3a4a3a]" 
+                  className="w-full bg-white border border-[#a0b0a0] rounded-sm px-3 py-1.5 text-[11px] font-bold text-slate-900 outline-none focus:border-[#3a4a3a]" 
                   placeholder="Introduce al menos 3 letras..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                />
             </div>
             <div>
-               <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block mb-1">Posición</label>
+               <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Posición</label>
                <select 
-                  className="w-full bg-white/10 border border-white/10 rounded-sm px-2 py-1.5 text-[11px] font-bold text-white/90 outline-none cursor-pointer"
+                  className="w-full bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[11px] font-bold text-slate-900 outline-none cursor-pointer"
                   value={posFilter}
                   onChange={(e) => setPosFilter(e.target.value)}
                >
@@ -83,17 +83,17 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
             </div>
              <div className="flex gap-2">
                 <div className="flex-1">
-                   <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block mb-1">Edad Min</label>
-                   <input type="number" value={minAge} onChange={(e) => setMinAge(Number(e.target.value))} className="w-full bg-white/10 border border-white/10 rounded-sm px-2 py-1.5 text-[11px] font-bold text-white/90 outline-none" />
+                   <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Edad Min</label>
+                   <input type="number" value={minAge} onChange={(e) => setMinAge(Number(e.target.value))} className="w-full bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[11px] font-bold text-slate-900 outline-none" />
                 </div>
                 <div className="flex-1">
-                   <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block mb-1">Edad Max</label>
-                   <input type="number" value={maxAge} onChange={(e) => setMaxAge(Number(e.target.value))} className="w-full bg-white/10 border border-white/10 rounded-sm px-2 py-1.5 text-[11px] font-bold text-white/90 outline-none" />
+                   <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Edad Max</label>
+                   <input type="number" value={maxAge} onChange={(e) => setMaxAge(Number(e.target.value))} className="w-full bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[11px] font-bold text-slate-900 outline-none" />
                 </div>
              </div>
              <div>
-                <label className="text-[9px] font-bold text-white/50 uppercase tracking-widest block mb-1">CA Mínimo</label>
-                <select className="w-full bg-white/10 border border-white/10 rounded-sm px-2 py-1.5 text-[11px] font-bold text-white/90 outline-none cursor-pointer" value={minAbility} onChange={e => setMinAbility(Number(e.target.value))}>
+                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">CA Mínimo</label>
+                <select className="w-full bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[11px] font-bold text-slate-900 outline-none cursor-pointer" value={minAbility} onChange={e => setMinAbility(Number(e.target.value))}>
                   <option value="0">Cualquiera</option>
                   <option value="50">≥ 50</option>
                   <option value="80">≥ 80</option>
@@ -109,7 +109,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
 
       <FMBox title={`Resultados de Búsqueda (${results.length})`} className="flex-1" noPadding>
         <div className="flex flex-col h-full">
-          <div className="flex text-[10px] font-black text-white/50 uppercase tracking-widest bg-white/10/10 border-b border-white/15 px-3 py-2 shrink-0">
+          <div className="flex text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-200 border-b border-slate-400 px-3 py-2 shrink-0">
             <div className="flex-1">Jugador</div>
             <div className="w-[120px]">Club</div>
             <div className="w-[40px] text-center">Edad</div>
@@ -125,28 +125,28 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
                     key={p.id}
                     onClick={() => onSelectPlayer(p)}
                     className={`flex items-center px-3 py-2 cursor-pointer transition-colors text-[11px] absolute top-0 left-0 w-full ${
-                      virtualItem.index % 2 === 0 ? 'bg-white' : 'bg-white/5'
-                    } hover:bg-white/10`}
+                      virtualItem.index % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'
+                    } hover:bg-[#ccd9cc]`}
                     style={{ height: `${virtualItem.size}px`, transform: `translateY(${virtualItem.start}px)` }}
                   >
                     <div className="flex-1 flex flex-col min-w-0">
-                      <span className="font-bold text-white/90 truncate">{p.name}</span>
-                      <span className="text-[9px] text-white/50 font-bold uppercase">{p.positions[0]}</span>
+                      <span className="font-bold text-slate-900 truncate">{p.name}</span>
+                      <span className="text-[9px] text-slate-500 font-bold uppercase">{p.positions[0]}</span>
                     </div>
-                    <div className="w-[120px] text-white/70 text-[10px] italic truncate px-2">
+                    <div className="w-[120px] text-slate-700 text-[10px] italic truncate px-2">
                       {world.getClub(p.clubId)?.name || 'Agente Libre'}
                     </div>
                     <div className="w-[40px] text-center font-bold">{p.age}</div>
                     <div className="w-[50px] text-right font-bold text-[10px]">
                       {avgForm(p) > 0 ? (
-                        <span className={avgForm(p) >= 7.5 ? 'text-green-600' : avgForm(p) >= 6.5 ? 'text-blue-400' : avgForm(p) >= 5 ? 'text-amber-600' : 'text-red-600'}>
+                        <span className={avgForm(p) >= 7.5 ? 'text-green-600' : avgForm(p) >= 6.5 ? 'text-blue-600' : avgForm(p) >= 5 ? 'text-amber-600' : 'text-red-600'}>
                           {avgForm(p).toFixed(1)}
                         </span>
                       ) : (
                         <span className="text-slate-300">-</span>
                       )}
                     </div>
-                    <div className="w-[80px] text-right font-bold text-white/90">
+                    <div className="w-[80px] text-right font-bold text-slate-900">
                       £{(p.value / 1000000).toFixed(1)}M
                     </div>
                   </div>
@@ -156,7 +156,7 @@ export const SearchView: React.FC<SearchViewProps> = ({ onSelectPlayer }) => {
           </div>
         </div>
         {results.length === 0 && (
-          <div className="p-20 text-center text-white/40 italic text-[10px] font-bold uppercase tracking-widest">
+          <div className="p-20 text-center text-slate-400 italic text-[10px] font-bold uppercase tracking-widest">
             {search.length < 3 && posFilter === 'ALL' ? 'Introduce al menos 3 caracteres para buscar.' : 'No se han encontrado resultados.'}
           </div>
         )}
