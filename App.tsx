@@ -15,6 +15,7 @@ import { PlayerCompareModal } from './components/PlayerCompareModal';
 import { PeopleHub } from './components/PeopleHub';
 import { PressConferenceView } from './components/PressConferenceView';
 import { PreMatchView } from './components/PreMatchView';
+import { PostMatchSummaryView } from './components/PostMatchSummaryView';
 import { MarketView } from './components/MarketView';
 import { SearchView } from './components/SearchView';
 import { EconomyView } from './components/EconomyView';
@@ -69,6 +70,7 @@ const App: React.FC = () => {
   const [managerSearch, setManagerSearch] = React.useState('');
   const [managerCountryFilter, setManagerCountryFilter] = React.useState('ALL');
   const [managerResultLimit, setManagerResultLimit] = React.useState(120);
+  const [lastMatchStats, setLastMatchStats] = React.useState<Record<string, PlayerMatchStats>>({});
 
   React.useEffect(() => {
     if (!isOnboarded()) {
@@ -316,10 +318,7 @@ const {
     const deepFix = totalFix.filter(f => deepIds.has(world.getClub(f.homeTeamId)?.leagueId || world.getClub(f.awayTeamId)?.leagueId || ''));
     const lightFix = totalFix.length - deepFix.length;
     console.groupCollapsed(`📅 ${currentDate.toLocaleDateString('es-ES')} — ${totalFix.length} partidos (${deepFix.length} DEEP · ${lightFix} LIGHT) · ${fixtures.length.toLocaleString()} totales`);
-    if (currentView === 'PRE_MATCH') {
-      handleStartMatch();
-      return;
-    }
+  
 
     if (currentView === 'SENIOR_TACTICS' && userClub) {
       const isMatchToday = fixtures.some(f =>
@@ -329,7 +328,7 @@ const {
         f.squadType === 'SENIOR'
       );
       if (isMatchToday) {
-        setView('PRESS_CONFERENCE_PRE');
+        setView('PRE_MATCH');
         return;
       }
     }
@@ -389,7 +388,13 @@ if (result.userWonLeague) gs.trackTitle('Liga');
     if (hasClubMatchToday) {
       console.log(`  ⏸ partido del usuario hoy — pausado`);
       console.groupEnd();
-      setView('PRE_MATCH');
+      // Check if lineup is configured (need 11 starters)
+      const starters = world.getPlayersByClub(userClub!.id).filter(p => p.isStarter && p.squad === 'SENIOR');
+      if (starters.length < 11) {
+        setView('SENIOR_TACTICS');
+      } else {
+        setView('PRE_MATCH');
+      }
       return;
     }
     // Los partidos de selección se simulan en el bloque de fixtures de abajo;
@@ -1299,6 +1304,23 @@ dayFixtures.forEach(f => {
         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error</div>;
       }
+      case 'POST_MATCH_SUMMARY': {
+         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
+         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
+         if (nextFixture && homeClub && awayClub) {
+           return <PostMatchSummaryView
+             homeTeam={homeClub}
+             awayTeam={awayClub}
+             homeScore={nextFixture.homeScore ?? 0}
+             awayScore={nextFixture.awayScore ?? 0}
+             stats={lastMatchStats}
+             userClubId={userClub.id}
+             onContinue={() => setView('PRESS_CONFERENCE_POST')}
+           />;
+         }
+         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos no disponibles</div>;
+       }
+
 case 'PRESS_CONFERENCE_POST': {
          if (isInVacation) {
            return <div className="p-8 text-center text-slate-500 font-black uppercase">En vacaciones</div>;
@@ -1321,7 +1343,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
-          return <PreMatchView club={userClub} opponent={homeClub.id === userClub.id ? awayClub : homeClub} starters={world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR')} onStart={() => setView('PRESS_CONFERENCE_PRE')} onGoToTactics={() => setView('SENIOR_TACTICS')} />;
+          return <PreMatchView club={userClub} opponent={homeClub.id === userClub.id ? awayClub : homeClub} starters={world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR')} onStart={() => setView('MATCH')} onGoToTactics={() => setView('SENIOR_TACTICS')} />;
         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
       }
@@ -1347,7 +1369,8 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
                 world.updateTacticalFamiliarity(userClub.id);
                 world.updateClubRecords(nextFixture.homeTeamId, nextFixture.awayTeamId, h, a, currentDate, nextFixture.competitionId);
                 generateMatchChronicle(nextFixture, h, a, stats, userClub.id, events);
-               setView('PRESS_CONFERENCE_POST');
+               setLastMatchStats(stats);
+               setView('POST_MATCH_SUMMARY');
                notify();
            }} />;
         }
@@ -1823,7 +1846,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
   }
 
   const isMatchView = currentView === 'MATCH';
-  const isPreMatchView = currentView === 'PRE_MATCH' || currentView === 'PRESS_CONFERENCE_PRE' || currentView === 'PRESS_CONFERENCE_POST';
+  const isPreMatchView = currentView === 'PRE_MATCH' || currentView === 'POST_MATCH_SUMMARY' || currentView === 'PRESS_CONFERENCE_POST';
 
   const dateBg = userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-white';
   const dateText = userClub ? userClub.primaryColor.replace('bg-', 'text-') : 'text-slate-700';
