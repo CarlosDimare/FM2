@@ -104,21 +104,21 @@ const SliderRow: React.FC<{
     onChange: (val: number) => void; 
     getLabel?: (val: number) => string;
 }> = ({ label, value, min = 1, max = 20, onChange, getLabel }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-2 border-b border-[#a0b0a0]/20 hover:bg-black/5 px-2 group">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-2 border-b border-white/10/20 hover:bg-black/5 px-2 group">
         <div className="flex justify-between items-center sm:w-32">
-            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight" style={{ fontFamily: 'Verdana, sans-serif' }}>{label}</span>
-            <span className="sm:hidden text-[10px] font-black text-slate-900 uppercase" style={{ fontFamily: 'Verdana, sans-serif' }}>
+            <span className="text-[10px] font-black text-white/60 uppercase tracking-tight" style={{ fontFamily: 'Verdana, sans-serif' }}>{label}</span>
+            <span className="sm:hidden text-[10px] font-black text-white/90 uppercase" style={{ fontFamily: 'Verdana, sans-serif' }}>
                 {getLabel ? getLabel(value) : value}
             </span>
         </div>
         <div className="flex items-center gap-3 flex-1">
             <input 
                 type="range" min={min} max={max} step="1" 
-                className="flex-1 accent-[#3a4a3a] h-1.5 bg-slate-300 rounded-lg appearance-none cursor-pointer"
+                className="flex-1 accent-[#3a4a3a] h-1.5 bg-white/10/15 rounded-lg appearance-none cursor-pointer"
                 value={value} 
                 onChange={(e) => onChange(parseInt(e.target.value))} 
             />
-            <span className="hidden sm:inline w-24 text-[10px] font-black text-slate-900 text-right uppercase" style={{ fontFamily: 'Verdana, sans-serif' }}>
+            <span className="hidden sm:inline w-24 text-[10px] font-black text-white/90 text-right uppercase" style={{ fontFamily: 'Verdana, sans-serif' }}>
                 {getLabel ? getLabel(value) : value}
             </span>
         </div>
@@ -126,24 +126,24 @@ const SliderRow: React.FC<{
 );
 
 const CheckboxRow: React.FC<{ label: string; checked: boolean; onChange: (val: boolean) => void }> = ({ label, checked, onChange }) => (
-    <label className="flex items-center gap-3 py-2 cursor-pointer hover:bg-black/5 px-2 group border-b border-[#a0b0a0]/10 sm:border-0">
-        <div className={`w-5 h-5 border border-[#3a4a3a] rounded-[1px] flex items-center justify-center transition-colors shadow-inner ${checked ? 'bg-[#3a4a3a]' : 'bg-white'}`}>
-            {checked && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
+    <label className="flex items-center gap-3 py-2 cursor-pointer hover:bg-black/5 px-2 group border-b border-white/10/10 sm:border-0">
+        <div className={`w-5 h-5 border border-[#3a4a3a] rounded-[1px] flex items-center justify-center transition-colors shadow-inner ${checked ? 'bg-white/25' : 'bg-white/10'}`}>
+            {checked && <div className="w-2.5 h-2.5 bg-white/10 rounded-full"></div>}
         </div>
         <input type="checkbox" className="hidden" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-        <span className="text-[10px] font-black text-slate-700 uppercase tracking-tight" style={{ fontFamily: 'Verdana, sans-serif' }}>{label}</span>
+        <span className="text-[10px] font-black text-white/70 uppercase tracking-tight" style={{ fontFamily: 'Verdana, sans-serif' }}>{label}</span>
     </label>
 );
 
 const CycleOption: React.FC<{ label: string; value: string; options: { id: string; label: string }[]; onChange: (val: any) => void }> = ({ label, value, options, onChange }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-b border-[#a0b0a0]/20 px-2 group">
-        <span className="sm:w-32 text-[10px] font-black text-slate-600 uppercase tracking-tight" style={{ fontFamily: 'Verdana, sans-serif' }}>{label}</span>
-        <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 py-2 border-b border-white/10/20 px-2 group">
+        <span className="sm:w-32 text-[10px] font-black text-white/60 uppercase tracking-tight" style={{ fontFamily: 'Verdana, sans-serif' }}>{label}</span>
+        <div className="flex bg-white/10/10 p-0.5 rounded-sm border border-white/10 shadow-sm">
             {options.map(opt => (
                 <button 
                     key={opt.id} 
                     onClick={() => onChange(opt.id)}
-                    className={`flex-1 py-2 text-[8px] font-black uppercase rounded-[1px] transition-all ${value === opt.id ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-600 hover:bg-black/5'}`}
+                    className={`flex-1 py-2 text-[8px] font-black uppercase rounded-[1px] transition-all ${value === opt.id ? 'bg-white/25 text-white shadow-md' : 'text-white/60 hover:bg-black/5'}`}
                 >
                     {opt.label}
                 </button>
@@ -154,20 +154,20 @@ const CycleOption: React.FC<{ label: string; value: string; options: { id: strin
 
 const PlayerRow: React.FC<{ p: Player; players: Player[]; fitScore: number; highlight?: boolean; onPick: () => void; badge?: string }> = ({ p, players, fitScore, highlight, onPick, badge }) => (
    <button onClick={onPick}
-      className={`flex items-center gap-2 px-2.5 py-2 rounded-sm border text-left transition-all shadow-sm w-full ${highlight ? 'bg-green-50 border-green-500 ring-1 ring-green-500' : 'bg-white border-[#a0b0a0] hover:border-[#3a4a3a]'}`}>
-      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
+      className={`flex items-center gap-2 px-2.5 py-2 rounded-sm border text-left transition-all shadow-sm w-full ${highlight ? 'bg-green-50 border-green-500 ring-1 ring-green-500' : 'bg-white/10 border-white/10 hover:border-white/20'}`}>
+      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-white/10 border-white/15 text-white/70'}`}>
          {getDorsal(p, players)}
       </span>
       <div className="min-w-0 flex-1">
-         <p className="text-[10px] font-black uppercase truncate leading-none text-slate-900">{p.name}</p>
+         <p className="text-[10px] font-black uppercase truncate leading-none text-white/90">{p.name}</p>
          <div className="flex items-center gap-1.5 mt-1">
-            <span className="text-[8px] font-bold text-slate-400">{p.positions.join('/')}</span>
-            <span className="text-[8px] font-black text-slate-600">CA {(p.currentAbility/20).toFixed(1)}</span>
-            {fitScore >= 15 && <span className="text-[8px] font-black text-green-700">Apto</span>}
+            <span className="text-[8px] font-bold text-white/40">{p.positions.join('/')}</span>
+            <span className="text-[8px] font-black text-white/60">CA {(p.currentAbility/20).toFixed(1)}</span>
+            {fitScore >= 15 && <span className="text-[8px] font-black text-green-400">Apto</span>}
             {badge && <span className="ml-auto text-[8px] font-black uppercase text-blue-700">{badge}</span>}
          </div>
       </div>
-      <span className="text-[9px] font-black text-slate-700 shrink-0">{Math.round(fitScore)}</span>
+      <span className="text-[9px] font-black text-white/70 shrink-0">{Math.round(fitScore)}</span>
    </button>
 );
 
@@ -531,7 +531,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                            <span className="px-1 py-px bg-black/70 text-white text-[6px] sm:text-[7px] font-black uppercase rounded-sm leading-none truncate max-w-[64px] shadow-sm">{p.name}</span>
                        </div>
                     ) : (
-                       <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-dashed flex items-center justify-center font-black text-[8px] sm:text-[10px] uppercase tracking-tight transition-all cursor-pointer hover:scale-110 ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${isTacticSlot ? 'border-white/50 bg-white/5 text-white/80' : 'border-green-400 bg-green-400/25 text-green-100 animate-pulse'} ${currentHoverSlot === slotIdx && !isTacticSlot ? 'border-green-200 bg-green-300/40' : ''}`}>
+                       <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-dashed flex items-center justify-center font-black text-[8px] sm:text-[10px] uppercase tracking-tight transition-all cursor-pointer hover:scale-110 ${isSelected ? 'ring-4 ring-yellow-400' : ''} ${isTacticSlot ? 'border-white/50 bg-white/10/5 text-white/80' : 'border-green-400 bg-green-400/25 text-green-100 animate-pulse'} ${currentHoverSlot === slotIdx && !isTacticSlot ? 'border-green-200 bg-green-300/40' : ''}`}>
                           {SLOT_CONFIG[slotIdx]?.abbr || 'JUG'}
                        </div>
                     )}
@@ -543,7 +543,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
     const renderBenchPanel = () => (
        <div className="flex flex-col h-full">
-          <header className="p-3 border-b border-[#a0b0a0] text-[10px] font-black uppercase tracking-widest text-slate-700 flex justify-between items-center" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
+          <header className="p-3 border-b border-white/10 text-[10px] font-black uppercase tracking-widest text-white/70 flex justify-between items-center" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
              <span className="flex items-center gap-1.5"><Users size={12} /> Suplentes</span>
              <span className="bg-black/10 px-2 rounded-full text-[9px] border border-black/5">{bench.length}</span>
           </header>
@@ -551,18 +551,18 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
               <div className="grid grid-cols-3 gap-1.5">
                  {bench.map(p => (
                     <button key={p.id} onClick={() => setPickBenchPlayer(p)}
-                       className="flex flex-col items-center gap-1 p-1.5 bg-white border border-[#a0b0a0] rounded-sm hover:border-[#3a4a3a] hover:bg-[#f2f7f2] transition-all shadow-sm group"
+                       className="flex flex-col items-center gap-1 p-1.5 bg-white/10 border border-white/10 rounded-sm hover:border-[#3a4a3a] hover:bg-white/5 transition-all shadow-sm group"
                        onContextMenu={(e) => { e.preventDefault(); onContextMenu?.(e, p); }}>
-                       <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
+                       <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-white/10 border-white/15 text-white/70'}`}>
                           {getDorsal(p, players)}
                        </div>
-                       <span className="text-[7px] font-black uppercase text-slate-800 truncate max-w-full leading-none">{p.name}</span>
-                       <span className="text-[7px] font-bold text-slate-500 whitespace-nowrap">CA {(p.currentAbility/20).toFixed(1)}</span>
+                       <span className="text-[7px] font-black uppercase text-white/80 truncate max-w-full leading-none">{p.name}</span>
+                       <span className="text-[7px] font-bold text-white/50 whitespace-nowrap">CA {(p.currentAbility/20).toFixed(1)}</span>
                     </button>
                  ))}
               </div>
               {bench.length === 0 && (
-                 <div className="p-6 text-center text-[9px] font-black uppercase tracking-widest text-slate-400 italic">Sin suplentes disponibles</div>
+                 <div className="p-6 text-center text-[9px] font-black uppercase tracking-widest text-white/40 italic">Sin suplentes disponibles</div>
               )}
            </div>
        </div>
@@ -579,20 +579,20 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       const rest = ranked.slice(3).sort((a, b) => b.currentAbility - a.currentAbility);
       return (
          <div className="fixed inset-0 z-[600] bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setPickSlot(null)}>
-            <div className="bg-[#e8ece8] border-2 border-[#a0b0a0] rounded-sm shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()} style={{ fontFamily: 'Verdana, sans-serif' }}>
-               <header className="px-4 py-3 border-b border-[#a0b0a0] flex justify-between items-center shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
+            <div className="bg-white/10/10 border-2 border-white/10 rounded-sm shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()} style={{ fontFamily: 'Verdana, sans-serif' }}>
+               <header className="px-4 py-3 border-b border-white/10 flex justify-between items-center shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
                   <div>
-                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider italic">Puesto: {lineLabel[line] || line}</h3>
-                     <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{current ? `Titular actual: ${current.name}` : 'Casilla vacante — elige a un jugador'}</p>
+                     <h3 className="text-sm font-black text-white/90 uppercase tracking-wider italic">Puesto: {lineLabel[line] || line}</h3>
+                     <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mt-0.5">{current ? `Titular actual: ${current.name}` : 'Casilla vacante — elige a un jugador'}</p>
                   </div>
                   <button onClick={() => setPickSlot(null)} className="bg-black/10 hover:bg-black/20 rounded-sm p-2 transition-colors">
-                     <X size={16} className="text-slate-800" />
+                     <X size={16} className="text-white/80" />
                   </button>
                </header>
 
                <div className="flex-1 overflow-y-auto custom-scroll p-3 sm:p-4 space-y-4">
                   {current && (
-                     <div className="flex items-center justify-between px-3 py-2 bg-amber-50 border border-amber-400 rounded-sm">
+                     <div className="flex items-center justify-between px-3 py-2 bg-amber-500/10 border border-amber-400 rounded-sm">
                         <span className="text-[10px] font-black uppercase text-amber-900">Titular: {current.name}</span>
                         <button onClick={() => handleUnassignSlot(pickSlot)} className="text-[9px] font-black uppercase text-amber-900 underline">Quitar del 11</button>
                      </div>
@@ -600,7 +600,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
                   {top3.length > 0 && (
                      <div>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                            <Star size={11} className="text-amber-500 fill-amber-500" /> Mejores opciones para este puesto
                         </p>
                         <div className="space-y-1.5">
@@ -613,7 +613,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
                   {rest.length > 0 && (
                      <div>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Resto del plantel</p>
+                        <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-2">Resto del plantel</p>
                         <div className="space-y-1.5">
                            {rest.map(p => (
                               <PlayerRow key={p.id} p={p} players={players} fitScore={slotFit(p, pickSlot)} onPick={() => handlePickForSlot(p)} />
@@ -623,11 +623,11 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                   )}
 
                   {ranked.length === 0 && (
-                     <p className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">No hay jugadores disponibles</p>
+                     <p className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-white/40">No hay jugadores disponibles</p>
                   )}
                </div>
 
-               <footer className="px-4 py-3 border-t border-[#a0b0a0] flex gap-2 shrink-0">
+               <footer className="px-4 py-3 border-t border-white/10 flex gap-2 shrink-0">
                   <FMButton variant="secondary" onClick={handleAutoPick} className="flex-1 py-2.5 text-[9px]">
                      <UserCheck size={12} /> AUTO COMPLETAR
                   </FMButton>
@@ -650,21 +650,21 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
       const rest = ranked.slice(3).sort((a, b) => b.currentAbility - a.currentAbility);
       return (
          <div className="fixed inset-0 z-[600] bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setPickBenchPlayer(null)}>
-            <div className="bg-[#e8ece8] border-2 border-[#a0b0a0] rounded-sm shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()} style={{ fontFamily: 'Verdana, sans-serif' }}>
-               <header className="px-4 py-3 border-b border-[#a0b0a0] flex justify-between items-center shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
+            <div className="bg-white/10/10 border-2 border-white/10 rounded-sm shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()} style={{ fontFamily: 'Verdana, sans-serif' }}>
+               <header className="px-4 py-3 border-b border-white/10 flex justify-between items-center shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
                   <div>
-                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider italic">Cambio de suplente</h3>
-                     <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">{pickBenchPlayer.name} ({lineLabel[line] || line}) — elige un titular para intercambiar</p>
+                     <h3 className="text-sm font-black text-white/90 uppercase tracking-wider italic">Cambio de suplente</h3>
+                     <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest mt-0.5">{pickBenchPlayer.name} ({lineLabel[line] || line}) — elige un titular para intercambiar</p>
                   </div>
                   <button onClick={() => setPickBenchPlayer(null)} className="bg-black/10 hover:bg-black/20 rounded-sm p-2 transition-colors">
-                     <X size={16} className="text-slate-800" />
+                     <X size={16} className="text-white/80" />
                   </button>
                </header>
 
                <div className="flex-1 overflow-y-auto custom-scroll p-3 sm:p-4 space-y-4">
                   {top3.length > 0 && (
                      <div>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                        <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                            <Star size={11} className="text-amber-500 fill-amber-500" /> Mejores opciones para {lineLabel[line]}
                         </p>
                         <div className="space-y-1.5">
@@ -678,7 +678,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
                   {rest.length > 0 && (
                      <div>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Resto del plantel</p>
+                        <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-2">Resto del plantel</p>
                         <div className="space-y-1.5">
                            {rest.map(p => (
                               <PlayerRow key={p.id} p={p} players={players} fitScore={lineFit(p, line) + p.currentAbility / 20}
@@ -689,7 +689,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                   )}
                </div>
 
-               <footer className="px-4 py-3 border-t border-[#a0b0a0] flex gap-2 shrink-0">
+               <footer className="px-4 py-3 border-t border-white/10 flex gap-2 shrink-0">
                   <FMButton variant="secondary" onClick={() => setPickBenchPlayer(null)} className="flex-1 py-2.5 text-[9px]">
                      CANCELAR
                   </FMButton>
@@ -700,16 +700,16 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
     };
 
    return (
-      <div className="flex flex-col h-full bg-[#d4dcd4] overflow-hidden select-none" onContextMenu={e => e.preventDefault()}>
+      <div className="flex flex-col h-full overflow-hidden select-none" onContextMenu={e => e.preventDefault()}>
          {/* Tactic Toolbar - Tier 1 */}
-         <div className="bg-[#e8ece8] border-b border-[#a0b0a0] p-2 flex flex-col gap-2 z-30 shadow-sm">
+         <div className="bg-white/10/10 border-b border-white/10 p-2 flex flex-col gap-2 z-30 shadow-sm">
              <div className="flex items-center justify-between gap-2">
                  <div className="flex gap-1.5 flex-1 overflow-x-auto scrollbar-hide py-1">
                     {world.getTactics().map(t => {
                        const isActive = t.id === selectedTacticId;
                        return (
                           <button key={t.id} onClick={() => handleTacticChange(t.id)}
-                             className={`relative flex-shrink-0 w-[72px] h-[52px] rounded-sm border transition-all flex flex-col items-center justify-center ${isActive ? 'border-[#3a4a3a] bg-white shadow-md ring-1 ring-[#3a4a3a]' : 'border-[#a0b0a0] bg-[#f0f4f0] hover:bg-white hover:border-[#3a4a3a]'}`}>
+                             className={`relative flex-shrink-0 w-[72px] h-[52px] rounded-sm border transition-all flex flex-col items-center justify-center ${isActive ? 'border-[#3a4a3a] bg-white/10 shadow-md ring-1 ring-[#3a4a3a]' : 'border-white/10 bg-white/10/5 hover:bg-white hover:border-[#3a4a3a]'}`}>
                              <svg viewBox="0 0 100 70" className="w-full h-full p-0.5">
                                 <rect x="0" y="0" width="100" height="70" fill="#4a7c3f" rx="2" opacity="0.15" />
                                 <line x1="0" y1="35" x2="100" y2="35" stroke="#4a7c3f" strokeWidth="0.5" opacity="0.3" />
@@ -720,17 +720,17 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                                    return <circle key={slotIdx} cx={coords.l} cy={70 - (coords.t * 0.7)} r="3" fill={isActive ? '#3a4a3a' : '#555'} opacity={isActive ? 1 : 0.7} />;
                                 })}
                              </svg>
-                             <span className={`text-[7px] font-black uppercase tracking-tight leading-none mt-0.5 ${isActive ? 'text-[#3a4a3a]' : 'text-slate-500'}`}>{t.id}</span>
+                             <span className={`text-[7px] font-black uppercase tracking-tight leading-none mt-0.5 ${isActive ? 'text-[#3a4a3a]' : 'text-white/50'}`}>{t.id}</span>
                           </button>
                        );
                     })}
                  </div>
                  
-                 <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-inner">
-                    <button onClick={() => setViewMode('PITCH')} className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${viewMode === 'PITCH' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>
+                 <div className="flex bg-white/10/10 p-0.5 rounded-sm border border-white/10 shadow-inner">
+                    <button onClick={() => setViewMode('PITCH')} className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${viewMode === 'PITCH' ? 'bg-white/25 text-white shadow-md' : 'text-white/70 hover:bg-black/5'}`}>
                         <LayoutGrid size={12} /> <span className="hidden sm:inline">DIBUJO</span>
                     </button>
-                    <button onClick={() => setViewMode('INSTRUCTIONS')} className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${viewMode === 'INSTRUCTIONS' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>
+                    <button onClick={() => setViewMode('INSTRUCTIONS')} className={`px-3 py-1.5 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${viewMode === 'INSTRUCTIONS' ? 'bg-white/25 text-white shadow-md' : 'text-white/70 hover:bg-black/5'}`}>
                         <ClipboardList size={12} /> <span className="hidden sm:inline">INSTRUCCIONES</span>
                     </button>
                 </div>
@@ -758,28 +758,28 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                {viewMode === 'PITCH' ? (
                   <div className="flex flex-col items-center gap-4 w-full pb-2">
                       {renderPitch()}
-                      <div className="w-full max-w-[420px] bg-white/60 p-2 rounded-sm border border-[#a0b0a0] text-[8px] font-black text-slate-500 uppercase tracking-widest flex flex-wrap justify-center gap-2 sm:gap-5 shadow-sm">
-                          <span className="flex items-center gap-1.5"><MousePointer2 size={10} className="text-slate-400" /> CLICK FICHA: ELEGIR JUGADOR</span>
-                          <span className="flex items-center gap-1.5"><ArrowUpRight size={10} className="text-slate-400" /> ARRASTRAR: MOVER / INTERCAMBIAR</span>
+                      <div className="w-full max-w-[420px] bg-white/10/60 p-2 rounded-sm border border-white/10 text-[8px] font-black text-white/50 uppercase tracking-widest flex flex-wrap justify-center gap-2 sm:gap-5 shadow-sm">
+                          <span className="flex items-center gap-1.5"><MousePointer2 size={10} className="text-white/40" /> CLICK FICHA: ELEGIR JUGADOR</span>
+                          <span className="flex items-center gap-1.5"><ArrowUpRight size={10} className="text-white/40" /> ARRASTRAR: MOVER / INTERCAMBIAR</span>
                           <span className="flex items-center gap-1.5"><GitBranch size={10} className="text-amber-600" /> FLECHAS: BOTÓN FLECHAS → TOCAR ORIGEN → DESTINO</span>
                       </div>
                       <div className="w-full max-w-[420px] lg:hidden">
-                         <div className="border border-[#a0b0a0] bg-[#e8ece8] rounded-sm shadow-sm max-h-56 overflow-y-auto custom-scroll">
+                         <div className="border border-white/10 bg-white/10/10 rounded-sm shadow-sm max-h-56 overflow-y-auto custom-scroll">
                             {renderBenchPanel()}
                          </div>
                       </div>
                   </div>
                ) : (
                    <div className="w-full max-w-4xl flex flex-col gap-4 pb-12 animate-fade-up">
-                      <div className="flex gap-1 bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] self-stretch sm:self-start shadow-sm">
-                          <button onClick={() => setInstructionType('TEAM')} className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all ${instructionType === 'TEAM' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>Instrucciones de Equipo</button>
-                          <button onClick={() => setInstructionType('INDIVIDUAL')} className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all ${instructionType === 'INDIVIDUAL' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>Instrucciones Individuales</button>
+                      <div className="flex gap-1 bg-white/10/10 p-0.5 rounded-sm border border-white/10 self-stretch sm:self-start shadow-sm">
+                          <button onClick={() => setInstructionType('TEAM')} className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all ${instructionType === 'TEAM' ? 'bg-white/25 text-white shadow-md' : 'text-white/70 hover:bg-black/5'}`}>Instrucciones de Equipo</button>
+                          <button onClick={() => setInstructionType('INDIVIDUAL')} className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all ${instructionType === 'INDIVIDUAL' ? 'bg-white/25 text-white shadow-md' : 'text-white/70 hover:bg-black/5'}`}>Instrucciones Individuales</button>
                       </div>
 
                       {instructionType === 'TEAM' ? (
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <FMBox title="Instrucciones de Equipo" noPadding className="shadow-lg">
-                                <div className="p-2 sm:p-4 bg-white/50 space-y-0.5">
+                                <div className="p-2 sm:p-4 bg-white/10/50 space-y-0.5">
                                     <SliderRow label="Mentalidad" value={activeTactic.settings.mentality} onChange={(v) => updateTeamSettings('mentality', v)} getLabel={getMentalityLabel} />
                                     <SliderRow label="Libertad Creativa" value={activeTactic.settings.creativeFreedom} onChange={(v) => updateTeamSettings('creativeFreedom', v)} />
                                     <SliderRow label="Estilo de Pase" value={activeTactic.settings.passingStyle} onChange={(v) => updateTeamSettings('passingStyle', v)} />
@@ -792,7 +792,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                                 </div>
                             </FMBox>
                             <FMBox title="Órdenes Específicas" noPadding className="shadow-lg">
-                                <div className="p-2 sm:p-4 bg-white/50 grid grid-cols-1 sm:grid-cols-2 gap-x-2">
+                                <div className="p-2 sm:p-4 bg-white/10/50 grid grid-cols-1 sm:grid-cols-2 gap-x-2">
                                     <CheckboxRow label="Marcaje Férreo" checked={activeTactic.settings.tightMarking} onChange={(v) => updateTeamSettings('tightMarking', v)} />
                                     <CheckboxRow label="Hombre Objetivo" checked={activeTactic.settings.useTargetMan} onChange={(v) => updateTeamSettings('useTargetMan', v)} />
                                     <CheckboxRow label="Usar Organizador" checked={activeTactic.settings.usePlaymaker} onChange={(v) => updateTeamSettings('usePlaymaker', v)} />
@@ -808,11 +808,11 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                                      {renderPitch()}
                                   </div>
                                   {selectedSlot !== null && starters.find(p => p.tacticalPosition === selectedSlot) && (
-                                      <div className="p-3 bg-[#e8ece8] border border-[#a0b0a0] rounded-sm text-center shadow-md border-t-4 border-t-slate-800">
-                                          <p className="text-[10px] font-black uppercase text-slate-900 truncate">
+                                      <div className="p-3 bg-white/10/10 border border-white/10 rounded-sm text-center shadow-md border-t-4 border-t-slate-800">
+                                          <p className="text-[10px] font-black uppercase text-white/90 truncate">
                                               {starters.find(p => p.tacticalPosition === selectedSlot)?.name}
                                           </p>
-                                          <p className="text-[8px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Línea: {SLOT_CONFIG[selectedSlot].line}</p>
+                                          <p className="text-[8px] font-bold text-white/50 mt-1 uppercase tracking-widest">Línea: {SLOT_CONFIG[selectedSlot].line}</p>
                                       </div>
                                   )}
                               </div>
@@ -821,7 +821,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                                   {selectedSlot !== null ? (
                                       <div className="space-y-4">
                                           <FMBox title="Instrucciones Individuales" noPadding className="shadow-lg">
-                                              <div className="p-2 sm:p-4 bg-white/50 space-y-0.5">
+                                              <div className="p-2 sm:p-4 bg-white/10/50 space-y-0.5">
                                                   <SliderRow label="Mentalidad" value={activeTactic.individualSettings[selectedSlot]?.mentality || 10} onChange={(v) => updateIndividualSettings(selectedSlot, 'mentality', v)} getLabel={getMentalityLabel} />
                                                   <SliderRow label="Libertad Creativa" value={activeTactic.individualSettings[selectedSlot]?.creativeFreedom || 10} onChange={(v) => updateIndividualSettings(selectedSlot, 'creativeFreedom', v)} />
                                                   <SliderRow label="Estilo de Pase" value={activeTactic.individualSettings[selectedSlot]?.passingStyle || 10} onChange={(v) => updateIndividualSettings(selectedSlot, 'passingStyle', v)} />
@@ -836,7 +836,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                                                       <CycleOption label="Centrar balón" value={activeTactic.individualSettings[selectedSlot]?.crossBall || 'MIXED'} options={[{id:'RARELY', label:'Poco'}, {id:'MIXED', label:'A veces'}, {id:'OFTEN', label:'Siempre'}]} onChange={(v) => updateIndividualSettings(selectedSlot, 'crossBall', v)} />
                                                   </div>
 
-                                                  <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 border-t border-[#a0b0a0]/20 mt-2">
+                                                  <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-1 border-t border-white/10/20 mt-2">
                                                       <CheckboxRow label="Marcaje Férreo" checked={activeTactic.individualSettings[selectedSlot]?.tightMarking || false} onChange={(v) => updateIndividualSettings(selectedSlot, 'tightMarking', v)} />
                                                       <CheckboxRow label="Aguantar Balón" checked={activeTactic.individualSettings[selectedSlot]?.holdUpBall || false} onChange={(v) => updateIndividualSettings(selectedSlot, 'holdUpBall', v)} />
                                                   </div>
@@ -844,7 +844,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                                           </FMBox>
                                       </div>
                                   ) : (
-                                      <div className="h-48 md:h-full flex flex-col items-center justify-center text-slate-400 bg-white/20 rounded border-2 border-dashed border-slate-400 shadow-inner">
+                                      <div className="h-48 md:h-full flex flex-col items-center justify-center text-white/40 bg-white/10/20 rounded border-2 border-dashed border-white/15 shadow-inner">
                                           <MousePointer2 size={32} className="mb-2 opacity-30" />
                                           <p className="text-[10px] font-black uppercase tracking-[0.2em] px-6 text-center">Selecciona una ficha para configurar sus órdenes individuales</p>
                                       </div>
@@ -857,7 +857,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
             </div>
 
             {/* Bench Panel - Desktop */}
-            <div className="w-64 border-l border-[#a0b0a0] bg-[#e8ece8] flex-col shadow-inner hidden lg:flex">
+            <div className="w-64 border-l border-white/10 bg-white/10/10 flex-col shadow-inner hidden lg:flex">
                {renderBenchPanel()}
             </div>
          </div>
@@ -868,13 +868,13 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
          {/* Arrow Menu Modal */}
          {arrowMenuSlot !== null && (
             <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setArrowMenuSlot(null)}>
-               <FMBox title="Flecha de ataque" className="w-full max-w-sm shadow-2xl border-2 border-slate-400">
+               <FMBox title="Flecha de ataque" className="w-full max-w-sm shadow-2xl border-2 border-white/15">
                   <div className="p-6 space-y-6">
                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0"><GitBranch size={18} /></div>
+                        <div className="w-10 h-10 rounded-full bg-amber-500/100 text-white flex items-center justify-center shrink-0"><GitBranch size={18} /></div>
                         <div>
-                           <p className="text-xs font-black text-slate-900 uppercase leading-snug">Existe una flecha desde {SLOT_CONFIG[arrowMenuSlot]?.abbr || arrowMenuSlot}</p>
-                           <p className="text-[10px] text-slate-600 mt-1 leading-relaxed">Podés borrarla o dibujar una nueva hacia otro puesto.</p>
+                           <p className="text-xs font-black text-white/90 uppercase leading-snug">Existe una flecha desde {SLOT_CONFIG[arrowMenuSlot]?.abbr || arrowMenuSlot}</p>
+                           <p className="text-[10px] text-white/60 mt-1 leading-relaxed">Podés borrarla o dibujar una nueva hacia otro puesto.</p>
                         </div>
                      </div>
                      <div className="flex flex-col gap-2">
@@ -894,17 +894,17 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
          {/* Confirm Modal: Assistant XI / Clear Selection */}
          {confirmAction && (
             <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setConfirmAction(null)}>
-               <FMBox title={confirmAction === 'AUTOPICK' ? 'Delegar elección del once' : 'Borrar selección'} className="w-full max-w-sm shadow-2xl border-2 border-slate-400">
+               <FMBox title={confirmAction === 'AUTOPICK' ? 'Delegar elección del once' : 'Borrar selección'} className="w-full max-w-sm shadow-2xl border-2 border-white/15">
                   <div className="p-6 space-y-6">
                      <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white ${confirmAction === 'AUTOPICK' ? 'bg-[#3a4a3a]' : 'bg-red-600'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white ${confirmAction === 'AUTOPICK' ? 'bg-white/25' : 'bg-red-600'}`}>
                            {confirmAction === 'AUTOPICK' ? <UserCheck size={18} /> : <Trash2 size={18} />}
                         </div>
                         <div>
-                           <p className="text-xs font-black text-slate-900 uppercase leading-snug">
+                           <p className="text-xs font-black text-white/90 uppercase leading-snug">
                               {confirmAction === 'AUTOPICK' ? 'El segundo entrenador armará el mejor once' : 'Quitar todos los jugadores del campo'}
                            </p>
-                           <p className="text-[10px] text-slate-600 mt-1 leading-relaxed">
+                           <p className="text-[10px] text-white/60 mt-1 leading-relaxed">
                               {confirmAction === 'AUTOPICK'
                                  ? 'Seleccionará los 11 titulares según la táctica activa, priorizando atributos, forma y estado físico.'
                                  : 'Todos los puestos quedarán vacíos y podrás armar el once desde cero.'}
@@ -927,11 +927,11 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
          {/* Save Modal */}
          {isSaveModalOpen && (
             <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in">
-               <FMBox title="Guardar Esquema Táctico" className="w-full max-w-sm shadow-2xl border-2 border-slate-400">
+               <FMBox title="Guardar Esquema Táctico" className="w-full max-w-sm shadow-2xl border-2 border-white/15">
                   <div className="p-6 space-y-6">
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Nombre de la Táctica</label>
-                        <input autoFocus type="text" className="w-full bg-white border border-[#a0b0a0] rounded-sm px-4 py-3 text-sm font-black uppercase outline-none focus:border-[#3a4a3a] shadow-inner text-slate-800" placeholder="Ej: 4-4-2 OFENSIVA..." value={newTacticName} onChange={(e) => setNewTacticName(e.target.value)} />
+                        <label className="text-[10px] font-black text-white/50 uppercase tracking-widest block">Nombre de la Táctica</label>
+                        <input autoFocus type="text" className="w-full bg-white/10 border border-white/10 rounded-sm px-4 py-3 text-sm font-black uppercase outline-none focus:border-[#3a4a3a] shadow-inner text-white/80" placeholder="Ej: 4-4-2 OFENSIVA..." value={newTacticName} onChange={(e) => setNewTacticName(e.target.value)} />
                      </div>
                      <div className="flex gap-2">
                         <FMButton variant="secondary" onClick={() => setIsSaveModalOpen(false)} className="flex-1 py-3">CANCELAR</FMButton>

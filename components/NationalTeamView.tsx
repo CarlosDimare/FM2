@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Player, Fixture, TacticSettings, POSITION_ORDER } from '../types';
 import { TACTIC_PRESETS, getFlagUrl } from '../data/static';
 import { world } from '../services/worldManager';
-import { useUIStore } from '../stores/uiStore';
+import { useNavStore } from '../stores/navStore';
+import { useUserStore } from '../stores/userStore';
 import { useGameStore } from '../stores/gameStore';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 import { PlayerFormDots, PlayerStatusIcons } from './PlayerBadges';
@@ -52,7 +53,8 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
   const [offerNotice, setOfferNotice] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>('POS');
   const [sortDesc, setSortDesc] = useState(false);
-  const { setView, setSelectedPlayer, setSelectedNationalTeamId, setCareerMode, userClub } = useUIStore();
+  const { setView, setSelectedPlayer } = useNavStore();
+  const { setSelectedNationalTeamId, setCareerMode, userClub } = useUserStore();
   const { fixtures, currentDate: gameCurrentDate, updateNextFixture } = useGameStore();
 
   const nationalManager = world.nationalTeamManager;
@@ -258,27 +260,27 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
   const mobileWidths = ['26px', 'auto', '34px', '40px', '78px'];
 
   return (
-    <div className="p-2 md:p-4 h-full flex flex-col gap-3 bg-[#d4dcd4] overflow-hidden">
+    <div className="p-2 md:p-4 h-full flex flex-col gap-3 overflow-hidden">
       {/* Header compartido: bandera, nombre, selector de sección y cambio de selección */}
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 shrink-0 bg-[#e8ece8] border border-[#a0b0a0] p-3 rounded-sm shadow-sm">
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 shrink-0 bg-white/10/10 border border-white/10 p-3 rounded-sm shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-white border border-[#a0b0a0] rounded-sm flex items-center justify-center shadow-inner overflow-hidden">
+          <div className="w-12 h-12 bg-white/10 border border-white/10 rounded-sm flex items-center justify-center shadow-inner overflow-hidden">
             <img src={flagUrl} alt={teamName} className="w-10 h-7 object-cover" />
           </div>
           <div>
             <h2 className="text-xl md:text-2xl font-black text-[#1a1a1a] uppercase italic tracking-tighter leading-none" style={{ fontFamily: 'Verdana, sans-serif' }}>{teamName}</h2>
-            <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-1" style={{ fontFamily: 'Verdana, sans-serif' }}>Selección Nacional · {SECTION_LABELS[section]}</p>
+            <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-1" style={{ fontFamily: 'Verdana, sans-serif' }}>Selección Nacional · {SECTION_LABELS[section]}</p>
           </div>
         </div>
 
         <div className="flex flex-col md:flex-row items-start md:items-center gap-2 w-full lg:w-auto">
           {/* Navegación por secciones — mismas vistas separadas que el modo club */}
-          <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] w-full md:w-auto shadow-sm">
+          <div className="flex bg-white/10/10 p-0.5 rounded-sm border border-white/10 w-full md:w-auto shadow-sm">
             {(['SQUAD', 'TACTICS', 'SCHEDULE', 'STATS'] as NationalTeamSection[]).map(s => (
               <button
                 key={s}
                 onClick={() => navigateTo(s)}
-                className={`flex-1 md:px-4 py-1.5 rounded-[1px] transition-all flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-tight ${section === s ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-[#1a2a1a] hover:bg-[#ccd9cc]'}`}
+                className={`flex-1 md:px-4 py-1.5 rounded-[1px] transition-all flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-tight ${section === s ? 'bg-white/25 text-white shadow-sm' : 'text-[#1a2a1a] hover:bg-white/10'}`}
                 style={{ fontFamily: 'Verdana, sans-serif' }}
               >
                 {s === 'SQUAD' ? <Users size={13} /> : s === 'TACTICS' ? <ClipboardList size={13} /> : s === 'SCHEDULE' ? <Calendar size={13} /> : <Star size={13} />}
@@ -292,7 +294,7 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
               value={teamId}
               onChange={event => changeNationalTeam(event.target.value)}
               aria-label="Cambiar selección dirigida"
-              className="bg-white border border-[#a0b0a0] rounded-sm px-2 py-1.5 text-[9px] font-black uppercase text-slate-700 outline-none focus:border-[#3a4a3a]"
+              className="bg-white/10/10 border border-white/10 rounded-sm px-2 py-1.5 text-[9px] font-black uppercase text-white/70 outline-none focus:border-[#3a4a3a]"
             >
               {nationalManager?.nationalTeams?.map((teamOption: any) => (
                 <option key={teamOption.id} value={teamOption.id}>{teamOption.name}</option>
@@ -303,26 +305,26 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
       </header>
 
       {offerNotice && (
-        <div className="shrink-0 flex items-center justify-between gap-3 bg-amber-50 border border-amber-300 rounded-sm px-3 py-2 text-[10px] font-bold text-amber-900">
+        <div className="shrink-0 flex items-center justify-between gap-3 bg-amber-500/10 border border-amber-300 rounded-sm px-3 py-2 text-[10px] font-bold text-amber-900">
           <span>{offerNotice}</span>
-          {nationalManager?.getPendingNationalTeamOffer() && <div className="flex gap-2"><button onClick={() => resolveTeamOffer(true)} className="px-2 py-1 bg-emerald-700 text-white rounded-sm uppercase text-[9px]">Aceptar</button><button onClick={() => resolveTeamOffer(false)} className="px-2 py-1 bg-slate-300 text-slate-800 rounded-sm uppercase text-[9px]">Rechazar</button></div>}
+          {nationalManager?.getPendingNationalTeamOffer() && <div className="flex gap-2"><button onClick={() => resolveTeamOffer(true)} className="px-2 py-1 bg-emerald-700 text-white rounded-sm uppercase text-[9px]">Aceptar</button><button onClick={() => resolveTeamOffer(false)} className="px-2 py-1 bg-white/10/15 text-white/80 rounded-sm uppercase text-[9px]">Rechazar</button></div>}
         </div>
       )}
 
       {/* ─── SECCIÓN: PLANTEL ─────────────────────────────────────────────── */}
       {section === 'SQUAD' && (
         <div className="flex-1 overflow-hidden min-h-0 flex flex-col gap-2">
-          <section className="shrink-0 bg-[#eef3ee] border border-[#a0b0a0] rounded-sm p-3 shadow-sm">
+          <section className="shrink-0 bg-[#eef3ee] border border-white/10 rounded-sm p-3 shadow-sm">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <Shield size={15} className={isControlled ? 'text-emerald-700' : 'text-slate-500'} />
-                  <h3 className="text-[11px] font-black uppercase tracking-wider text-slate-900">
+                  <Shield size={15} className={isControlled ? 'text-emerald-700' : 'text-white/50'} />
+                  <h3 className="text-[11px] font-black uppercase tracking-wider text-white/90">
                     {isControlled ? 'Cargo de seleccionador activo' : 'Dirección nacional'}
                   </h3>
-                  {isControlled && <span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded-sm">Bajo tu mando</span>}
+                  {isControlled && <span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-300 border border-emerald-300 px-1.5 py-0.5 rounded-sm">Bajo tu mando</span>}
                 </div>
-                <p className="text-[9px] text-slate-600 mt-1">
+                <p className="text-[9px] text-white/60 mt-1">
                   {isControlled ? `${controlledIds.length}/23 convocados · tus decisiones se aplican al simular partidos` : 'Asume el cargo para decidir convocatorias y planteamiento táctico.'}
                 </p>
               </div>
@@ -334,10 +336,10 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
             </div>
 
             {isControlled && (
-              <div className="mt-3 bg-white border border-[#c0ccc0] rounded-sm p-2">
+              <div className="mt-3 bg-white/10 border border-[#c0ccc0] rounded-sm p-2">
                 <div className="flex items-center justify-between border-b border-[#d4ddd4] pb-2 mb-2">
-                  <span className="text-[9px] font-black uppercase text-slate-700">Convocatoria</span>
-                  <span className={`text-[9px] font-black ${controlledIds.length >= 11 ? 'text-emerald-700' : 'text-red-700'}`}>{controlledIds.length}/23</span>
+                  <span className="text-[9px] font-black uppercase text-white/70">Convocatoria</span>
+                  <span className={`text-[9px] font-black ${controlledIds.length >= 11 ? 'text-emerald-700' : 'text-red-400'}`}>{controlledIds.length}/23</span>
                 </div>
                 <div className="max-h-32 overflow-y-auto custom-scroll space-y-1">
                   {eligiblePlayers.map(player => {
@@ -346,28 +348,28 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                       <button
                         key={player.id}
                         onClick={() => toggleConvocation(player.id)}
-                        className={`w-full flex items-center justify-between px-2 py-1.5 text-left rounded-sm border text-[9px] transition-colors ${selected ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                        className={`w-full flex items-center justify-between px-2 py-1.5 text-left rounded-sm border text-[9px] transition-colors ${selected ? 'bg-emerald-50 border-emerald-300 text-emerald-300' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
                       >
-                        <span className="truncate"><strong>{player.name}</strong> <span className="text-slate-500">· {getPositionLabel(player.primaryPosition || player.positions[0])}</span></span>
+                        <span className="truncate"><strong>{player.name}</strong> <span className="text-white/50">· {getPositionLabel(player.primaryPosition || player.positions[0])}</span></span>
                         {selected ? <UserMinus size={12} /> : <UserPlus size={12} />}
                       </button>
                     );
                   })}
                 </div>
-                {controlledIds.length < 11 && <p className="text-[8px] text-red-700 font-bold mt-2">Convoca al menos 11 jugadores para que el motor use tus decisiones.</p>}
+                {controlledIds.length < 11 && <p className="text-[8px] text-red-400 font-bold mt-2">Convoca al menos 11 jugadores para que el motor use tus decisiones.</p>}
               </div>
             )}
           </section>
 
-          {!isControlled && <div className="shrink-0 bg-slate-100 border border-slate-300 rounded-sm px-3 py-2 text-[9px] text-slate-600 flex items-center gap-2"><Lock size={12} /> La lista mostrada es automática. Asume la selección para gestionar convocatorias.</div>}
+          {!isControlled && <div className="shrink-0 bg-white/10/10 border border-white/20 rounded-sm px-3 py-2 text-[9px] text-white/60 flex items-center gap-2"><Lock size={12} /> La lista mostrada es automática. Asume la selección para gestionar convocatorias.</div>}
 
           {/* Filtro por posición */}
-          <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] overflow-x-auto scrollbar-hide shrink-0 shadow-sm">
+          <div className="flex bg-white/10/10 p-0.5 rounded-sm border border-white/10 overflow-x-auto scrollbar-hide shrink-0 shadow-sm">
             {['ALL', 'GK', 'DEF', 'MID', 'ATT'].map(pos => (
               <button
                 key={pos}
                 onClick={() => setSelectedPosition(pos)}
-                className={`px-4 py-1.5 rounded-[1px] text-[9px] font-bold uppercase whitespace-nowrap transition-colors ${selectedPosition === pos ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}
+                className={`px-4 py-1.5 rounded-[1px] text-[9px] font-bold uppercase whitespace-nowrap transition-colors ${selectedPosition === pos ? 'bg-white/25 text-white shadow-sm' : 'text-white/70 hover:bg-white/10'}`}
                 style={{ fontFamily: 'Verdana, sans-serif' }}
               >
                 {pos === 'ALL' ? 'Todos' : pos} ({pos === 'ALL' ? squadPlayers.length : getStatsByPosition(pos)})
@@ -387,12 +389,12 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                       <tr
                         key={player.id}
                         onClick={() => setSelectedPlayer(player)}
-                        className={`cursor-pointer transition-colors border-b border-[#e0e0e0] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] ${selectedIds.has(player.id) ? 'font-bold' : ''}`}
+                        className={`cursor-pointer transition-colors border-b border-white/10 ${idx % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10 ${selectedIds.has(player.id) ? 'font-bold' : ''}`}
                       >
-                        <FMTableCell className="text-center text-slate-400 font-bold">{squadNumber(player.id)}</FMTableCell>
-                        <FMTableCell className="text-slate-900">
+                        <FMTableCell className="text-center text-white/40 font-bold">{squadNumber(player.id)}</FMTableCell>
+                        <FMTableCell className="text-white/90">
                           <div className="flex items-center min-w-0">
-                            <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-slate-300" />
+                            <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-white/20" />
                             <span className="truncate">{player.name}</span>
                             <PlayerStatusIcons player={player} />
                           </div>
@@ -401,21 +403,21 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                           <span className={`px-2 py-0.5 rounded-[1px] text-[8px] font-bold uppercase ${getPositionColor(posLabel)}`}>{posLabel}</span>
                         </FMTableCell>
                         <FMTableCell className="text-center font-bold" isNumber>{player.age}</FMTableCell>
-                        <FMTableCell className="text-center"><span className="text-[9px] text-slate-600 font-bold">{club?.shortName || '-'}</span></FMTableCell>
-                        <FMTableCell className="text-center font-bold text-slate-700" isNumber>{player.seasonStats.appearances}</FMTableCell>
+                        <FMTableCell className="text-center"><span className="text-[9px] text-white/60 font-bold">{club?.shortName || '-'}</span></FMTableCell>
+                        <FMTableCell className="text-center font-bold text-white/70" isNumber>{player.seasonStats.appearances}</FMTableCell>
                         <FMTableCell className="text-center font-bold" isNumber>
-                          <span className={player.seasonStats.goals > 0 ? 'text-green-700' : 'text-slate-400'}>{player.seasonStats.goals}</span>
+                          <span className={player.seasonStats.goals > 0 ? 'text-green-400' : 'text-white/40'}>{player.seasonStats.goals}</span>
                         </FMTableCell>
                         <FMTableCell className="text-center"><PlayerFormDots ratings={player.formRatings} /></FMTableCell>
                         <FMTableCell className="text-center font-bold" isNumber>
-                          <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-700'}>{Math.round(player.fitness)}%</span>
+                          <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-400'}>{Math.round(player.fitness)}%</span>
                         </FMTableCell>
                         <FMTableCell className="text-right font-black" isNumber>£{(player.value / 1000000).toFixed(1)}M</FMTableCell>
                       </tr>
                     );
                   })}
                   {sortedPlayers.length === 0 && (
-                    <tr><td colSpan={10} className="p-8 text-center text-slate-400 italic text-[10px] uppercase font-bold">No hay jugadores en esta posición</td></tr>
+                    <tr><td colSpan={10} className="p-8 text-center text-white/40 italic text-[10px] uppercase font-bold">No hay jugadores en esta posición</td></tr>
                   )}
                 </FMTable>
               </div>
@@ -426,25 +428,25 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                     <tr
                       key={player.id}
                       onClick={() => setSelectedPlayer(player)}
-                      className={`cursor-pointer transition-colors border-b border-[#e0e0e0] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] ${selectedIds.has(player.id) ? 'font-bold shadow-[inset_4px_0_0_0_rgba(58,74,58,1)]' : ''}`}
+                      className={`cursor-pointer transition-colors border-b border-white/10 ${idx % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10 ${selectedIds.has(player.id) ? 'font-bold shadow-[inset_4px_0_0_0_rgba(58,74,58,1)]' : ''}`}
                     >
-                      <FMTableCell className="text-center text-slate-400 font-bold text-[9px] px-1">{squadNumber(player.id)}</FMTableCell>
-                      <FMTableCell className="text-slate-900 px-2">
+                      <FMTableCell className="text-center text-white/40 font-bold text-[9px] px-1">{squadNumber(player.id)}</FMTableCell>
+                      <FMTableCell className="text-white/90 px-2">
                         <div className="flex items-center min-w-0">
-                          <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-3 h-2 object-cover shadow-sm rounded-[1px] mr-1.5 shrink-0 border border-slate-300" />
+                          <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-3 h-2 object-cover shadow-sm rounded-[1px] mr-1.5 shrink-0 border border-white/20" />
                           <span className="truncate max-w-[100px] text-[10px]">{player.name}</span>
                           <PlayerStatusIcons player={player} />
                         </div>
                       </FMTableCell>
                       <FMTableCell className="text-center font-bold text-[10px]" isNumber>{player.age}</FMTableCell>
                       <FMTableCell className="text-center font-bold text-[10px]" isNumber>
-                        <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-700'}>{Math.round(player.fitness)}%</span>
+                        <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-400'}>{Math.round(player.fitness)}%</span>
                       </FMTableCell>
                       <FMTableCell className="text-right font-black text-[10px]" isNumber>£{(player.value / 1000000).toFixed(1)}M</FMTableCell>
                     </tr>
                   ))}
                   {sortedPlayers.length === 0 && (
-                    <tr><td colSpan={5} className="p-8 text-center text-slate-400 italic text-[10px] uppercase font-bold">No hay jugadores en esta posición</td></tr>
+                    <tr><td colSpan={5} className="p-8 text-center text-white/40 italic text-[10px] uppercase font-bold">No hay jugadores en esta posición</td></tr>
                   )}
                 </FMTable>
               </div>
@@ -460,35 +462,35 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
             <FMBox title={`Planteamiento · ${team?.formation || 'Sin formación definida'}`}>
               {!isControlled ? (
                 <div className="p-6 text-center">
-                  <Lock size={16} className="mx-auto mb-2 text-slate-400" />
-                  <p className="text-[10px] text-slate-500 uppercase font-bold">Asume la selección desde la pestaña Plantel para definir el planteamiento táctico.</p>
+                  <Lock size={16} className="mx-auto mb-2 text-white/40" />
+                  <p className="text-[10px] text-white/50 uppercase font-bold">Asume la selección desde la pestaña Plantel para definir el planteamiento táctico.</p>
                 </div>
               ) : tacticDraft ? (
                 <div className="space-y-4 p-2">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <label className="block">
-                      <span className="flex items-center justify-between text-[9px] font-bold uppercase text-slate-600 mb-1">Mentalidad <b className="w-5 text-right text-slate-900">{tacticDraft.mentality}</b></span>
+                      <span className="flex items-center justify-between text-[9px] font-bold uppercase text-white/60 mb-1">Mentalidad <b className="w-5 text-right text-white/90">{tacticDraft.mentality}</b></span>
                       <input type="range" min="1" max="20" value={tacticDraft.mentality} onChange={e => setTacticDraft({ ...tacticDraft, mentality: Number(e.target.value) })} className="w-full accent-emerald-700" />
                     </label>
                     <label className="block">
-                      <span className="flex items-center justify-between text-[9px] font-bold uppercase text-slate-600 mb-1">Presión <b className="w-5 text-right text-slate-900">{tacticDraft.closingDown}</b></span>
+                      <span className="flex items-center justify-between text-[9px] font-bold uppercase text-white/60 mb-1">Presión <b className="w-5 text-right text-white/90">{tacticDraft.closingDown}</b></span>
                       <input type="range" min="1" max="20" value={tacticDraft.closingDown} onChange={e => setTacticDraft({ ...tacticDraft, closingDown: Number(e.target.value) })} className="w-full accent-emerald-700" />
                     </label>
                     <label className="block">
-                      <span className="flex items-center justify-between text-[9px] font-bold uppercase text-slate-600 mb-1">Pase <b className="w-5 text-right text-slate-900">{tacticDraft.passingStyle}</b></span>
+                      <span className="flex items-center justify-between text-[9px] font-bold uppercase text-white/60 mb-1">Pase <b className="w-5 text-right text-white/90">{tacticDraft.passingStyle}</b></span>
                       <input type="range" min="1" max="20" value={tacticDraft.passingStyle} onChange={e => setTacticDraft({ ...tacticDraft, passingStyle: Number(e.target.value) })} className="w-full accent-emerald-700" />
                     </label>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <select value={tacticDraft.focusPassing} onChange={e => setTacticDraft({ ...tacticDraft, focusPassing: e.target.value as TacticSettings['focusPassing'] })} className="bg-slate-50 border border-slate-300 rounded-sm px-1.5 py-1 text-[9px] font-bold uppercase">
+                    <select value={tacticDraft.focusPassing} onChange={e => setTacticDraft({ ...tacticDraft, focusPassing: e.target.value as TacticSettings['focusPassing'] })} className="bg-white/10/5 border border-white/20 rounded-sm px-1.5 py-1 text-[9px] font-bold uppercase">
                       <option value="MIXED">Pase mixto</option><option value="LEFT">Banda izquierda</option><option value="CENTER">Por dentro</option><option value="RIGHT">Banda derecha</option>
                     </select>
-                    <select value={tacticDraft.counterAttack ? 'YES' : 'NO'} onChange={e => setTacticDraft({ ...tacticDraft, counterAttack: e.target.value === 'YES' })} className="bg-slate-50 border border-slate-300 rounded-sm px-1.5 py-1 text-[9px] font-bold uppercase">
+                    <select value={tacticDraft.counterAttack ? 'YES' : 'NO'} onChange={e => setTacticDraft({ ...tacticDraft, counterAttack: e.target.value === 'YES' })} className="bg-white/10/5 border border-white/20 rounded-sm px-1.5 py-1 text-[9px] font-bold uppercase">
                       <option value="NO">Sin contraataque</option><option value="YES">Contraataque</option>
                     </select>
                   </div>
                   <FMButton onClick={saveTactic} className="w-full"><Save size={13} /> Guardar planteamiento</FMButton>
-                  <p className="text-[8px] text-slate-500 italic uppercase font-bold">El once se elige automáticamente por capacidad dentro de la convocatoria. Este planteamiento se aplica al simular los partidos internacionales.</p>
+                  <p className="text-[8px] text-white/50 italic uppercase font-bold">El once se elige automáticamente por capacidad dentro de la convocatoria. Este planteamiento se aplica al simular los partidos internacionales.</p>
                 </div>
               ) : null}
             </FMBox>
@@ -499,11 +501,11 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                   .sort((a, b) => b.currentAbility - a.currentAbility)
                   .slice(0, 11)
                   .map((p, i) => (
-                    <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
+                    <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10 transition-colors`}>
                       <FMTableCell className="text-center"><span className={`px-2 py-0.5 rounded-[1px] text-[8px] font-bold uppercase ${getPositionColor(getPositionLabel(p.primaryPosition || p.positions[0]))}`}>{getPositionLabel(p.primaryPosition || p.positions[0])}</span></FMTableCell>
-                      <FMTableCell className="text-slate-900">{p.name}</FMTableCell>
-                      <FMTableCell className="text-center"><span className="text-[9px] text-slate-600 font-bold">{world.getClub(p.clubId)?.shortName || '-'}</span></FMTableCell>
-                      <FMTableCell className="text-center font-black text-slate-700" isNumber>{p.currentAbility}</FMTableCell>
+                      <FMTableCell className="text-white/90">{p.name}</FMTableCell>
+                      <FMTableCell className="text-center"><span className="text-[9px] text-white/60 font-bold">{world.getClub(p.clubId)?.shortName || '-'}</span></FMTableCell>
+                      <FMTableCell className="text-center font-black text-white/70" isNumber>{p.currentAbility}</FMTableCell>
                     </tr>
                   ))}
               </FMTable>
@@ -515,9 +517,9 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
       {/* ─── SECCIÓN: PARTIDOS ────────────────────────────────────────────── */}
       {section === 'SCHEDULE' && (
         <FMBox title="Calendario de Partidos" className="flex-1" noPadding>
-          <div className="h-full overflow-y-auto custom-scroll bg-white">
+          <div className="h-full overflow-y-auto custom-scroll bg-white/10">
             {teamFixtures.length === 0 ? (
-              <div className="p-20 text-slate-400 text-center italic text-[10px] uppercase font-bold tracking-widest">No hay partidos programados</div>
+              <div className="p-20 text-white/40 text-center italic text-[10px] uppercase font-bold tracking-widest">No hay partidos programados</div>
             ) : (
               <table className="w-full border-collapse">
                 <tbody className="text-[11px] text-[#1a1a1a]" style={{ fontFamily: 'Verdana, sans-serif' }}>
@@ -528,18 +530,18 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                     const compName = world.competitions.find(c => c.id === f.competitionId)?.name || f.competitionId;
 
                     return (
-                      <tr key={f.id} className={`border-b border-[#e0e0e0] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
-                        <td className="px-3 py-3 text-slate-500 font-mono text-[10px] w-24">
+                      <tr key={f.id} className={`border-b border-white/10 ${idx % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10 transition-colors`}>
+                        <td className="px-3 py-3 text-white/50 font-mono text-[10px] w-24">
                           <div className="flex flex-col">
                             <span>{f.date.toLocaleDateString()}</span>
-                            <span className="text-[8px] text-slate-400 uppercase">{compName}</span>
+                            <span className="text-[8px] text-white/40 uppercase">{compName}</span>
                           </div>
                         </td>
                         <td className="px-3 py-3 text-right">
                           <span className={`font-bold ${isHome ? 'text-blue-800' : ''}`}>{homeName}</span>
                         </td>
                         <td className="px-3 py-3 text-center w-16">
-                          <div className="bg-[#bcc8bc] border border-[#a0b0a0] rounded-sm py-1 font-black text-[10px] shadow-inner text-[#1a1a1a]">
+                          <div className="bg-white/10/10 border border-white/10 rounded-sm py-1 font-black text-[10px] shadow-inner text-[#1a1a1a]">
                             {f.played ? `${f.homeScore} - ${f.awayScore}` : 'VS'}
                           </div>
                         </td>
@@ -566,18 +568,18 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                 .sort((a, b) => b.seasonStats.goals - a.seasonStats.goals)
                 .slice(0, 10)
                 .map((p, i) => (
-                  <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
-                    <FMTableCell className="text-center font-bold text-slate-400">{i + 1}</FMTableCell>
+                  <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10 transition-colors`}>
+                    <FMTableCell className="text-center font-bold text-white/40">{i + 1}</FMTableCell>
                     <FMTableCell>
                       <div className="flex flex-col">
                         <span className="font-bold truncate max-w-[120px]">{p.name}</span>
-                        <span className="text-[9px] text-slate-500 font-bold uppercase">{world.getClub(p.clubId)?.shortName}</span>
+                        <span className="text-[9px] text-white/50 font-bold uppercase">{world.getClub(p.clubId)?.shortName}</span>
                       </div>
                     </FMTableCell>
-                    <FMTableCell className="text-center font-black text-green-700" isNumber>{p.seasonStats.goals}</FMTableCell>
+                    <FMTableCell className="text-center font-black text-green-400" isNumber>{p.seasonStats.goals}</FMTableCell>
                   </tr>
                 ))}
-              {squadPlayers.filter(p => p.seasonStats.goals > 0).length === 0 && <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin datos</td></tr>}
+              {squadPlayers.filter(p => p.seasonStats.goals > 0).length === 0 && <tr><td colSpan={3} className="p-4 text-center text-white/40 italic text-[10px] uppercase font-bold">Sin datos</td></tr>}
             </FMTable>
           </FMBox>
 
@@ -588,18 +590,18 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                 .sort((a, b) => b.seasonStats.assists - a.seasonStats.assists)
                 .slice(0, 10)
                 .map((p, i) => (
-                  <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
-                    <FMTableCell className="text-center font-bold text-slate-400">{i + 1}</FMTableCell>
+                  <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10 transition-colors`}>
+                    <FMTableCell className="text-center font-bold text-white/40">{i + 1}</FMTableCell>
                     <FMTableCell>
                       <div className="flex flex-col">
                         <span className="font-bold truncate max-w-[120px]">{p.name}</span>
-                        <span className="text-[9px] text-slate-500 font-bold uppercase">{world.getClub(p.clubId)?.shortName}</span>
+                        <span className="text-[9px] text-white/50 font-bold uppercase">{world.getClub(p.clubId)?.shortName}</span>
                       </div>
                     </FMTableCell>
                     <FMTableCell className="text-center font-black text-blue-700" isNumber>{p.seasonStats.assists}</FMTableCell>
                   </tr>
                 ))}
-              {squadPlayers.filter(p => p.seasonStats.assists > 0).length === 0 && <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin datos</td></tr>}
+              {squadPlayers.filter(p => p.seasonStats.assists > 0).length === 0 && <tr><td colSpan={3} className="p-4 text-center text-white/40 italic text-[10px] uppercase font-bold">Sin datos</td></tr>}
             </FMTable>
           </FMBox>
 
@@ -612,19 +614,19 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                 .map((p, i) => {
                   const avg = ((p.seasonStats.goals + p.seasonStats.assists) / p.seasonStats.appearances).toFixed(1);
                   return (
-                    <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
-                      <FMTableCell className="text-center font-bold text-slate-400">{i + 1}</FMTableCell>
+                    <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10 transition-colors`}>
+                      <FMTableCell className="text-center font-bold text-white/40">{i + 1}</FMTableCell>
                       <FMTableCell>
                         <div className="flex flex-col">
                           <span className="font-bold truncate max-w-[120px]">{p.name}</span>
-                          <span className="text-[9px] text-slate-500 font-bold uppercase">{world.getClub(p.clubId)?.shortName}</span>
+                          <span className="text-[9px] text-white/50 font-bold uppercase">{world.getClub(p.clubId)?.shortName}</span>
                         </div>
                       </FMTableCell>
                       <FMTableCell className="text-center font-black text-amber-700" isNumber>{avg}</FMTableCell>
                     </tr>
                   );
                 })}
-              {squadPlayers.filter(p => p.seasonStats.appearances > 0).length === 0 && <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin datos</td></tr>}
+              {squadPlayers.filter(p => p.seasonStats.appearances > 0).length === 0 && <tr><td colSpan={3} className="p-4 text-center text-white/40 italic text-[10px] uppercase font-bold">Sin datos</td></tr>}
             </FMTable>
           </FMBox>
         </div>

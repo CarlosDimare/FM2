@@ -11,7 +11,7 @@ export const PlayerFormDots: React.FC<{ ratings?: number[] }> = ({ ratings }) =>
   return (
     <div className="flex gap-[2px] items-center justify-center">
       {ratings.map((r, i) => {
-        let color = 'bg-slate-300';
+        let color = 'bg-white/15';
         if (r >= 8) color = 'bg-green-500';
         else if (r >= 7) color = 'bg-green-400';
         else if (r >= 6) color = 'bg-amber-400';
@@ -36,7 +36,7 @@ export const PlayerStatusIcons: React.FC<{ player: Player }> = ({ player }) => {
   }
   if (player.injury) {
     icons.push(
-      <div key="inj" className="w-4 h-4 bg-white border border-red-600 flex items-center justify-center rounded-[1px] shadow-sm">
+      <div key="inj" className="w-4 h-4 bg-white/10 border border-red-600 flex items-center justify-center rounded-[1px] shadow-sm">
         <X size={10} className="text-red-600 stroke-[4]" />
       </div>
     );
@@ -47,8 +47,8 @@ export const PlayerStatusIcons: React.FC<{ player: Player }> = ({ player }) => {
   if ((player.morale < 40 || player.fitness < 60) && player.clubId) {
     icons.push(
       <div key="unh" className="relative flex items-center justify-center">
-        <MessageSquare size={16} className="text-slate-700 fill-amber-400" />
-        <span className="absolute inset-0 flex items-center justify-center text-[7px] font-black text-slate-900 mt-[-1px]">!!</span>
+        <MessageSquare size={16} className="text-white/70 fill-amber-400" />
+        <span className="absolute inset-0 flex items-center justify-center text-[7px] font-black text-white/90 mt-[-1px]">!!</span>
       </div>
     );
   }

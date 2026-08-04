@@ -34,13 +34,13 @@ export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x,
 
   return (
     <div 
-      className="fixed z-[1000] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl py-2 w-56 animate-zoom-in"
+      className="fixed z-[1000] bg-white/10/10 border border-slate-700 rounded-lg shadow-2xl py-2 w-56 animate-zoom-in"
       style={{ left: x, top: y }}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="px-4 py-2 border-b border-slate-700">
         <p className="text-white font-bold text-xs truncate">{player.name}</p>
-        <p className="text-slate-500 text-[9px] uppercase tracking-widest">{player.positions[0]}</p>
+        <p className="text-white/50 text-[9px] uppercase tracking-widest">{player.positions[0]}</p>
       </div>
 
       <div className="py-1">

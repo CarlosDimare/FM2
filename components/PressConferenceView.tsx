@@ -207,17 +207,17 @@ export const PressConferenceView: React.FC<PressConferenceViewProps> = ({ club, 
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#d4dcd4] overflow-hidden" style={{ fontFamily: 'Verdana, sans-serif' }}>
-      <header className="bg-gradient-to-b from-[#e2e8f0] to-[#c8d2c8] p-4 border-b border-[#a0b0a0] shrink-0">
+    <div className="flex flex-col h-full overflow-hidden" style={{ fontFamily: 'Verdana, sans-serif' }}>
+      <header className="bg-gradient-to-b from-[#e2e8f0] to-[#c8d2c8] p-4 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="bg-[#3a4a3a] rounded-sm p-1.5">
+          <div className="bg-white/25 rounded-sm p-1.5">
             <Newspaper size={18} className="text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-slate-900 uppercase tracking-tighter">
+            <h2 className="text-lg font-black text-white/90 uppercase tracking-tighter">
               {context === 'PRE_MATCH' ? 'Conferencia de Prensa' : 'Rueda de Prensa Post-Partido'}
             </h2>
-            <p className="text-[10px] text-slate-500 font-bold">
+            <p className="text-[10px] text-white/50 font-bold">
               {context === 'PRE_MATCH' ? `Previa vs ${opponent.name}` : `${club.shortName} ${homeScore ?? '?'} - ${awayScore ?? '?'} ${opponent.shortName}`}
             </p>
           </div>
@@ -233,7 +233,7 @@ export const PressConferenceView: React.FC<PressConferenceViewProps> = ({ club, 
                 <p className="text-[10px] font-black uppercase tracking-wide text-green-900 flex items-center gap-2">
                   <Mic size={12} /> Delegada a: {delegate?.name || 'Staff'}
                 </p>
-                <p className="text-[9px] text-green-800 mt-0.5">Este empleado se encarga de la conferencia de prensa. Puedes dejar que responda en tu lugar.</p>
+                <p className="text-[9px] text-green-300 mt-0.5">Este empleado se encarga de la conferencia de prensa. Puedes dejar que responda en tu lugar.</p>
               </div>
               <button onClick={() => {
                 const neutral = questions.map(q => Math.max(0, q.options.findIndex(o => o.reaction === 'NEUTRAL')));
@@ -247,32 +247,32 @@ export const PressConferenceView: React.FC<PressConferenceViewProps> = ({ club, 
         })()}
         {!finished ? (
           <div>
-            <div className="flex items-center gap-2 mb-6 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+            <div className="flex items-center gap-2 mb-6 text-[10px] text-white/50 font-bold uppercase tracking-widest">
               <Mic size={14} /> Pregunta {currentQ + 1} de {questions.length}
             </div>
-            <div className="bg-white border border-[#a0b0a0] rounded-sm p-4 mb-6">
+            <div className="bg-white/10/10 border border-white/10 rounded-sm p-4 mb-6">
               <p className="text-sm font-bold italic text-[#3a4a3a]">"{questions[currentQ].question}"</p>
             </div>
             <div className="space-y-2">
               {questions[currentQ].options.map((opt, i) => (
                 <button key={i} onClick={() => handleAnswer(i)}
-                  className="w-full text-left p-3 bg-white hover:bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm transition-all active:scale-[0.99] text-sm flex items-start gap-3">
+                  className="w-full text-left p-3 bg-white/10 hover:bg-white/5 border border-white/10 rounded-sm transition-all active:scale-[0.99] text-sm flex items-start gap-3">
                   {opt.reaction === 'POSITIVE' ? <ThumbsUp size={16} className="text-green-600 mt-0.5 shrink-0" /> :
                    opt.reaction === 'NEGATIVE' ? <ThumbsDown size={16} className="text-red-600 mt-0.5 shrink-0" /> :
-                   <Minus size={16} className="text-slate-400 mt-0.5 shrink-0" />}
-                  <span className="text-slate-700">{opt.text}</span>
+                   <Minus size={16} className="text-white/40 mt-0.5 shrink-0" />}
+                  <span className="text-white/70">{opt.text}</span>
                 </button>
               ))}
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="bg-[#3a4a3a] rounded-sm p-3 mb-4">
+            <div className="bg-white/25 rounded-sm p-3 mb-4">
               <Newspaper size={36} className="text-white" />
             </div>
-            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter mb-2">Conferencia Finalizada</h3>
-            <p className="text-sm text-slate-600 mb-2">Los periodistas se retiran.</p>
-            <p className="text-[10px] text-slate-500 font-bold mb-6">
+            <h3 className="text-lg font-black text-white/90 uppercase tracking-tighter mb-2">Conferencia Finalizada</h3>
+            <p className="text-sm text-white/60 mb-2">Los periodistas se retiran.</p>
+            <p className="text-[10px] text-white/50 font-bold mb-6">
               La moral del equipo y la confianza del board se han visto afectadas por tus respuestas.
             </p>
             <FMButton onClick={onFinish} className="px-8 py-3">
@@ -282,7 +282,7 @@ export const PressConferenceView: React.FC<PressConferenceViewProps> = ({ club, 
         )}
       </div>
 
-      <footer className="bg-[#bcc8bc] border-t border-[#a0b0a0] p-3 text-center text-[8px] text-slate-600 font-bold uppercase shrink-0">
+      <footer className="bg-white/10/10 border-t border-white/10 p-3 text-center text-[8px] text-white/60 font-bold uppercase shrink-0">
         Tus respuestas afectan la moral del equipo y la confianza de la directiva.
       </footer>
     </div>

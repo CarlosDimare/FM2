@@ -82,22 +82,22 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlay
     const club = world.getClub(player.clubId);
     return (
       <div key={report.id}
-           className={`border rounded-sm shadow-sm transition-colors ${report.isRead ? 'bg-white border-[#a0b0a0]' : 'bg-amber-50 border-amber-300'}`}
+           className={`border rounded-sm shadow-sm transition-colors ${ report.isRead ? 'bg-white/10 border-white/10' : 'bg-amber-500/10 border-amber-300'}`}
            onClick={() => { markRead(report.id); onSelectPlayer(player); }}>
         <div className="p-3 flex items-start gap-3 cursor-pointer">
-          <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-            <User size={18} className="text-slate-500" />
+          <div className="w-10 h-10 rounded-full bg-white/10/10 flex items-center justify-center shrink-0">
+            <User size={18} className="text-white/50" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-black text-xs text-slate-900 truncate">{player.name}</span>
-              {!report.isRead && <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />}
+              <span className="font-black text-xs text-white/90 truncate">{player.name}</span>
+              {!report.isRead && <span className="w-2 h-2 rounded-full bg-amber-500/100 shrink-0" />}
               <button onClick={(e) => { e.stopPropagation(); toggleShortlist(player.id); }}
                       className="ml-auto shrink-0" title={isShortlisted(player.id) ? "Quitar de seguimiento" : "Agregar a seguimiento"}>
-                {isShortlisted(player.id) ? <BookmarkCheck size={14} className="text-blue-600" /> : <BookmarkPlus size={14} className="text-slate-400" />}
+                {isShortlisted(player.id) ? <BookmarkCheck size={14} className="text-blue-400" /> : <BookmarkPlus size={14} className="text-white/40" />}
               </button>
             </div>
-            <div className="text-[9px] text-slate-500 font-bold">{player.positions[0]} · {player.age} años · {club?.name || 'Agente Libre'}</div>
+            <div className="text-[9px] text-white/50 font-bold">{player.positions[0]} · {player.age} años · {club?.name || 'Agente Libre'}</div>
             <div className="flex items-center gap-4 mt-1.5 text-[10px]">
               <span className="flex items-center gap-1 font-black">
                 <Star size={12} className="text-amber-500" />
@@ -108,11 +108,11 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlay
                 PA: {report.potentialAbility}
               </span>
             </div>
-            <div className="text-[10px] text-slate-700 mt-1 italic">{report.summary}</div>
+            <div className="text-[10px] text-white/70 mt-1 italic">{report.summary}</div>
             {report.strengths.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {report.strengths.map(s => (
-                  <span key={s} className="text-[8px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-sm uppercase">
+                  <span key={s} className="text-[8px] font-bold text-green-400 bg-green-500/15 px-1.5 py-0.5 rounded-sm uppercase">
                     {ATTRIBUTE_TRANSLATIONS[s] || s}
                   </span>
                 ))}
@@ -121,13 +121,13 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlay
             {report.weaknesses.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-0.5">
                 {report.weaknesses.map(w => (
-                  <span key={w} className="text-[8px] font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded-sm uppercase">
+                  <span key={w} className="text-[8px] font-bold text-red-400 bg-red-100 px-1.5 py-0.5 rounded-sm uppercase">
                     {ATTRIBUTE_TRANSLATIONS[w] || w}
                   </span>
                 ))}
               </div>
             )}
-            <div className="text-[8px] text-slate-400 font-bold mt-1">
+            <div className="text-[8px] text-white/40 font-bold mt-1">
               Personalidad: {report.personality} · {new Date(report.date).toLocaleDateString()}
             </div>
           </div>
@@ -137,12 +137,12 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlay
   };
 
   return (
-    <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-hidden">
+    <div className="p-2 md:p-4 h-full flex flex-col gap-4 overflow-hidden">
       <header className="shrink-0">
-        <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase italic tracking-tighter flex items-center gap-2">
+        <h2 className="text-xl md:text-2xl font-black text-white/90 uppercase italic tracking-tighter flex items-center gap-2">
           <Binoculars size={22} /> Scouting
         </h2>
-        <p className="text-slate-600 font-bold text-[10px] uppercase tracking-widest">
+        <p className="text-white/60 font-bold text-[10px] uppercase tracking-widest">
           {reports.length} informes · Presupuesto: ${(club?.finances.scoutingBudget || 0).toLocaleString()}
         </p>
       </header>
@@ -167,38 +167,38 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlay
 
       {/* Search bar */}
       <div className="flex gap-2 shrink-0">
-        <div className="flex-1 flex items-center bg-white border border-slate-300 rounded-sm px-2">
-          <Search size={14} className="text-slate-400 shrink-0" />
+        <div className="flex-1 flex items-center bg-white/15 border border-white/20 rounded-sm px-2">
+          <Search size={14} className="text-white/40 shrink-0" />
           <input type="text" value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Buscar jugador para informe..."
-            className="flex-1 py-2 px-2 text-xs font-bold text-slate-800 bg-transparent outline-none" />
+            className="flex-1 py-2 px-2 text-xs font-bold text-white/80 bg-transparent outline-none" />
         </div>
         <FMButton onClick={handleSearch} className="text-[10px] shrink-0"><Search size={14} /> Buscar</FMButton>
       </div>
 
       {searchResults.length > 0 && (
-        <div className="shrink-0 max-h-40 overflow-y-auto bg-white border border-blue-300 rounded-sm shadow-lg">
-          <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-2 py-1 border-b border-slate-200">Resultados de búsqueda</div>
+        <div className="shrink-0 max-h-40 overflow-y-auto bg-white/10 border border-blue-300 rounded-sm shadow-lg">
+          <div className="text-[9px] font-black text-white/50 uppercase tracking-widest px-2 py-1 border-b border-white/10">Resultados de búsqueda</div>
           {searchResults.map(p => {
             const hasReport = world.scoutingReports.some(r => r.playerId === p.id && r.clubId === clubId);
             return (
-              <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-blue-50 border-b border-slate-100 last:border-0">
+              <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-blue-500/10 border-b border-slate-100 last:border-0">
                 <img src={getFlagUrl(p.nationality)} alt="" className="w-3 h-2 object-cover rounded-[1px]" />
                 <span className="flex-1 text-[10px] font-bold truncate">{p.name}</span>
-                <span className="text-[8px] text-slate-500">{p.positions[0]} · {p.age}a · {p.currentAbility}CA</span>
+                <span className="text-[8px] text-white/50">{p.positions[0]} · {p.age}a · {p.currentAbility}CA</span>
                 {hasReport ? (
-                  <span className="text-[8px] text-green-700 font-bold">✓ Informado</span>
+                  <span className="text-[8px] text-green-400 font-bold">✓ Informado</span>
                 ) : (
                   <button onClick={() => scoutPlayer(p.id)}
-                    className="text-[8px] bg-blue-600 text-white px-2 py-0.5 rounded-sm font-bold hover:bg-blue-500">
+                    className="text-[8px] bg-blue-600 text-white px-2 py-0.5 rounded-sm font-bold hover:bg-blue-500/100">
                     Informe
                   </button>
                 )}
                 <button onClick={() => toggleShortlist(p.id)}
                   className="shrink-0" title={isShortlisted(p.id) ? "Quitar" : "Seguimiento"}>
-                  {isShortlisted(p.id) ? <BookmarkCheck size={14} className="text-blue-600" /> : <BookmarkPlus size={14} className="text-slate-400" />}
+                  {isShortlisted(p.id) ? <BookmarkCheck size={14} className="text-blue-400" /> : <BookmarkPlus size={14} className="text-white/40" />}
                 </button>
               </div>
             );
@@ -208,7 +208,7 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlay
 
       <div className="flex-1 overflow-y-auto custom-scroll space-y-2">
         {reports.length === 0 && (
-          <div className="p-12 text-center text-slate-400 italic text-[10px] font-bold uppercase tracking-widest">
+          <div className="p-12 text-center text-white/40 italic text-[10px] font-bold uppercase tracking-widest">
             No hay informes de scouting. Los ojeadores generarán informes automáticamente con el paso del tiempo.
           </div>
         )}

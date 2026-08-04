@@ -169,30 +169,30 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
   const renderDelegationTab = () => (
     <div className="flex-1 overflow-y-auto custom-scroll pb-24">
       {!liveClub ? (
-        <div className="p-12 text-center text-slate-500 font-black uppercase text-[10px] tracking-widest">Selecciona un club para gestionar delegaciones</div>
+        <div className="p-12 text-center text-white/50 font-black uppercase text-[10px] tracking-widest">Selecciona un club para gestionar delegaciones</div>
       ) : (
         <div className="max-w-3xl mx-auto space-y-3">
-          <div className="bg-[#e8ece8] border border-[#a0b0a0] rounded-sm p-3 mb-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-2">
+          <div className="bg-white/10/10 border border-white/10 rounded-sm p-3 mb-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/60 flex items-center gap-2">
               <ClipboardList size={14} /> Delegación de Tareas
             </p>
-            <p className="text-[9px] text-slate-500 mt-1">Asigna responsabilidades a tu cuerpo técnico para ocuparte solo de lo que importa. Tareas sin delegar quedan a tu cargo.</p>
+            <p className="text-[9px] text-white/50 mt-1">Asigna responsabilidades a tu cuerpo técnico para ocuparte solo de lo que importa. Tareas sin delegar quedan a tu cargo.</p>
           </div>
           {DELEGABLE_TASKS.map(task => {
             const delegatedId = liveClub[task.key];
             const delegatedName = getDelegatedName(delegatedId);
             const candidates = staff.filter(s => task.suggestedRoles.includes(s.role));
             return (
-              <div key={task.key} className="bg-white border border-[#a0b0a0] rounded-sm shadow-sm overflow-hidden">
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-[#a0b0a0] bg-[#f2f7f2]">
-                  <div className={`w-9 h-9 rounded-sm flex items-center justify-center shrink-0 border ${delegatedId ? 'bg-green-100 border-green-400 text-green-800' : 'bg-slate-200 border-slate-400 text-slate-600'}`}>
+              <div key={task.key} className="bg-white/10/10 border border-white/10 rounded-sm shadow-sm overflow-hidden">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10 bg-white/10/5">
+                  <div className={`w-9 h-9 rounded-sm flex items-center justify-center shrink-0 border ${delegatedId ? 'bg-green-500/15 border-green-400 text-green-300' : 'bg-white/10 border-white/15 text-white/60'}`}>
                     {task.icon}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-black uppercase tracking-wide text-slate-900">{task.label}</p>
-                    <p className="text-[9px] text-slate-500 leading-snug mt-0.5">{task.desc}</p>
+                    <p className="text-[11px] font-black uppercase tracking-wide text-white/90">{task.label}</p>
+                    <p className="text-[9px] text-white/50 leading-snug mt-0.5">{task.desc}</p>
                   </div>
-                  <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-sm border shrink-0 ${delegatedId ? 'bg-green-50 text-green-800 border-green-300' : 'bg-amber-50 text-amber-800 border-amber-300'}`}>
+                  <span className={`text-[8px] font-black uppercase px-2 py-1 rounded-sm border shrink-0 ${delegatedId ? 'bg-green-50 text-green-300 border-green-300' : 'bg-amber-500/10 text-amber-800 border-amber-300'}`}>
                     {delegatedId ? 'Delegada' : 'A tu cargo'}
                   </span>
                 </div>
@@ -205,17 +205,17 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                   )}
                   <div className="flex flex-wrap gap-1.5">
                     <button onClick={() => setDelegation(task.key, undefined)}
-                      className={`px-3 py-2 text-[9px] font-black uppercase rounded-sm border transition-all ${!delegatedId ? 'bg-[#3a4a3a] text-white border-[#2a3a2a] shadow-md' : 'bg-white text-slate-600 border-[#a0b0a0] hover:bg-[#f2f7f2]'}`}>
+                      className={`px-3 py-2 text-[9px] font-black uppercase rounded-sm border transition-all ${!delegatedId ? 'bg-white/25 text-white border-[#2a3a2a] shadow-md' : 'bg-white text-white/60 border-white/10 hover:bg-white/5'}`}>
                       Tú
                     </button>
                     {candidates.map(s => (
                       <button key={s.id} onClick={() => setDelegation(task.key, s.id)}
-                        className={`px-3 py-2 text-[9px] font-black uppercase rounded-sm border transition-all ${delegatedId === s.id ? 'bg-green-700 text-white border-green-900 shadow-md' : 'bg-white text-slate-700 border-[#a0b0a0] hover:border-[#3a4a3a] hover:bg-[#f2f7f2]'}`}>
+                        className={`px-3 py-2 text-[9px] font-black uppercase rounded-sm border transition-all ${delegatedId === s.id ? 'bg-green-700 text-white border-green-900 shadow-md' : 'bg-white text-white/70 border-white/10 hover:border-[#3a4a3a] hover:bg-white/5'}`}>
                         {s.name}
                       </button>
                     ))}
                     {candidates.length === 0 && (
-                      <span className="text-[9px] text-slate-400 italic">No hay empleados aptos para esta tarea.</span>
+                      <span className="text-[9px] text-white/40 italic">No hay empleados aptos para esta tarea.</span>
                     )}
                   </div>
                 </div>
@@ -228,17 +228,17 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
   );
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col bg-[#d4dcd4]" style={{ fontFamily: 'Verdana, sans-serif' }}>
-      <header className="mb-4 border-b border-[#a0b0a0] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="p-4 md:p-6 h-full flex flex-col" style={{ fontFamily: 'Verdana, sans-serif' }}>
+      <header className="mb-4 border-b border-white/10 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Cuerpo Técnico</h2>
-          <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">Los empleados que hacen funcionar al club.</p>
+          <h2 className="text-2xl font-black text-white/90 uppercase italic tracking-tighter">Cuerpo Técnico</h2>
+          <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Los empleados que hacen funcionar al club.</p>
         </div>
-        <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] self-start sm:self-auto shadow-sm">
-          <button onClick={() => setActiveTab('PERSONAL')} className={`px-4 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${activeTab === 'PERSONAL' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>
+        <div className="flex bg-white/10/10 p-0.5 rounded-sm border border-white/10 self-start sm:self-auto shadow-sm">
+          <button onClick={() => setActiveTab('PERSONAL')} className={`px-4 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${activeTab === 'PERSONAL' ? 'bg-white/25 text-white shadow-md' : 'text-white/70 hover:bg-black/5'}`}>
             <Users size={12} /> Personal
           </button>
-          <button onClick={() => setActiveTab('DELEGACION')} className={`px-4 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${activeTab === 'DELEGACION' ? 'bg-[#3a4a3a] text-white shadow-md' : 'text-slate-700 hover:bg-black/5'}`}>
+          <button onClick={() => setActiveTab('DELEGACION')} className={`px-4 py-2 text-[9px] font-black uppercase rounded-[1px] transition-all flex items-center gap-1.5 ${activeTab === 'DELEGACION' ? 'bg-white/25 text-white shadow-md' : 'text-white/70 hover:bg-black/5'}`}>
             <ClipboardList size={12} /> Delegación
           </button>
         </div>
@@ -260,16 +260,16 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                     key={s.id}
                     onClick={() => setSelectedStaff(s)}
                     className={`
-                      cursor-pointer transition-colors border-b border-[#e0e0e0]
-                      ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
-                      hover:bg-[#ccd9cc]
+                      cursor-pointer transition-colors border-b border-white/10
+                      ${idx % 2 === 0 ? 'bg-white' : 'bg-white/5'}
+                      hover:bg-white/10
                       ${s.role === 'HEAD_COACH' ? 'font-bold' : ''}
                     `}
                   >
-                    <FMTableCell className="text-center text-slate-700 font-bold">{getRoleShort(s.role)}</FMTableCell>
-                    <FMTableCell className="text-slate-900">
+                    <FMTableCell className="text-center text-white/70 font-bold">{getRoleShort(s.role)}</FMTableCell>
+                    <FMTableCell className="text-white/90">
                       <div className="flex items-center min-w-0">
-                        <img src={getFlagUrl(s.nationality)} alt={s.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-slate-300" />
+                        <img src={getFlagUrl(s.nationality)} alt={s.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-white/20" />
                         <span className="truncate">{s.name}</span>
                         {s.role === 'HEAD_COACH' && s.reputation && (
                           <span className="ml-2 flex items-center gap-0.5 text-amber-700 shrink-0"><Star size={10} className="fill-amber-500" /> {s.reputation}</span>
@@ -277,13 +277,13 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                       </div>
                     </FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>{s.age}</FMTableCell>
-                    <FMTableCell className="text-slate-500 text-[10px]">{s.nationality}</FMTableCell>
+                    <FMTableCell className="text-white/50 text-[10px]">{s.nationality}</FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>{s.reputation ?? '-'}</FMTableCell>
                     <FMTableCell className="text-right font-bold" isNumber>£{(s.salary / 1000).toFixed(0)}k</FMTableCell>
                     <FMTableCell>
                       <div className="flex flex-wrap gap-1">
                         {badges.length > 0 ? badges.map(b => (
-                          <span key={b} className="px-1.5 py-0.5 bg-green-100 border border-green-400 rounded-sm text-green-800 text-[8px] font-black uppercase whitespace-nowrap">{b}</span>
+                          <span key={b} className="px-1.5 py-0.5 bg-green-500/15 border border-green-400 rounded-sm text-green-300 text-[8px] font-black uppercase whitespace-nowrap">{b}</span>
                         )) : <span className="text-slate-300 text-[9px]">—</span>}
                       </div>
                     </FMTableCell>
@@ -306,16 +306,16 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                     key={s.id}
                     onClick={() => setSelectedStaff(s)}
                     className={`
-                      cursor-pointer transition-colors border-b border-[#e0e0e0]
-                      ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
-                      hover:bg-[#ccd9cc]
+                      cursor-pointer transition-colors border-b border-white/10
+                      ${idx % 2 === 0 ? 'bg-white' : 'bg-white/5'}
+                      hover:bg-white/10
                       ${s.role === 'HEAD_COACH' ? 'font-bold' : ''}
                     `}
                   >
-                    <FMTableCell className="text-center text-slate-700 font-bold text-[9px] px-1">{getRoleShort(s.role)}</FMTableCell>
-                    <FMTableCell className="text-slate-900 px-2">
+                    <FMTableCell className="text-center text-white/70 font-bold text-[9px] px-1">{getRoleShort(s.role)}</FMTableCell>
+                    <FMTableCell className="text-white/90 px-2">
                       <div className="flex items-center min-w-0">
-                        <img src={getFlagUrl(s.nationality)} alt={s.nationality} className="w-3 h-2 object-cover shadow-sm rounded-[1px] mr-1.5 shrink-0 border border-slate-300" />
+                        <img src={getFlagUrl(s.nationality)} alt={s.nationality} className="w-3 h-2 object-cover shadow-sm rounded-[1px] mr-1.5 shrink-0 border border-white/20" />
                         <span className="truncate max-w-[110px] text-[10px]">{s.name}</span>
                         {s.role === 'HEAD_COACH' && s.reputation && (
                           <span className="ml-1.5 flex items-center gap-0.5 text-amber-700 shrink-0"><Star size={9} className="fill-amber-500" /> {s.reputation}</span>
@@ -326,7 +326,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                     <FMTableCell>
                       <div className="flex flex-wrap gap-1">
                         {badges.length > 0 ? badges.map(b => (
-                          <span key={b} className="px-1 py-0.5 bg-green-100 border border-green-400 rounded-sm text-green-800 text-[7px] font-black uppercase whitespace-nowrap">{b}</span>
+                          <span key={b} className="px-1 py-0.5 bg-green-500/15 border border-green-400 rounded-sm text-green-300 text-[7px] font-black uppercase whitespace-nowrap">{b}</span>
                         )) : <span className="text-slate-300 text-[9px]">—</span>}
                       </div>
                     </FMTableCell>
@@ -341,11 +341,11 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
 
       {selectedStaff && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden animate-zoom-in">
+          <div className="bg-white/10 w-full max-w-2xl max-h-[90vh] rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden animate-zoom-in">
             {(() => {
                const club = world.getClub(selectedStaff.clubId);
                const headerClasses = club ? `${club.primaryColor} ${club.secondaryColor}` : 'bg-slate-900 text-white';
-               const borderColor = club && club.primaryColor === 'bg-white' ? 'border-slate-300' : 'border-black/20';
+               const borderColor = club && club.primaryColor === 'bg-white' ? 'border-white/20' : 'border-black/20';
                
                return (
                   <header className={`${headerClasses} p-6 border-b ${borderColor} flex justify-between items-start`}>
@@ -365,14 +365,14 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                );
             })()}
             
-            <div className="flex-1 overflow-y-auto bg-slate-50 p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto bg-white/10/5 p-6 space-y-6">
                {/* Perfil / Biografía */}
                <div>
-                 <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-300 pb-2">
+                 <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/20 pb-2">
                    <BookOpen size={14} /> Perfil
                  </h4>
-                 <div className="bg-white p-4 rounded-sm border border-slate-200 shadow-sm">
-                   <p className="text-sm text-slate-700 leading-relaxed">
+                 <div className="bg-white/10 p-4 rounded-sm border border-white/10 shadow-sm">
+                   <p className="text-sm text-white/70 leading-relaxed">
                      {generateProfileText(selectedStaff)}
                    </p>
                  </div>
@@ -381,32 +381,32 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                {/* Perfil Táctico */}
                {(selectedStaff.preferredFormation || selectedStaff.tacticalStyle || selectedStaff.playingStyle) && (
                  <div>
-                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-300 pb-2">
+                   <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/20 pb-2">
                      <Shield size={14} /> Perfil Táctico
                    </h4>
-                   <div className="bg-white rounded-sm border border-slate-200 shadow-sm">
+                   <div className="bg-white/10 rounded-sm border border-white/10 shadow-sm">
                      {selectedStaff.preferredFormation && (
                        <div className="flex justify-between items-center p-3 border-b border-slate-100">
-                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Formación Preferida</span>
-                         <span className="text-sm text-slate-900 font-black">{selectedStaff.preferredFormation}</span>
+                         <span className="text-[10px] text-white/50 font-bold uppercase tracking-wide">Formación Preferida</span>
+                         <span className="text-sm text-white/90 font-black">{selectedStaff.preferredFormation}</span>
                        </div>
                      )}
                      {selectedStaff.tacticalStyle && (
                        <div className="flex justify-between items-center p-3 border-b border-slate-100">
-                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide flex items-center gap-1"><Swords size={12} /> Estilo Táctico</span>
-                         <span className="text-sm text-slate-900 font-black">{TACTICAL_STYLE_LABELS[selectedStaff.tacticalStyle] || selectedStaff.tacticalStyle}</span>
+                         <span className="text-[10px] text-white/50 font-bold uppercase tracking-wide flex items-center gap-1"><Swords size={12} /> Estilo Táctico</span>
+                         <span className="text-sm text-white/90 font-black">{TACTICAL_STYLE_LABELS[selectedStaff.tacticalStyle] || selectedStaff.tacticalStyle}</span>
                        </div>
                      )}
                      {selectedStaff.pressIntensity && (
                        <div className="flex justify-between items-center p-3 border-b border-slate-100">
-                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide flex items-center gap-1"><Zap size={10} /> Intensidad de Presión</span>
-                         <span className="text-sm text-slate-900 font-black">{PRESS_LABELS[selectedStaff.pressIntensity] || selectedStaff.pressIntensity}</span>
+                         <span className="text-[10px] text-white/50 font-bold uppercase tracking-wide flex items-center gap-1"><Zap size={10} /> Intensidad de Presión</span>
+                         <span className="text-sm text-white/90 font-black">{PRESS_LABELS[selectedStaff.pressIntensity] || selectedStaff.pressIntensity}</span>
                        </div>
                      )}
                      {selectedStaff.possessionVsCounter && (
                        <div className="flex justify-between items-center p-3">
-                         <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide flex items-center gap-1"><Shield size={10} /> Enfoque</span>
-                         <span className="text-sm text-slate-900 font-black">{POSSESSION_LABELS[selectedStaff.possessionVsCounter] || selectedStaff.possessionVsCounter}</span>
+                         <span className="text-[10px] text-white/50 font-bold uppercase tracking-wide flex items-center gap-1"><Shield size={10} /> Enfoque</span>
+                         <span className="text-sm text-white/90 font-black">{POSSESSION_LABELS[selectedStaff.possessionVsCounter] || selectedStaff.possessionVsCounter}</span>
                        </div>
                      )}
                    </div>
@@ -416,14 +416,14 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Attributes Column */}
                   <div>
-                     <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-300 pb-2">
+                     <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/20 pb-2">
                         <Activity size={14} /> Atributos Clave
                      </h4>
-                     <div className="space-y-1 bg-white p-4 rounded-sm border border-slate-200 shadow-sm">
+                     <div className="space-y-1 bg-white/10 p-4 rounded-sm border border-white/10 shadow-sm">
                         {Object.entries(selectedStaff.attributes).map(([key, val]) => (
                            <div key={key} className="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-0 group">
-                              <span className="text-slate-600 font-bold text-[11px] uppercase tracking-wide group-hover:text-slate-900">{STAFF_ATTRIBUTE_LABELS[key] || key}</span>
-                              <span className={`font-black text-xs ${getAttributeColor(val as number)} bg-slate-50 px-2 py-0.5 rounded-sm min-w-[24px] text-center`}>{val as number}</span>
+                              <span className="text-white/60 font-bold text-[11px] uppercase tracking-wide group-hover:text-white/90">{STAFF_ATTRIBUTE_LABELS[key] || key}</span>
+                              <span className={`font-black text-xs ${getAttributeColor(val as number)} bg-white/10/5 px-2 py-0.5 rounded-sm min-w-[24px] text-center`}>{val as number}</span>
                            </div>
                         ))}
                      </div>
@@ -434,26 +434,26 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                      {/* Reputación y Relaciones */}
                      {(selectedStaff.reputation || selectedStaff.internationalReputation || selectedStaff.boardRelationship != null) && (
                        <div>
-                         <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-300 pb-2">
+                         <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/20 pb-2">
                            <Star size={14} /> Reputación
                          </h4>
-                         <div className="bg-white p-4 rounded-sm border border-slate-200 shadow-sm space-y-3">
+                         <div className="bg-white/10 p-4 rounded-sm border border-white/10 shadow-sm space-y-3">
                            {selectedStaff.reputation && (
                              <div className="flex justify-between items-center">
-                               <span className="text-[10px] text-slate-500 font-bold uppercase">Reputación Nacional</span>
-                               <span className="text-slate-900 font-black text-sm">{selectedStaff.reputation}/100</span>
+                               <span className="text-[10px] text-white/50 font-bold uppercase">Reputación Nacional</span>
+                               <span className="text-white/90 font-black text-sm">{selectedStaff.reputation}/100</span>
                              </div>
                            )}
                            {selectedStaff.internationalReputation && (
                              <div className="flex justify-between items-center">
-                               <span className="text-[10px] text-slate-500 font-bold uppercase">Reputación Internacional</span>
-                               <span className="text-slate-900 font-black text-sm">{selectedStaff.internationalReputation}/100</span>
+                               <span className="text-[10px] text-white/50 font-bold uppercase">Reputación Internacional</span>
+                               <span className="text-white/90 font-black text-sm">{selectedStaff.internationalReputation}/100</span>
                              </div>
                            )}
                            {selectedStaff.boardRelationship != null && (
                              <div className="flex justify-between items-center">
-                               <span className="text-[10px] text-slate-500 font-bold uppercase">Relación con Directiva</span>
-                               <span className="text-slate-900 font-black text-sm">{selectedStaff.boardRelationship}/100</span>
+                               <span className="text-[10px] text-white/50 font-bold uppercase">Relación con Directiva</span>
+                               <span className="text-white/90 font-black text-sm">{selectedStaff.boardRelationship}/100</span>
                              </div>
                            )}
                          </div>
@@ -461,37 +461,37 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                      )}
 
                      <div>
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-300 pb-2">
+                        <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/20 pb-2">
                            <Wallet size={14} /> Contrato
                         </h4>
-                        <div className="bg-white p-4 rounded-sm border border-slate-200 shadow-sm space-y-3">
+                        <div className="bg-white/10 p-4 rounded-sm border border-white/10 shadow-sm space-y-3">
                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] text-slate-500 font-bold uppercase">Sueldo</span>
-                              <span className="text-slate-900 font-black text-sm">£{selectedStaff.salary.toLocaleString()}</span>
+                              <span className="text-[10px] text-white/50 font-bold uppercase">Sueldo</span>
+                              <span className="text-white/90 font-black text-sm">£{selectedStaff.salary.toLocaleString()}</span>
                            </div>
                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] text-slate-500 font-bold uppercase">Expira</span>
-                              <span className="text-slate-900 font-black text-sm">{selectedStaff.contractExpiry ? selectedStaff.contractExpiry.toLocaleDateString() : 'N/A'}</span>
+                              <span className="text-[10px] text-white/50 font-bold uppercase">Expira</span>
+                              <span className="text-white/90 font-black text-sm">{selectedStaff.contractExpiry ? selectedStaff.contractExpiry.toLocaleDateString() : 'N/A'}</span>
                            </div>
                         </div>
                      </div>
 
                      <div className="flex-1 min-h-0 flex flex-col">
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-300 pb-2">
+                        <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/20 pb-2">
                            <History size={14} /> Historial
                         </h4>
-                        <div className="bg-white border border-slate-200 rounded-sm shadow-sm overflow-hidden flex-1">
+                        <div className="bg-white/10/10 border border-white/10 rounded-sm shadow-sm overflow-hidden flex-1">
                            <FMTable headers={['Año', 'Club', 'Rol']} colWidths={['50px', 'auto', 'auto']}>
                               {selectedStaff.history && selectedStaff.history.length > 0 ? (
                                  selectedStaff.history.map((h, i) => (
                                     <tr key={i} className="border-b border-slate-100 last:border-0">
-                                       <FMTableCell className="text-slate-500 font-mono">{h.year}</FMTableCell>
-                                       <FMTableCell className="text-slate-900 font-bold">{world.getClub(h.clubId)?.name || 'Desconocido'}</FMTableCell>
-                                       <FMTableCell className="text-slate-500 text-[9px] uppercase">{getRoleLabel(h.role)}</FMTableCell>
+                                       <FMTableCell className="text-white/50 font-mono">{h.year}</FMTableCell>
+                                       <FMTableCell className="text-white/90 font-bold">{world.getClub(h.clubId)?.name || 'Desconocido'}</FMTableCell>
+                                       <FMTableCell className="text-white/50 text-[9px] uppercase">{getRoleLabel(h.role)}</FMTableCell>
                                     </tr>
                                  ))
                               ) : (
-                                 <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px]">Sin historial previo</td></tr>
+                                 <tr><td colSpan={3} className="p-4 text-center text-white/40 italic text-[10px]">Sin historial previo</td></tr>
                               )}
                            </FMTable>
                         </div>
@@ -502,13 +502,13 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                {/* Palmarés */}
                {selectedStaff.careerHonours && selectedStaff.careerHonours.length > 0 && (
                  <div>
-                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-300 pb-2">
+                   <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/20 pb-2">
                      <Trophy size={14} /> Palmarés
                    </h4>
-                   <div className="bg-white p-4 rounded-sm border border-slate-200 shadow-sm">
+                   <div className="bg-white/10 p-4 rounded-sm border border-white/10 shadow-sm">
                      <div className="flex flex-wrap gap-2">
                        {selectedStaff.careerHonours.map((honour, i) => (
-                         <span key={i} className="px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-sm text-amber-900 font-bold text-[11px] uppercase tracking-wide">
+                         <span key={i} className="px-3 py-1.5 bg-amber-500/10 border border-amber-300 rounded-sm text-amber-900 font-bold text-[11px] uppercase tracking-wide">
                            {honour}
                          </span>
                        ))}
@@ -520,22 +520,22 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
                {/* Clubes Anteriores */}
                {selectedStaff.previousClubs && selectedStaff.previousClubs.length > 0 && (
                  <div>
-                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-300 pb-2">
+                   <h4 className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/20 pb-2">
                      <MapPin size={14} /> Clubes Anteriores
                    </h4>
-                   <div className="bg-white rounded-sm border border-slate-200 shadow-sm overflow-hidden">
+                   <div className="bg-white/10 rounded-sm border border-white/10 shadow-sm overflow-hidden">
                      {selectedStaff.previousClubs.map((prev, i) => (
                        <div key={i} className="p-4 border-b border-slate-100 last:border-0">
                          <div className="flex justify-between items-start">
                            <div>
-                             <span className="text-slate-900 font-black text-sm">{prev.clubName}</span>
-                             <span className="text-slate-500 text-[10px] ml-2">{prev.years}</span>
+                             <span className="text-white/90 font-black text-sm">{prev.clubName}</span>
+                             <span className="text-white/50 text-[10px] ml-2">{prev.years}</span>
                            </div>
                          </div>
                          {prev.titles.length > 0 && (
                            <div className="flex flex-wrap gap-1 mt-2">
                              {prev.titles.map((t, j) => (
-                               <span key={j} className="px-2 py-0.5 bg-amber-50 border border-amber-200 rounded-sm text-amber-800 font-bold text-[9px]">
+                               <span key={j} className="px-2 py-0.5 bg-amber-500/10 border border-amber-200 rounded-sm text-amber-800 font-bold text-[9px]">
                                  {t}
                                </span>
                              ))}

@@ -34,12 +34,12 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub }) => {
   const confidenceColor = userClub.boardConfidence >= 70 ? 'text-green-600' : userClub.boardConfidence >= 40 ? 'text-amber-600' : 'text-red-600';
 
   return (
-    <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-y-auto pb-14">
+    <div className="p-2 md:p-4 h-full flex flex-col gap-4 overflow-y-auto pb-14">
       <header className="shrink-0">
-        <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase italic tracking-tighter flex items-center gap-2">
+        <h2 className="text-xl md:text-2xl font-black text-white/90 uppercase italic tracking-tighter flex items-center gap-2">
           <Award size={22} /> Directiva
         </h2>
-        <p className="text-slate-600 font-bold text-[10px] uppercase tracking-widest">
+        <p className="text-white/60 font-bold text-[10px] uppercase tracking-widest">
           Presenta tus propuestas a la junta directiva de {userClub.name}.
         </p>
       </header>
@@ -47,16 +47,16 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub }) => {
       <FMBox title="Confianza de la directiva">
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-slate-700">Nivel actual</span>
+            <span className="font-bold text-white/70">Nivel actual</span>
             <span className={`font-black text-lg ${confidenceColor}`}>{Math.round(userClub.boardConfidence)}%</span>
           </div>
-          <div className="h-4 bg-slate-300 rounded-sm overflow-hidden border border-slate-400">
+          <div className="h-4 bg-white/10/15 rounded-sm overflow-hidden border border-white/15">
             <div
-              className={`h-full transition-all ${userClub.boardConfidence >= 70 ? 'bg-green-500' : userClub.boardConfidence >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+              className={`h-full transition-all ${userClub.boardConfidence >= 70 ? 'bg-green-500' : userClub.boardConfidence >= 40 ? 'bg-amber-500/100' : 'bg-red-500'}`}
               style={{ width: `${userClub.boardConfidence}%` }}
             />
           </div>
-          <div className="text-[10px] text-slate-500 italic">
+          <div className="text-[10px] text-white/50 italic">
             {userClub.boardConfidence >= 70 ? 'Te tienen en alta estima. Probablemente aceptaran tus peticiones.' :
              userClub.boardConfidence >= 40 ? 'Estabilidad normal. Algunas peticiones seran aprobadas.' :
              'La confianza es baja. Las propuestas podrian ser rechazadas.'}
@@ -66,38 +66,38 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub }) => {
 
       <FMBox title="Saldo y finanzas">
         <div className="grid grid-cols-2 gap-3 text-[11px]">
-          <div className="bg-white border border-slate-300 p-3 rounded-sm">
-            <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Saldo</div>
-            <div className="font-black text-slate-900">${userClub.finances.balance.toLocaleString()}</div>
+          <div className="bg-white/10/10 border border-white/20 p-3 rounded-sm">
+            <div className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Saldo</div>
+            <div className="font-black text-white/90">${userClub.finances.balance.toLocaleString()}</div>
           </div>
-          <div className="bg-white border border-slate-300 p-3 rounded-sm">
-            <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Presupuesto Fichajes</div>
-            <div className="font-black text-green-700">${userClub.finances.transferBudget.toLocaleString()}</div>
+          <div className="bg-white/10/10 border border-white/20 p-3 rounded-sm">
+            <div className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">Presupuesto Fichajes</div>
+            <div className="font-black text-green-400">${userClub.finances.transferBudget.toLocaleString()}</div>
           </div>
         </div>
       </FMBox>
 
       <FMBox title="Mejoras de Instalaciones">
         <div className="space-y-2">
-          <div className="bg-white border border-slate-300 p-3 rounded-sm flex items-center justify-between gap-2">
+          <div className="bg-white/10/10 border border-white/20 p-3 rounded-sm flex items-center justify-between gap-2">
             <div className="flex-1 min-w-0">
               <div className="text-[10px] font-black uppercase flex items-center gap-2 mb-1">
                 <Building2 size={14} /> Entrenamiento
               </div>
-              <div className="text-[9px] text-slate-600">Nivel actual: <b>{userClub.trainingFacilities}/20</b></div>
-              <div className="text-[9px] text-slate-600">Costo proximo nivel: <b>${trainingCost.toLocaleString()}</b></div>
+              <div className="text-[9px] text-white/60">Nivel actual: <b>{userClub.trainingFacilities}/20</b></div>
+              <div className="text-[9px] text-white/60">Costo proximo nivel: <b>${trainingCost.toLocaleString()}</b></div>
             </div>
             <FMButton onClick={() => handleUpgrade('training')} disabled={userClub.trainingFacilities >= 20 || userClub.finances.balance < trainingCost} className="text-[10px] shrink-0">
               <ArrowUp size={12} /> Mejorar
             </FMButton>
           </div>
-          <div className="bg-white border border-slate-300 p-3 rounded-sm flex items-center justify-between gap-2">
+          <div className="bg-white/10/10 border border-white/20 p-3 rounded-sm flex items-center justify-between gap-2">
             <div className="flex-1 min-w-0">
               <div className="text-[10px] font-black uppercase flex items-center gap-2 mb-1">
                 <Users size={14} /> Juveniles
               </div>
-              <div className="text-[9px] text-slate-600">Nivel actual: <b>{userClub.youthFacilities}/20</b></div>
-              <div className="text-[9px] text-slate-600">Costo proximo nivel: <b>${youthCost.toLocaleString()}</b></div>
+              <div className="text-[9px] text-white/60">Nivel actual: <b>{userClub.youthFacilities}/20</b></div>
+              <div className="text-[9px] text-white/60">Costo proximo nivel: <b>${youthCost.toLocaleString()}</b></div>
             </div>
             <FMButton onClick={() => handleUpgrade('youth')} disabled={userClub.youthFacilities >= 20 || userClub.finances.balance < youthCost} className="text-[10px] shrink-0">
               <ArrowUp size={12} /> Mejorar
@@ -107,9 +107,9 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub }) => {
       </FMBox>
 
       <FMBox title="Aumento de Presupuesto de Fichajes">
-        <div className="bg-white border border-slate-300 p-3 rounded-sm">
+        <div className="bg-white/10/10 border border-white/20 p-3 rounded-sm">
           <div className="text-[10px] mb-2">Pide a la junta un aumento del 30% del presupuesto de fichajes actual</div>
-          <div className="text-[9px] text-slate-600 mb-3">Aumento solicitado: <b>${requestedAmount.toLocaleString()}</b></div>
+          <div className="text-[9px] text-white/60 mb-3">Aumento solicitado: <b>${requestedAmount.toLocaleString()}</b></div>
           <FMButton onClick={handleBudgetRequest} className="w-full text-[10px]" variant="primary">
             <DollarSign size={12} /> Solicitar aumento (${requestedAmount.toLocaleString()})
           </FMButton>
@@ -117,7 +117,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub }) => {
       </FMBox>
 
       {feedback && (
-        <div className={`p-3 rounded-sm border ${feedback.type === 'success' ? 'bg-green-100 border-green-400 text-green-900' : 'bg-red-100 border-red-400 text-red-900'} text-xs font-bold`}>
+        <div className={`p-3 rounded-sm border ${feedback.type === 'success' ? 'bg-green-500/15 border-green-400 text-green-900' : 'bg-red-100 border-red-400 text-red-900'} text-xs font-bold`}>
           {feedback.message}
         </div>
       )}

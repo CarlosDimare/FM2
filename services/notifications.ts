@@ -1,5 +1,24 @@
 const NOTIFICATION_KEY = 'fm_arg_notifications_enabled';
 
+// ─── Deep-linking: vista destino por tipo de notificación ───────────────────
+export type NotificationDeepLink = {
+  view: string;
+  params?: Record<string, string>;
+};
+
+const DEEP_LINK_MAP: Record<string, () => NotificationDeepLink> = {
+  match: () => ({ view: 'PRE_MATCH' }),
+  inbox: () => ({ view: 'INBOX' }),
+  transfer: () => ({ view: 'NEGOTIATIONS' }),
+  injury: () => ({ view: 'SENIOR_SQUAD' }),
+};
+
+/** Resuelve a qué vista navegar cuando el usuario toca una notificación */
+export const resolveNotificationDeepLink = (tag: string): NotificationDeepLink => {
+  const resolver = DEEP_LINK_MAP[tag];
+  return resolver ? resolver() : { view: 'HOME' };
+};
+
 export const isNotificationSupported = (): boolean => {
   return typeof window !== 'undefined' && 'Notification' in window;
 };

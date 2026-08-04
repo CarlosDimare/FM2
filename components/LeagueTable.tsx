@@ -111,16 +111,16 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
          {/* Controls */}
          <div className="flex flex-wrap gap-2 shrink-0">
              {onSquadTypeChange && (
-                 <div className="flex bg-[#bcc8bc] rounded-sm p-0.5 border border-[#a0b0a0] shadow-sm">
+                 <div className="flex bg-white/10/10 rounded-sm p-0.5 border border-white/10 shadow-sm">
                      {['SENIOR', 'RESERVE', 'U20'].map(t => (
-                         <button key={t} onClick={() => onSquadTypeChange(t as any)} className={`px-2 py-1 text-[9px] font-bold uppercase transition-all rounded-[1px] ${currentSquadType === t ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}>{t}</button>
+                         <button key={t} onClick={() => onSquadTypeChange(t as any)} className={`px-2 py-1 text-[9px] font-bold uppercase transition-all rounded-[1px] ${currentSquadType === t ? 'bg-white/25 text-white shadow-sm' : 'text-white/70 hover:bg-white/10'}`}>{t}</button>
                      ))}
                  </div>
              )}
              {allLeagues && onLeagueChange && (
-                 <div className="flex bg-[#bcc8bc] rounded-sm p-0.5 border border-[#a0b0a0] overflow-x-auto scrollbar-hide shadow-sm max-w-full">
+                 <div className="flex bg-white/10/10 rounded-sm p-0.5 border border-white/10 overflow-x-auto scrollbar-hide shadow-sm max-w-full">
                      {allLeagues.map(l => (
-                         <button key={l.id} onClick={() => onLeagueChange(l.id)} className={`px-2 py-1 text-[9px] font-bold whitespace-nowrap transition-all rounded-[1px] uppercase ${currentLeagueId === l.id ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}>{l.name}</button>
+                         <button key={l.id} onClick={() => onLeagueChange(l.id)} className={`px-2 py-1 text-[9px] font-bold whitespace-nowrap transition-all rounded-[1px] uppercase ${currentLeagueId === l.id ? 'bg-white/25 text-white shadow-sm' : 'text-white/70 hover:bg-white/10'}`}>{l.name}</button>
                      ))}
                  </div>
              )}
@@ -134,24 +134,24 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
                              {entries.length > 0 ? entries.map((e, i) => (
                                  <tr key={e.clubId} className={`
                                      transition-colors
-                                     ${e.clubId === userClubId ? 'bg-blue-50' : i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
-                                     hover:bg-[#ccd9cc]
+                                     ${e.clubId === userClubId ? 'bg-blue-500/10' : i % 2 === 0 ? 'bg-white' : 'bg-white/5'}
+                                     hover:bg-white/10
                                      ${getRowClass(i)}
                                  `}>
-                                     <FMTableCell className="text-center font-bold text-slate-500">
+                                     <FMTableCell className="text-center font-bold text-white/50">
                                      <div className="flex items-center justify-center gap-1">
                                          {i + 1} {getStatusLabel(i)}
                                      </div>
                                      </FMTableCell>
                                      <FMTableCell className={`font-bold truncate max-w-[120px] ${e.clubId === userClubId ? 'text-blue-800' : 'text-[#1a1a1a]'}`}>{e.clubName}</FMTableCell>
                                      <FMTableCell className="text-center" isNumber>{e.played}</FMTableCell>
-                                     <FMTableCell className="text-center text-green-700" isNumber>{e.won}</FMTableCell>
-                                     <FMTableCell className="text-center text-slate-500" isNumber>{e.drawn}</FMTableCell>
-                                     <FMTableCell className="text-center text-red-700" isNumber>{e.lost}</FMTableCell>
-                                     <FMTableCell className="text-center font-black bg-slate-100/50" isNumber>{e.points}</FMTableCell>
+                                     <FMTableCell className="text-center text-green-400" isNumber>{e.won}</FMTableCell>
+                                     <FMTableCell className="text-center text-white/50" isNumber>{e.drawn}</FMTableCell>
+                                     <FMTableCell className="text-center text-red-400" isNumber>{e.lost}</FMTableCell>
+                                     <FMTableCell className="text-center font-black bg-white/10/10/50" isNumber>{e.points}</FMTableCell>
                                  </tr>
                              )) : (
-                                 <tr><td colSpan={7} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">No se han encontrado datos</td></tr>
+                                 <tr><td colSpan={7} className="p-4 text-center text-white/40 italic text-[10px] uppercase font-bold">No se han encontrado datos</td></tr>
                              )}
                          </FMTable>
                      </div>
@@ -160,25 +160,25 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
                              {entries.length > 0 ? entries.map((e, i) => (
                                  <tr key={e.clubId} className={`
                                      transition-colors
-                                     ${e.clubId === userClubId ? 'bg-blue-50' : i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
-                                     hover:bg-[#ccd9cc]
+                                     ${e.clubId === userClubId ? 'bg-blue-500/10' : i % 2 === 0 ? 'bg-white' : 'bg-white/5'}
+                                     hover:bg-white/10
                                      ${getRowClass(i)}
                                  `}>
-                                     <FMTableCell className="text-center font-bold text-slate-500">
+                                     <FMTableCell className="text-center font-bold text-white/50">
                                      <div className="flex items-center justify-center gap-1">
                                          {i + 1} {getStatusLabel(i)}
                                      </div>
                                      </FMTableCell>
                                      <FMTableCell className={`font-bold truncate max-w-[120px] ${e.clubId === userClubId ? 'text-blue-800' : 'text-[#1a1a1a]'}`}>{e.clubName}</FMTableCell>
                                      <FMTableCell className="text-center" isNumber>{e.played}</FMTableCell>
-                                     <FMTableCell className="text-center text-green-700" isNumber>{e.won}</FMTableCell>
-                                     <FMTableCell className="text-center text-slate-500" isNumber>{e.drawn}</FMTableCell>
-                                     <FMTableCell className="text-center text-red-700" isNumber>{e.lost}</FMTableCell>
+                                     <FMTableCell className="text-center text-green-400" isNumber>{e.won}</FMTableCell>
+                                     <FMTableCell className="text-center text-white/50" isNumber>{e.drawn}</FMTableCell>
+                                     <FMTableCell className="text-center text-red-400" isNumber>{e.lost}</FMTableCell>
                                      <FMTableCell className="text-center" isNumber>{e.gd}</FMTableCell>
-                                     <FMTableCell className="text-center font-black bg-slate-100/50" isNumber>{e.points}</FMTableCell>
+                                     <FMTableCell className="text-center font-black bg-white/10/10/50" isNumber>{e.points}</FMTableCell>
                                  </tr>
                              )) : (
-                                 <tr><td colSpan={8} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">No se han encontrado datos</td></tr>
+                                 <tr><td colSpan={8} className="p-4 text-center text-white/40 italic text-[10px] uppercase font-bold">No se han encontrado datos</td></tr>
                              )}
                          </FMTable>
                      </div>
@@ -187,19 +187,19 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
                             {entries.length > 0 ? entries.map((e, i) => (
                                 <tr key={e.clubId} className={`
                                     transition-colors
-                                    ${e.clubId === userClubId ? 'bg-blue-50' : i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}
-                                    hover:bg-[#ccd9cc]
+                                    ${e.clubId === userClubId ? 'bg-blue-500/10' : i % 2 === 0 ? 'bg-white' : 'bg-white/5'}
+                                    hover:bg-white/10
                                     ${getRowClass(i)}
                                 `}>
-                                    <FMTableCell className="text-center font-bold text-slate-500 text-[9px]">
+                                    <FMTableCell className="text-center font-bold text-white/50 text-[9px]">
                                         {i + 1}
                                     </FMTableCell>
                                     <FMTableCell className={`font-bold truncate text-[10px] ${e.clubId === userClubId ? 'text-blue-800' : 'text-[#1a1a1a]'}`}>{e.clubName}</FMTableCell>
                                     <FMTableCell className="text-center text-[10px]" isNumber>{e.played}</FMTableCell>
-                                    <FMTableCell className="text-center font-black bg-slate-100/50 text-[10px]" isNumber>{e.points}</FMTableCell>
+                                    <FMTableCell className="text-center font-black bg-white/10/10/50 text-[10px]" isNumber>{e.points}</FMTableCell>
                                 </tr>
                             )) : (
-                                <tr><td colSpan={4} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin datos</td></tr>
+                                <tr><td colSpan={4} className="p-4 text-center text-white/40 italic text-[10px] uppercase font-bold">Sin datos</td></tr>
                             )}
                         </FMTable>
                     </div>
@@ -208,37 +208,37 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
 
              <div className="h-full flex flex-col min-h-0">
                  <FMBox title="Estadísticas del Torneo" className="h-full flex flex-col overflow-hidden" noPadding>
-                    <div className="flex bg-[#bcc8bc] p-0.5 border-b border-[#a0b0a0] shrink-0">
+                    <div className="flex bg-white/10/10 p-0.5 border-b border-white/10 shrink-0">
                        {([['SCORERS', 'Goleadores'], ['ASSISTS', 'Asistencias'], ['BEST_XI', 'Mejor XI']] as const).map(([key, label]) => (
-                          <button key={key} onClick={() => setStatsTab(key)} className={`flex-1 px-2 py-1.5 text-[8px] font-black uppercase transition-all rounded-[1px] ${statsTab === key ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}>{label}</button>
+                          <button key={key} onClick={() => setStatsTab(key)} className={`flex-1 px-2 py-1.5 text-[8px] font-black uppercase transition-all rounded-[1px] ${statsTab === key ? 'bg-white/25 text-white shadow-sm' : 'text-white/70 hover:bg-white/10'}`}>{label}</button>
                        ))}
                     </div>
                     <div className="flex-1 overflow-y-auto">
                        {statsTab === 'SCORERS' && (
                           <FMTable headers={['#', 'Nombre', 'Goles']} colWidths={['35px', 'auto', '45px']}>
                              {topScorers.filter(p => getCompGoals(p) > 0).map((p, i) => (
-                                <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc]`}>
-                                   <FMTableCell className="text-center text-slate-400 font-bold">{i + 1}</FMTableCell>
+                                <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10`}>
+                                   <FMTableCell className="text-center text-white/40 font-bold">{i + 1}</FMTableCell>
                                    <FMTableCell className="truncate max-w-[100px] font-bold">{p.name}</FMTableCell>
-                                   <FMTableCell className="text-center font-black text-green-700" isNumber>{getCompGoals(p)}</FMTableCell>
+                                   <FMTableCell className="text-center font-black text-green-400" isNumber>{getCompGoals(p)}</FMTableCell>
                                 </tr>
                              ))}
                              {topScorers.every(p => getCompGoals(p) === 0) && (
-                                <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin goles registrados</td></tr>
+                                <tr><td colSpan={3} className="p-4 text-center text-white/40 italic text-[10px] uppercase font-bold">Sin goles registrados</td></tr>
                              )}
                           </FMTable>
                        )}
                        {statsTab === 'ASSISTS' && (
                           <FMTable headers={['#', 'Nombre', 'Asist.']} colWidths={['35px', 'auto', '45px']}>
                              {topAssisters.filter(p => getCompAssists(p) > 0).map((p, i) => (
-                                <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc]`}>
-                                   <FMTableCell className="text-center text-slate-400 font-bold">{i + 1}</FMTableCell>
+                                <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10`}>
+                                   <FMTableCell className="text-center text-white/40 font-bold">{i + 1}</FMTableCell>
                                    <FMTableCell className="truncate max-w-[100px] font-bold">{p.name}</FMTableCell>
                                    <FMTableCell className="text-center font-black text-blue-700" isNumber>{getCompAssists(p)}</FMTableCell>
                                 </tr>
                              ))}
                              {topAssisters.every(p => getCompAssists(p) === 0) && (
-                                <tr><td colSpan={3} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin asistencias registradas</td></tr>
+                                <tr><td colSpan={3} className="p-4 text-center text-white/40 italic text-[10px] uppercase font-bold">Sin asistencias registradas</td></tr>
                              )}
                           </FMTable>
                        )}
@@ -247,16 +247,16 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
                              {bestXI.map((p, i) => {
                                 const club = world.getClub(p.clubId);
                                 return (
-                                <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc]`}>
+                                <tr key={p.id} className={`transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-white/5'} hover:bg-white/10`}>
                                    <FMTableCell className="text-center font-black text-[#3a4a3a]">{p.positions[0]}</FMTableCell>
                                    <FMTableCell className="truncate max-w-[80px] font-bold">{p.name}</FMTableCell>
-                                   <FMTableCell className="truncate max-w-[70px] text-[9px] text-slate-500">{club?.shortName || '-'}</FMTableCell>
-                                   <FMTableCell className="text-center font-black text-green-700" isNumber>{getCompRating(p).toFixed(2)}</FMTableCell>
+                                   <FMTableCell className="truncate max-w-[70px] text-[9px] text-white/50">{club?.shortName || '-'}</FMTableCell>
+                                   <FMTableCell className="text-center font-black text-green-400" isNumber>{getCompRating(p).toFixed(2)}</FMTableCell>
                                 </tr>
                                 );
                              })}
                              {bestXI.length === 0 && (
-                                <tr><td colSpan={4} className="p-4 text-center text-slate-400 italic text-[10px] uppercase font-bold">Sin datos de rating</td></tr>
+                                <tr><td colSpan={4} className="p-4 text-center text-white/40 italic text-[10px] uppercase font-bold">Sin datos de rating</td></tr>
                              )}
                           </FMTable>
                        )}

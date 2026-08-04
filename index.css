@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -87,3 +89,131 @@ body {
 .dark .bg-gradient-to-r { background-image: none !important; }
 .dark .from-slate-200 { --tw-gradient-from: #2a2e36 !important; }
 .dark .to-slate-300 { --tw-gradient-to: #323640 !important; }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   TYPOGRAPHY — Fuente condensada para títulos (estilo cartel deportivo)
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+  --font-display: 'Oswald', 'Impact', 'Arial Narrow', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Títulos de pantalla — estilo marcador de estadio */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Cuerpo de texto — alta legibilidad */
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   BOTTOM NAVIGATION — Mejoras visuales
+   ────────────────────────────────────────────────────────────────────────── */
+nav button .active-dot {
+  animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   SCREEN TRANSITIONS — Transiciones suaves entre vistas
+   ────────────────────────────────────────────────────────────────────────── */
+.screen-enter {
+  animation: screenEnter 200ms ease-out;
+}
+
+@keyframes screenEnter {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   BACKGROUND LAYER ANIMATIONS — Crossfade + subtle movement
+   ────────────────────────────────────────────────────────────────────────── */
+@keyframes bgFadeIn {
+  0% { opacity: 0; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes texFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes emojiEntrance {
+  0% { opacity: 0; transform: scale(0.8) rotate(-5deg); }
+  60% { opacity: 0.04; transform: scale(1.02) rotate(1deg); }
+  100% { opacity: 0.04; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes overlayFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes contentEntrance {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-bg-fadein {
+  animation: bgFadeIn 400ms ease-out both;
+}
+
+.animate-tex-fadein {
+  animation: texFadeIn 500ms ease-out 100ms both;
+}
+
+.animate-emoji-entrance {
+  animation: emojiEntrance 600ms ease-out 50ms both;
+}
+
+.animate-overlay-fadein {
+  animation: overlayFadeIn 350ms ease-out 50ms both;
+}
+
+.animate-content-entrance {
+  animation: contentEntrance 300ms ease-out 150ms both;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   DEPARTMENT TILES — Glow y hover effects
+   ────────────────────────────────────────────────────────────────────────── */
+.dept-tile {
+  transition: all 0.2s ease;
+}
+
+.dept-tile:active {
+  transform: scale(0.95);
+}
+
+.dept-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s;
+  background: radial-gradient(circle at center, currentColor 0%, transparent 70%);
+}
+
+.dept-tile:hover::after {
+  opacity: 0.1;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   RESPONSIVE — Desktop sidebar improvements
+   ────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  .desktop-sidebar-nav {
+    display: flex;
+  }
+}

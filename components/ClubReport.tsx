@@ -64,7 +64,7 @@ const KitVisual: React.FC<{ primary: string, secondary: string, label: string }>
            <Shield size={20} className="text-black" />
         </div>
       </div>
-      <span className="mt-3 text-[10px] font-black uppercase text-slate-600 tracking-[0.2em] bg-slate-100 px-3 py-0.5 border border-slate-300 rounded-sm shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-colors">
+      <span className="mt-3 text-[10px] font-black uppercase text-white/60 tracking-[0.2em] bg-white/10/10 px-3 py-0.5 border border-white/20 rounded-sm shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-colors">
         {label}
       </span>
     </div>
@@ -105,32 +105,32 @@ export const ClubReport: React.FC<ClubReportProps> = ({ club }) => {
   };
 
   const InfoRow = ({ label, value, children, isGreen = false }: { label: string, value?: string, children?: React.ReactNode, isGreen?: boolean }) => (
-    <div className="flex border-b border-[#a0b0a0] last:border-0 hover:bg-[#ccd9cc] transition-colors">
-       <div className="w-1/2 bg-[#e8ece8]/50 p-2 text-[10px] font-black text-slate-600 uppercase tracking-wide border-r border-[#a0b0a0] flex items-center" style={{ fontFamily: 'Verdana, sans-serif' }}>
+    <div className="flex border-b border-white/10 last:border-0 hover:bg-white/10 transition-colors">
+       <div className="w-1/2 bg-white/10/10/50 p-2 text-[10px] font-black text-white/60 uppercase tracking-wide border-r border-white/10 flex items-center" style={{ fontFamily: 'Verdana, sans-serif' }}>
           {label}
        </div>
-       <div className={`w-1/2 p-2 text-xs font-bold ${isGreen ? 'text-green-700' : 'text-slate-800'} flex items-center gap-2`} style={{ fontFamily: 'Verdana, sans-serif' }}>
+       <div className={`w-1/2 p-2 text-xs font-bold ${isGreen ? 'text-green-400' : 'text-white/80'} flex items-center gap-2`} style={{ fontFamily: 'Verdana, sans-serif' }}>
           {value || children}
        </div>
     </div>
   );
 
   return (
-    <div className="flex-1 p-2 md:p-4 overflow-y-auto flex flex-col gap-4 bg-[#d4dcd4]">
+    <div className="flex-1 p-2 md:p-4 overflow-y-auto flex flex-col gap-4">
       <FMBox title={`Información del Club - ${club.name}`} noPadding>
-        <div className="flex flex-col lg:flex-row bg-white">
-          <div className="p-6 flex flex-col items-center justify-center bg-[#f0f4f0] border-r border-[#a0b0a0] lg:w-1/3">
-            <div className="w-32 h-32 bg-white border-4 border-slate-300 shadow-lg flex items-center justify-center rounded-sm relative overflow-hidden mb-4">
+        <div className="flex flex-col lg:flex-row bg-white/10">
+          <div className="p-6 flex flex-col items-center justify-center bg-white/10/5 border-r border-white/10 lg:w-1/3">
+            <div className="w-32 h-32 bg-white/10 border-4 border-white/20 shadow-lg flex items-center justify-center rounded-sm relative overflow-hidden mb-4">
               <div className={`absolute inset-0 opacity-20 ${club.primaryColor}`}></div>
-              <span className="text-6xl font-black z-10 text-slate-900 italic">
+              <span className="text-6xl font-black z-10 text-white/90 italic">
                 {club.shortName.substring(0, 1)}
               </span>
             </div>
-            <h2 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter text-center leading-none">{club.name}</h2>
-            <div className="mt-3 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-[#e8ece8] border border-[#a0b0a0] px-4 py-1 rounded-full">{club.country}</div>
+            <h2 className="text-2xl font-black text-white/90 uppercase italic tracking-tighter text-center leading-none">{club.name}</h2>
+            <div className="mt-3 text-[10px] font-black text-white/50 uppercase tracking-widest bg-white/10/10 border border-white/10 px-4 py-1 rounded-full">{club.country}</div>
           </div>
 
-          <div className="flex-1 border-t lg:border-t-0 lg:border-l border-[#a0b0a0]">
+          <div className="flex-1 border-t lg:border-t-0 lg:border-l border-white/10">
             <InfoRow label="Nombre Completo" value={club.name} />
             <InfoRow label="Estadio" value={club.stadium} />
             <InfoRow label="Reputación" isGreen>
@@ -149,15 +149,15 @@ export const ClubReport: React.FC<ClubReportProps> = ({ club }) => {
         {club.records.allTimeTopScorer && (
           <FMBox title="Récords Históricos">
             <div className="grid grid-cols-2 gap-3 text-[10px]">
-              <div className="bg-slate-50 p-3 rounded border border-slate-200">
-                <span className="text-slate-500 uppercase text-[8px] font-black">Máximo Goleador</span>
-                <div className="font-black text-slate-900 mt-1">{club.records.allTimeTopScorer.playerName}</div>
-                <div className="text-green-700 font-bold">{club.records.allTimeTopScorer.goals} goles</div>
+              <div className="bg-white/10/5 p-3 rounded border border-white/10">
+                <span className="text-white/50 uppercase text-[8px] font-black">Máximo Goleador</span>
+                <div className="font-black text-white/90 mt-1">{club.records.allTimeTopScorer.playerName}</div>
+                <div className="text-green-400 font-bold">{club.records.allTimeTopScorer.goals} goles</div>
               </div>
               {club.records.allTimeMostApps && (
-                <div className="bg-slate-50 p-3 rounded border border-slate-200">
-                  <span className="text-slate-500 uppercase text-[8px] font-black">Más Partidos</span>
-                  <div className="font-black text-slate-900 mt-1">{club.records.allTimeMostApps.playerName}</div>
+                <div className="bg-white/10/5 p-3 rounded border border-white/10">
+                  <span className="text-white/50 uppercase text-[8px] font-black">Más Partidos</span>
+                  <div className="font-black text-white/90 mt-1">{club.records.allTimeMostApps.playerName}</div>
                   <div className="text-blue-700 font-bold">{club.records.allTimeMostApps.apps} partidos</div>
                 </div>
               )}
@@ -169,14 +169,14 @@ export const ClubReport: React.FC<ClubReportProps> = ({ club }) => {
             <FMTable headers={['Año', 'Competición']} colWidths={['60px', 'auto']}>
               {club.honours.length > 0 ? (
                 club.honours.map((h, i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'}>
-                    <FMTableCell className="font-mono text-slate-600 font-bold">{h.year}</FMTableCell>
-                    <FMTableCell className="text-slate-900 font-bold italic">🏆 {h.name}</FMTableCell>
+                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-white/5'}>
+                    <FMTableCell className="font-mono text-white/60 font-bold">{h.year}</FMTableCell>
+                    <FMTableCell className="text-white/90 font-bold italic">🏆 {h.name}</FMTableCell>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={2} className="p-12 text-center text-slate-400 italic text-[10px] uppercase font-black">Sin títulos en el registro</td>
+                  <td colSpan={2} className="p-12 text-center text-white/40 italic text-[10px] uppercase font-black">Sin títulos en el registro</td>
                 </tr>
               )}
             </FMTable>
@@ -185,21 +185,21 @@ export const ClubReport: React.FC<ClubReportProps> = ({ club }) => {
 
         <div className="flex flex-col gap-4">
           <FMBox title="Equipación Oficial">
-            <div className="flex justify-around items-center h-full py-8 bg-white border-b border-[#a0b0a0]">
+            <div className="flex justify-around items-center h-full py-8 bg-white/10 border-b border-white/10">
               <KitVisual primary={club.primaryColor} secondary={club.secondaryColor} label="Titular" />
               <KitVisual primary={club.secondaryColor} secondary={club.primaryColor} label="Alternativa" />
             </div>
           </FMBox>
 
           <FMBox title="Presupuestos" noPadding>
-            <div className="p-4 space-y-3 bg-white">
+            <div className="p-4 space-y-3 bg-white/10">
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Fichajes Restante</span>
-                <span className="text-sm font-black text-green-700">£{club.finances.transferBudget.toLocaleString()}</span>
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Fichajes Restante</span>
+                <span className="text-sm font-black text-green-400">£{club.finances.transferBudget.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sueldos Mensual</span>
-                <span className="text-sm font-black text-slate-900">£{club.finances.wageBudget.toLocaleString()}</span>
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Sueldos Mensual</span>
+                <span className="text-sm font-black text-white/90">£{club.finances.wageBudget.toLocaleString()}</span>
               </div>
             </div>
           </FMBox>

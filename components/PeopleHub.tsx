@@ -3,7 +3,7 @@ import { Player, Staff, Club, ManagerNetworkEntry, PressStatementTopic } from '.
 import { world } from '../services/worldManager';
 import { DialogueSystem } from '../services/dialogueSystem';
 import { FMBox, FMButton } from './FMUI';
-import { useUIStore } from '../stores/uiStore';
+import { useUserStore } from '../stores/userStore';
 import { Users, MessageSquare, AlertTriangle, Heart, Swords, Briefcase, Building2, X, DollarSign, Dumbbell, Newspaper, Radio, Handshake } from 'lucide-react';
 
 interface PeopleHubProps {
@@ -22,7 +22,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
   const [interactionTone, setInteractionTone] = useState<'MILD' | 'MODERATE' | 'AGGRESSIVE'>('MILD');
   const [lastResult, setLastResult] = useState<string | null>(null);
 
-  const { selectedNationalTeamId } = useUIStore();
+  const { selectedNationalTeamId } = useUserStore();
   const isNationalOnly = !userClub;
 
   // En modo club se listan los jugadores del primer equipo; en modo selección, la convocatoria controlada.
@@ -95,31 +95,31 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
   };
 
   const getRelationshipColor = (rel: { trust: number; respect: number; tension: number } | undefined) => {
-    if (!rel) return 'text-slate-500';
+    if (!rel) return 'text-white/50';
     if (rel.tension >= 70) return 'text-red-600';
     if (rel.tension >= 40) return 'text-amber-600';
     if (rel.trust >= 70) return 'text-green-600';
-    return 'text-slate-500';
+    return 'text-white/50';
   };
 
   return (
-    <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-y-auto pb-14">
+    <div className="p-2 md:p-4 h-full flex flex-col gap-4 overflow-y-auto pb-14">
       <header className="shrink-0">
-        <h2 className="text-xl md:text-2xl font-black text-slate-900 uppercase italic tracking-tighter flex items-center gap-2">
+        <h2 className="text-xl md:text-2xl font-black text-white/90 uppercase italic tracking-tighter flex items-center gap-2">
           <Users size={22} /> Centro de Personas
         </h2>
-        <p className="text-slate-600 font-bold text-[10px] uppercase tracking-widest">
+        <p className="text-white/60 font-bold text-[10px] uppercase tracking-widest">
           {isNationalOnly ? 'Gestiona relaciones y comunicación con tus convocados internacionales.' : 'Gestiona relaciones, tensiones y comunicación con jugadores, staff y directiva.'}
         </p>
       </header>
 
-      <div className="flex gap-2 border-b border-slate-300">
+      <div className="flex gap-2 border-b border-white/20">
         {tabs.map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`px-3 py-2 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${
-              tab === t ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'
+              tab === t ? 'border-slate-900 text-white/90' : 'border-transparent text-white/50 hover:text-white/70'
             }`}
           >
             {t === 'PLAYERS' ? 'Jugadores' : t === 'STAFF' ? 'Cuerpo Técnico' : t === 'RELATIONSHIPS' ? 'Relaciones' : t === 'PRESS' ? 'Prensa' : t === 'MANAGERS' ? 'Red de DT' : 'Directiva'}
@@ -129,19 +129,19 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
 
       {tab === 'PLAYERS' && (
         <div className="space-y-2">
-          {players.length === 0 && <div className="text-center text-slate-400 text-[10px] italic py-8">Sin jugadores disponibles.</div>}
+          {players.length === 0 && <div className="text-center text-white/40 text-[10px] italic py-8">Sin jugadores disponibles.</div>}
           {players.map(player => {
             const rel = world.getRelationship('COACH', player.id);
-            const moraleColor = player.morale >= 70 ? 'text-green-700' : player.morale >= 40 ? 'text-amber-600' : 'text-red-600';
+            const moraleColor = player.morale >= 70 ? 'text-green-400' : player.morale >= 40 ? 'text-amber-600' : 'text-red-600';
             return (
-              <div key={player.id} className="bg-white border border-slate-300 p-3 rounded-sm">
+              <div key={player.id} className="bg-white/10/10 border border-white/20 p-3 rounded-sm">
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <div className="font-black text-slate-900 text-sm">{player.name}</div>
-                    <div className="text-[10px] text-slate-500 font-bold uppercase">Moral: <span className={moraleColor}>{Math.round(player.morale)}%</span></div>
+                    <div className="font-black text-white/90 text-sm">{player.name}</div>
+                    <div className="text-[10px] text-white/50 font-bold uppercase">Moral: <span className={moraleColor}>{Math.round(player.morale)}%</span></div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] font-black uppercase text-slate-500">Relación</div>
+                    <div className="text-[10px] font-black uppercase text-white/50">Relación</div>
                     <div className={`text-[10px] font-black ${getRelationshipColor(rel)}`}>{getRelationshipLabel(rel)}</div>
                   </div>
                 </div>
@@ -160,14 +160,14 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
           {staff.map(member => {
             const rel = world.getRelationship('COACH', member.id);
             return (
-              <div key={member.id} className="bg-white border border-slate-300 p-3 rounded-sm">
+              <div key={member.id} className="bg-white/10/10 border border-white/20 p-3 rounded-sm">
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <div className="font-black text-slate-900 text-sm">{member.name}</div>
-                    <div className="text-[10px] text-slate-500 font-bold uppercase">{member.role}</div>
+                    <div className="font-black text-white/90 text-sm">{member.name}</div>
+                    <div className="text-[10px] text-white/50 font-bold uppercase">{member.role}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-[10px] font-black uppercase text-slate-500">Relación</div>
+                    <div className="text-[10px] font-black uppercase text-white/50">Relación</div>
                     <div className={`text-[10px] font-black ${getRelationshipColor(rel)}`}>{getRelationshipLabel(rel)}</div>
                   </div>
                 </div>
@@ -193,26 +193,26 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
             </div>
             <div className="space-y-2">
               {latestNews.map(news => (
-                <div key={news.id} className="bg-white border border-slate-200 p-3 rounded-sm">
+                <div key={news.id} className="bg-white/10/10 border border-white/10 p-3 rounded-sm">
                   <div className="flex justify-between gap-2">
-                    <span className="text-[9px] font-black uppercase text-slate-500">{news.type} · {news.category}</span>
-                    <span className="text-[9px] text-slate-400">{new Date(news.date).toLocaleDateString()}</span>
+                    <span className="text-[9px] font-black uppercase text-white/50">{news.type} · {news.category}</span>
+                    <span className="text-[9px] text-white/40">{new Date(news.date).toLocaleDateString()}</span>
                   </div>
-                  <div className="text-[11px] font-black text-slate-900 mt-1">{news.headline}</div>
-                  <div className="text-[10px] text-slate-600 mt-1">{news.subheadline}</div>
+                  <div className="text-[11px] font-black text-white/90 mt-1">{news.headline}</div>
+                  <div className="text-[10px] text-white/60 mt-1">{news.subheadline}</div>
                 </div>
               ))}
-              {latestNews.length === 0 && <div className="text-center text-slate-400 text-[10px] italic py-8">Todavía no hay noticias de prensa.</div>}
+              {latestNews.length === 0 && <div className="text-center text-white/40 text-[10px] italic py-8">Todavía no hay noticias de prensa.</div>}
             </div>
           </FMBox>
           <FMBox title="Tono público">
             <div className="space-y-2">
               {(['MILD', 'MODERATE', 'AGGRESSIVE'] as const).map(tone => (
-                <button key={tone} onClick={() => setInteractionTone(tone)} className={`w-full py-2 border-2 text-[10px] font-black uppercase ${interactionTone === tone ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-slate-300 text-slate-600'}`}>
+                <button key={tone} onClick={() => setInteractionTone(tone)} className={`w-full py-2 border-2 text-[10px] font-black uppercase ${interactionTone === tone ? 'bg-white/30 text-white border-white/30' : 'bg-white border-white/20 text-white/60'}`}>
                   {tone === 'MILD' ? 'Sereno' : tone === 'MODERATE' ? 'Profesional' : 'Desafiante'}
                 </button>
               ))}
-              {lastResult && <div className="mt-3 bg-slate-100 border border-slate-200 p-3 text-[10px] text-slate-700">{lastResult}</div>}
+              {lastResult && <div className="mt-3 bg-white/10/10 border border-white/10 p-3 text-[10px] text-white/70">{lastResult}</div>}
             </div>
           </FMBox>
         </div>
@@ -221,25 +221,25 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
       {tab === 'MANAGERS' && (
         <div className="space-y-3">
           <FMBox title="Red de Entrenadores">
-            <p className="text-[10px] text-slate-500 mb-3">Construye reputación, alianzas y rivalidades con los técnicos de tu entorno.</p>
+            <p className="text-[10px] text-white/50 mb-3">Construye reputación, alianzas y rivalidades con los técnicos de tu entorno.</p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
               {managerNetwork.map(manager => (
-                <div key={manager.managerId} className="bg-white border border-slate-300 p-3 rounded-sm">
+                <div key={manager.managerId} className="bg-white/10/10 border border-white/20 p-3 rounded-sm">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="font-black text-slate-900 text-sm">{manager.managerName}</div>
-                      <div className="text-[10px] text-slate-500 font-bold uppercase">{manager.clubName} · {manager.country}</div>
-                      <div className="text-[9px] text-slate-500 uppercase mt-1">Reputación {Math.round(manager.reputation)} · Relación {getRelationshipLabel(manager.relationship)}</div>
+                      <div className="font-black text-white/90 text-sm">{manager.managerName}</div>
+                      <div className="text-[10px] text-white/50 font-bold uppercase">{manager.clubName} · {manager.country}</div>
+                      <div className="text-[9px] text-white/50 uppercase mt-1">Reputación {Math.round(manager.reputation)} · Relación {getRelationshipLabel(manager.relationship)}</div>
                     </div>
                     <Handshake size={18} className={getRelationshipColor(manager.relationship)} />
                   </div>
                   <FMButton onClick={() => handleManagerContact(manager)} className="text-[10px] mt-3" variant="secondary"><Handshake size={12} /> Contactar</FMButton>
                 </div>
               ))}
-              {managerNetwork.length === 0 && <div className="text-center text-slate-400 text-[10px] italic py-8">No hay otros entrenadores disponibles todavía.</div>}
+              {managerNetwork.length === 0 && <div className="text-center text-white/40 text-[10px] italic py-8">No hay otros entrenadores disponibles todavía.</div>}
             </div>
           </FMBox>
-          {selectedManager && lastResult && <div className="bg-white border-2 border-slate-400 p-4 text-[11px] text-slate-700"><b>{selectedManager.managerName}:</b> {lastResult}</div>}
+          {selectedManager && lastResult && <div className="bg-white/10/10 border-2 border-white/15 p-4 text-[11px] text-white/70"><b>{selectedManager.managerName}:</b> {lastResult}</div>}
         </div>
       )}
 
@@ -247,21 +247,21 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
         <FMBox title="Red de Relaciones">
           <div className="space-y-2">
             {recentInteractions.map(interaction => (
-              <div key={interaction.id} className="bg-white border border-slate-200 p-3 rounded-sm">
+              <div key={interaction.id} className="bg-white/10/10 border border-white/10 p-3 rounded-sm">
                 <div className="flex items-center justify-between mb-1">
-                  <div className="text-[10px] font-black uppercase text-slate-500">
+                  <div className="text-[10px] font-black uppercase text-white/50">
                     {interaction.channel === 'COACH_PLAYER' ? 'DT ↔ Jugador' : interaction.channel === 'COACH_STAFF' ? 'DT ↔ Staff' : 'DT ↔ Directiva'}
                   </div>
-                  <div className={`text-[10px] font-black ${interaction.result === 'POSITIVE' ? 'text-green-600' : interaction.result === 'NEGATIVE' ? 'text-red-600' : 'text-slate-500'}`}>
+                  <div className={`text-[10px] font-black ${interaction.result === 'POSITIVE' ? 'text-green-600' : interaction.result === 'NEGATIVE' ? 'text-red-600' : 'text-white/50'}`}>
                     {interaction.result === 'POSITIVE' ? 'Positivo' : interaction.result === 'NEGATIVE' ? 'Negativo' : 'Neutral'}
                   </div>
                 </div>
-                <div className="text-[11px] text-slate-700">{interaction.description}</div>
-                <div className="text-[9px] text-slate-400 mt-1">{interaction.date.toLocaleDateString()}</div>
+                <div className="text-[11px] text-white/70">{interaction.description}</div>
+                <div className="text-[9px] text-white/40 mt-1">{interaction.date.toLocaleDateString()}</div>
               </div>
             ))}
             {recentInteractions.length === 0 && (
-              <div className="text-center text-slate-400 text-[10px] italic">Sin interacciones recientes</div>
+              <div className="text-center text-white/40 text-[10px] italic">Sin interacciones recientes</div>
             )}
           </div>
         </FMBox>
@@ -270,15 +270,15 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
       {tab === 'BOARD' && userClub && (
         <FMBox title="Relación con la Directiva">
           <div className="space-y-3">
-            <div className="bg-white border border-slate-300 p-4 rounded-sm">
-              <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Confianza de la directiva</div>
-              <div className="h-4 bg-slate-300 rounded-sm overflow-hidden border border-slate-400">
+            <div className="bg-white/10/10 border border-white/20 p-4 rounded-sm">
+              <div className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-2">Confianza de la directiva</div>
+              <div className="h-4 bg-white/10/15 rounded-sm overflow-hidden border border-white/15">
                 <div
-                  className={`h-full transition-all ${userClub.boardConfidence >= 70 ? 'bg-green-500' : userClub.boardConfidence >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                  className={`h-full transition-all ${userClub.boardConfidence >= 70 ? 'bg-green-500' : userClub.boardConfidence >= 40 ? 'bg-amber-500/100' : 'bg-red-500'}`}
                   style={{ width: `${userClub.boardConfidence}%` }}
                 />
               </div>
-              <div className="text-right text-[10px] font-black text-slate-700 mt-1">{Math.round(userClub.boardConfidence)}%</div>
+              <div className="text-right text-[10px] font-black text-white/70 mt-1">{Math.round(userClub.boardConfidence)}%</div>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -301,7 +301,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
 
       {interactionType === 'dialog' && selectedPlayer && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden">
+          <div className="bg-white/10 w-full max-w-lg rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden">
             <header className="bg-slate-900 text-white p-4 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black uppercase italic">Interacción con {selectedPlayer.name}</h3>
@@ -316,7 +316,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                     key={tone}
                     onClick={() => setInteractionTone(tone)}
                     className={`py-2 px-3 rounded-sm border-2 font-black text-[10px] uppercase transition-all ${
-                      interactionTone === tone ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 hover:border-slate-400'
+                      interactionTone === tone ? 'border-slate-900 bg-slate-900 text-white' : 'border-white/20 hover:border-white/15'
                     }`}
                   >
                     {tone === 'MILD' ? 'Suave' : tone === 'MODERATE' ? 'Moderado' : 'Agresivo'}
@@ -340,7 +340,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                   <AlertTriangle size={12} /> Amenazar con traspaso
                 </FMButton>}
               </div>
-              {lastResult && <div className="text-[11px] text-slate-700 bg-slate-100 p-3 rounded-sm border border-slate-200">{lastResult}</div>}
+              {lastResult && <div className="text-[11px] text-white/70 bg-white/10/10 p-3 rounded-sm border border-white/10">{lastResult}</div>}
             </div>
           </div>
         </div>
@@ -348,7 +348,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
 
       {interactionType === 'dialog' && selectedStaff && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden">
+          <div className="bg-white/10 w-full max-w-lg rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden">
             <header className="bg-slate-900 text-white p-4 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black uppercase italic">Interacción con {selectedStaff.name}</h3>
@@ -363,7 +363,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                     key={tone}
                     onClick={() => setInteractionTone(tone)}
                     className={`py-2 px-3 rounded-sm border-2 font-black text-[10px] uppercase transition-all ${
-                      interactionTone === tone ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 hover:border-slate-400'
+                      interactionTone === tone ? 'border-slate-900 bg-slate-900 text-white' : 'border-white/20 hover:border-white/15'
                     }`}
                   >
                     {tone === 'MILD' ? 'Suave' : tone === 'MODERATE' ? 'Moderado' : 'Agresivo'}
@@ -384,7 +384,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                   <MessageSquare size={12} /> Enfocar scouting
                 </FMButton>
               </div>
-              {lastResult && <div className="text-[11px] text-slate-700 bg-slate-100 p-3 rounded-sm border border-slate-200">{lastResult}</div>}
+              {lastResult && <div className="text-[11px] text-white/70 bg-white/10/10 p-3 rounded-sm border border-white/10">{lastResult}</div>}
             </div>
           </div>
         </div>
@@ -392,7 +392,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
 
       {interactionType && ['BUDGET_REQUEST', 'FACILITY_IMPROVEMENT', 'CONTRACT_EXTENSION', 'TACTICAL_AUTONOMY'].includes(interactionType) && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-lg rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden">
+          <div className="bg-white/10 w-full max-w-lg rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden">
             <header className="bg-slate-900 text-white p-4 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black uppercase italic">Proponer a la Directiva</h3>
@@ -407,7 +407,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                     key={tone}
                     onClick={() => setInteractionTone(tone)}
                     className={`py-2 px-3 rounded-sm border-2 font-black text-[10px] uppercase transition-all ${
-                      interactionTone === tone ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 hover:border-slate-400'
+                      interactionTone === tone ? 'border-slate-900 bg-slate-900 text-white' : 'border-white/20 hover:border-white/15'
                     }`}
                   >
                     {tone === 'MILD' ? 'Suave' : tone === 'MODERATE' ? 'Moderado' : 'Agresivo'}
@@ -419,7 +419,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                   <Building2 size={12} /> Enviar propuesta
                 </FMButton>
               </div>
-              {lastResult && <div className="text-[11px] text-slate-700 bg-slate-100 p-3 rounded-sm border border-slate-200">{lastResult}</div>}
+              {lastResult && <div className="text-[11px] text-white/70 bg-white/10/10 p-3 rounded-sm border border-white/10">{lastResult}</div>}
             </div>
           </div>
         </div>

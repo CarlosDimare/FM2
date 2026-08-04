@@ -40,13 +40,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
       <div className="mb-1">
         <button 
            onClick={() => toggleMenu(squadType)}
-           className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors"
+           className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-white/50 uppercase tracking-widest hover:text-white/90 transition-colors"
         >
           <div className="flex items-center gap-2"><Users size={14} /> {label}</div>
           {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
         {isOpen && (
-          <div className="mt-1 ml-4 space-y-1 border-l border-[#a0b0a0]">
+          <div className="mt-1 ml-4 space-y-1 border-l border-white/10">
             <SubNavItem id={`${squadType}_SQUAD`} label="Plantel" icon={Users} active={currentView === `${squadType}_SQUAD`} onClick={() => setView(`${squadType}_SQUAD`)} />
             <SubNavItem id={`${squadType}_TACTICS`} label="Tácticas" icon={Clipboard} active={currentView === `${squadType}_TACTICS`} onClick={() => setView(`${squadType}_TACTICS`)} />
             <SubNavItem id={`${squadType}_SCHEDULE`} label="Partidos" icon={Calendar} active={currentView === `${squadType}_SCHEDULE`} onClick={() => setView(`${squadType}_SCHEDULE`)} />
@@ -59,10 +59,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
   return (
     <>
       {isSidebarOpen && <div className="fixed inset-0 bg-black/30 z-[90] lg:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />}
-      <div id="main-sidebar" className={`fixed lg:static top-0 lg:top-0 left-0 bottom-0 z-[100] w-64 bg-[#e8ece8] border-r border-[#a0b0a0] h-full flex flex-col transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`} style={{ fontFamily: 'Verdana, sans-serif' }}>
-        <div className="lg:hidden p-4 border-b border-[#a0b0a0] flex justify-between items-center shrink-0">
-          <span className="font-bold text-slate-900 text-sm">Menú</span>
-          <button onClick={() => setIsSidebarOpen(false)} className="text-slate-600"><X size={20} /></button>
+      <div id="main-sidebar" className={`fixed lg:static top-0 lg:top-0 left-0 bottom-0 z-[100] w-64 bg-white/10/10 border-r border-white/10 h-full flex flex-col transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`} style={{ fontFamily: 'Verdana, sans-serif' }}>
+        <div className="lg:hidden p-4 border-b border-white/10 flex justify-between items-center shrink-0">
+          <span className="font-bold text-white/90 text-sm">Menú</span>
+          <button onClick={() => setIsSidebarOpen(false)} className="text-white/60"><X size={20} /></button>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-1">
@@ -81,12 +81,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
           </>}
 
           {!isNationalOnly && <div className="mb-1">
-            <button onClick={() => toggleMenu('TORNEOS')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+            <button onClick={() => toggleMenu('TORNEOS')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-white/50 uppercase tracking-widest hover:text-white/90 transition-colors">
               <div className="flex items-center gap-2"><Trophy size={14} /> Competiciones</div>
               {openMenus['TORNEOS'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
             {openMenus['TORNEOS'] && (
-              <div className="mt-1 ml-4 space-y-1 border-l border-[#a0b0a0]">
+              <div className="mt-1 ml-4 space-y-1 border-l border-white/10">
                 {clubTournaments.map(comp => (
                   <SubNavItem key={comp.id} id={`COMP_${comp.id}`} label={comp.name} icon={comp.type.startsWith('CONT') ? Globe : Trophy} active={currentView === `COMP_${comp.id}`} onClick={() => setView(`COMP_${comp.id}`)} />
                 ))}
@@ -99,15 +99,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
 
           {world.nationalTeamManager && (
             <div className="mb-1">
-              <button onClick={() => toggleMenu('NATIONAL')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+              <button onClick={() => toggleMenu('NATIONAL')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-white/50 uppercase tracking-widest hover:text-white/90 transition-colors">
                 <div className="flex items-center gap-2"><Flag size={14} /> Selecciones</div>
                 {openMenus['NATIONAL'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
               </button>
               {openMenus['NATIONAL'] && (
-                <div className="mt-1 ml-4 space-y-1 border-l border-[#a0b0a0]">
+                <div className="mt-1 ml-4 space-y-1 border-l border-white/10">
                   {nationalTeamId && (
                     <>
-                      <div className="px-4 py-1 text-[8px] font-black uppercase tracking-widest text-slate-400">Mi selección</div>
+                      <div className="px-4 py-1 text-[8px] font-black uppercase tracking-widest text-white/40">Mi selección</div>
                       <SubNavItem id={`NT_${nationalTeamId}_SQUAD`} label="Plantel" icon={Users} active={currentView === `NT_${nationalTeamId}_SQUAD` || currentView === `NT_${nationalTeamId}`} onClick={() => setView(`NT_${nationalTeamId}_SQUAD`)} />
                       <SubNavItem id={`NT_${nationalTeamId}_TACTICS`} label="Tácticas" icon={Clipboard} active={currentView === `NT_${nationalTeamId}_TACTICS`} onClick={() => setView(`NT_${nationalTeamId}_TACTICS`)} />
                       <SubNavItem id={`NT_${nationalTeamId}_SCHEDULE`} label="Partidos" icon={Calendar} active={currentView === `NT_${nationalTeamId}_SCHEDULE`} onClick={() => setView(`NT_${nationalTeamId}_SCHEDULE`)} />
@@ -124,12 +124,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
           )}
 
           {!isNationalOnly && <div className="mb-1">
-            <button onClick={() => toggleMenu('MARKET')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+            <button onClick={() => toggleMenu('MARKET')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-white/50 uppercase tracking-widest hover:text-white/90 transition-colors">
               <div className="flex items-center gap-2"><Globe size={14} /> Ojeo y Fichajes</div>
               {openMenus['MARKET'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
             {openMenus['MARKET'] && (
-              <div className="mt-1 ml-4 space-y-1 border-l border-[#a0b0a0]">
+              <div className="mt-1 ml-4 space-y-1 border-l border-white/10">
                  <SubNavItem id="MARKET" label="Mercado" icon={ShoppingBag} active={currentView === 'MARKET'} onClick={() => setView('MARKET')} />
                  <SubNavItem id="SEARCH" label="Buscar Jugador" icon={Search} active={currentView === 'SEARCH'} onClick={() => setView('SEARCH')} />
                  <SubNavItem id="NEGOTIATIONS" label="Negociaciones" icon={MessageSquare} active={currentView === 'NEGOTIATIONS'} onClick={() => setView('NEGOTIATIONS')} />
@@ -152,13 +152,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
            <NavItem id="MANAGER_PROFILE" label="Mi Carrera" icon={User} active={currentView === 'MANAGER_PROFILE'} onClick={() => setView('MANAGER_PROFILE')} />
 
           <div className="mt-auto pt-6 px-4 pb-4 space-y-2">
-             <button onClick={onVacation} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-[#f2f7f2] text-slate-700 hover:text-slate-900 rounded border border-[#a0b0a0] shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">
+             <button onClick={onVacation} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/5 text-white/70 hover:text-white/90 rounded border border-white/10 shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">
                 <Sun size={14} /> Ir de Vacaciones
              </button>
-             <button onClick={onSave} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#bcc8bc] hover:bg-[#a0b0a0] text-slate-700 hover:text-slate-900 rounded border border-[#a0b0a0] shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">
+             <button onClick={onSave} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10/10 hover:bg-[#a0b0a0] text-white/70 hover:text-white/90 rounded border border-white/10 shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">
                 <Save size={14} /> Guardar Partida
              </button>
-             <button onClick={() => setIsSettingsOpen(true)} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#bcc8bc] hover:bg-[#a0b0a0] text-slate-700 hover:text-slate-900 rounded border border-[#a0b0a0] shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">
+             <button onClick={() => setIsSettingsOpen(true)} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10/10 hover:bg-[#a0b0a0] text-white/70 hover:text-white/90 rounded border border-white/10 shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">
                 <Settings size={14} /> Configuración
              </button>
           </div>
@@ -170,12 +170,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
 };
 
 const NavItem = ({ id, label, icon: Icon, active, onClick, badge }: any) => (
-  <button onClick={onClick} className={`w-full flex items-center justify-between px-6 py-2.5 text-xs font-bold transition-colors border-l-4 ${active ? 'bg-white text-slate-900 border-[#3a4a3a]' : 'border-transparent text-slate-500 hover:bg-white hover:text-slate-900'}`}>
-    <div className="flex items-center"><Icon className={`w-4 h-4 mr-3 ${active ? 'text-[#3a4a3a]' : 'text-slate-400'}`} /> {label}</div>
-    {badge > 0 && <span className="bg-[#3a4a3a] text-white text-[9px] font-black px-1.5 rounded-sm">{badge}</span>}
+  <button onClick={onClick} className={`w-full flex items-center justify-between px-6 py-2.5 text-xs font-bold transition-colors border-l-4 ${active ? 'bg-white/10 text-white/90 border-white/20' : 'border-transparent text-white/50 hover:bg-white/10 hover:text-white/90'}`}>
+    <div className="flex items-center"><Icon className={`w-4 h-4 mr-3 ${active ? 'text-[#3a4a3a]' : 'text-white/40'}`} /> {label}</div>
+    {badge > 0 && <span className="bg-white/25 text-white text-[9px] font-black px-1.5 rounded-sm">{badge}</span>}
   </button>
 );
 
 const SubNavItem = ({ id, label, icon: Icon, active, onClick }: any) => (
-  <button onClick={onClick} className={`w-full flex items-center px-4 py-2 text-[10px] font-bold transition-colors ${active ? 'text-slate-900 bg-white rounded-r' : 'text-slate-500 hover:text-slate-900'}`}><Icon className={`w-3 h-3 mr-2 ${active ? 'text-[#3a4a3a]' : ''}`} /> <span className="truncate">{label}</span></button>
+  <button onClick={onClick} className={`w-full flex items-center px-4 py-2 text-[10px] font-bold transition-colors ${active ? 'text-white/90 bg-white/10 rounded-r' : 'text-white/50 hover:text-white/90'}`}><Icon className={`w-3 h-3 mr-2 ${active ? 'text-[#3a4a3a]' : ''}`} /> <span className="truncate">{label}</span></button>
 );
