@@ -1,5 +1,5 @@
 import React from 'react';
-import { Club, Player, PlayerMatchStats } from '../types';
+import { Club, Player, PlayerMatchStats, Chronicle } from '../types';
 import { world } from '../services/worldManager';
 import { FMButton } from './FMUI';
 import { Trophy, Star, Target, Shield, AlertTriangle, ChevronRight } from 'lucide-react';
@@ -10,12 +10,13 @@ interface PostMatchSummaryViewProps {
   homeScore: number;
   awayScore: number;
   stats: Record<string, PlayerMatchStats>;
+  chronicle: Chronicle | null;
   userClubId: string;
   onContinue: () => void;
 }
 
 export const PostMatchSummaryView: React.FC<PostMatchSummaryViewProps> = ({
-  homeTeam, awayTeam, homeScore, awayScore, stats, userClubId, onContinue,
+  homeTeam, awayTeam, homeScore, awayScore, stats, chronicle, userClubId, onContinue,
 }) => {
   // Get all players who participated
   const allPlayerIds = Object.keys(stats);
@@ -218,6 +219,19 @@ export const PostMatchSummaryView: React.FC<PostMatchSummaryViewProps> = ({
                       <span className="text-[9px] text-slate-500 font-bold">{p.clubId === homeTeam.id ? homeTeam.shortName : awayTeam.shortName}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Chronicle */}
+            {chronicle && (
+              <div className="bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm p-4">
+                <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  📰 Crónica del Partido
+                </h3>
+                <p className="text-xs font-black text-slate-900 mb-2 italic">{chronicle.title}</p>
+                <div className="text-[11px] text-slate-700 leading-relaxed whitespace-pre-line">
+                  {chronicle.body}
                 </div>
               </div>
             )}

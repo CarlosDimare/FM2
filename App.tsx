@@ -34,7 +34,7 @@ import { ManagerProfileView } from './components/ManagerProfileView';
 import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
 import { generateMatchChronicle, generateMonthlyChronicle, generateNationalTeamChronicle } from './services/chronicleService';
-import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager, NationalTeamMatchOptions, NationalTeamChronicleContext, CareerMode } from './types';
+import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager, NationalTeamMatchOptions, NationalTeamChronicleContext, CareerMode, Chronicle } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID, randomInt } from './services/utils';
 import { MatchSimulator } from './services/engine';
 import { LeagueEngine } from './services/leagueEngine';
@@ -71,6 +71,7 @@ const App: React.FC = () => {
   const [managerCountryFilter, setManagerCountryFilter] = React.useState('ALL');
   const [managerResultLimit, setManagerResultLimit] = React.useState(120);
   const [lastMatchStats, setLastMatchStats] = React.useState<Record<string, PlayerMatchStats>>({});
+  const [lastChronicle, setLastChronicle] = React.useState<Chronicle | null>(null);
 
   React.useEffect(() => {
     if (!isOnboarded()) {
@@ -544,8 +545,11 @@ if (result.userWonLeague) gs.trackTitle('Liga');
         (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) &&
         f.squadType === 'SENIOR'
       );
-      if (userMatchTomorrow) setView('PRE_MATCH');
-      else if (next && next.date.toDateString() === nextDay.toDateString()) setView('PRE_MATCH');
+      if (userMatchTomorrow) {
+        // Check if lineup is configured
+        const starters = userClub ? world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR') : [];
+        setView(starters.length >= 11 ? 'PRE_MATCH' : 'SENIOR_TACTICS');
+      } else if (next && next.date.toDateString() === nextDay.toDateString()) setView('PRE_MATCH');
     }
     notify();
     const elapsed = parseFloat((performance.now() - t0).toFixed(1));
@@ -857,7 +861,13 @@ dayFixtures.forEach(f => {
         updateNextFixture(localFixtures, tempDate, activeManagedTeamId);
         setIsSimulating(false);
         setSimProgress(0);
-        setView(hasClubMatch ? 'PRE_MATCH' : hasNationalMatch ? `NT_${selectedNationalTeamId}` : 'PRE_MATCH');
+        // Check if lineup is configured before going to pre-match
+        if (hasClubMatch && userClub) {
+          const starters = world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR');
+          setView(starters.length >= 11 ? 'PRE_MATCH' : 'SENIOR_TACTICS');
+        } else {
+          setView(hasNationalMatch ? `NT_${selectedNationalTeamId}` : 'PRE_MATCH');
+        }
         notify();
         return;
       }
@@ -1314,6 +1324,7 @@ dayFixtures.forEach(f => {
              homeScore={nextFixture.homeScore ?? 0}
              awayScore={nextFixture.awayScore ?? 0}
              stats={lastMatchStats}
+             chronicle={lastChronicle}
              userClubId={userClub.id}
              onContinue={() => setView('PRESS_CONFERENCE_POST')}
            />;
@@ -1368,8 +1379,9 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
                 world.updateManagerProfileMatch(userScore, oppScore);
                 world.updateTacticalFamiliarity(userClub.id);
                 world.updateClubRecords(nextFixture.homeTeamId, nextFixture.awayTeamId, h, a, currentDate, nextFixture.competitionId);
-                generateMatchChronicle(nextFixture, h, a, stats, userClub.id, events);
+                const chronicle = generateMatchChronicle(nextFixture, h, a, stats, userClub.id, events);
                setLastMatchStats(stats);
+               setLastChronicle(chronicle);
                setView('POST_MATCH_SUMMARY');
                notify();
            }} />;
