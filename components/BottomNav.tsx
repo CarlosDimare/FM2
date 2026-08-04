@@ -6,7 +6,7 @@ const tabs = [
   { id: 'HOME', label: 'Inicio', icon: Home },
   { id: 'SENIOR_SQUAD', label: 'Plantilla', icon: Users },
   { id: 'SENIOR_TACTICS', label: 'Táctica', icon: Clipboard },
-  { id: 'PRE_MATCH', label: 'Partido', icon: Play },
+  { id: '__ADVANCE__', label: 'Continuar', icon: RefreshCw, isAction: true },
   { id: '__MORE__', label: 'Más', icon: MoreHorizontal },
 ];
 
@@ -36,6 +36,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ advanceTime, simulateToNex
 
   const isNationalOnly = !userClub && Boolean(selectedNationalTeamId);
   const isActive = (tabId: string) => {
+    if (tabId === '__ADVANCE__') return false;
     if (tabId === currentView) return true;
     if (!isNationalOnly && tabId === 'SENIOR_SQUAD' && currentView.endsWith('_SQUAD')) return true;
     if (!isNationalOnly && tabId === 'SENIOR_TACTICS' && currentView.endsWith('_TACTICS')) return true;
@@ -48,41 +49,26 @@ export const BottomNav: React.FC<BottomNavProps> = ({ advanceTime, simulateToNex
       setShowMore(prev => !prev);
       return;
     }
+    if (id === '__ADVANCE__') {
+      setShowMore(false);
+      advanceTime();
+      return;
+    }
     setShowMore(false);
     setView(id);
   };
 
-  const nationalTabs = [
-    { id: `NT_${selectedNationalTeamId}`, label: 'Selección', icon: Users },
-    { id: 'CHRONICLES', label: 'Crónicas', icon: Trophy },
-    { id: 'MANAGER_PROFILE', label: 'Carrera', icon: Briefcase },
-    { id: '__MORE__', label: 'Más', icon: MoreHorizontal },
-  ];
+const nationalTabs = [
+  { id: `NT_${selectedNationalTeamId}`, label: 'Selección', icon: Users },
+  { id: 'CHRONICLES', label: 'Crónicas', icon: Trophy },
+  { id: '__ADVANCE__', label: 'Continuar', icon: RefreshCw, isAction: true },
+  { id: '__MORE__', label: 'Más', icon: MoreHorizontal },
+];
 
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-[200] bg-[#3a4a3a] border-t border-[#2a3a2a] lg:hidden"
            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        <div className="flex items-center justify-around h-12 border-b border-[#2a3a2a]">
-          {!isPreMatchView && (
-            <button
-              onClick={simulateToNextMatch}
-              className="flex items-center justify-center gap-1.5 flex-1 h-full text-slate-200 active:bg-[#2a3a2a] transition-colors"
-            >
-              <SkipForward size={18} />
-              <span className="text-[10px] font-black uppercase tracking-wider">Próximo Partido</span>
-            </button>
-          )}
-          <button
-            onClick={advanceTime}
-            className={`flex items-center justify-center gap-1.5 flex-1 h-full text-white active:bg-[#2a3a2a] transition-colors ${isPreMatchView ? 'bg-[#5a6a5a] animate-pulse' : ''}`}
-          >
-            {isPreMatchView ? <Zap size={18} fill="currentColor" /> : <RefreshCw size={18} />}
-            <span className="text-[10px] font-black uppercase tracking-wider">
-              {isPreMatchView ? 'Jugar Partido' : 'Continuar'}
-            </span>
-          </button>
-        </div>
         <div className="flex items-center justify-around h-14">
           {(isNationalOnly ? nationalTabs : tabs).map(tab => {
             const Icon = tab.icon;

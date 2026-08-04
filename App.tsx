@@ -1085,6 +1085,14 @@ dayFixtures.forEach(f => {
                   </div>
                 ) : <p className="text-center text-slate-500 italic py-10">No hay partidos próximos.</p>}
                 <div className="mt-4 text-center text-slate-600 font-mono text-[10px] uppercase tracking-widest">{nextFixture?.date.toLocaleDateString()}</div>
+                {nextFixture && (
+                  <button
+                    onClick={handleStartMatch}
+                    className="mt-4 w-full flex items-center justify-center gap-2 bg-[#3a4a3a] hover:bg-[#2a3a2a] text-white font-black uppercase text-[11px] tracking-wider py-2.5 rounded-sm border border-[#2a3a2a] transition-colors"
+                  >
+                    <Play size={14} /> Ir al Partido
+                  </button>
+                )}
               </div>
               <div className="bg-slate-200 p-4 rounded-sm border border-slate-500 shadow-sm flex flex-col">
                 <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-2 border-b border-slate-400 pb-1 flex items-center gap-2"><Trophy size={14} /> Competiciones</h3>
