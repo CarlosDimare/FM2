@@ -1877,14 +1877,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <div className={`font-mono text-[10px] sm:text-[11px] font-black uppercase tracking-widest px-2 py-1 rounded-sm shadow-inner border border-black/20 ${dateBg} ${dateText}`}>
               {currentDate.toLocaleDateString()}
             </div>
-            <div id="header-actions" className="flex items-center gap-2">
-              <button onClick={() => setIsAutoSaveEnabled(!isAutoSaveEnabled)} className={`p-1.5 rounded-sm border transition-colors ${isAutoSaveEnabled ? 'bg-slate-800 text-green-400 border-green-600' : 'bg-slate-700 text-slate-400 border-slate-600'}`} title={isAutoSaveEnabled ? 'Auto-guardado activado' : 'Auto-guardado desactivado'}>
-                <Save size={12} />
-              </button>
-              <button onClick={() => setDarkMode(!darkMode)} className="p-1.5 rounded-sm border border-slate-600 bg-slate-700 text-yellow-300 hover:bg-slate-600 transition-colors" title={darkMode ? 'Modo claro' : 'Modo oscuro'}>
-                {darkMode ? <Sun size={12} /> : <Moon size={12} />}
-              </button>
-            </div>
+
           </div>
         </header>
       )}
