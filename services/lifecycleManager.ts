@@ -896,6 +896,21 @@ private static calculateUCLStandings(fixtures: Fixture[], clubIds: string[]): Le
 
       const finalGrowthFactor = growthFactor * phaseMultiplier * scoutingBonus;
 
+      // Plan semanal de entrenamiento: las categorías priorizadas en el plan reciben más foco
+      // en el desarrollo; las no incluidas, algo menos. Multiplicador por categoría.
+      const planWeeklyCounts = (() => {
+        const plan = club?.trainingWeeklyPlan;
+        if (!plan) return null;
+        const counts: Record<string, number> = {};
+        Object.values(plan).forEach(v => { if (v && v !== 'REST') counts[v] = (counts[v] || 0) + 1; });
+        if (Object.keys(counts).length === 0) return null;
+        return (cat: string) => {
+          const c = counts[cat] || 0;
+          if (c === 0) return 0.85;
+          return Math.min(1.75, 1 + c * 0.12);
+        };
+      })();
+
       const getTrainingBias = (attrKey: string): number => {
         const biasMap: Record<string, string[]> = {
           fuerza: ['STRENGTH'],
@@ -914,7 +929,10 @@ private static calculateUCLStandings(fixtures: Fixture[], clubIds: string[]): Le
         };
         const cats = biasMap[attrKey] || [];
         let bias = 0;
-        cats.forEach(cat => { bias = Math.max(bias, ((schedule as any)[cat] || 8) / 10); });
+        cats.forEach(cat => {
+          const mult = planWeeklyCounts ? planWeeklyCounts(cat) : 1;
+          bias = Math.max(bias, ((schedule as any)[cat] || 8) / 10 * mult);
+        });
         return Math.max(0.3, bias || 0.5);
       };
 

@@ -344,7 +344,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
           <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden animate-zoom-in">
             {(() => {
                const club = world.getClub(selectedStaff.clubId);
-               const headerClasses = club ? `${club.primaryColor} ${club.secondaryColor}` : 'bg-slate-900 text-white';
+               const headerClasses = club ? `${club.primaryColor} ${club.secondaryColor}` : 'bg-[#3a4a3a] text-white';
                const borderColor = club && club.primaryColor === 'bg-white' ? 'border-slate-300' : 'border-black/20';
                
                return (

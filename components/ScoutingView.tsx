@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Player, ScoutingReport } from '../types';
 import { world } from '../services/worldManager';
 import { notifyAll } from '../stores/worldStore';
-import { FMBox, FMButton } from './FMUI';
+import { FMBox, FMButton, FMEmptyState } from './FMUI';
 import { Binoculars, User, Star, TrendingUp, ArrowDown, Eye, Crosshair, Search, BookmarkPlus, BookmarkCheck, ListPlus } from 'lucide-react';
 import { getFlagUrl } from '../data/static';
 
@@ -192,7 +192,7 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlay
                   <span className="text-[8px] text-green-700 font-bold">✓ Informado</span>
                 ) : (
                   <button onClick={() => scoutPlayer(p.id)}
-                    className="text-[8px] bg-blue-600 text-white px-2 py-0.5 rounded-sm font-bold hover:bg-blue-500">
+                    className="text-[8px] bg-[#3a4a3a] text-white px-2 py-0.5 rounded-sm font-bold hover:bg-[#2a3a2a]">
                     Informe
                   </button>
                 )}
@@ -208,8 +208,12 @@ export const ScoutingView: React.FC<ScoutingViewProps> = ({ clubId, onSelectPlay
 
       <div className="flex-1 overflow-y-auto custom-scroll space-y-2">
         {reports.length === 0 && (
-          <div className="p-12 text-center text-slate-400 italic text-[10px] font-bold uppercase tracking-widest">
-            No hay informes de scouting. Los ojeadores generarán informes automáticamente con el paso del tiempo.
+          <div className="h-full flex items-center justify-center">
+            <FMEmptyState
+              icon={<Binoculars size={28} />}
+              title="Sin informes de scouting"
+              subtitle="Los ojeadores generarán informes automáticamente con el paso del tiempo. Usa el buscador para pedir un informe de un jugador concreto."
+            />
           </div>
         )}
         {reports.map(renderReportCard)}

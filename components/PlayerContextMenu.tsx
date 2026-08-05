@@ -34,7 +34,7 @@ export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x,
 
   return (
     <div 
-      className="fixed z-[1000] bg-slate-800 border border-slate-700 rounded-lg shadow-2xl py-2 w-56 animate-zoom-in"
+      className="fixed z-[1000] bg-[#2a3a2a] border border-[#1a2a1a] rounded-lg shadow-2xl py-2 w-56 animate-zoom-in"
       style={{ left: x, top: y }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -81,7 +81,7 @@ export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x,
 const ContextItem = ({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) => (
   <button 
     onClick={onClick}
-    className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-blue-600 hover:text-white flex items-center gap-3 transition-colors"
+    className="w-full text-left px-4 py-2 text-xs font-medium text-slate-300 hover:bg-[#3a4a3a] hover:text-white flex items-center gap-3 transition-colors"
   >
     {icon} {label}
   </button>

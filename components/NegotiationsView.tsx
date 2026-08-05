@@ -56,7 +56,7 @@ export const NegotiationsView: React.FC<NegotiationsViewProps> = ({ userClubId, 
       <div key={offer.id} className="bg-white border border-[#a0b0a0] rounded-sm p-4 shadow-sm hover:border-[#3a4a3a] transition-all group mb-2">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-white shrink-0 shadow-inner ${isBuying ? 'bg-slate-800' : 'bg-[#aabdaa]'}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-white shrink-0 shadow-inner ${isBuying ? 'bg-[#3a4a3a]' : 'bg-[#aabdaa]'}`}>
               {isBuying ? <ArrowRightLeft size={20} /> : <DollarSign size={20} />}
             </div>
             <div className="min-w-0">

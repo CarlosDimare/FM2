@@ -1,30 +1,103 @@
-
 import React, { useState } from 'react';
 import { Club } from '../types';
 import { world } from '../services/worldManager';
 import { notifyAll } from '../stores/worldStore';
 import { FMBox, FMButton } from './FMUI';
-import { Building2, Award, DollarSign, Users, ArrowUp } from 'lucide-react';
+import { Building2, Award, DollarSign, Users, ArrowUp, Target, TrendingUp, ShieldCheck, Briefcase, Megaphone } from 'lucide-react';
 
 interface BoardViewProps {
   userClub: Club;
+  currentDate: Date;
 }
 
-export const BoardView: React.FC<BoardViewProps> = ({ userClub }) => {
+const OBJECTIVE_LABELS: Record<string, string> = {
+  WIN_LEAGUE: 'Ganar la Liga',
+  TOP_4: 'Top 4 (europa)',
+  WIN_CUP: 'Ganar la Copa',
+  CUP_SEMIS: 'Semifinal de Copa',
+  TOP_HALF: 'Mitad superior',
+  AVOID_RELEGATION: 'Evitar el descenso',
+};
+
+const OBJECTIVE_DESC: Record<string, string> = {
+  WIN_LEAGUE: 'La directiva exige el título liguero. Presión máxima.',
+  TOP_4: 'Clasificar a competición europea por liga.',
+  WIN_CUP: 'Levantar el trofeo de la copa nacional.',
+  CUP_SEMIS: 'Alcanzar al menos las semifinales de la copa.',
+  TOP_HALF: 'Terminar en la mitad superior de la tabla.',
+  AVOID_RELEGATION: 'Asegurar la permanencia en la categoría.',
+};
+
+type MeetingTopic = { id: string; label: string; icon: React.ReactNode };
+
+const MEETING_TOPICS: MeetingTopic[] = [
+  { id: 'FORM', label: 'Valoración de la plantilla', icon: <Users size={13} /> },
+  { id: 'OBJECTIVE', label: 'Debatir el objetivo', icon: <Target size={13} /> },
+  { id: 'SUPPORT', label: 'Pedir respaldo del proyecto', icon: <ShieldCheck size={13} /> },
+  { id: 'FUTURE', label: 'Plan a largo plazo', icon: <TrendingUp size={13} /> },
+];
+
+export const BoardView: React.FC<BoardViewProps> = ({ userClub, currentDate }) => {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [objectiveDraft, setObjectiveDraft] = useState<string>(userClub.seasonObjective || 'TOP_HALF');
+  const [meetingLog, setMeetingLog] = useState<{ topic: string; response: string; tone: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' }[]>([]);
 
   const refreshClub = () => notifyAll();
 
   const handleUpgrade = (facility: 'training' | 'youth') => {
-    const result = world.requestFacilityUpgrade(userClub.id, facility, new Date());
+    const result = world.requestFacilityUpgrade(userClub.id, facility, currentDate);
     setFeedback({ type: result.success ? 'success' : 'error', message: result.message });
     refreshClub();
   };
 
   const handleBudgetRequest = () => {
-    const result = world.requestBudgetIncrease(userClub.id, new Date());
+    const result = world.requestBudgetIncrease(userClub.id, currentDate);
     setFeedback({ type: result.success ? 'success' : 'error', message: result.message });
     refreshClub();
+  };
+
+  const handleObjectiveSubmit = () => {
+    const result = world.setSeasonObjective(userClub.id, objectiveDraft as NonNullable<Club['seasonObjective']>, currentDate);
+    setFeedback({ type: result.success ? 'success' : 'error', message: result.message });
+    refreshClub();
+  };
+
+  const handleMeeting = (topic: MeetingTopic) => {
+    const confidence = userClub.boardConfidence;
+    const tone: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' = confidence >= 70 ? 'POSITIVE' : confidence >= 40 ? 'NEUTRAL' : 'NEGATIVE';
+    let response = '';
+    switch (topic.id) {
+      case 'FORM':
+        response = tone === 'POSITIVE'
+          ? 'La junta confía en la calidad de la plantilla que has construido y te respaldará en el mercado de invierno si lo necesitas.'
+          : tone === 'NEUTRAL'
+          ? 'La junta considera que la plantilla es competente, pero pide más consistencia en los resultados antes de aprobar nuevas inversiones.'
+          : 'La directiva cuestiona la competitividad de la plantilla actual y duda de que pueda cumplir los mínimos exigidos.';
+        break;
+      case 'OBJECTIVE':
+        response = tone === 'POSITIVE'
+          ? 'La junta acepta debatir el objetivo contigo: valora tu lectura del equipo y la situación de la tabla.'
+          : tone === 'NEUTRAL'
+          ? 'La directiva escucha tu propuesta de objetivo, aunque matiza que los recursos disponibles son los que son.'
+          : 'La junta rechaza de plano revisar el objetivo: exigen cumplir lo pactado antes de hablar de cambios.';
+        break;
+      case 'SUPPORT':
+        response = tone === 'POSITIVE'
+          ? 'Te ratifican como el hombre del proyecto y prometen blindarte ante los rumores de la prensa.'
+          : tone === 'NEUTRAL'
+          ? 'Confirman su apoyo, siempre que los resultados acompañen a corto plazo.'
+          : 'Dejan claro que el respaldo no es incondicional: necesitan ver resultados inmediatos.';
+        break;
+      case 'FUTURE':
+        response = tone === 'POSITIVE'
+          ? 'La junta comparte tu visión de crecimiento: apuestan por un proyecto de 3 años con refuerzos progresivos.'
+          : tone === 'NEUTRAL'
+          ? 'Hablan de un plan de estabilidad: sin grandes sobresaltos ni grandes inversiones.'
+          : 'La directiva solo piensa en el corto plazo: tu continuidad depende de la próxima jornada.';
+        break;
+    }
+    setMeetingLog(prev => [{ topic: topic.label, response, tone }, ...prev].slice(0, 6));
+    setFeedback(null);
   };
 
   const trainingCost = Math.round((userClub.trainingFacilities + 1) * (userClub.trainingFacilities + 1) * 50000);
@@ -32,6 +105,7 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub }) => {
   const requestedAmount = Math.round(userClub.finances.transferBudget * 0.3);
 
   const confidenceColor = userClub.boardConfidence >= 70 ? 'text-green-600' : userClub.boardConfidence >= 40 ? 'text-amber-600' : 'text-red-600';
+  const profile = world.managerProfile;
 
   return (
     <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-y-auto pb-14">
@@ -61,6 +135,27 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub }) => {
              userClub.boardConfidence >= 40 ? 'Estabilidad normal. Algunas peticiones seran aprobadas.' :
              'La confianza es baja. Las propuestas podrian ser rechazadas.'}
           </div>
+        </div>
+      </FMBox>
+
+      <FMBox title="Objetivo de temporada" headerRight={
+        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-sm border bg-white/60 border-[#a0b0a0] text-slate-600">{OBJECTIVE_LABELS[userClub.seasonObjective || 'TOP_HALF'] || 'Sin definir'}</span>
+      }>
+        <div className="space-y-2">
+          <p className="text-[9px] text-slate-600 italic">La directiva evalúa tus resultados contra este objetivo. Proponer cambios afecta la confianza: pedir más tensa la relación, pedir menos la alivia.</p>
+          <select
+            value={objectiveDraft}
+            onChange={(e) => setObjectiveDraft(e.target.value)}
+            className="w-full bg-white border border-[#a0b0a0] rounded-sm px-3 py-2 text-[11px] font-black uppercase text-slate-800 outline-none focus:border-[#3a4a3a]"
+          >
+            {Object.entries(OBJECTIVE_LABELS).map(([id, label]) => (
+              <option key={id} value={id}>{label}</option>
+            ))}
+          </select>
+          <p className="text-[9px] text-slate-500 italic">{OBJECTIVE_DESC[objectiveDraft]}</p>
+          <FMButton onClick={handleObjectiveSubmit} className="w-full text-[10px]">
+            <Target size={12} /> Presentar propuesta a la junta
+          </FMButton>
         </div>
       </FMBox>
 
@@ -116,11 +211,53 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub }) => {
         </div>
       </FMBox>
 
+      <FMBox title="Reunión con la directiva">
+        <div className="space-y-2">
+          <p className="text-[9px] text-slate-600 italic">Concierta una reunión y elige el tema del día. La respuesta de la junta depende de la confianza y la reputación del club.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {MEETING_TOPICS.map(topic => (
+              <button
+                key={topic.id}
+                onClick={() => handleMeeting(topic)}
+                className="flex items-center gap-2 bg-white border border-[#a0b0a0] hover:border-[#3a4a3a] hover:bg-[#f2f7f2] rounded-sm px-3 py-2 text-[9px] font-black uppercase text-slate-700 transition-all text-left"
+              >
+                <span className="text-[#3a4a3a]">{topic.icon}</span> {topic.label}
+              </button>
+            ))}
+          </div>
+          {meetingLog.length > 0 && (
+            <div className="space-y-1.5 mt-2">
+              {meetingLog.map((entry, i) => (
+                <div key={i} className={`border-l-4 rounded-sm px-3 py-2 text-[10px] font-bold ${entry.tone === 'POSITIVE' ? 'border-green-500 bg-green-50 text-green-900' : entry.tone === 'NEUTRAL' ? 'border-amber-500 bg-amber-50 text-amber-900' : 'border-red-500 bg-red-50 text-red-900'}`}>
+                  <div className="text-[8px] font-black uppercase tracking-widest opacity-70 mb-0.5">Acta · {entry.topic}</div>
+                  {entry.response}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </FMBox>
+
+      <FMBox title="Tu cargo en el club">
+        <div className="bg-white border border-slate-300 p-3 rounded-sm flex items-center gap-3">
+          <div className="p-2.5 bg-[#e8ece8] border border-[#a0b0a0] rounded-sm text-[#3a4a3a]">
+            <Briefcase size={18} />
+          </div>
+          <div className="flex-1">
+            <div className="text-[10px] font-black uppercase text-slate-900">{profile?.currentClubName || userClub.name}</div>
+            <div className="text-[9px] text-slate-600 font-bold">Entrenador · Temporada {profile?.seasonInClub || 1} en el club</div>
+            <div className="text-[8px] text-slate-500 italic">La junta revisa tu continuidad al final de cada temporada según objetivos cumplidos.</div>
+          </div>
+          <Megaphone size={16} className="text-slate-300 shrink-0" />
+        </div>
+      </FMBox>
+
       {feedback && (
         <div className={`p-3 rounded-sm border ${feedback.type === 'success' ? 'bg-green-100 border-green-400 text-green-900' : 'bg-red-100 border-red-400 text-red-900'} text-xs font-bold`}>
           {feedback.message}
         </div>
       )}
+
     </div>
   );
 };

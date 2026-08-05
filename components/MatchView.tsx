@@ -4,7 +4,7 @@ import { Club, Player, MatchState, MatchEvent, PlayerMatchStats, Position, Tacti
 import { MatchSimulator } from '../services/engine';
 import { GAME_SPEED_MS } from '../constants';
 import { world } from '../services/worldManager';
-import { Play, Pause, List, BarChart3, Users, Zap, Table, FastForward, SkipForward, Copy, Terminal, Check, UserPlus, ArrowRightFromLine, MessageCircle, Shield, ShieldAlert, Heart } from 'lucide-react';
+import { Play, Pause, List, BarChart3, Users, Zap, Table, FastForward, SkipForward, Copy, Terminal, Check, UserPlus, ArrowRightFromLine, MessageCircle, Shield, ShieldAlert, Heart, Goal, AlertTriangle, RefreshCcw, Cross } from 'lucide-react';
 import { MatchStatsTable } from './MatchStatsTable';
 import { FMBox, FMButton } from './FMUI';
 
@@ -221,6 +221,8 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
     let fontClass = "font-bold";
     let containerClass = "bg-white border-[#a0b0a0]";
     let textStyle = { color: '#333' };
+    let iconNode: React.ReactNode = null;
+    let iconBg = "bg-slate-200 text-slate-600";
 
     if (team) {
        containerClass = `${team.primaryColor} border-black/20 shadow-md`;
@@ -235,23 +237,40 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         fontClass = "font-black uppercase"; 
     }
 
-    if (e.type === 'SUBSTITUTION') {
+    if (e.type === 'GOAL') {
+      iconNode = <Goal size={14} />;
+      iconBg = 'bg-green-600 text-white';
+    } else if (e.type === 'PENALTY') {
+      iconNode = <Goal size={14} />;
+      iconBg = 'bg-green-700 text-white';
+    } else if (e.type === 'SUBSTITUTION') {
       containerClass = 'bg-amber-100 border-amber-300';
       textStyle = { color: '#92400e' };
+      iconNode = <RefreshCcw size={14} />;
+      iconBg = 'bg-amber-500 text-white';
     } else if (e.type === 'YELLOW_CARD') {
       containerClass = 'bg-yellow-100 border-yellow-400';
       textStyle = { color: '#854d0e' };
+      iconNode = <div className="w-3 h-4 bg-yellow-400 border border-yellow-600 rounded-[1px]" />;
+      iconBg = 'bg-yellow-100';
     } else if (e.type === 'RED_CARD') {
       containerClass = 'bg-red-100 border-red-500';
       textStyle = { color: '#991b1b' };
+      iconNode = <div className="w-3 h-4 bg-red-600 border border-red-800 rounded-[1px]" />;
+      iconBg = 'bg-red-100';
     } else if (e.type === 'INJURY') {
       containerClass = 'bg-orange-100 border-orange-400';
       textStyle = { color: '#9a3412' };
+      iconNode = <Cross size={14} />;
+      iconBg = 'bg-orange-500 text-white';
+    } else if (e.type === 'CHANCE' || e.type === 'SAVE' || e.type === 'MISS') {
+      iconNode = <AlertTriangle size={13} />;
+      iconBg = 'bg-blue-500 text-white';
     }
 
     const animationDelay = `${Math.min(i * 30, 500)}ms`;
     return (
-      <div key={i} className={`w-full max-w-4xl flex gap-3 p-3 rounded-sm border shadow-sm animate-fade-in ${containerClass}`}
+      <div key={i} className={`w-full max-w-4xl flex gap-3 p-3 rounded-sm border shadow-sm animate-fade-in items-center ${containerClass}`}
            style={{ animationDelay }}>
         <span className="font-mono font-black shrink-0 border-r border-black/10 pr-3 min-w-[60px] text-center flex items-center justify-center opacity-70" style={textStyle}>
             {e.minute}:{(e.second ?? 0).toString().padStart(2, '0')}'
@@ -259,6 +278,9 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         <span className={`flex-1 flex items-center ${sizeClass} ${fontClass}`} style={textStyle}>
             {e.text}
         </span>
+        {iconNode && (
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm ${iconBg}`}>{iconNode}</span>
+        )}
       </div>
     );
   };
@@ -297,6 +319,21 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
         </div>
       </div>
 
+      {/* Barra de posesión en vivo */}
+      <div className="shrink-0 bg-[#e8ece8] border-b border-[#a0b0a0] px-4 py-1.5 flex items-center gap-2 z-10">
+        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 w-16 text-right hidden sm:block" style={ { color: '#4a5a4a' } }>{homeTeam.shortName}</span>
+        <div className="flex-1 h-3 bg-[#ccd5cc] rounded-sm overflow-hidden border border-[#a0b0a0] shadow-inner">
+          <div className={`h-full ${hCol.bg} border-r border-black/10 transition-all duration-700`}
+               style={{ width: `${matchState.homeStats.possession}%` }}></div>
+        </div>
+        <span className="text-[10px] font-mono font-black text-slate-700 w-20 text-center">{matchState.homeStats.possession}% — {matchState.awayStats.possession}%</span>
+        <div className="flex-1 h-3 bg-[#ccd5cc] rounded-sm overflow-hidden border border-[#a0b0a0] shadow-inner">
+          <div className={`h-full ${aCol.bg} border-l border-black/10 transition-all duration-700 ml-auto`}
+               style={{ width: `${matchState.awayStats.possession}%` }}></div>
+        </div>
+        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 w-16 hidden sm:block" style={ { color: '#4a5a4a' } }>{awayTeam.shortName}</span>
+      </div>
+
       <div className="flex bg-[#bcc8bc] border-b border-[#a0b0a0] shrink-0 h-12 shadow-inner z-10">
         <button onClick={() => setActiveTab('LOG')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'LOG' ? 'bg-[#dbe6db] text-slate-950 border-b-4 border-slate-950' : 'text-slate-500 hover:bg-[#ccd9cc]'}`}><List size={20} /></button>
         <button onClick={() => setActiveTab('TECH')} className={`flex-1 flex items-center justify-center transition-all ${activeTab === 'TECH' ? 'bg-[#dbe6db] text-slate-950 border-b-4 border-slate-950' : 'text-slate-500 hover:bg-[#ccd9cc]'}`}><Terminal size={20} /></button>
@@ -309,7 +346,18 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
           <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll flex flex-col items-center" ref={scrollRef}>
             {matchState.events.filter(e => !e.isTechnical).map((e, i) => renderEvent(e, i))}
             {matchState.events.length === 0 && (
-                <div className="p-20 text-center text-slate-400 italic font-black uppercase text-[12px] tracking-[0.3em]">Esperando el pitido inicial...</div>
+              <div className="flex-1 w-full flex flex-col items-center justify-center gap-4 py-16">
+                <div className="relative w-24 h-24">
+                  <div className="absolute inset-0 rounded-full border-4 border-[#a0b0a0] border-dashed animate-[spin_6s_linear_infinite]"></div>
+                  <div className="absolute inset-3 rounded-full bg-[#3a4a3a] flex items-center justify-center">
+                    <Zap size={28} className="text-yellow-400" />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-slate-600 italic font-black uppercase text-[12px] tracking-[0.3em]">Esperando el pitido inicial...</p>
+                  <p className="text-slate-400 font-bold uppercase text-[9px] tracking-widest mt-2">Pulsa Reanudar para dar comienzo al partido</p>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -453,7 +501,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
             )}
           </div>
         ) : (
-          <button onClick={() => onFinish(matchState.homeScore, matchState.awayScore, matchState.playerStats, matchState.events)} className="w-full max-w-sm h-12 bg-blue-700 hover:bg-blue-600 text-white rounded-sm font-black uppercase text-xs shadow-xl border-b-4 border-blue-900 transition-all active:scale-95">SALIR DEL PARTIDO</button>
+          <button onClick={() => onFinish(matchState.homeScore, matchState.awayScore, matchState.playerStats, matchState.events)} className="w-full max-w-sm h-12 bg-[#3a4a3a] hover:bg-[#2a3a2a] text-white rounded-sm font-black uppercase text-xs shadow-xl border-b-4 border-[#1a2a1a] transition-all active:scale-95">SALIR DEL PARTIDO</button>
         )}
       </footer>
 
@@ -615,7 +663,7 @@ export const MatchView: React.FC<MatchViewProps> = ({ homeTeam, awayTeam, homePl
               );
             })()}
             <div className="p-3 border-t border-slate-200">
-              <button onClick={() => setShowPostMatch(false)} className="w-full py-2 bg-blue-700 hover:bg-blue-600 text-slate-900 rounded-sm font-black uppercase text-[10px]">
+              <button onClick={() => setShowPostMatch(false)} className="w-full py-2 bg-[#3a4a3a] hover:bg-[#2a3a2a] text-white rounded-sm font-black uppercase text-[10px]">
                 Cerrar resumen
               </button>
             </div>

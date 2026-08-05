@@ -37,8 +37,8 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
 
   return (
     <div className="fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center p-4 backdrop-blur-md">
-      <div className="bg-slate-800 w-full max-w-md rounded-2xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col">
-        <header className="p-6 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+      <div className="bg-[#2a3a2a] w-full max-w-md rounded-2xl shadow-2xl border border-[#1a2a1a] overflow-hidden flex flex-col">
+        <header className="p-6 bg-[#1a2a1a] border-b border-[#3a4a3a] flex justify-between items-center">
           <div>
             <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Realizar Oferta</h3>
             <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{player.name}</p>
@@ -51,16 +51,16 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
         <div className="p-8 space-y-6">
           {!submitted ? (
             <>
-              <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-700">
+              <div className="flex bg-slate-900 p-1 rounded-lg border border-[#3a4a3a]">
                 <button 
                   onClick={() => { setOfferType('PURCHASE'); setAmount(player.value); }}
-                  className={`flex-1 py-2 text-xs font-black rounded transition-all uppercase tracking-widest ${offerType === 'PURCHASE' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                  className={`flex-1 py-2 text-xs font-black rounded transition-all uppercase tracking-widest ${offerType === 'PURCHASE' ? 'bg-[#3a4a3a] text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                 >
                   Fichaje
                 </button>
                 <button 
                   onClick={() => { setOfferType('LOAN'); setAmount(0); }}
-                  className={`flex-1 py-2 text-xs font-black rounded transition-all uppercase tracking-widest ${offerType === 'LOAN' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                  className={`flex-1 py-2 text-xs font-black rounded transition-all uppercase tracking-widest ${offerType === 'LOAN' ? 'bg-[#3a4a3a] text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                 >
                   Cesión
                 </button>
@@ -85,7 +85,7 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
                       <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" size={18} />
                       <input 
                         type="number" 
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-12 pr-6 py-4 text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold"
+                        className="w-full bg-slate-900 border border-[#3a4a3a] rounded-xl pl-12 pr-6 py-4 text-white focus:ring-2 focus:ring-amber-500 outline-none font-bold"
                         value={amount}
                         onChange={(e) => setAmount(Number(e.target.value))}
                       />
@@ -109,7 +109,7 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
                     <div className="relative">
                       <Percent className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" size={18} />
                       <select 
-                        className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-12 pr-6 py-4 text-white focus:ring-2 focus:ring-blue-500 outline-none font-bold appearance-none"
+                        className="w-full bg-slate-900 border border-[#3a4a3a] rounded-xl pl-12 pr-6 py-4 text-white focus:ring-2 focus:ring-amber-500 outline-none font-bold appearance-none"
                         value={wageShare}
                         onChange={(e) => setWageShare(Number(e.target.value))}
                       >
@@ -130,7 +130,7 @@ export const TransferOfferModal: React.FC<TransferOfferModalProps> = ({ player, 
               <button 
                 onClick={handleSubmit}
                 disabled={loading || !canAfford}
-                className={`w-full py-5 flex items-center justify-center gap-3 rounded-xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 ${loading || !canAfford ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
+                className={`w-full py-5 flex items-center justify-center gap-3 rounded-xl font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 ${loading || !canAfford ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-[#4a6a4a] hover:bg-[#5a7a5a] text-white'}`}
               >
                 {loading ? 'Procesando...' : 'Enviar Oferta'}
               </button>

@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Club, Player, POSITION_ORDER } from '../types';
 import { FMBox, FMTable, FMTableCell } from './FMUI';
-import { TrendingUp, TrendingDown, Minus, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, X, Search } from 'lucide-react';
 import { getFlagUrl } from '../data/static';
 import { getPlayerTag } from '../services/playerGenerator';
 import { DialogueSystem } from '../services/dialogueSystem';
@@ -23,8 +23,18 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
   const [sortField, setSortField] = useState<SortField>('POS');
   const [sortDesc, setSortDesc] = useState(false);
   const [showInjuries, setShowInjuries] = useState(true);
+  const [search, setSearch] = useState('');
+  const [salaryMode, setSalaryMode] = useState<'WEEKLY' | 'MONTHLY' | 'ANNUAL'>('WEEKLY');
 
   const injuredPlayers = useMemo(() => players.filter(p => p.injury), [players]);
+
+  // player.salary se guarda como sueldo MENSUAL en todo el juego.
+  const formatSalary = (s: number) => {
+    const value = salaryMode === 'WEEKLY' ? s / 4.33 : salaryMode === 'MONTHLY' ? s : s * 12;
+    if (value >= 1000000) return `£${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `£${(value / 1000).toFixed(0)}k`;
+    return `£${value.toFixed(0)}`;
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) setSortDesc(!sortDesc);
@@ -45,7 +55,13 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
       }
   };
 
-  const sortedPlayers = useMemo(() => [...players].sort((a, b) => {
+  const visiblePlayers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return players;
+    return players.filter(p => p.name.toLowerCase().includes(q) || (p.positions[0] || '').toLowerCase().includes(q));
+  }, [players, search]);
+
+  const sortedPlayers = useMemo(() => [...visiblePlayers].sort((a, b) => {
     let res = 0;
     switch (sortField) {
       case 'STATUS': 
@@ -78,7 +94,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
           break;
     }
     return sortDesc ? -res : res;
-  }), [players, sortField, sortDesc]);
+  }), [visiblePlayers, sortField, sortDesc]);
 
   const renderTrend = (trend: string | undefined) => {
     if (trend === 'RISING') return <TrendingUp size={12} className="text-green-600 mx-auto" />;
@@ -128,7 +144,30 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
           <span className="text-[9px] font-bold text-amber-600">⚠</span>
         )}
       </div>
-      <FMBox title={customTitle || `Plantilla (${players.length})`} className="flex-1" noPadding>
+      <div className="shrink-0 flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" size={13} />
+          <input
+            type="text"
+            placeholder="Buscar por nombre o posición..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-white border border-[#a0b0a0] rounded-sm pl-8 pr-3 py-1.5 text-[11px] font-bold text-slate-900 focus:border-[#3a4a3a] outline-none placeholder:text-slate-400"
+          />
+        </div>
+        <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm self-start">
+          {(['WEEKLY', 'MONTHLY', 'ANNUAL'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => setSalaryMode(mode)}
+              className={`px-2.5 py-1 text-[8px] font-black rounded-[1px] uppercase tracking-widest transition-all ${salaryMode === mode ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}
+            >
+              {mode === 'WEEKLY' ? 'Semanal' : mode === 'MONTHLY' ? 'Mensual' : 'Anual'}
+            </button>
+          ))}
+        </div>
+      </div>
+      <FMBox title={customTitle || `Plantilla (${visiblePlayers.length})`} className="flex-1" noPadding>
         {/* Tablet Table View */}
         <div className="hidden md:block lg:hidden h-full overflow-hidden">
             <FMTable
@@ -159,7 +198,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                     <FMTableCell className="text-center font-bold" isNumber>{player.age}</FMTableCell>
                     <FMTableCell className="text-center"><span className="text-[8px] font-black text-blue-700 uppercase">{getPlayerTag(player)}</span></FMTableCell>
                     <FMTableCell className="text-center"><PlayerFormDots ratings={player.formRatings} /></FMTableCell>
-                    <FMTableCell className="text-right font-bold" isNumber>£{(player.salary / 1000).toFixed(0)}k</FMTableCell>
+                    <FMTableCell className="text-right font-bold" isNumber>{formatSalary(player.salary)}</FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>
                         <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-700'}>{Math.round(player.fitness)}%</span>
                     </FMTableCell>
@@ -199,7 +238,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                     <FMTableCell className="text-center font-bold" isNumber>{player.age}</FMTableCell>
                     <FMTableCell className="text-center"><span className="text-[8px] font-black text-blue-700 uppercase">{getPlayerTag(player)}</span></FMTableCell>
                     <FMTableCell className="text-center"><PlayerFormDots ratings={player.formRatings} /></FMTableCell>
-                    <FMTableCell className="text-right font-bold" isNumber>£{(player.salary / 1000).toFixed(0)}k</FMTableCell>
+                    <FMTableCell className="text-right font-bold" isNumber>{formatSalary(player.salary)}</FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>
                         <span className={player.fitness < 70 ? 'text-red-600' : 'text-green-700'}>{Math.round(player.fitness)}%</span>
                     </FMTableCell>

@@ -61,7 +61,33 @@ export const COUNTRY_CODES: Record<string, string> = {
   "Corea del Sur": "kr",
   "China": "cn",
   "Estados Unidos": "us",
+  "EE. UU.": "us", // alias legacy de partidas antiguas
   "Peru": "pe",
+  // Países ampliados para el selector de nacionalidad del manager
+  "Irlanda": "ie", "Escocia": "gb-sct", "Gales": "gb-wls", "Irlanda del Norte": "gb-nir",
+  "Finlandia": "fi", "Islandia": "is", "República Checa": "cz", "Eslovaquia": "sk", "Hungría": "hu", "Rumania": "ro", "Bulgaria": "bg",
+  "Eslovenia": "si", "Bosnia y Herzegovina": "ba", "Montenegro": "me", "Macedonia del Norte": "mk", "Albania": "al", "Kosovo": "xk",
+  "Bielorrusia": "by", "Georgia": "ge", "Armenia": "am", "Azerbaiyán": "az", "Kazajistán": "kz", "Chipre": "cy", "Malta": "mt",
+  "Luxemburgo": "lu", "Letonia": "lv", "Lituania": "lt", "Estonia": "ee", "Moldavia": "md", "Andorra": "ad", "San Marino": "sm",
+  "Mónaco": "mc", "Liechtenstein": "li", "Ciudad del Vaticano": "va", "Islas Feroe": "fo", "Gibraltar": "gi",
+  "Guyana": "gy", "Surinam": "sr",
+  "Costa Rica": "cr", "Panamá": "pa", "Honduras": "hn", "El Salvador": "sv", "Guatemala": "gt", "Nicaragua": "ni", "Belice": "bz",
+  "Cuba": "cu", "República Dominicana": "do", "Puerto Rico": "pr", "Jamaica": "jm", "Haití": "ht", "Trinidad y Tobago": "tt",
+  "Bahamas": "bs", "Barbados": "bb", "Curazao": "cw",
+  "Argelia": "dz", "Libia": "ly", "Angola": "ao", "República Democrática del Congo": "cd", "Congo": "cg", "Gabón": "ga",
+  "Guinea": "gn", "Guinea Ecuatorial": "gq", "Malí": "ml", "Burkina Faso": "bf", "Níger": "ne", "Chad": "td", "Sudán": "sd",
+  "Etiopía": "et", "Kenia": "ke", "Tanzania": "tz", "Zambia": "zm", "Zimbabue": "zw", "Mozambique": "mz", "Benín": "bj", "Togo": "tg",
+  "Sierra Leona": "sl", "Liberia": "lr", "Mauritania": "mr", "Cabo Verde": "cv", "Gambia": "gm", "Uganda": "ug", "Ruanda": "rw",
+  "Botsuana": "bw", "Namibia": "na", "Comoras": "km", "Madagascar": "mg", "Mauricio": "mu", "Lesoto": "ls", "Suazilandia": "sz",
+  "Burundi": "bi", "Somalia": "so", "Eritrea": "er", "Yibuti": "dj",
+  "Corea del Norte": "kp", "India": "in", "Pakistán": "pk", "Irán": "ir", "Irak": "iq", "Emiratos Árabes Unidos": "ae",
+  "Catar": "qa", "Kuwait": "kw", "Omán": "om", "Bahréin": "bh", "Jordania": "jo", "Líbano": "lb", "Siria": "sy",
+  "Israel": "il", "Palestina": "ps", "Afganistán": "af", "Uzbekistán": "uz", "Kirguistán": "kg", "Tayikistán": "tj",
+  "Turkmenistán": "tm", "Bangladés": "bd", "Sri Lanka": "lk", "Nepal": "np", "Bután": "bt", "Maldivas": "mv",
+  "Tailandia": "th", "Vietnam": "vn", "Filipinas": "ph", "Indonesia": "id", "Malasia": "my", "Singapur": "sg",
+  "Birmania": "mm", "Camboya": "kh", "Laos": "la", "Mongolia": "mn", "Taiwán": "tw", "Hong Kong": "hk", "Brunéi": "bn",
+  "Nueva Zelanda": "nz", "Papúa Nueva Guinea": "pg", "Fiyi": "fj", "Samoa": "ws", "Tonga": "to", "Islas Salomón": "sb",
+  "Vanuatu": "vu", "Polinesia Francesa": "pf", "Nueva Caledonia": "nc", "Timor Oriental": "tl",
 };
 
 // Lookup sin acentos ni mayúsculas para que 'Peru' y 'Perú', 'USA' y 'Estados Unidos' resuelvan igual.
@@ -77,6 +103,37 @@ export const getFlagUrl = (countryName: string) => {
   if (!code) return "https://flagcdn.com/w40/un.png";
   return `https://flagcdn.com/w40/${code}.png`;
 };
+
+// Países reales del mundo (nombres en español) para el selector de nacionalidad del manager.
+// Todos tienen código de bandera en COUNTRY_CODES para que la bandera resuelva correctamente.
+export const WORLD_COUNTRIES: string[] = [
+  // Sudamérica
+  'Argentina', 'Brasil', 'Uruguay', 'Chile', 'Colombia', 'Ecuador', 'Perú', 'Paraguay', 'Bolivia', 'Venezuela', 'Guyana', 'Surinam',
+  // Europa
+  'España', 'Portugal', 'Francia', 'Italia', 'Alemania', 'Inglaterra', 'Escocia', 'Gales', 'Irlanda del Norte', 'Irlanda',
+  'Países Bajos', 'Bélgica', 'Suiza', 'Austria', 'Dinamarca', 'Suecia', 'Noruega', 'Finlandia', 'Islandia',
+  'Polonia', 'República Checa', 'Eslovaquia', 'Hungría', 'Rumania', 'Bulgaria', 'Grecia', 'Croacia', 'Serbia', 'Eslovenia',
+  'Bosnia y Herzegovina', 'Montenegro', 'Macedonia del Norte', 'Albania', 'Kosovo', 'Ucrania', 'Rusia', 'Bielorrusia',
+  'Turquía', 'Georgia', 'Armenia', 'Azerbaiyán', 'Kazajistán', 'Chipre', 'Malta', 'Luxemburgo', 'Letonia', 'Lituania',
+  'Estonia', 'Moldavia', 'Andorra', 'San Marino', 'Mónaco', 'Liechtenstein', 'Ciudad del Vaticano', 'Islas Feroe', 'Gibraltar',
+  // Norteamérica, Centroamérica y Caribe
+  'México', 'Estados Unidos', 'Canadá', 'Costa Rica', 'Panamá', 'Honduras', 'El Salvador', 'Guatemala', 'Nicaragua', 'Belice',
+  'Cuba', 'República Dominicana', 'Puerto Rico', 'Jamaica', 'Haití', 'Trinidad y Tobago', 'Bahamas', 'Barbados', 'Curazao',
+  // África
+  'Marruecos', 'Argelia', 'Túnez', 'Libia', 'Egipto', 'Senegal', 'Nigeria', 'Ghana', 'Costa de Marfil', 'Camerún', 'Sudáfrica',
+  'Angola', 'República Democrática del Congo', 'Congo', 'Gabón', 'Guinea', 'Guinea Ecuatorial', 'Malí', 'Burkina Faso', 'Níger',
+  'Chad', 'Sudán', 'Etiopía', 'Kenia', 'Tanzania', 'Zambia', 'Zimbabue', 'Mozambique', 'Benín', 'Togo', 'Sierra Leona', 'Liberia',
+  'Mauritania', 'Cabo Verde', 'Gambia', 'Uganda', 'Ruanda', 'Botsuana', 'Namibia', 'Comoras', 'Madagascar', 'Mauricio',
+  'Lesoto', 'Suazilandia', 'Burundi', 'Somalia', 'Eritrea', 'Yibuti',
+  // Asia
+  'Japón', 'China', 'Corea del Sur', 'Corea del Norte', 'India', 'Pakistán', 'Irán', 'Irak', 'Arabia Saudita',
+  'Emiratos Árabes Unidos', 'Catar', 'Kuwait', 'Omán', 'Bahréin', 'Jordania', 'Líbano', 'Siria', 'Israel', 'Palestina',
+  'Afganistán', 'Uzbekistán', 'Kirguistán', 'Tayikistán', 'Turkmenistán', 'Bangladés', 'Sri Lanka', 'Nepal', 'Bután', 'Maldivas',
+  'Tailandia', 'Vietnam', 'Filipinas', 'Indonesia', 'Malasia', 'Singapur', 'Birmania', 'Camboya', 'Laos', 'Mongolia',
+  'Taiwán', 'Hong Kong', 'Brunéi', 'Timor Oriental',
+  // Oceanía
+  'Australia', 'Nueva Zelanda', 'Papúa Nueva Guinea', 'Fiyi', 'Samoa', 'Tonga', 'Islas Salomón', 'Vanuatu', 'Polinesia Francesa', 'Nueva Caledonia',
+];
 
 export const REGEN_DB: any = {
   "espana": {

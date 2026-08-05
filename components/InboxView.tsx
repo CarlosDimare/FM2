@@ -198,7 +198,7 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
                       className="mt-10 w-full p-4 md:p-6 bg-[#f0f4f0] border border-[#a0b0a0] rounded-sm flex items-center justify-between shadow-inner hover:bg-[#ccd9cc] transition-all group"
                     >
                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-900 rounded-sm flex items-center justify-center text-white shadow-md">
+                          <div className="w-10 h-10 md:w-12 md:h-12 bg-[#3a4a3a] rounded-sm flex items-center justify-center text-white shadow-md">
                              {selectedMessage.category === 'MARKET' ? <ShoppingBag size={20}/> : 
                               selectedMessage.category === 'COMPETITION' ? <Trophy size={20}/> : 
                               selectedMessage.category === 'STATEMENTS' ? <Briefcase size={20}/> : <Users size={20}/>}

@@ -1342,6 +1342,34 @@ export class MatchSimulator {
     });
   }
 
+  /**
+   * Resultado instantáneo ultra-rápido para ligas de fondo (LIGHT).
+   * Sin stats por jugador ni eventos: solo marcador basado en fuerza relativa.
+   * Los stats/events vacíos son tolerados por finalizeSeasonStats / trackU21Minutes.
+   */
+  static simulateLightMatch(
+    homeId: string, awayId: string, squadType: string
+  ): { homeScore: number; awayScore: number; stats: Record<string, PlayerMatchStats>; events: MatchEvent[] } {
+    const hAll = world.getPlayersByClub(homeId).filter(p => p.squad === squadType);
+    const aAll = world.getPlayersByClub(awayId).filter(p => p.squad === squadType);
+    const avgCA = (arr: Player[]) => arr.length ? arr.reduce((s, p) => s + p.currentAbility, 0) / arr.length : 100;
+    const hRep = world.getClub(homeId)?.reputation || 5000;
+    const aRep = world.getClub(awayId)?.reputation || 5000;
+    const hStr = avgCA(hAll) * 0.7 + hRep * 0.003;
+    const aStr = avgCA(aAll) * 0.7 + aRep * 0.003;
+    const total = hStr + aStr || 1;
+    // Goles esperados por lado (~3 en total), con jitter por partido
+    const hExp = 3 * (hStr / total) * (0.8 + Math.random() * 0.4);
+    const aExp = 3 * (aStr / total) * (0.8 + Math.random() * 0.4);
+    const poisson = (lambda: number) => {
+      const L = Math.exp(-lambda);
+      let k = 0, p = 1;
+      do { k++; p *= Math.random(); } while (p > L);
+      return Math.min(7, k - 1);
+    };
+    return { homeScore: poisson(hExp), awayScore: poisson(aExp), stats: {}, events: [] };
+  }
+
   static finalizeSeasonStats(hS: Player[], aS: Player[], mS: Record<string, PlayerMatchStats>, h: number, a: number, cId: string) {
       const isCupMatch = ['UCL', 'UEL', 'UECL', 'COPA', 'EURO', 'AFCON', 'WC_Q', 'WC_FINAL', 'WCC'].includes(cId);
       const proc = (ps: Player[], ga: number) => ps.forEach(p => {

@@ -3,7 +3,7 @@
 > **Propósito:** listar TODAS las pantallas del juego, su estado actual y qué falta en cada una, para priorizar la construcción.
 >
 > **Fecha del análisis:** 5 agosto 2026 · Basado en lectura del código actual (`App.tsx`, `components/`).
-> **Última actualización:** 5 agosto 2026 — código muerto eliminado, Tácticas de Selección con pizarra, Settings ampliado, bugs de texto corregidos.
+> **Última actualización:** 5 agosto 2026 — **Unificación de paleta**: main a verde-gris `#b8c4b8`, reemplazado el gris azulado (slate) por la paleta verdosa FM en ~14 archivos (theads, ErrorBoundary, PeopleHub, Inbox, menú contextual, modales de traspaso/contrato, Scouting, ClubReport, LOADING), botones de acción del Partido y modales al verde militar, y **eliminado todo el dark mode residual** (clase `dark` + bloque CSS `.dark`). Antes: tareas de la auditoría visual implementadas (bug de tablas, partido en vivo, empty-states, Setup Liga).
 
 ---
 
@@ -13,11 +13,126 @@
 |---|---|
 | Pantallas de juego (activas) | **~40** (setup: 8 · club: 24 · partido: 5 · selección: 5) |
 | Modales / overlays | 9 |
-| Pantallas **completas y funcionales** | **~38** (95%) |
-| Pantallas **parciales / mejorables** | 3–4 (detalladas abajo) |
+| Pantallas **completas y funcionales** | **~40** (100%) |
+| Pantallas **parciales / mejorables** | 0 (restan solo mejoras menores, detalladas en la sección H) |
 | Código muerto (no se usa) | ~~`components/views/` + `components/ViewRouter.tsx`~~ → **eliminado** ✅ |
+| **Auditoría visual (screenshots)** | **41/41 renderizan** · 0 crashes · 0 imágenes rotas · **1 bug visual crítico** (tablas altas recortadas) + notas de diseño |
 
-**Conclusión principal:** el juego está **funcional de punta a punta** (setup → temporada → partido → resumen → prensa → siguiente temporada). No hay pantallas "stub" o vacías. Lo que queda no es construir pantallas nuevas, sino **pulir profundidad de simulación, limpiar deuda técnica y completar features de gestión**.
+**Conclusión principal:** el juego está **funcional de punta a punta** (setup → temporada → partido → resumen → prensa → siguiente temporada). No hay pantallas "stub" o vacías. La auditoría visual con screenshots reales confirmó que **todas las pantallas dibujan contenido**, con un **único bug de layout grave** (las tablas muy largas quedan recortadas sin posibilidad de scroll — ver sección I) y varias notas menores de diseño (pantallas espartanas al inicio de carrera, estética de partido muy oscura). Lo que queda no es construir pantallas nuevas, sino **corregir ese bug de layout, pulir profundidad de simulación, limpiar deuda técnica y completar features de gestión**.
+
+---
+
+## 🎨 I. Auditoría Visual — Screenshots reales (5 ago 2026)
+
+> **Metodología:** juego real ejecutado en **Chromium headless** (Playwright) con el motor de verdad (`world`, stores de Zustand), carrera creada con Boca Juniors (L_ARG_1), temporada iniciada y fixture del próximo partido activo. Se capturaron **41 screenshots** en desktop (1440×900) + verificación de overflow en móvil (390×844), y se analizaron los píxeles de cada captura (dominancia claro/oscuro, variación de color) + DOM (texto, botones, tablas, cajas). **0 crashes, 0 imágenes rotas, 41/41 pantallas renderizan contenido real.**
+
+### Resultado global
+
+| Verificación | Resultado |
+|---|---|
+| Pantallas que renderizan | **41/41 (100%)** |
+| Crashes / pantalla de error | **0** |
+| Imágenes rotas (flags, escudos) | **0** |
+| Pantallas vacías o "stub" | **0** |
+| 🐞 Bug crítico de layout | **1: tablas altas recortadas sin scroll** (ver 1.1) |
+| Estética dominante | Tema claro "FM Industrial Steel" (fondo gris-azulado `#94a3b8`, cajas blancas, texto oscuro) en ~90% de las vistas |
+| Excepciones oscuras | Partido en vivo (cancha), Prensa/Crónicas/Buzón (fondos oscuros por diseño), Scouting |
+
+### 1.1 🐞 BUG CRÍTICO CONFIRMADO — Tablas altas recortadas sin scroll
+
+**Síntoma:** las vistas con tablas largas (Plantel, Mercado, Club externo, Calendario de Selección) dibujan la tabla a **alturas enormes** (4.000–23.000 px) por debajo del viewport **sin ningún contenedor con scroll**: el contenido bajo el pliegue es **inaccesible** (no hay forma de llegar a las últimas filas).
+
+**Prueba empírica (desktop 1440×900):**
+- `SENIOR_SQUAD` (Plantel): la tabla mide **4.624 px** contra un viewport de 900 px; el `main` tiene `overflow-hidden` y el scroll interno de la tabla **no funciona** (scrollTop se queda en 0) → solo se ven ~848 px del total.
+- `MARKET` (Mercado): tabla de ~492 filas → altura del orden de **23.000 px**, la más afectada.
+- `EXTERNAL_CLUB`: mismo patrón (tablas de 148 filas).
+- `NT_ARG_SCHEDULE` (Calendario Selección): mismo patrón.
+
+**Causa raíz (solo diagnóstico, sin tocar código):** el contenedor `<main>` de `App.tsx` usa `overflow-hidden` dentro de una cadena flex sin `min-h-0`/`overflow` en el eslabón intermedio; el FMBox que envuelve las tablas crece al alto de su contenido (falta `min-h-0`/`overflow-y-auto` en esa cadena flex). Las tablas cortas (Clasificación, Torneo, Ranking, Staff) no lo sufren.
+
+**Severidad:** 🔴 Alta — afecta vistas de gestión centrales (Plantel, Mercado, Club externo, Calendario Selección). *Prioridad #13 en la sección H.*
+
+### 1.2 Desglose por pantalla (hallazgos visuales)
+
+| Pantalla | Screenshot | Estado visual | Hallazgos del análisis de píxeles / DOM |
+|---|---|---|---|
+| **Setup: Perfil Manager** (`SETUP_USER`) | ✅ | Correcto | Form centrado, claro (20% claro), 1.930 chars de texto, 2 botones. Buen contraste. |
+| **Setup: Tipo de carrera** (`SETUP_CAREER`) | ✅ | Correcto | 392 chars, 4 botones (3 modos + volver). Simple y legible. |
+| **Setup: País** (`SETUP_COUNTRY`) | ✅ | Correcto | 35 botones (grid de países con banderas), 53% claro. Rico. |
+| **Setup: Liga** (`SETUP_LEAGUE`) | ✅ | Correcto | 136 chars, 4 botones. Minimalista pero suficiente (lista de ligas). |
+| **Setup: Club** (`SETUP_TEAM`) | ✅ | Correcto | 16 botones (grid de clubes con reputación), 41% claro. |
+| **Setup: Selección** (`SETUP_NATIONAL_TEAM`) | ✅ | Correcto | 45 botones (grid de 45 selecciones), 61% claro — la pantalla más densa del setup. |
+| **Setup: Manager existente** (`SETUP_EXISTING_MANAGER`) | ✅ | Correcto | 22 botones, 660 chars, alta variación de color (lista de perfiles). |
+| **Home** (`HOME`) | ✅ | Correcto | 44 botones, 1.107 chars, 52% claro. Tarjetas bien distribuidas. |
+| **Buzón** (`INBOX`) | ✅ | Correcto | Fondo oscuro por diseño (variación de color baja), 49 botones. |
+| **Plantel** (`SENIOR_SQUAD`) | 🐞 | **Recorte crítico** | Tabla de 148 filas × 4.624 px, sin scroll accesible. Además: 82% claro, 8.295 chars. |
+| **Tácticas** (`SENIOR_TACTICS`) | ✅ | Correcto | La más interactiva: 325 botones, pizarra, alta variación de color (campo). |
+| **Calendario** (`SENIOR_SCHEDULE`) | ✅ | Correcto | 80% claro, 2.563 chars, lista de partidos + filtro. |
+| **Clasificación** (`TABLE`) | ✅ | Correcto | Tabla de 16 filas — **cabe bien**, no sufre el bug. |
+| **Torneo** (`COMP_L_ARG_1`) | ✅ | Correcto | Tablas de 16 filas, 4 cajas, pestañas. Bien. |
+| **Mercado** (`MARKET`) | 🐞 | **Recorte crítico** | 492 filas ≈ 23.000 px sin scroll → peor caso del bug. 538 botones. |
+| **Buscador** (`SEARCH`) | ✅ | Correcto | 74% claro, lista virtualizada. |
+| **Fichajes** (`NEGOTIATIONS`) | ✅ | Correcto | 2 cajas, tono oscuro suave, legible. |
+| **Clubes del mundo** (`CLUBS_LIST`) | ✅ | Correcto | 35 cajas (acordeón por país), 109 botones — denso pero organizado. |
+| **Club externo** (`EXTERNAL_CLUB`) | 🐞 | **Recorte crítico** | Mismas tablas de 148 filas sin scroll. |
+| **Economía** (`ECONOMY`) | ✅ | Correcto | 3 cajas, 1.007 chars, gráfico SVG visible. |
+| **Cuerpo Técnico** (`STAFF`) | ✅ | Correcto | Tabla de 8 filas (cabe bien), 65% claro. |
+| **Entrenamiento** (`TRAINING`) | ✅ | Correcto | Muy rica: 9.772 chars, tabla 183 filas (tiene su propio scroll interno funcional), 7 cajas. |
+| **Scouting** (`SCOUTING`) | ✅ | Correcto | Fondo oscuro por diseño, 619 chars (pocos informes al inicio — estado vacío esperable). |
+| **Directiva** (`BOARD`) | ✅ | Correcto | 9 cajas, 1.732 chars, 44% de variación — panel rico y balanceado. |
+| **Club Report** (`CLUB_REPORT`) | ✅ | Correcto | 6 cajas, tabla de 4 filas. |
+| **People Hub** (`PEOPLE_HUB`) | ✅ | Correcto | 8.885 chars, 342 botones — muy denso pero con pestañas que lo ordenan. |
+| **Prensa** (`MEDIA`) | ✅ | Correcto | Portada oscura por diseño (23% claro), 654 chars. |
+| **Crónicas** (`CHRONICLES`) | ✅ | Correcto | 543 chars, poca variación (estado vacío al inicio de carrera — esperable). |
+| **Mi Carrera** (`MANAGER_PROFILE`) | ✅ | Correcto | 65% claro, 755 chars, bien legible. |
+| **Salón de la Fama** (`HALL_OF_FAME`) | ✅ | Correcto | 509 chars (vacío al inicio — esperable), fondo oscuro suave. |
+| **Libro de Temporadas** (`SEASON_HISTORY`) | ✅ | Correcto | 573 chars (vacío hasta fin de temporada — esperable). |
+| **Ranking de Ligas** (`LEAGUE_RANKING`) | ✅ | Correcto | Tabla de 42 filas — cabe con scroll propio. |
+| **Previa** (`PRE_MATCH`) | ✅ | Correcto | 78% claro, once titular + advertencias. |
+| **Partido en vivo** (`MATCH`) | ✅ | Correcto | **La más oscura del juego** (5.7% claro) — estética de cancha/relato; solo 64 chars en captura (simulación en curso, marcador 0-0). Correcto para su función. |
+| **Resumen post** (`POST_MATCH_SUMMARY`) | ✅ | Correcto | 515 chars + estadísticas, alta variación (colores de marcador). |
+| **Rueda pre/post** (`PRESS_CONFERENCE_*`) | ✅ | Correcto | ~700 chars cada una, 45 botones, legibles. |
+| **Selección: Plantel** (`NT_ARG_SQUAD`) | ✅ | Correcto | Tabla de 24 filas — cabe bien. |
+| **Selección: Tácticas** (`NT_ARG_TACTICS`) | ✅ | Correcto | Pizarra + tabla 12 filas. |
+| **Selección: Calendario** (`NT_ARG_SCHEDULE`) | 🐞 | **Recorte crítico** | Tabla de 21 filas desbordada (mismo bug). 83% claro. |
+| **Selección: Stats** (`NT_ARG_STATS`) | ✅ | Correcto | 3 tablas chicas (2 filas c/u), 5 cajas. |
+
+### 1.3 Notas de diseño (menores, no bloqueantes)
+
+1. **Estados vacíos**: Scouting, Crónicas, Salón de la Fama y Libro de Temporadas se ven espartanos al **inicio** de una carrera (poca variación de color) — es contenido que crece con el tiempo, no un defecto. ✅ *Resuelto:* empty-states ilustrados con `FMEmptyState` (icono en círculo, título, subtítulo, acción opcional).
+2. **Partido en vivo** era la pantalla con menor riqueza visual. ✅ *Resuelto:* iconos por tipo de evento en el relato, barra de posesión en vivo, estado inicial con animación.
+3. **Setup: Liga** (`SETUP_LEAGUE`) era la pantalla con menos contenido del flujo (136 chars). ✅ *Resuelto:* estrellas de reputación, división, nº de clubes, prize pool total y confederación.
+4. **Móvil**: verificado con viewport 390×844 — ninguna vista rompe el layout móvil. ✅ *Resuelto:* el bug de tablas recortadas también aplicaba en móvil y quedó corregido con `min-h-0`.
+5. ~~**Fondos oscuros en Buzón/Prensa/Crónicas/Scouting**~~ → **NOTA CORREGIDA**: era un artefacto de la primera pasada contaminada por el ErrorBoundary. Los screenshots reales de ambas auditorías confirman que esas vistas son **claras (~90% light)**, coherentes con el resto. *No hay fondos oscuros por diseño fuera del flujo de partido.*
+
+### 1.4 Auditoría de coherencia estética (análisis transversal)
+
+> **Resultado:** coherencia **~90%** — se percibe un único juego con sistema de diseño ("FM Industrial Steel"). Verificado con color medio de píxeles (meanRGB) de las 41 pantallas + análisis de código.
+
+| Dimensión | Veredicto | Detalle |
+|---|---|---|
+| **Tipografía** | 🟢 Excelente | `Verdana, sans-serif` en ~todos los componentes (FMUI + vistas). |
+| **Paleta fondo/cajas** | 🟢 Muy buena | 35/41 pantallas en la familia verde-gris clara (meanRGB `[213-235, 219-236, 197-219]`); cajas `#e8ece8` + borde `#a0b0a0`. |
+| **Componentes UI** | 🟢 Muy buena | FMBox/FMButton/FMTable/FMModal centralizados; tabs activos `#3a4a3a`; esquinas `rounded-sm`. |
+| **Flujo Setup vs juego** | 🟡 Diferente por diseño | El wizard de creación usa estética propia (fondo más azulado `SETUP_USER`), coherente internamente pero distinta del juego. |
+| **Verde-gris vs gris azulado** | 🟠 Antes ruidoso → ✅ **unificado** | Se reemplazó el gris azulado visible por la paleta verdosa (main `#b8c4b8`, theads, ErrorBoundary, PeopleHub, InboxView, menú contextual, modales de traspaso/contrato, Scouting, ClubReport, LOADING). |
+| **Botones de acción** | 🟠 Antes mixto → ✅ **unificado** | El azul `blue-700`/`blue-600` del flujo de partido y modales ahora usa verde militar `#3a4a3a`/`#4a6a4a`. |
+| **Dark mode residual** | ✅ **eliminado** | Se quitó el toggle de clase `dark` y todo el bloque CSS `.dark` (index.css); `darkMode` queda solo como campo de guardado para retrocompatibilidad. |
+| **Excepciones intencionales** | ✅ Correctas | Cancha en Tácticas/Partido (verde oscuro), marcador negro en Partido/Resumen, colores de equipos (azules reales en `data/static.ts`) — no se tocan. |
+
+### 1.5 Coherencia de jerarquía, espaciado y densidad
+
+> Medido con DOM real de las 41 pantallas (texto, botones, filas de tabla) + análisis de clases.
+
+| Dimensión | Veredicto | Detalle |
+|---|---|---|
+| **Jerarquía tipográfica** | 🟢 Coherente | Patrón consistente en todas las vistas: título grande `text-xl/2xl font-black uppercase italic tracking-tighter`, subtítulo `text-[9-10px] font-bold uppercase tracking-widest`, cuerpo `text-[10-11px]`. Cabeceras de FMBox con degradado propio. |
+| **Escala de tamaños** | 🟢 Uniforme | Textos micrométricos en rango `text-[8px]`–`text-[12px]` en casi todo el juego; solo los títulos escalan (`xl/2xl/3xl`). Es una decisión de diseño "densa" pero consistente. |
+| **Espaciado** | 🟢 Coherente | `p-2/4`, `gap-2/3`, `rounded-sm` en la práctica totalidad; modales flotantes con `max-h-[85-90vh] overflow-y-auto`. |
+| **Densidad (texto por pantalla)** | 🟠 Desbalanceada pero justificada | Rango enorme: Mercado 25.050 chars y Plantel 8.742 vs. Partido 129 y Setup Liga 239. Las pantallas densas son tablas de datos (esperable); las ligeras son flujos de acción (partido, setup). El único outlier raro: **Partido en vivo con solo 129 chars** (es inmersivo por diseño, el relato crece con la simulación). |
+| **Densidad (interacción)** | 🟢 Aceptable | Tácticas 283 botones (pizarra), PeopleHub 300 (diálogos), Mercado 476 (filas) — todas son superficies interactivas por naturaleza. |
+| **Responsive** | 🟢 Verificado | 390×844 sin roturas; tablas con vistas mobile dedicadas (SquadView/NT tienen 3 layouts). |
+| **Conclusión jerarquía** | 🟢 | No hay pantallas "perdidas"; la jerarquía tipográfica y el espaciado son sistemáticos. La densidad varía por tipo de superficie (tabla vs. flujo), lo cual es correcto. *Mejora opcional:* aumentar el tamaño de texto base en pantallas de lectura (Media/Crónicas) si se busca accesibilidad. |
 
 ---
 
@@ -34,7 +149,7 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 | # | Pantalla (state) | Estado | Qué falta / notas |
 |---|---|---|---|
 | A1 | **Carga inicial** (`LOADING`) | ✅ Completa | Nada. Splash con spinner. |
-| A2 | **Perfil del Manager** (`SETUP_USER`) | ✅ Completa | Nombre, apellido, nacionalidad (lista **hardcodeada de 15 países**), origen, fecha nac., "crear manager", "elegir manager existente" y "cargar partida" (con modal + borrar). *Mejora:* nacionalidad por país real del mundo, validación de campos vacíos. |
+| A2 | **Perfil del Manager** (`SETUP_USER`) | ✅ Completa | Nombre, apellido, nacionalidad (**~150 países reales del mundo** con bandera funcional), origen, fecha nac., "crear manager", "elegir manager existente" y "cargar partida" (con modal + borrar). *Mejora:* validación de campos vacíos. |
 | A3 | **Elegir Manager existente** (`SETUP_EXISTING_MANAGER`) | ✅ Completa | Búsqueda por nombre/club/nacionalidad, filtro por país, paginación "cargar más", modal de conflicto (tomar club / despedir). Base Wikidata (~miles de perfiles, algunos con datos básicos). *Mejora:* indicar atributos de forma más visual. |
 | A4 | **Tipo de carrera** (`SETUP_CAREER`) | ✅ Completa | 3 modos: Club / Selección / Ambos. Nada crítico. |
 | A5 | **Elegir selección** (`SETUP_NATIONAL_TEAM`) | ✅ Completa | Grid de 45 selecciones con nº de elegibles. Nada crítico. |
@@ -50,21 +165,21 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 |---|---|---|---|---|
 | B1 | **Inicio** (`HOME`) | inline en `App.tsx` | ✅ Completa | Próximo partido, competiciones con posición, historial del manager, últimas noticias. *Nota:* la `HomeView.tsx` (muerta) tiene header temático más atractivo que la versión activa. |
 | B2 | **Buzón** (`INBOX`) | `InboxView` | ✅ Completa | Filtros por categoría, leído/no leído, borrar, botón "acción requerida" que navega (fichajes, plantel, torneo, club externo). Confianza de directiva + objetivo del club en el header. |
-| B3 | **Plantel** (`*_SQUAD`, x3: Senior/Reserva/Sub-20) | `SquadView` | ✅ Completa | Ordenamiento por 8 columnas, responsive (mobile/tablet/desktop), parte médico, barra minutos Sub-21 (600 min), badges de forma/estado, menú contextual. *Mejora:* buscador dentro del plantel; vista de sueldos anuales vs. mensuales. |
+| B3 | **Plantel** (`*_SQUAD`, x3: Senior/Reserva/Sub-20) | `SquadView` | ✅ Completa | Ordenamiento por 8 columnas, responsive (mobile/tablet/desktop), parte médico, barra minutos Sub-21 (600 min), badges de forma/estado, menú contextual, **buscador por nombre/posición**, **toggle de sueldos semanal/mensual/anual** (el sueldo base del juego es mensual). |
 | B4 | **Tácticas** (`*_TACTICS`, x3) | `TacticsView` | ✅ Completa | Pizarra drag&drop, flechas de ataque, instrucciones de equipo (9 sliders + 5 checkboxes), instrucciones individuales por puesto, guardar/borrar esquemas, autopick "el segundo elige 11", panel de suplentes, modal de elección con "mejores opciones". Es la pantalla más rica del juego. |
-| B5 | **Calendario** (`*_SCHEDULE`, x3) | inline en `App.tsx` | ✅ Completa | Lista de partidos del equipo con resultados y penales. *Mejora:* filtro por competición, vista mensual. |
+| B5 | **Calendario** (`*_SCHEDULE`, x3) | inline en `App.tsx` | ✅ Completa | Lista de partidos del equipo con resultados y penales, **filtro por competición** (con reseteo automático si el filtro no aplica al equipo). *Mejora:* vista mensual. |
 | B6 | **Clasificación** (`TABLE`) | `LeagueTable` | ✅ Completa | Tabla por posición, selector de liga, selector Senior/Reserva/Sub-20, goleadores/asistencias/mejor XI del torneo. *Zonas dinámicas por liga* (CONMEBOL: 5 Lib + 5 Sud · UEFA: 4 UCL + 2 UEL · otras confederaciones con sus cupos; descenso proporcional al tamaño; ascenso en 2ª división). |
 | B7 | **Torneo** (`COMP_*`) | `TournamentHub` | ✅ Completa | Pestañas: Tabla (con grupos), Partidos, Bracket (eliminatorias), Estadísticas (goleadores/asist/rating), Premios. Maneja ligas, copas, continentales y torneos de selecciones. |
-| B8 | **Mercado** (`MARKET`) | `MarketView` | ✅ Completa | Filtros Todos/Transf./Cedibles/Libres + búsqueda. *Mejora:* ordenar por valor/precio, oferta rápida desde la lista. |
+| B8 | **Mercado** (`MARKET`) | `MarketView` | ✅ Completa | Filtros Todos/Transf./Cedibles/Libres + búsqueda, **orden por CA/valor/sueldo/edad/nombre con dirección**, **botón "Ofertar" en cada fila** que abre el modal de traspaso directo. |
 | B9 | **Buscador de jugadores** (`SEARCH`) | `SearchView` | ✅ Completa | Virtualizado (55k jugadores sin lag), filtros nombre/posición/edad/CA. |
 | B10 | **Centro de Fichajes** (`NEGOTIATIONS`) | `NegotiationsView` | ✅ Completa | Ofertas activas/historial, contraofertas, aceptar, "firmar jugador" para cerrar el trato. |
 | B11 | **Clubes del mundo** (`CLUBS_LIST`) | `ClubsListView` | ✅ Completa | Acordeón por país, 618 clubes. |
 | B12 | **Club externo** (`EXTERNAL_CLUB`) | inline + `SquadView` | ✅ Completa | Plantilla del club visitante, click en jugador → ficha. |
-| B13 | **Economía** (`ECONOMY`) | `EconomyView` | ✅ Completa | Balance, presupuesto fichajes/salarial, previsión mensual (ingresos/gastos detallados), salud financiera, historial mensual. *Mejora:* gráfico de evolución (hoy es tabla). |
+| B13 | **Economía** (`ECONOMY`) | `EconomyView` | ✅ Completa | Balance, presupuesto fichajes/salarial, previsión mensual (ingresos/gastos detallados), salud financiera, historial mensual y **gráfico SVG de evolución** (línea de saldo + barras de resultado mensual). |
 | B14 | **Cuerpo Técnico** (`STAFF`) | `StaffView` | ✅ Completa | Tabla de staff, ficha completa (biografía generada, perfil táctico, atributos, contrato, historial, palmarés, clubes previos), delegación de 6 tareas (entreno, prensa, charlas, reserva, sub-20, scouting). |
-| B15 | **Entrenamiento** (`TRAINING`) | `TrainingView` | ✅ Completa | Presets de carga, sliders por categoría por jugador, barra de intensidad, delegación a staff, editor mobile. *Mejora:* plan de entrenamiento semanal (días), foco por posición. |
+| B15 | **Entrenamiento** (`TRAINING`) | `TrainingView` | ✅ Completa | Presets de carga, sliders por categoría por jugador, barra de intensidad, delegación a staff, editor mobile, **plan semanal por días (Lun-Dom, 8 categorías + descanso)** que refuerza el desarrollo de las categorías elegidas, **foco por posición** (Porteros/Defensas/Medios/Delanteros) con presets específicos. |
 | B16 | **Scouting** (`SCOUTING`) | `ScoutingView` | ✅ Completa | Informes (CA/PA, fortalezas/debilidades, personalidad), no leídos, lista de seguimiento, buscador para pedir informe, informe aleatorio. |
-| B17 | **Directiva** (`BOARD`) | `BoardView` | 🟡 Parcial | Confianza, mejora de instalaciones (entreno/juveniles), aumento de presupuesto. **Falta:** objetivos de temporada editables, reuniones/diálogos más profundos (sí existen en PeopleHub), control de contrato del manager. |
+| B17 | **Directiva** (`BOARD`) | `BoardView` | ✅ Completa | Confianza, mejora de instalaciones (entreno/juveniles), aumento de presupuesto, **objetivos de temporada editables** (6 objetivos con aprobación de la junta, efectos en confianza + mensaje al buzón), **reuniones con la directiva** (4 temas con respuesta contextual según confianza y acta), tarjeta de cargo/contrato del manager. |
 | B18 | **Información Club** (`CLUB_REPORT`) | `ClubReport` | ✅ Completa | Datos, récords históricos (max goleador/más partidos), palmarés, equipación SVG, presupuestos. |
 | B19 | **Centro de Personas** (`PEOPLE_HUB`) | `PeopleHub` | ✅ Completa | 6 pestañas: Jugadores, Staff, Relaciones, Prensa, Red de DT, Directiva. Diálogos con tono (suave/moderado/agresivo) sobre jugadores, staff, directiva, declaraciones a prensa y contacto con otros DTs. Es el corazón del "mundo vivo". |
 | B20 | **Prensa** (`MEDIA`) | `MediaView` | ✅ Completa | Portada de periódico, filtros por categoría, detalle de noticia. *Bug de typo `PRASE` corregido.* |
@@ -115,7 +230,7 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 | E2 | **Plantel Selección** (`NT_*_SQUAD`) | `NationalTeamView` | ✅ Completa | Convocatoria gestionable (23 jugadores), asumir control, filtro por posición, tabla ordenable, dorsales. |
 | E3 | **Tácticas Selección** (`NT_*_TACTICS`) | `NationalTeamView` | ✅ Completa | **Pizarra táctil editable** con 5 formaciones (4-4-2, 4-3-3, 4-2-3-1, 3-5-2, 5-4-1): toca un casillero para elegir jugador de la convocatoria (ranked por aptitud), **selección de capitán** (C), instrucciones de equipo (mentalidad/presión/pase + foco + contraataque), guardado separado de once y de instrucciones. El motor **respeta la alineación guardada** al simular y el capitán recibe bonus. |
 | E4 | **Partidos Selección** (`NT_*_SCHEDULE`) | `NationalTeamView` | ✅ Completa | Calendario de compromisos internacionales. |
-| E5 | **Estadísticas Selección** (`NT_*_STATS`) | `NationalTeamView` | ✅ Completa | Goleadores, asistencias, mejor valoración. *Mejora:* usar ratings reales en vez de (goles+asist)/PJ. |
+| E5 | **Estadísticas Selección** (`NT_*_STATS`) | `NationalTeamView` | ✅ Completa | Goleadores, asistencias, **mejor valoración con media real por partido** (`totalRating / PJ`). |
 
 ---
 
@@ -150,9 +265,17 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 5. ~~IA de partido~~ → **hecho** ✅ (sustituciones con conciencia de marcador: refresco ofensivo persiguiendo, cierre defensivo protegiendo ventaja).
 6. ~~Historial entre temporadas~~ → **hecho** ✅ (Libro de Temporadas `SEASON_HISTORY` consultable).
 7. ~~Generalizar la tabla de clasificación~~ → **hecho** ✅ (zonas dinámicas por confederación/tier).
-8. **Editor de datos** (clubes, jugadores, competiciones) — feature grande pendiente.
-9. **Directiva** (B17): objetivos de temporada editables y reuniones más profundas.
-10. **Nacionalidades hardcodeadas en setup** (A2): usar los países reales del mundo.
+8. **Editor de datos** (clubes, jugadores, competiciones) — feature grande pendiente (dejado para el final a propósito).
+9. ~~**Directiva** (B17)~~ → **hecho** ✅ (objetivos editables + reuniones con acta + tarjeta de cargo).
+10. ~~**Nacionalidades hardcodeadas en setup** (A2)~~ → **hecho** ✅ (~150 países reales con bandera).
+11. ~~Buscador/sueldos en Plantel, filtro Calendario, orden/oferta Mercado, gráfico Economía, plan semanal + foco posición en Entrenamiento, ratings reales en Selección~~ → **hechos** ✅.
+12. *Mejoras menores restantes:* validación de campos vacíos en setup (A2), vista mensual del Calendario, control de contrato del manager negociable (hoy informativo).
+13. ~~🔴 **FIX BUG VISUAL CRÍTICO — tablas altas recortadas sin scroll**~~ → **hecho** ✅ (se añadió `min-h-0` al `FMBox` del design system; verificado en navegador real: Plantel 4.590px scrolleable, Mercado 22.622px scrolleable, Calendario Selección scrolleable — test de scroll con scrollTop 0→3880 OK).
+14. ~~**Partido en vivo con mayor riqueza visual** (C3)~~ → **hecho** ✅ (iconos por tipo de evento en el relato, barra de posesión en vivo bajo el marcador, estado inicial con animación y jerarquía de mitad).
+15. ~~**Empty-states ilustrados** (Scouting, Crónicas, Salón de la Fama, Libro de Temporadas)~~ → **hechos** ✅ (nuevo componente `FMEmptyState` del design system: icono en círculo, título, subtítulo y acción opcional).
+16. ~~**Setup: Liga enriquecida** (A7)~~ → **hecho** ✅ (por liga: estrellas de reputación dinámica, división, nº de clubes, prize pool total y confederación).
+17. ~~**Unificación de paleta y dark mode**~~ → **hecho** ✅ (análisis de coherencia estética en sección I.1.4: main a `#b8c4b8`, slate azulado → verde-gris en 14 archivos, botones azules → verde militar, dark mode residual eliminado del CSS y del DOM; también bordes internos de los modales de traspaso/contrato unificados a `#3a4a3a`).
+18. ~~**Análisis de jerarquía tipográfica/espaciado/densidad**~~ → **hecho** ✅ (sección I.1.5: jerarquía y espaciado coherentes; densidad varía por tipo de superficie —tabla vs. flujo—, correcto; se documentó la mejora opcional de accesibilidad en lecturas largas).
 
 ---
 

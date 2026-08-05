@@ -21,6 +21,58 @@ const StatCard = ({ icon, label, value, color }: { icon: React.ReactNode, label:
   </div>
 );
 
+const FinanceChart: React.FC<{ history: { month: string; income: number; expenses: number; balance: number }[] }> = ({ history }) => {
+  const W = 600, H = 180, PAD = 30, BOTTOM = 26;
+  const data = history;
+  const nets = data.map(e => e.income - e.expenses);
+  const max = Math.max(...data.map(e => Math.abs(e.balance)).concat(nets.map(Math.abs)), 1);
+  const stepX = data.length > 1 ? (W - PAD * 2) / (data.length - 1) : 0;
+  const x = (i: number) => PAD + i * stepX;
+  const midY = (H - BOTTOM) / 2;
+  const scale = (midY - 8) / max;
+  const yBalance = (v: number) => midY - v * scale;
+  const barH = (v: number) => Math.max(2, Math.abs(v) * scale);
+  const points = data.map((e, i) => `${x(i)},${yBalance(e.balance)}`).join(' ');
+  const labelEvery = Math.max(1, Math.ceil(data.length / 6));
+
+  return (
+    <div className="p-3 bg-white">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Evolución del saldo y del resultado mensual">
+        <line x1={PAD} y1={midY} x2={W - PAD} y2={midY} stroke="#a0b0a0" strokeDasharray="4 3" strokeWidth="1" />
+        {data.map((e, i) => {
+          const net = e.income - e.expenses;
+          return (
+            <rect
+              key={`bar-${i}`}
+              x={x(i) - 4}
+              y={net >= 0 ? midY - barH(net) : midY}
+              width={8}
+              height={barH(net)}
+              fill={net >= 0 ? '#16a34a' : '#dc2626'}
+              opacity={0.85}
+              rx={1}
+            />
+          );
+        })}
+        <polyline points={points} fill="none" stroke="#1a2a1a" strokeWidth="2" strokeLinejoin="round" />
+        {data.map((e, i) => (
+          <circle key={`dot-${i}`} cx={x(i)} cy={yBalance(e.balance)} r={3} fill="#1a2a1a" />
+        ))}
+        {data.map((e, i) => (
+          i % labelEvery === 0 ? (
+            <text key={`lb-${i}`} x={x(i)} y={H - 8} textAnchor="middle" fontSize={8} fill="#64748b" fontFamily="Verdana, sans-serif">{e.month.split(' ')[0]}</text>
+          ) : null
+        ))}
+      </svg>
+      <div className="flex flex-wrap gap-4 justify-center mt-2 text-[8px] font-black uppercase tracking-widest text-slate-500" style={{ fontFamily: 'Verdana, sans-serif' }}>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 inline-block bg-[#1a2a1a] rounded-[1px]"></span> Saldo</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 inline-block bg-green-600 rounded-[1px]"></span> Mes positivo</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 inline-block bg-red-600 rounded-[1px]"></span> Mes negativo</span>
+      </div>
+    </div>
+  );
+};
+
 const FinanceRow = ({ label, value, type }: { label: string, value: number, type: 'INCOME' | 'EXPENSE' }) => (
   <div className="flex justify-between items-center py-2.5 border-b border-[#d0d8d0] last:border-0 hover:bg-[#ccd9cc] px-2 transition-colors">
     <span className="text-slate-600 font-bold uppercase text-[10px] tracking-wide" style={{ fontFamily: 'Verdana, sans-serif' }}>{label}</span>
@@ -151,6 +203,12 @@ export const EconomyView: React.FC<EconomyViewProps> = ({ club }) => {
             </div>
            </div>
         </FMBox>
+
+        {club.finances.monthlyHistory.length > 1 && (
+          <FMBox title="Evolución Financiera" noPadding className="mt-4 lg:col-span-2">
+            <FinanceChart history={club.finances.monthlyHistory} />
+          </FMBox>
+        )}
 
         {club.finances.monthlyHistory.length > 0 && (
           <FMBox title="Historial Mensual" noPadding className="mt-4">

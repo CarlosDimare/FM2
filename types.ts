@@ -250,6 +250,8 @@ export interface Club {
   scoutingDelegatedTo?: string;
   boardConfidence: number;
   seasonObjective?: 'WIN_LEAGUE' | 'TOP_4' | 'TOP_HALF' | 'AVOID_RELEGATION' | 'WIN_CUP' | 'CUP_SEMIS';
+  /** Plan semanal de entrenamiento: día (LUN..DOM) → categoría de foco o descanso */
+  trainingWeeklyPlan?: Partial<Record<string, TrainingCategory | 'REST'>>;
   shortlistedPlayerIds: string[];
   u21MinutesThisSeason: number;
   records: ClubRecords;

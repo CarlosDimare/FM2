@@ -35,9 +35,12 @@ export class WorldManager {
   seasonHistory: SeasonRecord[] = [];
 
   // Caching for performance
-  private playersByClubCache: Map<string, { timestamp: number; players: Player[] }> = new Map();
   private clubByIdCache: Map<string, Club> = new Map();
-  private CACHE_TTL = 1000; // 1 second cache
+  /** Índice persistente clubId → jugadores (reconstruido solo cuando algo muta) */
+  private playersByClubIndex: Map<string, Player[]> | null = null;
+  private playerByIdIndex: Map<string, Player> | null = null;
+  private playersIndexDirty = true;
+  private indexedPlayersCount = 0;
 
   constructor() { this.initWorld(); }
 
@@ -410,16 +413,32 @@ getClub(id: string) {
     if (club) this.clubByIdCache.set(id, club);
     return club;
   }
-  getPlayer(id: string) { return this.players.find(p => p.id === id); }
-  getPlayersByClub(clubId: string) {
-    const cached = this.playersByClubCache.get(clubId);
-    const now = Date.now();
-    if (cached && (now - cached.timestamp) < this.CACHE_TTL) {
-      return cached.players;
+  private ensurePlayerIndices() {
+    if (!this.playersIndexDirty && this.indexedPlayersCount === this.players.length) return;
+    const byClub = new Map<string, Player[]>();
+    const byId = new Map<string, Player>();
+    for (const p of this.players) {
+      byId.set(p.id, p);
+      const arr = byClub.get(p.clubId);
+      if (arr) arr.push(p); else byClub.set(p.clubId, [p]);
     }
-    const players = this.players.filter(p => p.clubId === clubId);
-    this.playersByClubCache.set(clubId, { timestamp: now, players });
-    return players;
+    this.playersByClubIndex = byClub;
+    this.playerByIdIndex = byId;
+    this.playersIndexDirty = false;
+    this.indexedPlayersCount = this.players.length;
+  }
+
+  /** Invalidate player indices after bulk mutations (e.g. loading a save). */
+  markPlayersDirty() { this.playersIndexDirty = true; }
+
+  getPlayer(id: string) {
+    this.ensurePlayerIndices();
+    return this.playerByIdIndex!.get(id);
+  }
+  /** Devuelve la misma instancia del array (bucket del índice): los callers NO deben mutarlo in-place. */
+  getPlayersByClub(clubId: string) {
+    this.ensurePlayerIndices();
+    return this.playersByClubIndex!.get(clubId) || [];
   }
   /** Pre-fetch squads for multiple clubs at once — reduces O(n×m) to O(m) for fixture loops */
   preFetchSquads(clubIds: string[]): Map<string, Player[]> {
@@ -453,8 +472,9 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
   getTactics() { return this.tactics; }
 
   private invalidateClubCache(clubId: string) {
-    this.playersByClubCache.delete(clubId);
     this.clubByIdCache.delete(clubId);
+    // Un jugador cambió de club (traspaso/cesión/contrato) → reconstruir índices de forma perezosa
+    this.playersIndexDirty = true;
   }
 
    getPlayersByNationalTeam(teamId: string): Player[] {
@@ -657,7 +677,22 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
     player.personality = this.assignPlayerPersonality(player.leadership, player.loyalty, player.stats.internal.agresividad, player.stats.internal.decision, player.stats.internal.vision);
     return player;
   }
+  /** Versión de fixtures: se incrementa cada vez que cambian resultados (invalida tablas cacheadas). */
+  private fixturesVersion = 0;
+  private leagueTableCache = new Map<string, { version: number; table: TableEntry[] }>();
+
+  /**
+   * Señaliza que los resultados de partidos cambiaron (invalida la caché de tablas).
+   * INVARIANTE: TODA mutación de resultados (f.played/scores) DEBE llamar a este método,
+   * o las tablas de posiciones quedarán obsoletas hasta el próximo avance.
+   */
+  bumpFixturesVersion() { this.fixturesVersion++; }
+
   getLeagueTable(compId: string, fixtures: Fixture[], squadType: SquadType, groupId?: number): TableEntry[] {
+    const key = `${compId}|${squadType}|${groupId ?? ''}`;
+    const cached = this.leagueTableCache.get(key);
+    if (cached && cached.version === this.fixturesVersion) return [...cached.table];
+
     const table: Record<string, TableEntry> = {};
     
     // Fix: We must only initialize the table with clubs that are actually in the requested group
@@ -687,9 +722,11 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
       else { h.drawn++; a.drawn++; h.points++; a.points++; }
     });
     
-    return Object.values(table)
+    const result = Object.values(table)
         .map(e => ({ ...e, gd: e.gf - e.ga }))
         .sort((a,b) => b.points - a.points || b.gd - a.gd || b.gf - a.gf);
+    this.leagueTableCache.set(key, { version: this.fixturesVersion, table: result });
+    return result;
   }
 
   getClubsByCompetition(compId: string, fixtures: Fixture[], groupId?: number): Club[] {
@@ -2346,6 +2383,36 @@ offer.status = 'REJECTED';
     return { success: true, amount: requestedAmount, message: `Aprobado: +$${requestedAmount.toLocaleString()}` };
   }
 
+  setSeasonObjective(clubId: string, objective: NonNullable<Club['seasonObjective']>, date: Date): { success: boolean; message: string } {
+    const club = this.getClub(clubId);
+    if (!club) return { success: false, message: 'Club no encontrado' };
+    if (club.seasonObjective === objective) return { success: false, message: 'Ya es el objetivo vigente de la temporada.' };
+
+    const labels: Record<string, string> = {
+      WIN_LEAGUE: 'Ganar la Liga', TOP_4: 'Clasificar a competición europea (Top 4)',
+      WIN_CUP: 'Ganar la Copa', CUP_SEMIS: 'Alcanzar semifinales de Copa',
+      TOP_HALF: 'Terminar en la mitad superior', AVOID_RELEGATION: 'Evitar el descenso',
+    };
+    // Ambición: objetivos más exigentes tensan la relación con la directiva; los modestos la relajan.
+    const ambition: Record<string, number> = {
+      WIN_LEAGUE: 6, TOP_4: 4, WIN_CUP: 4, CUP_SEMIS: 2, TOP_HALF: 0, AVOID_RELEGATION: -3,
+    };
+    const ambitionScore = ambition[objective] ?? 0;
+    const acceptChance = (club.boardConfidence / 100) * 0.6 + (club.reputation / 10000) * 0.4;
+    if (Math.random() > acceptChance) {
+      club.boardConfidence = Math.max(0, club.boardConfidence - 5);
+      this.addInboxMessage('SQUAD', 'Directiva rechaza el cambio de objetivo',
+        `La directiva ha rechazado tu propuesta de fijar como objetivo \"${labels[objective]}\". Consideran que el momento no es adecuado para cambiar las exigencias.`, date);
+      return { success: false, message: 'La directiva rechazó la propuesta.' };
+    }
+    club.seasonObjective = objective;
+    club.boardConfidence = Math.max(0, Math.min(100, club.boardConfidence - ambitionScore));
+    const confDirection = ambitionScore > 0 ? 'Se esperan exigencias mayores y la directiva estará más pendiente de tus resultados.' : ambitionScore < 0 ? 'La directiva valora tu prudencia y ha relajado la presión sobre el cargo.' : 'La directiva toma nota del objetivo consensuado.';
+    this.addInboxMessage('SQUAD', 'Nuevo objetivo de temporada',
+      `La directiva ha acordado fijar como objetivo de la temporada: \"${labels[objective]}\". ${confDirection}`, date);
+    return { success: true, message: `Objetivo fijado: ${labels[objective]}` };
+  }
+
   checkManagerJobOffers(date: Date, userClubId: string, managerReputation: number): void {
     if (managerReputation < 50) return;
     if (Math.random() > 0.06) return;
@@ -2645,6 +2712,7 @@ generateYouthIntake(year: number) {
       // Release low-potential U20 players over 19
       youthPlayers.forEach(player => {
         if (player.age >= 19 && player.potentialAbility < 100) {
+          this.invalidateClubCache(player.clubId);
           player.clubId = 'FREE_AGENT';
           player.squad = 'U20';
         }

@@ -70,7 +70,7 @@ export const FMBox: React.FC<{
     headerRight?: React.ReactNode;
 }> = ({ title, children, className = "", noPadding = false, headerRight }) => {
     return (
-        <div className={`bg-[#e8ece8] border border-[#a0b0a0] rounded-sm shadow-md flex flex-col ${className}`}>
+        <div className={`bg-[#e8ece8] border border-[#a0b0a0] rounded-sm shadow-md flex flex-col min-h-0 ${className}`}>
             {title && (
                 <div className="border-b border-[#a0b0a0] px-2 py-1 flex justify-between items-center shrink-0 h-8" 
                      style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
@@ -78,9 +78,28 @@ export const FMBox: React.FC<{
                     {headerRight && <div>{headerRight}</div>}
                 </div>
             )}
-            <div className={`flex-1 overflow-hidden ${noPadding ? '' : 'p-2'}`}>
+            <div className={`flex-1 min-h-0 overflow-hidden ${noPadding ? '' : 'p-2'}`}>
                 {children}
             </div>
+        </div>
+    );
+};
+
+export const FMEmptyState: React.FC<{
+    icon: React.ReactNode;
+    title: string;
+    subtitle?: string;
+    action?: React.ReactNode;
+    className?: string;
+}> = ({ icon, title, subtitle, action, className = "" }) => {
+    return (
+        <div className={`flex flex-col items-center justify-center text-center px-6 py-14 ${className}`}>
+            <div className="w-16 h-16 rounded-full bg-[#e0e8e0] border-2 border-[#a0b0a0] shadow-inner flex items-center justify-center text-[#5a6a5a] mb-4">
+                {icon}
+            </div>
+            <h4 className="text-[#1a1a1a] font-black text-[11px] uppercase tracking-widest mb-2" style={{ fontFamily: 'Verdana, sans-serif' }}>{title}</h4>
+            {subtitle && <p className="text-[#6a7a6a] text-[10px] font-bold uppercase tracking-wide max-w-xs leading-relaxed" style={{ fontFamily: 'Verdana, sans-serif' }}>{subtitle}</p>}
+            {action && <div className="mt-5">{action}</div>}
         </div>
     );
 };

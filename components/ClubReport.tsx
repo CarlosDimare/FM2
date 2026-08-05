@@ -64,7 +64,7 @@ const KitVisual: React.FC<{ primary: string, secondary: string, label: string }>
            <Shield size={20} className="text-black" />
         </div>
       </div>
-      <span className="mt-3 text-[10px] font-black uppercase text-slate-600 tracking-[0.2em] bg-slate-100 px-3 py-0.5 border border-slate-300 rounded-sm shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-colors">
+      <span className="mt-3 text-[10px] font-black uppercase text-slate-600 tracking-[0.2em] bg-slate-100 px-3 py-0.5 border border-slate-300 rounded-sm shadow-inner group-hover:bg-[#3a4a3a] group-hover:text-white transition-colors">
         {label}
       </span>
     </div>

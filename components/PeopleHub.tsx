@@ -208,7 +208,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
           <FMBox title="Tono público">
             <div className="space-y-2">
               {(['MILD', 'MODERATE', 'AGGRESSIVE'] as const).map(tone => (
-                <button key={tone} onClick={() => setInteractionTone(tone)} className={`w-full py-2 border-2 text-[10px] font-black uppercase ${interactionTone === tone ? 'bg-slate-900 text-white border-slate-900' : 'bg-white border-slate-300 text-slate-600'}`}>
+                <button key={tone} onClick={() => setInteractionTone(tone)} className={`w-full py-2 border-2 text-[10px] font-black uppercase ${interactionTone === tone ? 'bg-[#3a4a3a] text-white border-[#3a4a3a]' : 'bg-white border-slate-300 text-slate-600'}`}>
                   {tone === 'MILD' ? 'Sereno' : tone === 'MODERATE' ? 'Profesional' : 'Desafiante'}
                 </button>
               ))}
@@ -302,7 +302,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
       {interactionType === 'dialog' && selectedPlayer && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white w-full max-w-lg rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden">
-            <header className="bg-slate-900 text-white p-4 flex justify-between items-center">
+            <header className="bg-[#3a4a3a] text-white p-4 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black uppercase italic">Interacción con {selectedPlayer.name}</h3>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Elige el tono de la charla</p>
@@ -316,7 +316,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                     key={tone}
                     onClick={() => setInteractionTone(tone)}
                     className={`py-2 px-3 rounded-sm border-2 font-black text-[10px] uppercase transition-all ${
-                      interactionTone === tone ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 hover:border-slate-400'
+                      interactionTone === tone ? 'border-[#3a4a3a] bg-[#3a4a3a] text-white' : 'border-slate-300 hover:border-slate-400'
                     }`}
                   >
                     {tone === 'MILD' ? 'Suave' : tone === 'MODERATE' ? 'Moderado' : 'Agresivo'}
@@ -349,7 +349,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
       {interactionType === 'dialog' && selectedStaff && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white w-full max-w-lg rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden">
-            <header className="bg-slate-900 text-white p-4 flex justify-between items-center">
+            <header className="bg-[#3a4a3a] text-white p-4 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black uppercase italic">Interacción con {selectedStaff.name}</h3>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">{selectedStaff.role}</p>
@@ -363,7 +363,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                     key={tone}
                     onClick={() => setInteractionTone(tone)}
                     className={`py-2 px-3 rounded-sm border-2 font-black text-[10px] uppercase transition-all ${
-                      interactionTone === tone ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 hover:border-slate-400'
+                      interactionTone === tone ? 'border-[#3a4a3a] bg-[#3a4a3a] text-white' : 'border-slate-300 hover:border-slate-400'
                     }`}
                   >
                     {tone === 'MILD' ? 'Suave' : tone === 'MODERATE' ? 'Moderado' : 'Agresivo'}
@@ -393,7 +393,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
       {interactionType && ['BUDGET_REQUEST', 'FACILITY_IMPROVEMENT', 'CONTRACT_EXTENSION', 'TACTICAL_AUTONOMY'].includes(interactionType) && (
         <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white w-full max-w-lg rounded-sm shadow-2xl border-2 border-slate-500 flex flex-col overflow-hidden">
-            <header className="bg-slate-900 text-white p-4 flex justify-between items-center">
+            <header className="bg-[#3a4a3a] text-white p-4 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-black uppercase italic">Proponer a la Directiva</h3>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Elige el tono de la propuesta</p>
@@ -407,7 +407,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
                     key={tone}
                     onClick={() => setInteractionTone(tone)}
                     className={`py-2 px-3 rounded-sm border-2 font-black text-[10px] uppercase transition-all ${
-                      interactionTone === tone ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 hover:border-slate-400'
+                      interactionTone === tone ? 'border-[#3a4a3a] bg-[#3a4a3a] text-white' : 'border-slate-300 hover:border-slate-400'
                     }`}
                   >
                     {tone === 'MILD' ? 'Suave' : tone === 'MODERATE' ? 'Moderado' : 'Agresivo'}

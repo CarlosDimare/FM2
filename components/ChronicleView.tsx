@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Chronicle, ChronicleType } from '../types';
 import { world } from '../services/worldManager';
-import { FMButton } from './FMUI';
+import { FMButton, FMEmptyState } from './FMUI';
 import { BookOpen, ArrowLeft, Filter, Calendar, Trophy, Star, Clock, FileText } from 'lucide-react';
 
 interface ChronicleViewProps {
@@ -112,11 +112,11 @@ export const ChronicleView: React.FC<ChronicleViewProps> = ({ onBack, clubId }) 
         ) : (
           <div className="max-w-2xl mx-auto space-y-3">
             {sortedChronicles.length === 0 ? (
-              <div className="text-center py-12">
-                <BookOpen size={48} className="text-slate-400 mx-auto mb-4" />
-                <p className="text-slate-600 text-sm">Aún no hay crónicas disponibles.</p>
-                <p className="text-slate-500 text-[10px] mt-2">Juega partidos para generar crónicas automáticas.</p>
-              </div>
+              <FMEmptyState
+                icon={<BookOpen size={28} />}
+                title="Aún no hay crónicas disponibles"
+                subtitle="Juega partidos y completa meses de gestión para que se generen crónicas automáticas de tu carrera."
+              />
             ) : (
               sortedChronicles.map(chronicle => (
                 <button

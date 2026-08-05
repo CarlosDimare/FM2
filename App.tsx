@@ -34,8 +34,9 @@ import { ChronicleView } from './components/ChronicleView';
 import { ManagerProfileView } from './components/ManagerProfileView';
 import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
-import { generateMatchChronicle, generateMonthlyChronicle, generateNationalTeamChronicle } from './services/chronicleService';
-import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager, NationalTeamMatchOptions, NationalTeamChronicleContext, CareerMode, Chronicle } from './types';
+import { generateMatchChronicle, generateMonthlyChronicle } from './services/chronicleService';
+import { simulateDayFixtures } from './services/simulationService';
+import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager, CareerMode, Chronicle } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID, randomInt } from './services/utils';
 import { MatchSimulator } from './services/engine';
 import { LeagueEngine } from './services/leagueEngine';
@@ -46,7 +47,7 @@ import { FMButton, FMLoadingOverlay, FMModal } from './components/FMUI';
 import { useWorldStore } from './stores/worldStore';
 import { useUIStore } from './stores/uiStore';
 import { useGameStore } from './stores/gameStore';
-import { getFlagUrl, TACTIC_PRESETS } from './data/static';
+import { getFlagUrl, TACTIC_PRESETS, WORLD_COUNTRIES } from './data/static';
 import { ALL_REAL_MANAGERS, MANAGER_DATABASE_META } from './data/managerDatabase';
 
 const AttrBar: React.FC<{ label: string; value: number; color: string }> = ({ label, value, color }) => {
@@ -63,14 +64,13 @@ const AttrBar: React.FC<{ label: string; value: number; color: string }> = ({ la
 };
 
 const App: React.FC = () => {
-  const darkMode = useGameStore(s => s.darkMode);
-  const setDarkMode = useGameStore(s => s.setDarkMode);
   const [showOnboarding, setShowOnboarding] = React.useState(false);
   const [showConflictModal, setShowConflictModal] = React.useState(false);
   const [managerToConfirm, setManagerToConfirm] = React.useState<RealManager | null>(null);
   const [managerSearch, setManagerSearch] = React.useState('');
   const [managerCountryFilter, setManagerCountryFilter] = React.useState('ALL');
   const [managerResultLimit, setManagerResultLimit] = React.useState(120);
+  const [scheduleCompFilter, setScheduleCompFilter] = React.useState('ALL');
   const [lastMatchStats, setLastMatchStats] = React.useState<Record<string, PlayerMatchStats>>({});
   const [lastChronicle, setLastChronicle] = React.useState<Chronicle | null>(null);
 
@@ -84,10 +84,6 @@ const App: React.FC = () => {
   useEffect(() => {
     requestNotificationPermission();
   }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-  }, [darkMode]);
 
   const notify = useWorldStore(s => s.notify);
 
@@ -121,48 +117,7 @@ const {
     }
   }, [selectedPlayer, comparePlayerA, comparePlayerB]);
 
-  const getClubNationalTeamId = () => {
-    const manager = world.nationalTeamManager;
-    if (!userClub || !manager?.nationalTeams) return undefined;
-    const normalizeCountry = (country: string) => country.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    const userCountry = normalizeCountry(userClub.country);
-    return manager.nationalTeams.find((team: any) => normalizeCountry(team.country) === userCountry)?.id;
-  };
-
-  const getNationalChronicleTeamIds = (fixture: Fixture): string[] => {
-    const manager = world.nationalTeamManager;
-    const ids = new Set<string>();
-    if (manager?.controlledTeamId && (fixture.homeTeamId === manager.controlledTeamId || fixture.awayTeamId === manager.controlledTeamId)) {
-      ids.add(manager.controlledTeamId);
-    }
-    const clubTeamId = getClubNationalTeamId();
-    if (clubTeamId && (fixture.homeTeamId === clubTeamId || fixture.awayTeamId === clubTeamId)) ids.add(clubTeamId);
-    return [...ids];
-  };
-
-  const getNationalMatchOptions = (fixture: Fixture): NationalTeamMatchOptions => {
-    const manager = world.nationalTeamManager;
-    const teamId = manager?.controlledTeamId;
-    if (!manager || !teamId) return {};
-    const squadIds = manager.getControlledSquadIds(teamId);
-    const tactic = manager.getControlledTactic(teamId);
-    if (fixture.homeTeamId === teamId) return { homeSquadIds: squadIds, homeTactic: tactic };
-    if (fixture.awayTeamId === teamId) return { awaySquadIds: squadIds, awayTactic: tactic };
-    return {};
-  };
-
   const activeManagedTeamId = userClub?.id || selectedNationalTeamId || undefined;
-
-  const getNationalChronicleContext = (teamId: string): NationalTeamChronicleContext | undefined => {
-    const manager = world.nationalTeamManager;
-    if (!manager?.isControlled(teamId)) return undefined;
-    return {
-      controlled: true,
-      squadSize: manager.getControlledSquadIds(teamId).length,
-      squadIds: manager.getControlledSquadIds(teamId),
-      tactic: manager.getControlledTactic(teamId),
-    };
-  };
 
   const getMatchSquad = (clubId: string) => {
     const clubPlayers = world.getPlayersByClub(clubId);
@@ -199,6 +154,7 @@ const {
   }, [handleGlobalClick]);
 
   const advanceTimeRef = useRef<() => void>(null as any);
+  const advancingRef = useRef(false);
   const lastChronicleMonth = useRef<number>(-1);
   const perfSamples = useRef<number[]>([]);
   useEffect(() => {
@@ -313,6 +269,7 @@ const {
   };
 
   const advanceTime = async () => {
+    if (advancingRef.current) return; // evita doble avance (espacio / doble clic mientras procesa)
     const t0 = performance.now();
     // ── Fixture stats ──────────────────────────────────────────────
     const deepIds = new Set(useGameStore.getState().deepSimLeagues);
@@ -376,7 +333,20 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       return;
     }
 
-    await performAutoSave();
+    try {
+    advancingRef.current = true;
+
+    // ── Feedback visual: mostrar que el juego está procesando (el avance es síncrono) ──
+    setIsSimulating(true);
+    setSimProgress(0);
+    setSimProgressDetail('Avanzando al día siguiente…');
+    await new Promise(r => setTimeout(r, 30));
+
+    // Autosave cada 3 días para no bloquear el avance diario (quien lo tenga activado)
+    if (isAutoSaveEnabled && currentDate.getDate() % 3 === 0) {
+      setSimProgressDetail('Guardando partida…');
+      await performAutoSave();
+    }
 
     if (userClub || selectedNationalTeamId) {
       const hasClubMatchToday = Boolean(userClub && fixtures.some(f =>
@@ -390,6 +360,8 @@ if (result.userWonLeague) gs.trackTitle('Liga');
     if (hasClubMatchToday) {
       console.log(`  ⏸ partido del usuario hoy — pausado`);
       console.groupEnd();
+      setIsSimulating(false);
+      setSimProgress(0);
       // Check if lineup is configured (need 11 starters)
       const starters = world.getPlayersByClub(userClub!.id).filter(p => p.isStarter && p.squad === 'SENIOR');
       if (starters.length < 11) {
@@ -402,68 +374,12 @@ if (result.userWonLeague) gs.trackTitle('Liga');
     // Los partidos de selección se simulan en el bloque de fixtures de abajo;
     // no se interrumpe aquí para evitar dejar el mismo encuentro pendiente.
 
-      const dayFixtures = fixtures.filter(f =>
-        f.date.toDateString() === currentDate.toDateString() && !f.played
-      );
       console.time('  ⚽ simular partidos');
-      // Pre-cache squads for all clubs in today's fixtures
-      const uniqueClubIds = [...new Set(dayFixtures.flatMap(f => [f.homeTeamId, f.awayTeamId]))];
-      const squads = world.preFetchSquads(uniqueClubIds);
-      dayFixtures.forEach(f => {
-        const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
-        
-        if (isNationalTeamMatch) {
-          // National team match simulation
-          const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId, getNationalMatchOptions(f));
-          f.played = true;
-          f.homeScore = result.homeScore;
-          f.awayScore = result.awayScore;
-          getNationalChronicleTeamIds(f).forEach(teamId => {
-            generateNationalTeamChronicle(f, result.homeScore, result.awayScore, result.stats, teamId, result.events, getNationalChronicleContext(teamId));
-          });
-        } else {
-          // Club match simulation
-          const { homeScore, awayScore, stats, events } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-          f.played = true;
-          f.homeScore = homeScore;
-          f.awayScore = awayScore;
-          const hSquad = (squads.get(f.homeTeamId) || []).filter(p => p.squad === f.squadType);
-          const aSquad = (squads.get(f.awayTeamId) || []).filter(p => p.squad === f.squadType);
-          MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-          const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
-          const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-          if (f.competitionId === 'FRIENDLY') {
-            // Friendlies: no suspensions, no U21 tracking, income + team benefits
-            world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
-            if (f.homeTeamId === userClub?.id || f.awayTeamId === userClub?.id) {
-              const userClubId = userClub?.id || '';
-              if (userClubId) {
-                const club = world.getClub(userClubId);
-                if (club) club.teamCohesion = Math.min(100, (club.teamCohesion || 50) + 2);
-                // Only players who played get the boost
-                const userSquad = f.homeTeamId === userClubId ? hSquad : aSquad;
-                userSquad.forEach(p => {
-                  p.tacticalFamiliarity = Math.min(100, p.tacticalFamiliarity + 3);
-                  p.fitness = Math.min(100, p.fitness + 5);
-                });
-              }
-            }
-          } else {
-            LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-            world.processMatchDayIncome(f.homeTeamId, f.competitionId, currentDate);
-            world.trackU21Minutes(f.homeTeamId, hSquad, stats, currentDate);
-            world.trackU21Minutes(f.awayTeamId, aSquad, stats, currentDate);
-          }
-          if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
-            const us = f.homeTeamId === userClub.id ? homeScore : awayScore;
-            const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
-                useGameStore.getState().trackMatchResult(us, os);
-                world.updateManagerProfileMatch(us, os);
-                world.updateTacticalFamiliarity(userClub.id);
-                generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id, events);
-          }
-        }
-        world.generateMatchNews(f, f.homeScore!, f.awayScore!, currentDate);
+      await simulateDayFixtures({
+        date: currentDate,
+        fixtures,
+        userClub,
+        selectedNationalTeamId,
       });
       console.timeEnd('  ⚽ simular partidos');
     }
@@ -553,6 +469,11 @@ if (result.userWonLeague) gs.trackTitle('Liga');
       } else if (next && next.date.toDateString() === nextDay.toDateString()) setView('PRE_MATCH');
     }
     notify();
+    } finally {
+      advancingRef.current = false;
+      setIsSimulating(false);
+      setSimProgress(0);
+    }
     const elapsed = parseFloat((performance.now() - t0).toFixed(1));
     console.log(`  ✅ total: ${elapsed}ms`);
     // Rolling average (last 50 days)
@@ -628,46 +549,11 @@ const startVacation = async (targetOverride?: Date) => {
       world.developYouthPlayers(tempDate);
       world.autoPromoteYouthPlayers(tempDate);
 
-      const dayFixtures = localFixtures.filter(f =>
-        f.date.toDateString() === tempDate.toDateString() && !f.played
-      );
-      // Pre-cache squads for all clubs in today's fixtures
-      const uniqueClubIds = [...new Set(dayFixtures.flatMap(f => [f.homeTeamId, f.awayTeamId]))];
-      const squads = world.preFetchSquads(uniqueClubIds);
-      dayFixtures.forEach(f => {
-        const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
-        
-        if (isNationalTeamMatch) {
-          const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId, getNationalMatchOptions(f));
-          f.played = true; f.homeScore = result.homeScore; f.awayScore = result.awayScore;
-          getNationalChronicleTeamIds(f).forEach(teamId => {
-            generateNationalTeamChronicle(f, result.homeScore, result.awayScore, result.stats, teamId, result.events, getNationalChronicleContext(teamId));
-          });
-        } else {
-          const { homeScore, awayScore, stats, events } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-          f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
-          const hSquad = (squads.get(f.homeTeamId) || []).filter(p => p.squad === f.squadType);
-          const aSquad = (squads.get(f.awayTeamId) || []).filter(p => p.squad === f.squadType);
-          MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-          const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
-          const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-          if (f.competitionId === 'FRIENDLY') {
-            world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-          } else {
-            LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-            world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-            world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-            world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
-          }
-            if (userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)) {
-              const us = f.homeTeamId === userClub.id ? homeScore : awayScore;
-              const os = f.homeTeamId === userClub.id ? awayScore : homeScore;
-              useGameStore.getState().trackMatchResult(us, os);
-              world.updateManagerProfileMatch(us, os);
-              generateMatchChronicle(f, homeScore, awayScore, stats, userClub.id, events);
-            }
-        }
-        world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
+      await simulateDayFixtures({
+        date: tempDate,
+        fixtures: localFixtures,
+        userClub,
+        selectedNationalTeamId,
       });
 
       const newCupFixtures = LifecycleManager.processCompetitionProgress(localFixtures, tempDate);
@@ -786,44 +672,13 @@ const startVacation = async (targetOverride?: Date) => {
         (f.homeTeamId === selectedNationalTeamId || f.awayTeamId === selectedNationalTeamId) && f.squadType === 'SENIOR'
       ));
 
-      const dayFixtures = localFixtures.filter(f =>
-        f.date.toDateString() === tempDate.toDateString() && !f.played
-      );
-      // Pre-cache squads for all clubs in today's fixtures (skip user matches)
-      const nonUserFix = dayFixtures.filter(f => !(userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id)));
-      const uniqueClubIds = [...new Set(nonUserFix.flatMap(f => [f.homeTeamId, f.awayTeamId]))];
-      const squads = world.preFetchSquads(uniqueClubIds);
-dayFixtures.forEach(f => {
-         const isUserMatch = userClub && (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id);
-          if (isUserMatch) return;
-         
-         const isNationalTeamMatch = ['WC_Q', 'WC_FINAL', 'COPA', 'EURO', 'AFCON'].includes(f.competitionId);
-         
-         if (isNationalTeamMatch) {
-           const result = MatchSimulator.simulateNationalTeamMatch(f.homeTeamId, f.awayTeamId, getNationalMatchOptions(f));
-           f.played = true; f.homeScore = result.homeScore; f.awayScore = result.awayScore;
-           getNationalChronicleTeamIds(f).forEach(teamId => {
-             generateNationalTeamChronicle(f, result.homeScore, result.awayScore, result.stats, teamId, result.events, getNationalChronicleContext(teamId));
-           });
-         } else {
-           const { homeScore, awayScore, stats, events } = MatchSimulator.simulateQuickMatch(f.homeTeamId, f.awayTeamId, f.squadType);
-           f.played = true; f.homeScore = homeScore; f.awayScore = awayScore;
-           const hSquad = (squads.get(f.homeTeamId) || []).filter(p => p.squad === f.squadType);
-           const aSquad = (squads.get(f.awayTeamId) || []).filter(p => p.squad === f.squadType);
-           MatchSimulator.finalizeSeasonStats(hSquad, aSquad, stats, homeScore, awayScore, f.competitionId);
-           const hRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.homeTeamId).length;
-           const aRedCards = Object.entries(stats).filter(([pid, s]) => s.card === 'RED' && world.getPlayer(pid)?.clubId === f.awayTeamId).length;
-           if (f.competitionId === 'FRIENDLY') {
-             world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-           } else {
-             LifecycleManager.processPostMatchSuspensions(f.homeTeamId, f.awayTeamId, hRedCards, aRedCards);
-             world.processMatchDayIncome(f.homeTeamId, f.competitionId, tempDate);
-             world.trackU21Minutes(f.homeTeamId, hSquad, stats, tempDate);
-             world.trackU21Minutes(f.awayTeamId, aSquad, stats, tempDate);
-           }
-         }
-         world.generateMatchNews(f, f.homeScore!, f.awayScore!, tempDate);
-       });
+      await simulateDayFixtures({
+        date: tempDate,
+        fixtures: localFixtures,
+        userClub,
+        selectedNationalTeamId,
+        skipUserMatches: true,
+      });
 
       LifecycleManager.checkBirthdays(tempDate);
       LifecycleManager.recoverDailyFitness();
@@ -943,6 +798,7 @@ dayFixtures.forEach(f => {
         seenIds.add(p.id);
         return true;
       });
+      world.markPlayersDirty();
       world.clubs = data.worldState.clubs;
       world.competitions = data.worldState.competitions;
       world.staff = data.worldState.staff;
@@ -1222,7 +1078,7 @@ dayFixtures.forEach(f => {
       case 'SCOUTING':
         return <ScoutingView clubId={userClub.id} onSelectPlayer={setSelectedPlayer} />;
       case 'BOARD':
-        return <BoardView userClub={userClub} />;
+        return <BoardView userClub={userClub} currentDate={currentDate} />;
       case 'HALL_OF_FAME':
         return <HallOfFameView onBack={() => setView('HOME')} />;
       case 'SEASON_HISTORY':
@@ -1233,8 +1089,7 @@ dayFixtures.forEach(f => {
             <div className="max-w-4xl mx-auto">
               <h2 className="text-xl font-black text-slate-900 uppercase italic mb-4">🌍 Ranking Mundial de Ligas</h2>
               <div className="bg-white border border-[#a0b0a0] rounded-sm shadow-sm overflow-hidden">
-                <table className="w-full text-[10px]">
-                  <thead className="bg-slate-800 text-white">
+                <table className="w-full text-[10px]">                   <thead className="bg-[#3a4a3a] text-white">
                     <tr>
                       <th className="p-2 text-left w-8">#</th>
                       <th className="p-2 text-left">Liga</th>
@@ -1374,8 +1229,8 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
-           return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats: Record<string, PlayerMatchStats>, events) => {
-              nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
+           return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats: Record<string, PlayerMatchStats>, events) => {               nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
+               world.bumpFixturesVersion();
               MatchSimulator.finalizeSeasonStats(
                 world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),
                 world.getPlayersByClub(nextFixture.awayTeamId).filter(p => p.squad === 'SENIOR'), stats, h, a, nextFixture.competitionId
@@ -1412,11 +1267,30 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         if (currentView.endsWith('_SCHEDULE')) {
           const type = currentView.split('_')[0] as SquadType;
           const squadFixtures = fixtures.filter(f => (f.homeTeamId === userClub.id || f.awayTeamId === userClub.id) && f.squadType === type);
+          const compIds = [...new Set(squadFixtures.map(f => f.competitionId))].sort();
+          const activeCompFilter = scheduleCompFilter !== 'ALL' && compIds.includes(scheduleCompFilter) ? scheduleCompFilter : 'ALL';
+          const filteredFixtures = activeCompFilter === 'ALL' ? squadFixtures : squadFixtures.filter(f => f.competitionId === activeCompFilter);
           return (
             <div className="p-4 h-full flex flex-col">
-              <h2 className="text-xl font-black text-slate-950 mb-4 uppercase tracking-tighter border-b border-slate-500 pb-2 italic">Calendario - {type}</h2>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                <h2 className="text-xl font-black text-slate-950 uppercase tracking-tighter border-b border-slate-500 pb-2 italic">Calendario - {type}</h2>
+                <select
+                  value={activeCompFilter}
+                  onChange={(e) => setScheduleCompFilter(e.target.value)}
+                  className="bg-slate-100 border border-slate-500 rounded-sm px-3 py-1.5 text-[10px] font-black uppercase text-slate-800 outline-none focus:border-slate-800 max-w-[240px]"
+                >
+                  <option value="ALL">Todas las competiciones</option>
+                  {compIds.map(cid => {
+                    const comp = world.competitions.find(c => c.id === cid);
+                    return <option key={cid} value={cid}>{comp?.name || cid}</option>;
+                  })}
+                </select>
+              </div>
               <div className="bg-slate-200 rounded-sm border border-slate-500 overflow-y-auto shadow-md flex-1 p-2">
-                {squadFixtures.map(f => {
+                {filteredFixtures.length === 0 && (
+                  <div className="p-10 text-center text-slate-500 italic uppercase font-bold tracking-widest text-[10px]">Sin partidos para esta competición</div>
+                )}
+                {filteredFixtures.map(f => {
                   const home = world.getClub(f.homeTeamId); const away = world.getClub(f.awayTeamId);
                   const isPenalty = f.penaltyHome !== undefined;
                   const comp = world.competitions.find(c => c.id === f.competitionId);
@@ -1446,7 +1320,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
     }
   };
 
-  if (gameState === 'LOADING') return <div className="h-screen w-screen bg-slate-400 flex items-center justify-center text-slate-950"><div className="animate-pulse flex flex-col items-center"><RefreshCw className="w-10 h-10 animate-spin mb-4 text-slate-900" /><h1 className="text-2xl font-black italic tracking-widest uppercase">FM Argentina</h1></div></div>;
+  if (gameState === 'LOADING') return <div className="h-screen w-screen bg-[#b8c4b8] flex items-center justify-center text-slate-950"><div className="animate-pulse flex flex-col items-center"><RefreshCw className="w-10 h-10 animate-spin mb-4 text-[#3a4a3a]" /><h1 className="text-2xl font-black italic tracking-widest uppercase">FM Argentina</h1></div></div>;
 
   const onboardingActive = showOnboarding && gameState === 'PLAYING';
 
@@ -1494,21 +1368,9 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
           <div>
             <label className="text-[10px] font-black text-slate-600 uppercase block mb-1 tracking-widest">Nacionalidad</label>
             <select className="w-full bg-slate-100 border border-slate-500 rounded-sm px-4 py-3 text-slate-950 font-bold text-sm outline-none focus:border-slate-800" value={userNationality} onChange={(e) => setUserNationality(e.target.value)}>
-              <option value="Argentina">Argentina</option>
-              <option value="España">España</option>
-              <option value="Brasil">Brasil</option>
-              <option value="Inglaterra">Inglaterra</option>
-              <option value="Italia">Italia</option>
-              <option value="Alemania">Alemania</option>
-              <option value="Francia">Francia</option>
-              <option value="Portugal">Portugal</option>
-              <option value="Países Bajos">Países Bajos</option>
-              <option value="Uruguay">Uruguay</option>
-              <option value="Chile">Chile</option>
-              <option value="Colombia">Colombia</option>
-              <option value="México">México</option>
-              <option value="EE. UU.">EE. UU.</option>
-              <option value="Japón">Japón</option>
+              {WORLD_COUNTRIES.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -1801,11 +1663,23 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             )}
             {leagues.map(league => {
               const clubCount = world.getClubsByLeague(league.id).length;
+              const rep = league.dynamicReputation ?? Math.max(10, 100 - (league.tier - 1) * 22);
+              const repStars = Math.max(1, Math.min(5, Math.round(rep / 20)));
+              const prize = (league.defaultPrizePool ?? 1000000) / 1000000;
+              const tierLabel = league.tier === 1 ? '1ª División' : league.tier === 2 ? '2ª División' : `${league.tier}ª División`;
               return (
                 <button key={league.id} onClick={() => { setSelectedLeague(league); world.ensureDeepSquads(league.id); useGameStore.getState().setDeepSimLeagues([league.id]); setGameState('SETUP_TEAM'); }}
-                  className="p-5 bg-[#f2f7f2] hover:bg-[#e2eae2] border border-[#a0b0a0] rounded-sm text-left transition-all shadow-sm flex flex-col">
-                  <h3 className="text-base font-black text-slate-900 mb-1 italic uppercase truncate">{league.name}</h3>
-                  <p className="text-[9px] text-slate-500">{clubCount} equipo{clubCount !== 1 ? 's' : ''}</p>
+                  className="p-5 bg-[#f2f7f2] hover:bg-[#e2eae2] hover:border-[#3a4a3a] border border-[#a0b0a0] rounded-sm text-left transition-all shadow-sm flex flex-col group">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="text-base font-black text-slate-900 italic uppercase truncate group-hover:text-[#3a4a3a]">{league.name}</h3>
+                    <span className="shrink-0 text-[10px] tracking-tight">{'★'.repeat(repStars)}<span className="text-slate-300">{'★'.repeat(5 - repStars)}</span></span>
+                  </div>
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wide">{tierLabel} · {clubCount} equipo{clubCount !== 1 ? 's' : ''}</p>
+                  <div className="mt-2 pt-2 border-t border-[#c8d4c8] flex items-center gap-3 text-[9px] text-slate-600">
+                    <span className="font-black text-emerald-800">£{prize.toFixed(1)}M</span>
+                    <span className="font-bold uppercase tracking-wider">Premio total</span>
+                    <span className="ml-auto font-bold text-slate-500 uppercase">{league.confederation || '—'}</span>
+                  </div>
                 </button>
               );
             })}
@@ -1877,12 +1751,12 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
   const headerTeamName = userClub?.name || world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === selectedNationalTeamId)?.name || 'FM';
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-400 text-slate-950 overflow-hidden font-sans relative text-sm dark:bg-gray-900 dark:text-gray-100">
-      <div className={`h-1 w-full ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-slate-800'}`}></div>
+    <div className="flex flex-col h-screen w-screen bg-[#b8c4b8] text-slate-950 overflow-hidden font-sans relative text-sm">
+      <div className={`h-1 w-full ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-[#3a4a3a]'}`}></div>
 
       {isSimulating && !isInVacation && (
         <div className="fixed bottom-[7rem] lg:bottom-4 left-4 right-4 z-[300] pointer-events-none">
-          <div className="max-w-md mx-auto bg-slate-900/90 text-white rounded-lg px-4 py-2.5 shadow-2xl border border-slate-700 backdrop-blur">
+          <div className="max-w-md mx-auto bg-[#2a3a2a]/90 text-white rounded-lg px-4 py-2.5 shadow-2xl border border-[#1a2a1a] backdrop-blur">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">⏳ Simulando</span>
               <span className="text-[9px] text-slate-400 ml-auto">{simProgress}%</span>
@@ -1953,7 +1827,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
               <Menu size={20} />
             </button>
             <div className="flex items-center gap-3">
-              <div className={`w-1.5 h-8 ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-slate-800'} border-x border-black/10 opacity-80`}></div>
+              <div className={`w-1.5 h-8 ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-[#3a4a3a]'} border-x border-black/10 opacity-80`}></div>
               <h1 className={`text-sm font-black uppercase tracking-tight italic drop-shadow-sm truncate max-w-[150px] sm:max-w-none ${userClub ? '' : 'text-slate-950'}`}>
                 {headerTeamName}
               </h1>
@@ -1972,7 +1846,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         {(userClub || selectedNationalTeamId) && !isMatchView && (
           <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
         )}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#94a3b8] relative overflow-hidden pb-[104px] lg:pb-0">
+        <main className="flex-1 flex flex-col min-w-0 bg-[#b8c4b8] relative overflow-hidden pb-[104px] lg:pb-0">
           {renderCurrentView()}
         </main>
         {onboardingActive && <OnboardingTour active={onboardingActive} currentView={currentView} onComplete={() => setShowOnboarding(false)} />}

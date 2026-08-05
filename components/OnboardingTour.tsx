@@ -170,7 +170,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ active, currentV
          </div>
           <button
             onClick={handleNext}
-            className="text-[10px] font-bold uppercase flex items-center gap-1 bg-slate-800 text-white px-3 py-1 rounded-sm hover:bg-slate-700"
+            className="text-[10px] font-bold uppercase flex items-center gap-1 bg-[#3a4a3a] text-white px-3 py-1 rounded-sm hover:bg-[#4a5a4a]"
           >
             {stepIdx === total - 1 ? 'Finalizar' : 'Siguiente'}
             <ChevronRight size={12} />

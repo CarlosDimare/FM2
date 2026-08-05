@@ -32,7 +32,7 @@ export const ErrorBoundary: React.FC<Props> = ({ children }) => {
 
   if (hasError) {
     return (
-      <div className="h-screen w-screen bg-slate-800 flex flex-col items-center justify-center text-white p-8">
+      <div className="h-screen w-screen bg-[#3a4a3a] flex flex-col items-center justify-center text-white p-8">
         <div className="max-w-md text-center">
           <div className="text-6xl mb-6 opacity-50">!</div>
           <h1 className="text-2xl font-black uppercase italic mb-4 tracking-tight">

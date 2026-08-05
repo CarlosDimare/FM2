@@ -1,6 +1,6 @@
 import React from 'react';
 import { world } from '../services/worldManager';
-import { FMBox } from './FMUI';
+import { FMBox, FMEmptyState } from './FMUI';
 import { Trophy, Star, Medal } from 'lucide-react';
 
 interface HallOfFameViewProps {
@@ -20,14 +20,15 @@ export const HallOfFameView: React.FC<HallOfFameViewProps> = ({ onBack }) => {
         </div>
         <FMBox>
           {entries.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-xs italic">
-              <Star size={48} className="mx-auto mb-3 opacity-30" />
-              Aún no hay entrenadores en el Salón de la Fama. ¡Sé el primero en dejar tu huella!
-            </div>
+            <FMEmptyState
+              icon={<Star size={28} />}
+              title="El Salón de la Fama está vacío"
+              subtitle="Gana títulos y mantén un alto porcentaje de victorias para ser recordado entre los grandes. ¡Sé el primero en dejar tu huella!"
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-[10px]">
-                <thead className="bg-slate-800 text-white sticky top-0">
+                <thead className="bg-[#3a4a3a] text-white sticky top-0">
                   <tr>
                     <th className="p-2 text-left w-8">#</th>
                     <th className="p-2 text-left">Entrenador</th>

@@ -911,14 +911,16 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
             </FMTable>
           </FMBox>
 
-          <FMBox title="Mejor Valoración" noPadding>
+          <FMBox title="Mejor Valoración" noPadding headerRight={
+            <span className="text-[8px] font-black uppercase text-slate-500 italic">media real por partido</span>
+          }>
             <FMTable headers={['#', 'Nombre', 'Media']} colWidths={['30px', 'auto', '40px']}>
               {squadPlayers
                 .filter(p => p.seasonStats.appearances > 0)
-                .sort((a, b) => (b.seasonStats.goals + b.seasonStats.assists) / b.seasonStats.appearances - (a.seasonStats.goals + a.seasonStats.assists) / a.seasonStats.appearances)
+                .sort((a, b) => (b.seasonStats.totalRating / b.seasonStats.appearances) - (a.seasonStats.totalRating / a.seasonStats.appearances))
                 .slice(0, 10)
                 .map((p, i) => {
-                  const avg = ((p.seasonStats.goals + p.seasonStats.assists) / p.seasonStats.appearances).toFixed(1);
+                  const avg = (p.seasonStats.totalRating / p.seasonStats.appearances).toFixed(2);
                   return (
                     <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
                       <FMTableCell className="text-center font-bold text-slate-400">{i + 1}</FMTableCell>

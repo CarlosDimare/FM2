@@ -53,7 +53,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   darkMode: false,
   deepSimLeagues: [],
 
-  setFixtures: (fixtures) => set({ fixtures }),
+  setFixtures: (fixtures) => { world.bumpFixturesVersion(); set({ fixtures }); },
   setNextFixture: (nextFixture) => set({ nextFixture }),
   setCurrentDate: (currentDate) => set({ currentDate }),
   setSeasonEndDate: (seasonEndDate) => set({ seasonEndDate }),
@@ -338,7 +338,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     console.table(leagueFixCounts.map(s => ({ fixtureCount: s })));
     console.groupEnd();
 
-    set({ fixtures: allFixtures });
+    get().setFixtures(allFixtures);
     if (clubId) {
       const next = get().updateNextFixture(allFixtures, startFrom, clubId);
       set({ nextFixture: next });

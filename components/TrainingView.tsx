@@ -5,7 +5,7 @@ import { world } from '../services/worldManager';
 import { useWorldStore, notifyPlayers, notifyClubs } from '../stores/worldStore';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 import { TRAINING_PRESETS } from '../data/static';
-import { User, Dumbbell, Users, Settings2, Shield, Target, Zap, Activity, X } from 'lucide-react';
+import { User, Dumbbell, Users, Settings2, Shield, Target, Zap, Activity, X, CalendarDays } from 'lucide-react';
 
 interface TrainingViewProps {
   players: Player[];
@@ -46,12 +46,71 @@ const TrainingSlider: React.FC<{
   </div>
 );
 
+const WEEK_DAYS = [
+  { id: 'LUN', label: 'Lun' }, { id: 'MAR', label: 'Mar' }, { id: 'MIE', label: 'Mié' }, { id: 'JUE', label: 'Jue' },
+  { id: 'VIE', label: 'Vie' }, { id: 'SAB', label: 'Sáb' }, { id: 'DOM', label: 'Dom' },
+];
+
+const WEEKLY_OPTIONS: { value: TrainingCategory | 'REST'; label: string }[] = [
+  { value: 'REST', label: 'Descanso' },
+  { value: 'STRENGTH', label: 'Fuerza' },
+  { value: 'AEROBIC', label: 'Aeróbico' },
+  { value: 'TACTICAL', label: 'Táctica' },
+  { value: 'BALL_CONTROL', label: 'Control' },
+  { value: 'DEFENDING', label: 'Defensa' },
+  { value: 'ATTACKING', label: 'Ataque' },
+  { value: 'SHOOTING', label: 'Remate' },
+  { value: 'SET_PIECES', label: 'Balón parado' },
+];
+
+const POSITION_FOCUS_PRESETS: Record<'GK' | 'DEF' | 'MID' | 'ATT', { label: string; schedule: TrainingSchedule }> = {
+  GK: { label: 'Porteros', schedule: { STRENGTH: 12, AEROBIC: 8, TACTICAL: 10, BALL_CONTROL: 10, DEFENDING: 14, ATTACKING: 3, SHOOTING: 3, SET_PIECES: 8 } },
+  DEF: { label: 'Defensas', schedule: { STRENGTH: 10, AEROBIC: 8, TACTICAL: 14, BALL_CONTROL: 8, DEFENDING: 18, ATTACKING: 4, SHOOTING: 2, SET_PIECES: 6 } },
+  MID: { label: 'Medios', schedule: { STRENGTH: 8, AEROBIC: 12, TACTICAL: 14, BALL_CONTROL: 12, DEFENDING: 10, ATTACKING: 10, SHOOTING: 8, SET_PIECES: 8 } },
+  ATT: { label: 'Delanteros', schedule: { STRENGTH: 8, AEROBIC: 10, TACTICAL: 8, BALL_CONTROL: 14, DEFENDING: 2, ATTACKING: 16, SHOOTING: 16, SET_PIECES: 6 } },
+};
+
+const getPlayerGroup = (p: Player): 'GK' | 'DEF' | 'MID' | 'ATT' => {
+  const pos = p.positions[0];
+  if (pos === 'P') return 'GK';
+  if (['DFC', 'LD', 'LI', 'LIB', 'CD', 'CI'].includes(pos)) return 'DEF';
+  if (['MCD', 'MC', 'MD', 'MI', 'MPC'].includes(pos)) return 'MID';
+  return 'ATT';
+};
+
 export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club }) => {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(players[0]?.id || null);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('GENERAL');
   const [isMobileEditorOpen, setIsMobileEditorOpen] = useState(false);
+  const [weeklyPlan, setWeeklyPlan] = useState<Partial<Record<string, TrainingCategory | 'REST'>>>(club.trainingWeeklyPlan || {});
+  const [planFeedback, setPlanFeedback] = useState<string | null>(null);
 
   const selectedPlayer = useMemo(() => players.find(p => p.id === selectedPlayerId), [selectedPlayerId, players]);
+
+  const handleSaveWeeklyPlan = () => {
+    club.trainingWeeklyPlan = { ...weeklyPlan };
+    notifyClubs();
+    setPlanFeedback('Plan semanal guardado: las categorías priorizadas reciben más foco en el desarrollo de los jugadores.');
+    setTimeout(() => setPlanFeedback(null), 4000);
+  };
+
+  const handleApplyPositionFocus = (group: 'GK' | 'DEF' | 'MID' | 'ATT') => {
+    const preset = POSITION_FOCUS_PRESETS[group];
+    const matched = players.filter(p => getPlayerGroup(p) === group);
+    matched.forEach(p => { p.trainingSchedule = { ...preset.schedule }; });
+    notifyPlayers();
+    setPlanFeedback(`Plan de ${preset.label.toLowerCase()} aplicado a ${matched.length} jugadores.`);
+    setTimeout(() => setPlanFeedback(null), 4000);
+  };
+
+  const weeklyFocusCount = useMemo(() => {
+    const counts: Record<string, number> = {};
+    WEEK_DAYS.forEach(day => {
+      const v = weeklyPlan[day.id];
+      if (v && v !== 'REST') counts[v] = (counts[v] || 0) + 1;
+    });
+    return counts;
+  }, [weeklyPlan]);
 
   const handleApplyPresetAll = (presetId: string) => {
     const preset = TRAINING_PRESETS.find(p => p.id === presetId);
@@ -140,6 +199,67 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club
            </div>
         </div>
       </header>
+
+      {/* Plan semanal de entrenamiento */}
+      <FMBox title="Plan Semanal de Entrenamiento" className="shrink-0" headerRight={
+        <span className="text-[8px] font-black uppercase text-slate-600 italic">define el foco de cada día</span>
+      }>
+        <div className="px-3 pt-2 pb-0 text-[8px] text-slate-500 italic font-bold uppercase">Las categorías más elegidas en la semana reciben más foco en el desarrollo; el resto, un poco menos.</div>
+        <div className="p-2 space-y-2">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
+            {WEEK_DAYS.map(day => (
+              <div key={day.id} className="flex flex-col gap-1 bg-white border border-[#a0b0a0]/50 rounded-sm p-1.5">
+                <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest text-center">{day.label}</span>
+                <select
+                  value={weeklyPlan[day.id] || 'REST'}
+                  onChange={(e) => setWeeklyPlan(prev => ({ ...prev, [day.id]: e.target.value as TrainingCategory | 'REST' }))}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-[1px] px-1 py-1 text-[8px] font-black uppercase text-slate-800 outline-none focus:border-[#3a4a3a]"
+                >
+                  {WEEKLY_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <FMButton onClick={handleSaveWeeklyPlan} className="text-[10px]">
+              <CalendarDays size={12} /> Guardar plan semanal
+            </FMButton>
+            {Object.keys(weeklyFocusCount).length > 0 && (
+              <span className="text-[8px] text-slate-600 italic font-bold uppercase">
+                Foco semanal: {Object.keys(weeklyFocusCount)
+                  .sort((a, b) => (weeklyFocusCount[b] || 0) - (weeklyFocusCount[a] || 0))
+                  .slice(0, 3)
+                  .map(cat => `${(WEEKLY_OPTIONS.find(o => o.value === cat)?.label || cat).toUpperCase()} ×${weeklyFocusCount[cat] || 0}`)
+                  .join(' · ')}
+              </span>
+            )}
+          </div>
+          {planFeedback && <div className="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-sm px-3 py-1.5">{planFeedback}</div>}
+        </div>
+      </FMBox>
+
+      {/* Foco por posición */}
+      <FMBox title="Foco por Posición" className="shrink-0">
+        <div className="p-2 flex flex-wrap gap-1.5">
+          {(Object.keys(POSITION_FOCUS_PRESETS) as ('GK' | 'DEF' | 'MID' | 'ATT')[]).map(group => {
+            const preset = POSITION_FOCUS_PRESETS[group];
+            const count = players.filter(p => getPlayerGroup(p) === group).length;
+            return (
+              <button
+                key={group}
+                onClick={() => handleApplyPositionFocus(group)}
+                className="flex items-center gap-2 bg-white border border-[#a0b0a0] hover:border-[#3a4a3a] hover:bg-[#f2f7f2] rounded-sm px-3 py-1.5 text-[9px] font-black uppercase text-slate-700 transition-all"
+                title={`Aplica un plan de entrenamiento específico a los ${preset.label.toLowerCase()} del plantel`}
+              >
+                <Shield size={12} className="text-[#3a4a3a]" /> {preset.label}
+                <span className="text-[8px] text-slate-400">({count})</span>
+              </button>
+            );
+          })}
+        </div>
+      </FMBox>
 
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 overflow-hidden relative">
         {/* Left: Players List */}

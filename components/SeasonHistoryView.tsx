@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { world } from '../services/worldManager';
-import { FMBox, FMTable, FMTableCell } from './FMUI';
+import { FMBox, FMTable, FMTableCell, FMEmptyState } from './FMUI';
 import { BookMarked, Trophy, ChevronLeft, ChevronRight, Goal, Zap, Star } from 'lucide-react';
 
 interface SeasonHistoryViewProps {
@@ -20,12 +20,12 @@ export const SeasonHistoryView: React.FC<SeasonHistoryViewProps> = ({ onBack }) 
             <h2 className="text-xl font-black text-slate-900 uppercase italic">Libro de Temporadas</h2>
           </div>
           <FMBox>
-            <div className="text-center py-16 text-slate-400">
-              <BookMarked size={48} className="mx-auto mb-3 opacity-30" />
-              <p className="text-xs italic uppercase font-bold tracking-widest">Aún no hay temporadas completadas</p>
-              <p className="text-[10px] text-slate-500 mt-2">Termina una temporada y aquí quedará registrado el historial de campeones, goleadores y tablas finales.</p>
-              <button onClick={onBack} className="mt-6 text-[10px] font-black uppercase text-slate-600 hover:text-slate-900 underline">Volver al inicio</button>
-            </div>
+            <FMEmptyState
+              icon={<BookMarked size={28} />}
+              title="Aún no hay temporadas completadas"
+              subtitle="Termina una temporada y aquí quedará registrado el historial de campeones, goleadores y tablas finales de todas las ligas."
+              action={<button onClick={onBack} className="text-[10px] font-black uppercase text-slate-600 hover:text-slate-900 underline">Volver al inicio</button>}
+            />
           </FMBox>
         </div>
       </div>
