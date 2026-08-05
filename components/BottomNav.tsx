@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Users, Clipboard, Play, MoreHorizontal, Trophy, ShoppingBag, Wallet, Briefcase, Dumbbell, Binoculars, Award, RefreshCw, Zap, SkipForward } from 'lucide-react';
+import { Home, Users, Clipboard, Play, MoreHorizontal, Trophy, ShoppingBag, Wallet, Briefcase, Dumbbell, Binoculars, Award, RefreshCw, Zap, SkipForward, BookMarked } from 'lucide-react';
 import { useUIStore } from '../stores/uiStore';
 
 const tabs = [
@@ -16,6 +16,7 @@ const moreItems = [
   { id: 'ECONOMY', label: 'Economía', icon: Wallet },
   { id: 'STAFF', label: 'Staff', icon: Briefcase },
   { id: 'TRAINING', label: 'Entreno', icon: Dumbbell },
+  { id: 'SEASON_HISTORY', label: 'Libro Temp.', icon: BookMarked },
   { id: 'SCOUTING', label: 'Scouting', icon: Binoculars },
   { id: 'BOARD', label: 'Directiva', icon: Award },
 ];
@@ -99,6 +100,7 @@ const nationalTabs = [
                 { id: `NT_${selectedNationalTeamId}`, label: 'Gestionar selección', icon: Users },
                 { id: 'CHRONICLES', label: 'Crónicas', icon: Trophy },
                 { id: 'MANAGER_PROFILE', label: 'Mi carrera', icon: Briefcase },
+                { id: 'SEASON_HISTORY', label: 'Libro Temp.', icon: BookMarked },
               ] : moreItems).map(item => {
                 const Icon = item.icon;
                 return (

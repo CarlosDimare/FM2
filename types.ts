@@ -189,6 +189,25 @@ export interface HallOfFameEntry {
   yearInducted: number;
 }
 
+export interface SeasonCompetitionResult {
+  compId: string;
+  compName: string;
+  compType: string;
+  championId: string;
+  championName: string;
+  topScorer: { name: string; club: string; value: number };
+  topAssists: { name: string; club: string; value: number };
+}
+
+export interface SeasonRecord {
+  year: number;
+  userManagerName: string;
+  userClubId?: string;
+  userClubName?: string;
+  competitions: SeasonCompetitionResult[];
+  finalTables?: Record<string, { clubName: string; points: number }[]>;
+}
+
 export interface CareerStats {
   totalApps: number;
   totalGoals: number;

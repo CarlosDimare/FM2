@@ -16,6 +16,12 @@ export class NationalTeamManager {
   controlledTeamId: string | null = null;
   controlledSquadIds: Record<string, string[]> = {};
   controlledTactics: Record<string, TacticSettings> = {};
+  /** Once titular por selección: ids en orden de slots de la formación guardada */
+  controlledLineups: Record<string, string[]> = {};
+  /** Formación (id de preset) con la que se guardó cada alineación */
+  controlledFormations: Record<string, string> = {};
+  /** Capitán por selección */
+  controlledCaptains: Record<string, string> = {};
   nationalTeamOffers: { teamId: string; status: 'PENDING' | 'ACCEPTED' | 'REJECTED'; date: Date }[] = [];
 
   static NATIONAL_TEAMS: NationalTeamDef[] = [
@@ -128,12 +134,52 @@ export class NationalTeamManager {
     const uniqueIds = [...new Set(squadIds)].filter(id => eligible.has(id)).slice(0, 23);
     if (uniqueIds.length < 11) return false;
     this.controlledSquadIds[teamId] = uniqueIds;
+    // Sincronizar alineación y capitán: descartar jugadores que ya no están convocados.
+    const squad = new Set(uniqueIds);
+    const lineup = this.controlledLineups[teamId];
+    if (lineup) {
+      const validLineup = lineup.filter(id => squad.has(id));
+      if (validLineup.length === 11) this.controlledLineups[teamId] = validLineup;
+      else delete this.controlledLineups[teamId];
+    }
+    const captain = this.controlledCaptains[teamId];
+    if (captain && !squad.has(captain)) delete this.controlledCaptains[teamId];
     return true;
   }
 
   setControlledTactic(teamId: string, tactic: TacticSettings) {
     if (this.controlledTeamId !== teamId) return;
     this.controlledTactics[teamId] = { ...tactic };
+  }
+
+  /** Guarda el once titular (11 ids en orden de slots de la formación indicada) */
+  setControlledLineup(teamId: string, lineupIds: string[], formationId: string): boolean {
+    if (this.controlledTeamId !== teamId) return false;
+    const squad = new Set(this.getControlledSquadIds(teamId));
+    const valid = [...new Set(lineupIds)].filter(id => squad.has(id));
+    if (valid.length !== 11) return false;
+    this.controlledLineups[teamId] = valid;
+    this.controlledFormations[teamId] = formationId;
+    return true;
+  }
+
+  getControlledLineup(teamId: string): string[] {
+    return this.controlledLineups?.[teamId] || [];
+  }
+
+  getControlledFormation(teamId: string): string | undefined {
+    return this.controlledFormations?.[teamId];
+  }
+
+  setControlledCaptain(teamId: string, captainId: string | null) {
+    if (this.controlledTeamId !== teamId) return;
+    if (!captainId) { delete this.controlledCaptains[teamId]; return; }
+    const squad = new Set(this.getControlledSquadIds(teamId));
+    if (squad.has(captainId)) this.controlledCaptains[teamId] = captainId;
+  }
+
+  getControlledCaptain(teamId: string): string | undefined {
+    return this.controlledCaptains?.[teamId];
   }
 
   getControlledSquadIds(teamId: string): string[] {
@@ -171,6 +217,18 @@ export class NationalTeamManager {
     const fallbackIds = this.getEligiblePlayers(this.controlledTeamId, players, clubs).slice(0, 23).map(player => player.id);
     this.controlledSquadIds[this.controlledTeamId] = (validSavedIds.length >= 11 ? validSavedIds : fallbackIds);
     if (this.controlledSquadIds[this.controlledTeamId].length < 11) this.controlledTeamId = null;
+    // Mantener alineación y capitán coherentes con la convocatoria resultante.
+    if (this.controlledTeamId) {
+      const squad = new Set(this.controlledSquadIds[this.controlledTeamId]);
+      const lineup = this.controlledLineups[this.controlledTeamId];
+      if (lineup) {
+        const validLineup = lineup.filter(id => squad.has(id));
+        if (validLineup.length === 11) this.controlledLineups[this.controlledTeamId] = validLineup;
+        else delete this.controlledLineups[this.controlledTeamId];
+      }
+      const captain = this.controlledCaptains[this.controlledTeamId];
+      if (captain && !squad.has(captain)) delete this.controlledCaptains[this.controlledTeamId];
+    }
   }
 
   getEligiblePlayers(teamId: string, players: Player[], clubs: Club[]): Player[] {

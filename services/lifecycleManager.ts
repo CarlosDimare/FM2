@@ -401,6 +401,36 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
     world.updateHallOfFame(nextSeasonYear);
     world.updateClubAllTimeRecords();
 
+    // ── Libro de temporadas: archivar el año en el historial consultable ──
+    // Guard anti-duplicados: si el año ya está archivado, reemplazar en vez de duplicar.
+    const existingSeasonIdx = world.seasonHistory.findIndex(s => s.year === seasonYear);
+    const newSeasonRecord = {
+      year: seasonYear,
+      userManagerName: world.managerProfile?.name || (userClubId ? (world.getClub(userClubId)?.name || 'Mi club') : 'Seleccionador'),
+      userClubId: userClubId || undefined,
+      userClubName: userClubId ? world.getClub(userClubId)?.name : undefined,
+      competitions: summaries
+        .filter(s => s.championName && s.championName !== 'Sin Ganador')
+        .map(s => ({
+          compId: s.compId,
+          compName: s.compName,
+          compType: s.compType,
+          championId: s.championId,
+          championName: s.championName,
+          topScorer: s.topScorer,
+          topAssists: s.topAssists,
+        })),
+      finalTables: Object.fromEntries(
+        world.competitions
+          .filter(c => c.type === 'LEAGUE')
+          .map(c => [c.id, world.getLeagueTable(c.id, fixtures, 'SENIOR').slice(0, 6).map(e => ({ clubName: e.clubName, points: e.points }))])
+      ),
+    };
+    if (existingSeasonIdx >= 0) world.seasonHistory[existingSeasonIdx] = newSeasonRecord;
+    else world.seasonHistory.push(newSeasonRecord);
+    // Límite de archivo: conservar las últimas 40 temporadas.
+    if (world.seasonHistory.length > 40) world.seasonHistory = world.seasonHistory.slice(-40);
+
     return summaries;
   }
 

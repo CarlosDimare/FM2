@@ -76,25 +76,49 @@ export const LeagueTable: React.FC<LeagueTableProps> = ({
        }).slice(0, 11);
     }, [leaguePlayers, currentLeagueId]);
 
-   const getRowClass = (index: number) => {
-      if (currentLeagueId === 'L_ARG_1') {
-         if (index < 5) return 'border-l-[3px] border-l-green-600'; // Libertadores
-         if (index >= 5 && index < 10) return 'border-l-[3px] border-l-blue-600'; // Sudamericana
-         if (entries.length > 2 && index >= entries.length - 2) return 'border-l-[3px] border-l-red-600'; // Relegation
-      } else if (currentLeagueId === 'L_ARG_2') {
-         if (index < 2) return 'border-l-[3px] border-l-green-600'; // Promotion
+   // Zonas de la tabla dinámicas según la liga (confederación + tier), no hardcodeadas.
+   const zoneConfig = useMemo(() => {
+      const comp = world.competitions.find(c => c.id === currentLeagueId);
+      const conf = comp?.confederation || '';
+      const tier = comp?.tier || 1;
+      const total = entries.length;
+      const relegation = Math.max(2, Math.min(4, Math.round(total * 0.12)));
+      if (tier === 2) {
+         return { primary: 0, secondary: 0, relegation: 0, promotion: 2, primaryLabel: '', secondaryLabel: '', promotionLabel: 'Asc' };
       }
+      if (conf === 'CONMEBOL') {
+         return { primary: 5, secondary: 5, relegation, promotion: 0, primaryLabel: 'Lib', secondaryLabel: 'Sud' };
+      }
+      if (conf === 'UEFA') {
+         return { primary: 4, secondary: 2, relegation, promotion: 0, primaryLabel: 'UCL', secondaryLabel: 'UEL' };
+      }
+      if (conf === 'AFC') {
+         return { primary: 4, secondary: 0, relegation, promotion: 0, primaryLabel: 'AFC', secondaryLabel: '' };
+      }
+      if (conf === 'CAF') {
+         return { primary: 3, secondary: 0, relegation, promotion: 0, primaryLabel: 'CAF', secondaryLabel: '' };
+      }
+      if (conf === 'CONCACAF') {
+         return { primary: 4, secondary: 0, relegation, promotion: 0, primaryLabel: 'CCL', secondaryLabel: '' };
+      }
+      return { primary: 3, secondary: 0, relegation, promotion: 0, primaryLabel: 'Cont', secondaryLabel: '' };
+   }, [currentLeagueId, entries.length]);
+
+   const getRowClass = (index: number) => {
+      const { primary, secondary, relegation, promotion } = zoneConfig;
+      if (primary > 0 && index < primary) return 'border-l-[3px] border-l-green-600';
+      if (secondary > 0 && index >= primary && index < primary + secondary) return 'border-l-[3px] border-l-blue-600';
+      if (promotion > 0 && index < promotion) return 'border-l-[3px] border-l-green-600';
+      if (relegation > 0 && entries.length > 2 && index >= entries.length - relegation) return 'border-l-[3px] border-l-red-600';
       return 'border-l-[3px] border-l-transparent';
    };
 
    const getStatusLabel = (index: number) => {
-      if (currentLeagueId === 'L_ARG_1') {
-         if (index < 5) return <span className="text-[7px] bg-green-600 text-white px-1 rounded-[1px] uppercase tracking-tighter">Lib</span>;
-         if (index >= 5 && index < 10) return <span className="text-[7px] bg-blue-600 text-white px-1 rounded-[1px] uppercase tracking-tighter">Sud</span>;
-         if (entries.length > 2 && index >= entries.length - 2) return <span className="text-[7px] bg-red-600 text-white px-1 rounded-[1px] uppercase tracking-tighter">Des</span>;
-      } else if (currentLeagueId === 'L_ARG_2') {
-         if (index < 2) return <span className="text-[7px] bg-green-600 text-white px-1 rounded-[1px] uppercase tracking-tighter">Asc</span>;
-      }
+      const { primary, secondary, relegation, promotion, primaryLabel, secondaryLabel, promotionLabel } = zoneConfig;
+      if (primary > 0 && index < primary && primaryLabel) return <span className="text-[7px] bg-green-600 text-white px-1 rounded-[1px] uppercase tracking-tighter">{primaryLabel}</span>;
+      if (secondary > 0 && index >= primary && index < primary + secondary && secondaryLabel) return <span className="text-[7px] bg-blue-600 text-white px-1 rounded-[1px] uppercase tracking-tighter">{secondaryLabel}</span>;
+      if (promotion > 0 && index < promotion && promotionLabel) return <span className="text-[7px] bg-green-600 text-white px-1 rounded-[1px] uppercase tracking-tighter">{promotionLabel}</span>;
+      if (relegation > 0 && entries.length > 2 && index >= entries.length - relegation) return <span className="text-[7px] bg-red-600 text-white px-1 rounded-[1px] uppercase tracking-tighter">Des</span>;
       return null;
    };
 

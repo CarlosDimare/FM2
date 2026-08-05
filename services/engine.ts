@@ -480,6 +480,13 @@ export class MatchSimulator {
       const bench = allPlayers.filter(p => benchIds.includes(p.id) && !p.injury);
       if (bench.length === 0) return;
 
+      // Conciencia de marcador: la IA reacciona según el resultado.
+      const myScore = isHome ? state.homeScore : state.awayScore;
+      const oppScore = isHome ? state.awayScore : state.homeScore;
+      const scoreDiff = myScore - oppScore;
+      const chasing = scoreDiff < 0;
+      const protecting = scoreDiff > 0 && state.minute >= 75;
+
       // Priority 1: Injured players
       const injured = activeOnField.filter(p => p.injury && p.injury.daysLeft > 0);
 
@@ -501,17 +508,37 @@ export class MatchSimulator {
         return ps && ps.condition < 65 && !injured.includes(p) && !carded.includes(p) && !fatigued.includes(p);
       }) : [];
 
+      // Priority 5 (táctica): perdiendo tras el 60' → refresco ofensivo; ganando tras el 78' → cierre defensivo.
+      const tacticalPush = phase === 'MID_HALF' && state.minute > 60 && chasing && !protecting
+        ? activeOnField.filter(p => {
+            const slot = SLOT_CONFIG[p.tacticalPosition || 0];
+            const line = slot?.line || '';
+            return (line === 'DEF' || line === 'DM') && !injured.includes(p) && !carded.includes(p) && !fatigued.includes(p);
+          }).slice(0, 1)
+        : [];
+      const tacticalShore = phase === 'MID_HALF' && protecting
+        ? activeOnField.filter(p => {
+            const slot = SLOT_CONFIG[p.tacticalPosition || 0];
+            const line = slot?.line || '';
+            return (line === 'ATT' || line === 'AM') && !injured.includes(p) && !carded.includes(p) && !fatigued.includes(p);
+          }).slice(0, 1)
+        : [];
+
       // Deduplicate by player ID (priority order preserved via Set iteration)
       const seen = new Set<string>();
-      const candidates = [...injured, ...carded, ...fatigued, ...tired].filter(p => {
+      const candidates = [...injured, ...carded, ...fatigued, ...tired, ...tacticalPush, ...tacticalShore].filter(p => {
         if (seen.has(p.id)) return false;
         seen.add(p.id);
         return true;
       });
 
-      // Limit subs: 1-2 at halftime, 1 mid-half
-      const maxThisWindow = phase === 'HALFTIME' ? 2 : 1;
+      // Limit subs: 1-2 at halftime, 1 mid-half (2 si hay cambio táctico + natural)
+      const hasTactical = tacticalPush.length > 0 || tacticalShore.length > 0;
+      const maxThisWindow = phase === 'HALFTIME' ? 2 : (hasTactical ? 2 : 1);
       let subsThisWindow = 0;
+
+      const isTacticalCandidate = (p: Player) =>
+        tacticalPush.includes(p) || tacticalShore.includes(p);
 
       for (const playerOff of candidates) {
         if (subsThisWindow >= maxThisWindow) break;
@@ -520,20 +547,49 @@ export class MatchSimulator {
         // Find best bench replacement for same position line
         const offSlot = SLOT_CONFIG[playerOff.tacticalPosition || 0];
         const offLine = offSlot?.line || 'MID';
+        const tactical = isTacticalCandidate(playerOff);
+
+        const lineMatches = (line: string): boolean => {
+          // Cambios tácticos: se permite cruce de líneas (persiguiendo → entran atacantes; protegiendo → entran defensores).
+          if (tactical) {
+            if (tacticalPush.includes(playerOff)) {
+              return line === 'ATT' || line === 'AM' || line === 'MID' || line === offLine;
+            }
+            if (tacticalShore.includes(playerOff)) {
+              return line === 'DEF' || line === 'DM' || line === offLine;
+            }
+          }
+          if (line === offLine) return true;
+          if (offLine === 'DEF' && line === 'DM') return true;
+          if (offLine === 'DM' && (line === 'DEF' || line === 'MID')) return true;
+          if (offLine === 'MID' && (line === 'DM' || line === 'AM')) return true;
+          if (offLine === 'AM' && line === 'ATT') return true;
+          if (offLine === 'ATT' && line === 'AM') return true;
+          return false;
+        };
 
         const replacements = bench
           .filter(p => {
             const slot = SLOT_CONFIG[p.tacticalPosition || 0];
-            // Prefer same line, but allow nearby lines
-            if (slot?.line === offLine) return true;
-            if (offLine === 'DEF' && slot?.line === 'DM') return true;
-            if (offLine === 'DM' && (slot?.line === 'DEF' || slot?.line === 'MID')) return true;
-            if (offLine === 'MID' && (slot?.line === 'DM' || slot?.line === 'AM')) return true;
-            if (offLine === 'AM' && slot?.line === 'ATT') return true;
-            if (offLine === 'ATT' && slot?.line === 'AM') return true;
-            return false;
+            return slot && lineMatches(slot.line);
           })
-          .sort((a, b) => b.currentAbility - a.currentAbility);
+          .sort((a, b) => {
+            // Al perseguir, priorizar atacantes; al proteger, priorizar defensa/mediocentros.
+            let aScore = a.currentAbility;
+            let bScore = b.currentAbility;
+            if (chasing) {
+              const aLine = SLOT_CONFIG[a.tacticalPosition || 0]?.line;
+              const bLine = SLOT_CONFIG[b.tacticalPosition || 0]?.line;
+              if (aLine === 'ATT' || aLine === 'AM') aScore += 25;
+              if (bLine === 'ATT' || bLine === 'AM') bScore += 25;
+            } else if (protecting) {
+              const aLine = SLOT_CONFIG[a.tacticalPosition || 0]?.line;
+              const bLine = SLOT_CONFIG[b.tacticalPosition || 0]?.line;
+              if (aLine === 'DEF' || aLine === 'DM') aScore += 25;
+              if (bLine === 'DEF' || bLine === 'DM') bScore += 25;
+            }
+            return bScore - aScore;
+          });
 
         if (replacements.length === 0) continue;
 
@@ -542,7 +598,9 @@ export class MatchSimulator {
         const pOnName = playerOn.name.split(' ').pop() || '???';
         const reason = injured.includes(playerOff) ? 'lesionado' :
                        carded.includes(playerOff) ? 'amonestado (riesgo)' :
-                       'por fatiga';
+                       fatigued.includes(playerOff) || tired.includes(playerOff) ? 'por fatiga' :
+                       tacticalPush.includes(playerOff) ? 'por ir a buscar el partido' :
+                       'para asegurar la ventaja';
 
         state.events.push({
           minute: state.minute, second: state.second,
@@ -1821,8 +1879,25 @@ export class MatchSimulator {
       const hTactic = options.homeTactic || manager?.getControlledTactic(homeTeamId);
       const aTactic = options.awayTactic || manager?.getControlledTactic(awayTeamId);
 
-      const hXI = this.selectBestXI(homePlayers);
-      const aXI = this.selectBestXI(awayPlayers);
+      // Respetar la alineación guardada por el seleccionador si existe (once completo y válido).
+      const getNationalXI = (teamId: string, players: Player[]): Player[] => {
+        const lineupIds = manager?.isControlled(teamId) ? manager.getControlledLineup(teamId) : [];
+        if (lineupIds.length === 11) {
+          const lineup = lineupIds
+            .map(id => world.getPlayer(id))
+            .filter((p): p is Player => Boolean(p));
+          if (lineup.length === 11) return lineup;
+        }
+        return this.selectBestXI(players);
+      };
+      const hXI = getNationalXI(homeTeamId, homePlayers);
+      const aXI = getNationalXI(awayTeamId, awayPlayers);
+      const hCaptainId = manager?.isControlled(homeTeamId) ? manager.getControlledCaptain(homeTeamId) : undefined;
+      const aCaptainId = manager?.isControlled(awayTeamId) ? manager.getControlledCaptain(awayTeamId) : undefined;
+      const captainOf = (id: string | undefined, side: Player[]): string | undefined =>
+        id && side.some(p => p.id === id) ? id : undefined;
+      const hCaptain = captainOf(hCaptainId, hXI);
+      const aCaptain = captainOf(aCaptainId, aXI);
       const stats = this.initMatchStats([...homePlayers, ...awayPlayers]);
 
       // Team strength
@@ -1864,8 +1939,9 @@ export class MatchSimulator {
       for (const [pid, count] of Object.entries(hShooters)) {
         const shooter = hXI.find(p => p.id === pid);
         if (!shooter) continue;
+        const isCap = hCaptain === pid;
         for (let i = 0; i < count; i++) {
-          const shotQ = this.getQuickAttr(shooter, 'finishing') * 0.6 + this.getQuickAttr(shooter, 'technique') * 0.25 + (Math.random() * 8 - 4);
+          const shotQ = this.getQuickAttr(shooter, 'finishing') * 0.6 + this.getQuickAttr(shooter, 'technique') * 0.25 + (isCap ? 1.5 : 0) + (Math.random() * 8 - 4);
           const saveQ = aGkRef * (0.8 + Math.random() * 0.4);
           stats[pid].shots++;
           ntMinute = Math.min(88, ntMinute + randomInt(1, 8));
@@ -1876,8 +1952,9 @@ export class MatchSimulator {
       for (const [pid, count] of Object.entries(aShooters)) {
         const shooter = aXI.find(p => p.id === pid);
         if (!shooter) continue;
+        const isCap = aCaptain === pid;
         for (let i = 0; i < count; i++) {
-          const shotQ = this.getQuickAttr(shooter, 'finishing') * 0.6 + this.getQuickAttr(shooter, 'technique') * 0.25 + (Math.random() * 8 - 4);
+          const shotQ = this.getQuickAttr(shooter, 'finishing') * 0.6 + this.getQuickAttr(shooter, 'technique') * 0.25 + (isCap ? 1.5 : 0) + (Math.random() * 8 - 4);
           const saveQ = hGkRef * (0.8 + Math.random() * 0.4);
           stats[pid].shots++;
           if (shotQ > saveQ + 3.5) { stats[pid].shotsOnTarget++; stats[pid].goals++; aScore++; if (hGK) stats[hGK.id].conceded++; ntEvents.push({ minute: ntMinute, type: 'GOAL', text: `¡GOL para ${awayTeamId}! ${shooter.name.split(' ').pop()}.`, teamId: awayTeamId, playerId: pid, importance: 'HIGH', intensity: 5 }); }

@@ -42,6 +42,7 @@ export interface SaveData {
     mediaNews: any[];
     managerProfile: any;
     nationalTeamManager: any;
+    seasonHistory: any[];
   };
 }
 
@@ -106,6 +107,7 @@ export function buildSaveData(params: {
       mediaNews: world.mediaNews,
       managerProfile: world.managerProfile,
       nationalTeamManager: world.nationalTeamManager,
+      seasonHistory: world.seasonHistory,
     },
   };
 }
@@ -221,6 +223,7 @@ export function applyWorldState(worldState: any): void {
   if (!world.activeReputationalBuffs) world.activeReputationalBuffs = [];
   if (!world.relationshipWeb) world.relationshipWeb = {};
   if (!world.mediaNews) world.mediaNews = [];
+  world.seasonHistory = worldState.seasonHistory || [];
   if (worldState.chronicles) world.chronicles = worldState.chronicles;
   else world.chronicles = [];
   if (worldState.managerProfile) world.managerProfile = worldState.managerProfile;

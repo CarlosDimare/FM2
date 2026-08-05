@@ -195,7 +195,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                 <div className="flex items-center gap-2 mt-1 md:mt-2">
                     <span className={`text-[7px] md:text-[9px] font-black px-1.5 py-0.5 rounded-sm uppercase border ${isHeaderLight ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-white/10 text-white border-white/20'}`}>{personalityLabel}</span>
                     <div className={`ml-auto px-1.5 py-0.5 rounded-sm border ${isHeaderLight ? 'bg-[#bcc8bc] border-[#a0b0a0]' : 'bg-black/20 border-white/10'}`}>
-                        <span className={`text-[7px] md:text-[9px] font-black uppercase ${isHeaderLight ? 'text-green-700' : 'text-green-400'}`}>LEAL</span>
+                        <span className={`text-[7px] md:text-[9px] font-black uppercase ${isHeaderLight ? (player.loyalty >= 15 ? 'text-green-700' : player.loyalty <= 5 ? 'text-red-700' : 'text-slate-500') : (player.loyalty >= 15 ? 'text-green-400' : player.loyalty <= 5 ? 'text-red-400' : 'text-white/70')}`}>{player.loyalty >= 15 ? 'LEAL' : player.loyalty <= 5 ? 'INESTABLE' : 'PROFESIONAL'}</span>
                     </div>
                 </div>
              </div>

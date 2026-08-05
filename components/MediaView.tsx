@@ -29,7 +29,7 @@ const TYPE_LABELS: Record<string, string> = {
   FEATURE: 'Reportaje',
   RUMOR: 'Rumor',
   CRITICISM: 'Crítica',
-  PRASE: 'Elogio',
+  PRAISE: 'Elogio',
 };
 
 export const MediaView: React.FC<MediaViewProps> = ({ onBack }) => {

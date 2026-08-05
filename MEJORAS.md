@@ -18,6 +18,23 @@
 - `ClubRecords.allTimeTopScorer` + `allTimeMostApps`: máximos goleadores y jugadores con más partidos en la historia del club
 - Visible en PlayerModal (pestaña Historial → "Carrera") y ClubReport (Récords Históricos)
 
+### 🏆 Libro de Temporadas (Historial entre temporadas)
+- `SeasonRecord` por temporada completada: año, DT, club del usuario, campeones por competición (con goleador y asistente), tablas finales top 6 de todas las ligas
+- `SeasonHistoryView`: vista consultable con selector de años, tarjetas de campeones y tablas finales
+- Acceso desde Sidebar (📗 "Libro de Temporadas") y BottomNav "Más" (móvil)
+- Persistido en saves (con migración segura para partidas viejas) · límite de 40 temporadas
+
+### ⚽ Zonas de Tabla Dinámicas por Liga
+- Las zonas de la tabla ya no están hardcodeadas para Argentina: se calculan según confederación y tier de cada competición
+- CONMEBOL: 5 Libertadores + 5 Sudamericana · UEFA: 4 UCL + 2 UEL · AFC/CONCACAF/CAF: cupos continentales propios
+- Descenso proporcional al tamaño de la liga (~12%), ascenso para 2ª división
+
+### 🎯 IA de Partido Mejorada
+- `autoSubstitute` con conciencia de marcador: persiguiendo → prioriza atacantes (refresco ofensivo tras el 60'); protegiendo ventaja → prioriza defensa/mediocentros (cierre tras el 75')
+- Hasta 2 cambios por ventana cuando hay cambio táctico + natural
+- Mensajes de sustitución contextuales ("por ir a buscar el partido" / "para asegurar la ventaja")
+- Ajustes tácticos dinámicos por resultado y rival (ya existentes, consolidados)
+
 ### 🎭 Pilar C: Personalidades y Drama
 - **7 personalidades de jugador** (`PlayerPersonality`): LEADER, MERCENARY, LOYAL, VOLATILE, PROFESSIONAL, LAZY, AMBITIOUS
 - Asignación según atributos: leadership, loyalty, agresividad, decision, vision
@@ -153,12 +170,11 @@
 
 ## ⚠️ Próximos pasos
 
-- Mejorar IA de partido (sustituciones inteligentes, ajustes tácticos dinámicos)
-- Modo online / multijugador
 - Editor de datos (clubes, jugadores, competiciones)
-- Historial entre temporadas completo
-- Modo espectador (simular sin intervenir)
+- Reuniones de directiva más profundas (objetivos de temporada editables)
+- Gráfico de evolución financiera (hoy es tabla)
+
 
 ---
 
-*Última actualización: 3 agosto 2026*
+*Última actualización: 5 agosto 2026*

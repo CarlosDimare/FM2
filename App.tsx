@@ -29,6 +29,7 @@ import { NationalTeamView } from './components/NationalTeamView';
 import { ClubsListView } from './components/ClubsListView';
 import { BottomNav } from './components/BottomNav';
 import { HallOfFameView } from './components/HallOfFameView';
+import { SeasonHistoryView } from './components/SeasonHistoryView';
 import { ChronicleView } from './components/ChronicleView';
 import { ManagerProfileView } from './components/ManagerProfileView';
 import { world } from './services/worldManager';
@@ -953,6 +954,7 @@ dayFixtures.forEach(f => {
       world.activeReputationalBuffs = data.worldState.activeReputationalBuffs || [];
       world.relationshipWeb = data.worldState.relationshipWeb || {};
       world.mediaNews = data.worldState.mediaNews || [];
+      world.seasonHistory = data.worldState.seasonHistory || [];
 
       world.players.forEach(p => {
         if (!p.relationships) p.relationships = {};
@@ -980,6 +982,7 @@ dayFixtures.forEach(f => {
       if (!world.activeReputationalBuffs) world.activeReputationalBuffs = [];
       if (!world.relationshipWeb) world.relationshipWeb = {};
       if (!world.mediaNews) world.mediaNews = [];
+      if (!world.seasonHistory) world.seasonHistory = [];
       if (data.worldState.chronicles) world.chronicles = data.worldState.chronicles;
       else world.chronicles = [];
       if (data.worldState.managerProfile) world.managerProfile = data.worldState.managerProfile;
@@ -1071,6 +1074,7 @@ dayFixtures.forEach(f => {
       if (currentView === 'MANAGER_PROFILE') return <ManagerProfileView onBack={() => setView('HOME')} />;
       if (currentView === 'INBOX') return <InboxView setView={setView} />;
       if (currentView === 'MEDIA') return <MediaView onBack={() => setView('HOME')} />;
+      if (currentView === 'SEASON_HISTORY') return <SeasonHistoryView onBack={() => setView('HOME')} />;
       const nationalTeam = world.nationalTeamManager?.nationalTeams?.find((team: any) => team.id === selectedNationalTeamId);
       const nationalFixture = nextFixture && (nextFixture.homeTeamId === selectedNationalTeamId || nextFixture.awayTeamId === selectedNationalTeamId) ? nextFixture : null;
       return (
@@ -1221,6 +1225,8 @@ dayFixtures.forEach(f => {
         return <BoardView userClub={userClub} />;
       case 'HALL_OF_FAME':
         return <HallOfFameView onBack={() => setView('HOME')} />;
+      case 'SEASON_HISTORY':
+        return <SeasonHistoryView onBack={() => setView('HOME')} />;
       case 'LEAGUE_RANKING':
         return (
           <div className="p-4 sm:p-8 h-full overflow-y-auto bg-[#d4dcd4]">

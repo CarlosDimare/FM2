@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { Player, Fixture, TacticSettings, POSITION_ORDER } from '../types';
+import { Player, Fixture, TacticSettings, POSITION_ORDER, Position } from '../types';
 import { TACTIC_PRESETS, getFlagUrl } from '../data/static';
+import { SLOT_CONFIG } from '../services/engine';
 import { world } from '../services/worldManager';
 import { useUIStore } from '../stores/uiStore';
 import { useGameStore } from '../stores/gameStore';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 import { PlayerFormDots, PlayerStatusIcons } from './PlayerBadges';
-import { Users, Calendar, Star, Shield, UserPlus, UserMinus, Save, Lock, ClipboardList } from 'lucide-react';
+import { Users, Calendar, Star, Shield, UserPlus, UserMinus, Save, Lock, ClipboardList, X } from 'lucide-react';
 
 export type NationalTeamSection = 'SQUAD' | 'TACTICS' | 'SCHEDULE' | 'STATS';
 
@@ -26,6 +27,41 @@ const getPositionColor = (label: string): string => {
   if (label === 'DF') return 'bg-blue-200 text-blue-900';
   if (label === 'MC') return 'bg-green-200 text-green-900';
   return 'bg-red-200 text-red-900';
+};
+
+// ── Pizarra táctica de selección (reutiliza la geometría de slots del modo club) ──
+const NT_SLOT_COORDS: Record<number, { t: number; l: number }> = {
+  0: { t: 90, l: 50 },
+  31: { t: 82.5, l: 50 },
+  1: { t: 75, l: 8 }, 2: { t: 75, l: 29 }, 3: { t: 75, l: 50 }, 4: { t: 75, l: 71 }, 5: { t: 75, l: 92 },
+  9: { t: 62, l: 8 }, 6: { t: 62, l: 29 }, 8: { t: 62, l: 50 }, 7: { t: 62, l: 71 }, 10: { t: 62, l: 92 },
+  11: { t: 45, l: 8 }, 12: { t: 45, l: 29 }, 13: { t: 45, l: 50 }, 14: { t: 45, l: 71 }, 15: { t: 45, l: 92 },
+  16: { t: 28, l: 8 }, 19: { t: 28, l: 29 }, 17: { t: 28, l: 50 }, 20: { t: 28, l: 71 }, 18: { t: 28, l: 92 },
+  27: { t: 12, l: 8 }, 29: { t: 12, l: 29 }, 26: { t: 12, l: 50 }, 30: { t: 12, l: 71 }, 28: { t: 12, l: 92 },
+};
+
+const getPlayerLine = (p: Player): string => {
+  if (p.positions.includes(Position.GK)) return 'GK';
+  if (p.positions.includes(Position.SW)) return 'SW';
+  const pos = p.positions[0];
+  if ([Position.DC, Position.DR, Position.DL].includes(pos)) return 'DEF';
+  if ([Position.DM, Position.DMR, Position.DML].includes(pos)) return 'DM';
+  if ([Position.MC, Position.MR, Position.ML].includes(pos)) return 'MID';
+  if ([Position.AM, Position.AMR, Position.AML].includes(pos)) return 'AM';
+  return 'ATT';
+};
+
+const NT_LINE_NEIGHBORS: Record<string, string[]> = {
+  GK: ['DEF'], SW: ['DEF'], DEF: ['SW', 'DM'], DM: ['DEF', 'MID'], MID: ['DM', 'AM'], AM: ['MID', 'ATT'], ATT: ['AM'],
+};
+
+const lineFit = (p: Player, line: string): number => {
+  const pLine = getPlayerLine(p);
+  if (line === pLine) return 20;
+  if (p.secondaryPositions && p.secondaryPositions.some(sp => getPlayerLine({ ...p, positions: [sp] } as Player) === line)) return 15;
+  if ((NT_LINE_NEIGHBORS[line] || []).includes(pLine)) return 9;
+  if ((NT_LINE_NEIGHBORS[pLine] || []).includes(line)) return 9;
+  return 3;
 };
 
 const getAvgForm = (player: Player): number => {
@@ -50,6 +86,10 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
   const [rosterVersion, setRosterVersion] = useState(0);
   const [tacticDraft, setTacticDraft] = useState<TacticSettings | null>(null);
   const [offerNotice, setOfferNotice] = useState<string | null>(null);
+  const [formationDraft, setFormationDraft] = useState<string>('4-4-2');
+  const [lineupDraft, setLineupDraft] = useState<(string | null)[]>([]);
+  const [captainDraft, setCaptainDraft] = useState<string | null>(null);
+  const [pickSlot, setPickSlot] = useState<number | null>(null);
   const [sortField, setSortField] = useState<SortField>('POS');
   const [sortDesc, setSortDesc] = useState(false);
   const { setView, setSelectedPlayer, setSelectedNationalTeamId, setCareerMode, userClub } = useUIStore();
@@ -57,6 +97,12 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
 
   const nationalManager = world.nationalTeamManager;
   const team = nationalManager?.nationalTeams?.find((t: any) => t.id === teamId);
+  // Sincronizar la formación inicial por defecto con la definida para la selección.
+  React.useEffect(() => {
+    if (team?.formation && !nationalManager?.getControlledFormation(teamId)) {
+      setFormationDraft(team.formation);
+    }
+  }, [teamId, team?.formation]);
   const teamName = team?.name || teamId;
   const flagUrl = getFlagUrl(team?.country || teamId);
   const isControlled = Boolean(nationalManager?.isControlled(teamId));
@@ -94,6 +140,103 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
       setTacticDraft(null);
     }
   }, [teamId, isControlled, rosterVersion, team?.formation]);
+
+  // ── Pizarra: sincronizar alineación + capitán desde el manager ──
+  React.useEffect(() => {
+    if (!isControlled) { setLineupDraft([]); setCaptainDraft(null); return; }
+    const savedFormation = nationalManager?.getControlledFormation(teamId);
+    const savedLineup = nationalManager?.getControlledLineup(teamId);
+    const formation = savedFormation && TACTIC_PRESETS.some(t => t.id === savedFormation)
+      ? savedFormation
+      : (team?.formation || '4-4-2');
+    setFormationDraft(formation);
+    if (savedLineup && savedLineup.length === 11 && savedLineup.every(id => selectedIds.has(id))) {
+      setLineupDraft(savedLineup);
+    } else {
+      setLineupDraft(autoAssignLineup(formation, squadPlayers));
+    }
+    setCaptainDraft(nationalManager?.getControlledCaptain(teamId) || null);
+  }, [teamId, isControlled, rosterVersion]);
+
+  const autoAssignLineup = (formationId: string, pool: Player[]): (string | null)[] => {
+    const preset = TACTIC_PRESETS.find(t => t.id === formationId) || TACTIC_PRESETS[0];
+    const slots = [...preset.positions];
+    const result: (string | null)[] = new Array(slots.length).fill(null);
+    const unassigned = [...pool];
+    const pickBest = (slot: number, candidates: Player[]) => {
+      const line = SLOT_CONFIG[slot]?.line || 'MID';
+      let bestIdx = -1, bestScore = -Infinity;
+      candidates.forEach((p, idx) => {
+        const score = lineFit(p, line) + p.currentAbility / 20;
+        if (score > bestScore) { bestScore = score; bestIdx = idx; }
+      });
+      return bestIdx;
+    };
+    // GK primero
+    const gkIdx = slots.findIndex(s => SLOT_CONFIG[s]?.line === 'GK');
+    if (gkIdx !== -1) {
+      const gk = unassigned.findIndex(p => p.positions.includes(Position.GK));
+      if (gk !== -1) { result[gkIdx] = unassigned[gk].id; unassigned.splice(gk, 1); }
+    }
+    slots.forEach((slot, i) => {
+      if (result[i]) return;
+      const idx = pickBest(slot, unassigned);
+      if (idx !== -1) { result[i] = unassigned[idx].id; unassigned.splice(idx, 1); }
+    });
+    return result;
+  };
+
+  const handleFormationChange = (id: string) => {
+    setFormationDraft(id);
+    const preset = TACTIC_PRESETS.find(t => t.id === id) || TACTIC_PRESETS[0];
+    const kept = (lineupDraft.filter(Boolean) as string[]);
+    const pool = squadPlayers.filter(p => kept.includes(p.id));
+    const rest = squadPlayers.filter(p => !kept.includes(p.id));
+    const slots = [...preset.positions];
+    const result: (string | null)[] = new Array(slots.length).fill(null);
+    const unassigned = [...pool];
+    const gkIdx = slots.findIndex(s => SLOT_CONFIG[s]?.line === 'GK');
+    if (gkIdx !== -1) {
+      const gk = unassigned.findIndex(p => p.positions.includes(Position.GK));
+      if (gk !== -1) { result[gkIdx] = unassigned[gk].id; unassigned.splice(gk, 1); }
+    }
+    const filler = [...unassigned, ...rest];
+    slots.forEach((slot, i) => {
+      if (result[i]) return;
+      const line = SLOT_CONFIG[slot]?.line || 'MID';
+      let bestIdx = -1, bestScore = -Infinity;
+      filler.forEach((p, idx) => {
+        const score = lineFit(p, line) + p.currentAbility / 20;
+        if (score > bestScore) { bestScore = score; bestIdx = idx; }
+      });
+      if (bestIdx !== -1) { result[i] = filler[bestIdx].id; filler.splice(bestIdx, 1); }
+    });
+    setLineupDraft(result);
+  };
+
+  const handleAssignPlayer = (slotIdx: number, playerId: string) => {
+    setLineupDraft(prev => {
+      const next = [...prev];
+      for (let i = 0; i < next.length; i++) if (next[i] === playerId) next[i] = null;
+      next[slotIdx] = playerId;
+      return next;
+    });
+  };
+
+  const saveLineup = () => {
+    if (!nationalManager || !isControlled) return;
+    const ids = lineupDraft.filter(Boolean) as string[];
+    if (ids.length !== 11) {
+      setOfferNotice('Completa el once titular (11 jugadores) antes de guardar.');
+      return;
+    }
+    const ok = nationalManager.setControlledLineup(teamId, ids, formationDraft);
+    nationalManager.setControlledCaptain(teamId, captainDraft);
+    if (ok) {
+      setOfferNotice('Alineación guardada: el once elegido jugará los próximos partidos.');
+      setRosterVersion(v => v + 1);
+    }
+  };
 
   const assumeControl = () => {
     if (!nationalManager || !team) return;
@@ -457,57 +600,222 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
       {section === 'TACTICS' && (
         <div className="flex-1 overflow-y-auto custom-scroll">
           <div className="max-w-4xl mx-auto space-y-3">
-            <FMBox title={`Planteamiento · ${team?.formation || 'Sin formación definida'}`}>
+            <FMBox title={`Planteamiento · ${TACTIC_PRESETS.find(t => t.id === formationDraft)?.name || formationDraft}`}>
               {!isControlled ? (
                 <div className="p-6 text-center">
                   <Lock size={16} className="mx-auto mb-2 text-slate-400" />
-                  <p className="text-[10px] text-slate-500 uppercase font-bold">Asume la selección desde la pestaña Plantel para definir el planteamiento táctico.</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-bold">Asume la selección desde la pestaña Plantel para definir el once y el planteamiento táctico.</p>
                 </div>
-              ) : tacticDraft ? (
+              ) : (
                 <div className="space-y-4 p-2">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <label className="block">
-                      <span className="flex items-center justify-between text-[9px] font-bold uppercase text-slate-600 mb-1">Mentalidad <b className="w-5 text-right text-slate-900">{tacticDraft.mentality}</b></span>
-                      <input type="range" min="1" max="20" value={tacticDraft.mentality} onChange={e => setTacticDraft({ ...tacticDraft, mentality: Number(e.target.value) })} className="w-full accent-emerald-700" />
-                    </label>
-                    <label className="block">
-                      <span className="flex items-center justify-between text-[9px] font-bold uppercase text-slate-600 mb-1">Presión <b className="w-5 text-right text-slate-900">{tacticDraft.closingDown}</b></span>
-                      <input type="range" min="1" max="20" value={tacticDraft.closingDown} onChange={e => setTacticDraft({ ...tacticDraft, closingDown: Number(e.target.value) })} className="w-full accent-emerald-700" />
-                    </label>
-                    <label className="block">
-                      <span className="flex items-center justify-between text-[9px] font-bold uppercase text-slate-600 mb-1">Pase <b className="w-5 text-right text-slate-900">{tacticDraft.passingStyle}</b></span>
-                      <input type="range" min="1" max="20" value={tacticDraft.passingStyle} onChange={e => setTacticDraft({ ...tacticDraft, passingStyle: Number(e.target.value) })} className="w-full accent-emerald-700" />
-                    </label>
+                  {/* Selector de formación */}
+                  <div>
+                    <span className="text-[9px] font-black uppercase text-slate-600 mb-1.5 block">Formación</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {TACTIC_PRESETS.map(preset => (
+                        <button
+                          key={preset.id}
+                          onClick={() => handleFormationChange(preset.id)}
+                          className={`px-2.5 py-1.5 rounded-sm text-[9px] font-black uppercase transition-all border ${formationDraft === preset.id ? 'bg-[#3a4a3a] text-white border-[#3a4a3a] shadow-sm' : 'bg-white text-slate-700 border-[#a0b0a0] hover:bg-[#e8f0e8]'}`}
+                        >
+                          {preset.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+
+                  {/* Pizarra editable */}
+                  <div className="relative w-full aspect-[3/4] sm:aspect-[4/3] max-h-[460px] rounded-sm overflow-hidden border-2 border-[#3a4a3a] shadow-inner" style={{ background: 'linear-gradient(160deg, #1c3d24 0%, #2c5e33 45%, #1f4a28 100%)' }}>
+                    {/* Líneas de cancha */}
+                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t border-white/15" />
+                    <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 border-l border-white/15" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-white/15" />
+                    <div className="absolute bottom-0 inset-x-0 h-12 border border-white/15 border-b-0" />
+                    <div className="absolute top-0 inset-x-0 h-12 border border-white/15 border-t-0" />
+
+                    {/* Slots de la formación */}
+                    {(() => {
+                      const preset = TACTIC_PRESETS.find(t => t.id === formationDraft) || TACTIC_PRESETS[0];
+                      return preset.positions.map((slot, i) => {
+                        const coords = NT_SLOT_COORDS[slot] || { t: 50, l: 50 };
+                        const playerId = lineupDraft[i] || null;
+                        const player = playerId ? world.players.find(p => p.id === playerId) : undefined;
+                        const isCaptain = playerId === captainDraft;
+                        const isSelected = pickSlot === i;
+                        return (
+                          <div
+                            key={`${slot}-${i}`}
+                            className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10 cursor-pointer select-none ${isSelected ? 'ring-2 ring-amber-300 rounded-full' : ''}`}
+                            style={{ top: `${coords.t}%`, left: `${coords.l}%` }}
+                            onClick={() => setPickSlot(i)}
+                          >
+                            {player ? (
+                              <>
+                                <div className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 flex items-center justify-center font-black text-[9px] sm:text-[11px] shadow-lg transition-transform hover:scale-110 ${player.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-emerald-600 text-white border-emerald-300'}`}>
+                                  {SLOT_CONFIG[slot]?.abbr || 'JUG'}
+                                  {isCaptain && <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-amber-300 border border-amber-600 flex items-center justify-center text-[8px] text-amber-900">C</span>}
+                                </div>
+                                <span className="px-1 py-px bg-black/70 text-white text-[6px] sm:text-[7px] font-black uppercase rounded-sm leading-none truncate max-w-[72px] shadow-sm">{player.name}</span>
+                              </>
+                            ) : (
+                              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-dashed flex items-center justify-center font-black text-[8px] sm:text-[9px] uppercase text-white/70 transition-all hover:scale-110 ${isSelected ? 'ring-2 ring-amber-300' : ''}`}>
+                                {SLOT_CONFIG[slot]?.abbr || 'JUG'}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+
+                  <p className="text-[8px] text-slate-500 italic uppercase font-bold">Toca un casillero para elegir al jugador de la convocatoria. La C marca al capitán.</p>
+
+                  {/* Instrucciones tácticas (sliders) */}
+                  {tacticDraft && (
+                    <div className="border-t border-[#a0b0a0]/40 pt-3 space-y-3">
+                      <span className="text-[9px] font-black uppercase text-slate-600 block">Instrucciones de equipo</span>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <label className="block">
+                          <span className="flex items-center justify-between text-[9px] font-bold uppercase text-slate-600 mb-1">Mentalidad <b className="w-5 text-right text-slate-900">{tacticDraft.mentality}</b></span>
+                          <input type="range" min="1" max="20" value={tacticDraft.mentality} onChange={e => setTacticDraft({ ...tacticDraft, mentality: Number(e.target.value) })} className="w-full accent-emerald-700" />
+                        </label>
+                        <label className="block">
+                          <span className="flex items-center justify-between text-[9px] font-bold uppercase text-slate-600 mb-1">Presión <b className="w-5 text-right text-slate-900">{tacticDraft.closingDown}</b></span>
+                          <input type="range" min="1" max="20" value={tacticDraft.closingDown} onChange={e => setTacticDraft({ ...tacticDraft, closingDown: Number(e.target.value) })} className="w-full accent-emerald-700" />
+                        </label>
+                        <label className="block">
+                          <span className="flex items-center justify-between text-[9px] font-bold uppercase text-slate-600 mb-1">Pase <b className="w-5 text-right text-slate-900">{tacticDraft.passingStyle}</b></span>
+                          <input type="range" min="1" max="20" value={tacticDraft.passingStyle} onChange={e => setTacticDraft({ ...tacticDraft, passingStyle: Number(e.target.value) })} className="w-full accent-emerald-700" />
+                        </label>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select value={tacticDraft.focusPassing} onChange={e => setTacticDraft({ ...tacticDraft, focusPassing: e.target.value as TacticSettings['focusPassing'] })} className="bg-slate-50 border border-slate-300 rounded-sm px-1.5 py-1 text-[9px] font-bold uppercase">
+                          <option value="MIXED">Pase mixto</option><option value="LEFT">Banda izquierda</option><option value="CENTER">Por dentro</option><option value="RIGHT">Banda derecha</option>
+                        </select>
+                        <select value={tacticDraft.counterAttack ? 'YES' : 'NO'} onChange={e => setTacticDraft({ ...tacticDraft, counterAttack: e.target.value === 'YES' })} className="bg-slate-50 border border-slate-300 rounded-sm px-1.5 py-1 text-[9px] font-bold uppercase">
+                          <option value="NO">Sin contraataque</option><option value="YES">Contraataque</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <select value={tacticDraft.focusPassing} onChange={e => setTacticDraft({ ...tacticDraft, focusPassing: e.target.value as TacticSettings['focusPassing'] })} className="bg-slate-50 border border-slate-300 rounded-sm px-1.5 py-1 text-[9px] font-bold uppercase">
-                      <option value="MIXED">Pase mixto</option><option value="LEFT">Banda izquierda</option><option value="CENTER">Por dentro</option><option value="RIGHT">Banda derecha</option>
-                    </select>
-                    <select value={tacticDraft.counterAttack ? 'YES' : 'NO'} onChange={e => setTacticDraft({ ...tacticDraft, counterAttack: e.target.value === 'YES' })} className="bg-slate-50 border border-slate-300 rounded-sm px-1.5 py-1 text-[9px] font-bold uppercase">
-                      <option value="NO">Sin contraataque</option><option value="YES">Contraataque</option>
-                    </select>
+                    <FMButton onClick={saveLineup} className="w-full"><Save size={13} /> Guardar once y formación</FMButton>
+                    {tacticDraft && <FMButton onClick={saveTactic} variant="secondary" className="w-full"><Save size={13} /> Guardar instrucciones</FMButton>}
                   </div>
-                  <FMButton onClick={saveTactic} className="w-full"><Save size={13} /> Guardar planteamiento</FMButton>
-                  <p className="text-[8px] text-slate-500 italic uppercase font-bold">El once se elige automáticamente por capacidad dentro de la convocatoria. Este planteamiento se aplica al simular los partidos internacionales.</p>
                 </div>
-              ) : null}
+              )}
             </FMBox>
 
-            <FMBox title="Once probable" noPadding>
-              <FMTable headers={['Pos', 'Nombre', 'Club', 'CA']} colWidths={['45px', 'auto', '80px', '40px']}>
-                {[...squadPlayers]
-                  .sort((a, b) => b.currentAbility - a.currentAbility)
-                  .slice(0, 11)
-                  .map((p, i) => (
-                    <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
-                      <FMTableCell className="text-center"><span className={`px-2 py-0.5 rounded-[1px] text-[8px] font-bold uppercase ${getPositionColor(getPositionLabel(p.primaryPosition || p.positions[0]))}`}>{getPositionLabel(p.primaryPosition || p.positions[0])}</span></FMTableCell>
-                      <FMTableCell className="text-slate-900">{p.name}</FMTableCell>
-                      <FMTableCell className="text-center"><span className="text-[9px] text-slate-600 font-bold">{world.getClub(p.clubId)?.shortName || '-'}</span></FMTableCell>
-                      <FMTableCell className="text-center font-black text-slate-700" isNumber>{p.currentAbility}</FMTableCell>
-                    </tr>
-                  ))}
-              </FMTable>
-            </FMBox>
+            {/* Once actual (si controlada muestra el editable; si no, el probable automático) */}
+            {!isControlled && (
+              <FMBox title="Once probable (automático)" noPadding>
+                <FMTable headers={['Pos', 'Nombre', 'Club', 'CA']} colWidths={['45px', 'auto', '80px', '40px']}>
+                  {[...squadPlayers]
+                    .sort((a, b) => b.currentAbility - a.currentAbility)
+                    .slice(0, 11)
+                    .map((p, i) => (
+                      <tr key={p.id} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
+                        <FMTableCell className="text-center"><span className={`px-2 py-0.5 rounded-[1px] text-[8px] font-bold uppercase ${getPositionColor(getPositionLabel(p.primaryPosition || p.positions[0]))}`}>{getPositionLabel(p.primaryPosition || p.positions[0])}</span></FMTableCell>
+                        <FMTableCell className="text-slate-900">{p.name}</FMTableCell>
+                        <FMTableCell className="text-center"><span className="text-[9px] text-slate-600 font-bold">{world.getClub(p.clubId)?.shortName || '-'}</span></FMTableCell>
+                        <FMTableCell className="text-center font-black text-slate-700" isNumber>{p.currentAbility}</FMTableCell>
+                      </tr>
+                    ))}
+                </FMTable>
+              </FMBox>
+            )}
+            {isControlled && (
+              <FMBox title={`Once titular · ${lineupDraft.filter(Boolean).length}/11`} noPadding>
+                <FMTable headers={['Pos', 'Nombre', 'Club', 'CA']} colWidths={['45px', 'auto', '80px', '40px']}>
+                  {lineupDraft.map((pid, i) => {
+                    if (!pid) return null;
+                    const p = world.players.find(pl => pl.id === pid);
+                    if (!p) return null;
+                    const isCaptain = pid === captainDraft;
+                    return (
+                      <tr key={`${pid}-${i}`} className={`${i % 2 === 0 ? 'bg-white' : 'bg-[#f2f7f2]'} hover:bg-[#ccd9cc] transition-colors`}>
+                        <FMTableCell className="text-center">
+                          <span className={`px-2 py-0.5 rounded-[1px] text-[8px] font-bold uppercase ${getPositionColor(getPositionLabel(p.primaryPosition || p.positions[0]))}`}>{getPositionLabel(p.primaryPosition || p.positions[0])}</span>
+                        </FMTableCell>
+                        <FMTableCell className="text-slate-900">
+                          <span className="flex items-center gap-1.5">
+                            {isCaptain && <span className="w-3.5 h-3.5 rounded-full bg-amber-300 border border-amber-600 flex items-center justify-center text-[8px] text-amber-900 font-black">C</span>}
+                            <span className="truncate">{p.name}</span>
+                          </span>
+                        </FMTableCell>
+                        <FMTableCell className="text-center"><span className="text-[9px] text-slate-600 font-bold">{world.getClub(p.clubId)?.shortName || '-'}</span></FMTableCell>
+                        <FMTableCell className="text-center font-black text-slate-700" isNumber>{p.currentAbility}</FMTableCell>
+                      </tr>
+                    );
+                  })}
+                </FMTable>
+              </FMBox>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de selección de jugador para la pizarra */}
+      {isControlled && pickSlot !== null && (
+        <div className="fixed inset-0 z-[900] bg-black/70 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm" onClick={() => setPickSlot(null)}>
+          <div className="bg-[#e8ece8] border-2 border-[#a0b0a0] rounded-sm shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()} style={{ fontFamily: 'Verdana, sans-serif' }}>
+            <header className="px-4 py-3 border-b border-[#a0b0a0] flex justify-between items-center shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider italic">Puesto: {(() => {
+                  const preset = TACTIC_PRESETS.find(t => t.id === formationDraft) || TACTIC_PRESETS[0];
+                  return SLOT_CONFIG[preset.positions[pickSlot]]?.abbr || 'JUG';
+                })()}</h3>
+                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Elige jugador de la convocatoria · toca la estrella para nombrar capitán</p>
+              </div>
+              <button onClick={() => setPickSlot(null)} className="bg-black/10 hover:bg-black/20 rounded-sm p-2 transition-colors">
+                <X size={16} className="text-slate-800" />
+              </button>
+            </header>
+            <div className="flex-1 overflow-y-auto custom-scroll p-2 space-y-1">
+              {(() => {
+                const preset = TACTIC_PRESETS.find(t => t.id === formationDraft) || TACTIC_PRESETS[0];
+                const slot = preset.positions[pickSlot];
+                const line = SLOT_CONFIG[slot]?.line || 'MID';
+                const currentId = lineupDraft[pickSlot];
+                const ranked = [...squadPlayers]
+                  .sort((a, b) => (lineFit(b, line) + b.currentAbility / 20) - (lineFit(a, line) + a.currentAbility / 20));
+                return ranked.map(p => {
+                  const usedElsewhere = lineupDraft.includes(p.id) && lineupDraft.indexOf(p.id) !== pickSlot;
+                  const isCurrent = p.id === currentId;
+                  const isCaptain = p.id === captainDraft;
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => handleAssignPlayer(pickSlot, p.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={e => { if (e.key === 'Enter') { handleAssignPlayer(pickSlot, p.id); } }}
+                      className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-sm border cursor-pointer text-left transition-colors ${isCurrent ? 'bg-emerald-100 border-emerald-400' : usedElsewhere ? 'bg-slate-100 border-slate-200 opacity-50' : 'bg-white border-[#a0b0a0] hover:bg-[#f2f7f2]'}`}
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black shrink-0 border ${p.positions.includes(Position.GK) ? 'bg-yellow-400 text-black border-yellow-600' : 'bg-slate-200 border-slate-400 text-slate-700'}`}>
+                        {lineFit(p, line) >= 20 ? '★' : ''}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-black text-slate-900 truncate">{p.name}</span>
+                          {isCaptain && <span className="w-3.5 h-3.5 rounded-full bg-amber-300 border border-amber-600 flex items-center justify-center text-[8px] text-amber-900 font-black shrink-0">C</span>}
+                        </div>
+                        <span className="text-[8px] text-slate-500 font-bold uppercase">{getPositionLabel(p.primaryPosition || p.positions[0])} · {world.getClub(p.clubId)?.shortName || '-'} · CA {p.currentAbility}</span>
+                      </div>
+                      <button
+                        onClick={e => { e.stopPropagation(); setCaptainDraft(isCaptain ? null : p.id); }}
+                        className={`w-6 h-6 flex items-center justify-center rounded-full border transition-all shrink-0 ${isCaptain ? 'bg-amber-300 border-amber-500 text-amber-900' : 'bg-white border-slate-300 text-slate-300 hover:text-amber-500 hover:border-amber-400'}`}
+                        title={isCaptain ? 'Quitar capitanía' : 'Nombrar capitán'}
+                        aria-label={isCaptain ? `Quitar capitanía a ${p.name}` : `Nombrar capitán a ${p.name}`}
+                      >
+                        <Star size={12} className={isCaptain ? 'fill-amber-900' : ''} />
+                      </button>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
           </div>
         </div>
       )}

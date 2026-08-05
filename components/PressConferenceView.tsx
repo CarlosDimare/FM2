@@ -59,7 +59,7 @@ const PRE_MATCH_QUESTIONS: PressQuestion[] = [
     question: '¿Cómo valoras la preparación física del equipo?',
     options: [
       { text: "Estamos en óptimas condiciones. El trabajo en preseason fue excelente.", moraleEffect: 4, confidenceEffect: 3, reaction: 'POSITIVE' },
-      { text: "HaySome fatiga acumulada, pero estamos listos.", moraleEffect: 1, confidenceEffect: 1, reaction: 'NEUTRAL' },
+      { text: "Hay algo de fatiga acumulada, pero estamos listos.", moraleEffect: 1, confidenceEffect: 1, reaction: 'NEUTRAL' },
       { text: "Algunos jugadores llegan con cargas. Será un factor.", moraleEffect: -2, confidenceEffect: -3, reaction: 'NEGATIVE' },
     ],
   },

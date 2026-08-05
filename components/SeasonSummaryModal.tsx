@@ -36,7 +36,7 @@ export const SeasonSummaryModal: React.FC<SeasonSummaryModalProps> = ({ summary,
                 style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
           <div className="relative z-10">
              <h2 className="text-xl md:text-2xl font-black text-[#1a1a1a] italic tracking-tighter uppercase leading-none" style={{ fontFamily: 'Verdana, sans-serif' }}>Resumen de la Temporada</h2>
-             <p className="text-slate-700 font-bold tracking-widest text-[9px] uppercase mt-1" style={{ fontFamily: 'Verdana, sans-serif' }}>Salón de la Fama 2008/09</p>
+             <p className="text-slate-700 font-bold tracking-widest text-[9px] uppercase mt-1" style={{ fontFamily: 'Verdana, sans-serif' }}>Fin de temporada</p>
           </div>
           <button onClick={onClose} className="text-slate-700 hover:text-slate-950 z-10 transition-colors">
             <X size={24} />
