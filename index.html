@@ -34,6 +34,21 @@
         overscroll-behavior: none;
         -webkit-overflow-scrolling: touch;
       }
+      #root::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('/FM2/campo-futbol.jpg') center/cover no-repeat;
+        opacity: 0.05;
+        z-index: 1;
+        pointer-events: none;
+      }
+      .dark #root::after {
+        opacity: 0.05;
+      }
       * {
         -webkit-tap-highlight-color: transparent;
       }
@@ -96,8 +111,8 @@
         animation: fm-slide-up 0.3s ease-out forwards;
       }
     </style>
-    <script type="module" crossorigin src="/FM2/assets/index-C9RKEAZV.js"></script>
-    <link rel="stylesheet" crossorigin href="/FM2/assets/index-Dd6wxYuA.css">
+    <script type="module" crossorigin src="/FM2/assets/index-Ai6W9_cY.js"></script>
+    <link rel="stylesheet" crossorigin href="/FM2/assets/index-D-c_E8Tt.css">
   <link rel="manifest" href="/FM2/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/FM2/registerSW.js"></script></head>
   <body>
     <div id="root"></div>
