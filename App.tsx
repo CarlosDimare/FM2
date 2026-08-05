@@ -541,6 +541,11 @@ const startVacation = async (targetOverride?: Date) => {
       world.processDailyContracts(tempDate, userClub?.id);
       world.processDailyScouting(tempDate, userClub?.id);
 
+      // Cosecha de cantera + retiros + purga (1 de agosto) — mismo gate que advanceTime
+      if (tempDate.getMonth() === 7 && tempDate.getDate() === 1) {
+        world.generateYouthIntake(tempDate.getFullYear());
+      }
+
       // Transfer deadline day mechanics
       world.processDeadlineWeekActivity(tempDate);
       world.processDeadlineDay(tempDate);
@@ -689,6 +694,11 @@ const startVacation = async (targetOverride?: Date) => {
       world.processDailyContracts(tempDate, userClub?.id);
       world.processDailyScouting(tempDate, userClub?.id);
          world.generateGeneralNews(tempDate);
+
+      // Cosecha de cantera + retiros + purga (1 de agosto) — mismo gate que advanceTime
+      if (tempDate.getMonth() === 7 && tempDate.getDate() === 1) {
+        world.generateYouthIntake(tempDate.getFullYear());
+      }
 
       // Transfer deadline day mechanics
       world.processDeadlineWeekActivity(tempDate);
