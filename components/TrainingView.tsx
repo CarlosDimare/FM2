@@ -3,9 +3,10 @@ import React, { useState, useMemo } from 'react';
 import { Player, Staff, Club, TrainingSchedule, TrainingCategory } from '../types';
 import { world } from '../services/worldManager';
 import { useWorldStore, notifyPlayers, notifyClubs } from '../stores/worldStore';
+import { useDialogueStore } from '../stores/dialogueStore';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 import { TRAINING_PRESETS } from '../data/static';
-import { User, Dumbbell, Users, Settings2, Shield, Target, Zap, Activity, X, CalendarDays } from 'lucide-react';
+import { User, Dumbbell, Users, Settings2, Shield, Target, Zap, Activity, X, CalendarDays, HeartPulse } from 'lucide-react';
 
 interface TrainingViewProps {
   players: Player[];
@@ -78,11 +79,17 @@ const getPlayerGroup = (p: Player): 'GK' | 'DEF' | 'MID' | 'ATT' => {
   return 'ATT';
 };
 
-export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club }) => {
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(players[0]?.id || null);
+export const TrainingView: React.FC<TrainingViewProps> = ({ players: playersProp, staff, club: clubProp }) => {
+  // Datos en vivo: se refresca cuando el mundo cambia (p.ej. plan del PF aplicado)
+  const storePlayers = useWorldStore(s => s.players);
+  const storeClubs = useWorldStore(s => s.clubs);
+  const club = storeClubs.find(c => c.id === clubProp?.id) || clubProp;
+  const players = storePlayers.filter(p => p.clubId === club?.id);
+
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(players[0]?.id || playersProp[0]?.id || null);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('GENERAL');
   const [isMobileEditorOpen, setIsMobileEditorOpen] = useState(false);
-  const [weeklyPlan, setWeeklyPlan] = useState<Partial<Record<string, TrainingCategory | 'REST'>>>(club.trainingWeeklyPlan || {});
+  const [weeklyPlan, setWeeklyPlan] = useState<Partial<Record<string, TrainingCategory | 'REST'>>>(clubProp.trainingWeeklyPlan || {});
   const [planFeedback, setPlanFeedback] = useState<string | null>(null);
 
   const selectedPlayer = useMemo(() => players.find(p => p.id === selectedPlayerId), [selectedPlayerId, players]);
@@ -185,6 +192,9 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players, staff, club
 
         <div className="flex flex-col gap-1 w-full md:w-auto">
            <span className="text-[8px] font-black text-slate-500 uppercase md:hidden mb-1">Cargar Plan General:</span>
+           <FMButton onClick={() => useDialogueStore.getState().open('FITNESS', { clubId: club.id, source: 'TRAINING' })} className="mb-1">
+             <HeartPulse size={13} /> Plan del Preparador
+           </FMButton>
            <div className="flex flex-wrap gap-1 bg-[#bcc8bc] p-1 rounded-sm border border-[#a0b0a0] shadow-sm">
               <span className="px-2 py-1.5 text-[8px] font-black text-slate-500 uppercase items-center hidden md:flex">Cargar Plan:</span>
               {TRAINING_PRESETS.map(p => (

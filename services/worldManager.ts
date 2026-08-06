@@ -614,7 +614,7 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
   }
 
   generateStaffForClub(clubId: string) {
-    const roles: StaffRole[] = ['HEAD_COACH', 'ASSISTANT_MANAGER', 'PHYSIO', 'FITNESS_COACH', 'RESERVE_MANAGER', 'YOUTH_MANAGER', 'SCOUT'];
+    const roles: StaffRole[] = ['HEAD_COACH', 'ASSISTANT_MANAGER', 'PHYSIO', 'FITNESS_COACH', 'RESERVE_MANAGER', 'YOUTH_MANAGER', 'SCOUT', 'SPORTING_DIRECTOR'];
     const club = this.getClub(clubId);
     const countryEconomy: Record<string, number> = {
       'Argentina': 0.6, 'Brasil': 0.8, 'Uruguay': 0.6, 'Chile': 0.7, 'Colombia': 0.65,
@@ -634,7 +634,17 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
       const s: Staff = {
         id: generateUUID(), name: `${STAFF_NAMES.names[randomInt(0, STAFF_NAMES.names.length-1)]} ${STAFF_NAMES.surnames[randomInt(0, STAFF_NAMES.surnames.length-1)]}`,
         age: randomInt(35, 65), nationality: club?.country || "Argentina", role: role, clubId: clubId,
-        attributes: { coaching: weightedRandom(8, 20), judgingAbility: role === 'SCOUT' ? weightedRandom(12, 20) : weightedRandom(8, 20), judgingPotential: role === 'SCOUT' ? weightedRandom(12, 20) : weightedRandom(8, 20), tacticalKnowledge: weightedRandom(10, 20), adaptability: weightedRandom(5, 20), medical: role === 'PHYSIO' ? 18 : 5, physiotherapy: role === 'PHYSIO' ? 18 : 5, motivation: weightedRandom(8, 20), manManagement: weightedRandom(8, 20) },
+        attributes: {
+          coaching: role === 'SPORTING_DIRECTOR' ? weightedRandom(4, 12) : weightedRandom(8, 20),
+          judgingAbility: role === 'SCOUT' || role === 'SPORTING_DIRECTOR' ? weightedRandom(12, 20) : weightedRandom(8, 20),
+          judgingPotential: role === 'SCOUT' || role === 'SPORTING_DIRECTOR' ? weightedRandom(12, 20) : weightedRandom(8, 20),
+          tacticalKnowledge: weightedRandom(10, 20),
+          adaptability: weightedRandom(5, 20),
+          medical: role === 'PHYSIO' ? 18 : 5,
+          physiotherapy: role === 'PHYSIO' ? 18 : 5,
+          motivation: weightedRandom(8, 20),
+          manManagement: role === 'SPORTING_DIRECTOR' ? weightedRandom(12, 20) : weightedRandom(8, 20),
+        },
         salary: Math.round(randomInt(3000, 15000) * economyMult),
         contractExpiry: new Date(2010, 5, 30), history: [],
         personality: ['LEADER', 'PASSIONATE', 'CALM', 'DISCIPLINARIAN', 'VISIONARY'][randomInt(0, 4)],
@@ -2554,7 +2564,7 @@ addInboxMessage(category: MessageCategory, subject: string, body: string, date: 
     if (!club) return;
     if (club.finances.scoutingBudget <= 0) return;
 
-    const scouts = this.getStaffByClub(userClubId).filter(s => s.role === 'SCOUT' || s.role === 'HEAD_COACH' || s.role === 'ASSISTANT_MANAGER');
+    const scouts = this.getStaffByClub(userClubId).filter(s => s.role === 'SCOUT' || s.role === 'HEAD_COACH' || s.role === 'ASSISTANT_MANAGER' || s.role === 'SPORTING_DIRECTOR');
     const scoutCount = Math.max(1, scouts.length);
     const dailyBudget = Math.round(club.finances.scoutingBudget / 365);
     const reportsToday = Math.min(scoutCount * 2, Math.max(1, Math.floor(dailyBudget / 200)));

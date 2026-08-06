@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Staff, Club, STAFF_ATTRIBUTE_LABELS } from '../types';
 import { world } from '../services/worldManager';
 import { notifyClubs, useWorldStore } from '../stores/worldStore';
+import { useDialogueStore } from '../stores/dialogueStore';
 import { getAttributeColor } from '../constants';
 import { getFlagUrl } from '../data/static';
-import { X, Activity, Calendar, History, Wallet, BookOpen, Trophy, Star, Shield, Zap, Target, Swords, MapPin, Users, ClipboardList, Dumbbell, Mic, MessageCircle, GraduationCap, Binoculars } from 'lucide-react';
-import { FMBox, FMTable, FMTableCell } from './FMUI';
+import { X, Activity, Calendar, History, Wallet, BookOpen, Trophy, Star, Shield, Zap, Target, Swords, MapPin, Users, ClipboardList, Dumbbell, Mic, MessageCircle, GraduationCap, Binoculars, HeartPulse } from 'lucide-react';
+import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 
 const TACTICAL_STYLE_LABELS: Record<string, string> = {
   CONTROL: 'Control',
@@ -45,6 +46,7 @@ const getRoleShort = (role: string) => {
     case 'RESERVE_MANAGER': return 'RESERVA';
     case 'YOUTH_MANAGER': return 'SUB-20';
     case 'SCOUT': return 'OJEADOR';
+    case 'SPORTING_DIRECTOR': return 'DD';
     default: return role;
   }
 };
@@ -122,6 +124,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
       case 'RESERVE_MANAGER': return 'E. Reserva';
       case 'YOUTH_MANAGER': return 'E. Juveniles';
       case 'SCOUT': return 'Ojeador';
+      case 'SPORTING_DIRECTOR': return 'Director Deportivo';
       default: return role;
     }
   };
@@ -139,7 +142,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
     { key: 'talksDelegatedTo', label: 'Charlas de Equipo', icon: <MessageCircle size={14} />, desc: 'Dar la charla técnica y la motivacional en el descanso.', suggestedRoles: ['ASSISTANT_MANAGER', 'HEAD_COACH'] },
     { key: 'reserveDelegatedTo', label: 'Dirección del Equipo Reserva', icon: <Users size={14} />, desc: 'Gestionar partidos, formación y decisiones del equipo reserva.', suggestedRoles: ['RESERVE_MANAGER', 'ASSISTANT_MANAGER'] },
     { key: 'u20DelegatedTo', label: 'Dirección de Sub-20', icon: <GraduationCap size={14} />, desc: 'Gestionar partidos, formación y decisiones de los juveniles.', suggestedRoles: ['YOUTH_MANAGER', 'ASSISTANT_MANAGER'] },
-    { key: 'scoutingDelegatedTo', label: 'Scouting', icon: <Binoculars size={14} />, desc: 'Solicitar informes y seguir a los jugadores objetivo.', suggestedRoles: ['SCOUT', 'ASSISTANT_MANAGER'] },
+    { key: 'scoutingDelegatedTo', label: 'Scouting', icon: <Binoculars size={14} />, desc: 'Solicitar informes y seguir a los jugadores objetivo.', suggestedRoles: ['SCOUT', 'SPORTING_DIRECTOR', 'ASSISTANT_MANAGER'] },
   ];
 
   const setDelegation = (key: string, staffId: string | undefined) => {
@@ -366,6 +369,22 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
             })()}
             
             <div className="flex-1 overflow-y-auto bg-slate-50 p-6 space-y-6">
+               {/* Acción rápida: plan del preparador físico */}
+               {selectedStaff.role === 'FITNESS_COACH' && liveClub && (
+                 <div className="flex items-center justify-between gap-3 bg-[#f2f7f2] border border-[#a0b0a0] rounded-sm p-3">
+                   <div className="min-w-0">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-700">Asesoría de carga</p>
+                     <p className="text-[9px] text-slate-500 mt-0.5">Revisa el estado físico del plantel y aplica un plan de carga.</p>
+                   </div>
+                   <FMButton
+                     onClick={() => useDialogueStore.getState().open('FITNESS', { clubId: liveClub.id, source: 'STAFF' })}
+                     className="shrink-0 px-4"
+                   >
+                     <HeartPulse size={12} /> Plan de carga
+                   </FMButton>
+                 </div>
+               )}
+
                {/* Perfil / Biografía */}
                <div>
                  <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-slate-300 pb-2">

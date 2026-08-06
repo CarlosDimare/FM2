@@ -2,6 +2,7 @@ import React from 'react';
 import { Club, Player } from '../types';
 import { Play, Clipboard, ShieldCheck, AlertOctagon, Info, Settings } from 'lucide-react';
 import { FMBox, FMButton } from './FMUI';
+import { useDialogueStore } from '../stores/dialogueStore';
 
 interface PreMatchViewProps {
   club: Club;
@@ -67,6 +68,12 @@ export const PreMatchView: React.FC<PreMatchViewProps> = ({ club, opponent, star
               <div className="bg-[#f2f7f2] p-6 rounded-sm border border-[#a0b0a0]">
                 <h4 className="text-slate-900 font-black mb-3 flex items-center gap-2 text-[10px] uppercase tracking-widest border-b border-[#a0b0a0] pb-2"><ShieldCheck size={16}/> Informe del Cuerpo Técnico</h4>
                 <p className="text-slate-700 text-sm italic font-black leading-relaxed">"Todo listo, Jefe. El equipo tiene un promedio de {Math.round(starters.reduce((acc, p) => acc + p.fitness, 0) / (starters.length || 1))}% de condición física para hoy."</p>
+                <button
+                  onClick={() => useDialogueStore.getState().open('ASSISTANT', { clubId: club.id, opponentId: opponent.id, source: 'PRE_MATCH' })}
+                  className="mt-4 w-full flex items-center justify-center gap-2 bg-[#3a4a3a] hover:bg-[#2a3a2a] text-white font-black uppercase text-[10px] tracking-wider py-2.5 rounded-sm border border-[#2a3a2a] transition-all active:scale-[0.98]"
+                >
+                  🎩 Consejo del Ayudante
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

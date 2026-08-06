@@ -3,7 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { world } from '../services/worldManager';
 import { TransferOffer, Club, Player } from '../types';
 import { notifyPlayers, notifyClubs, notifyOffers } from '../stores/worldStore';
-import { MessageSquare, History, CheckCircle, XCircle, Clock, ArrowRightLeft, DollarSign, Info, UserCheck, Wallet } from 'lucide-react';
+import { useDialogueStore } from '../stores/dialogueStore';
+import { MessageSquare, History, CheckCircle, XCircle, Clock, ArrowRightLeft, DollarSign, Info, UserCheck, Wallet, FolderOpen } from 'lucide-react';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 
 interface NegotiationsViewProps {
@@ -140,19 +141,24 @@ export const NegotiationsView: React.FC<NegotiationsViewProps> = ({ userClubId, 
             <p className="text-slate-600 font-bold text-[9px] md:text-[10px] uppercase tracking-widest italic mt-1">Acuerdos, cesiones y confirmaciones de contrato.</p>
           </div>
           
-          <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm w-full md:w-auto">
-             <button 
-                onClick={() => setActiveTab('ACTIVE')}
-                className={`flex-1 md:px-6 py-2 text-[9px] font-black rounded-[1px] transition-all uppercase tracking-widest flex items-center justify-center gap-2 ${activeTab === 'ACTIVE' ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}
-             >
-                <MessageSquare size={14} /> ACTIVAS ({activeOffers.length})
-             </button>
-             <button 
-                onClick={() => setActiveTab('HISTORY')}
-                className={`flex-1 md:px-6 py-2 text-[9px] font-black rounded-[1px] transition-all uppercase tracking-widest flex items-center justify-center gap-2 ${activeTab === 'HISTORY' ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}
-             >
-                <History size={14} /> HISTORIAL ({historyOffers.length})
-             </button>
+          <div className="flex flex-col gap-1.5 items-stretch md:items-end">
+             <FMButton onClick={() => useDialogueStore.getState().open('TRANSFERS', { clubId: userClubId, source: 'NEGOTIATIONS' })} className="w-full md:w-auto">
+               <FolderOpen size={13} /> Carpeta de refuerzos
+             </FMButton>
+             <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm w-full md:w-auto">
+                <button 
+                   onClick={() => setActiveTab('ACTIVE')}
+                   className={`flex-1 md:px-6 py-2 text-[9px] font-black rounded-[1px] transition-all uppercase tracking-widest flex items-center justify-center gap-2 ${activeTab === 'ACTIVE' ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}
+                >
+                   <MessageSquare size={14} /> ACTIVAS ({activeOffers.length})
+                </button>
+                <button 
+                   onClick={() => setActiveTab('HISTORY')}
+                   className={`flex-1 md:px-6 py-2 text-[9px] font-black rounded-[1px] transition-all uppercase tracking-widest flex items-center justify-center gap-2 ${activeTab === 'HISTORY' ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}
+                >
+                   <History size={14} /> HISTORIAL ({historyOffers.length})
+                </button>
+             </div>
           </div>
         </div>
       </header>

@@ -31,6 +31,7 @@ import { BottomNav } from './components/BottomNav';
 import { HallOfFameView } from './components/HallOfFameView';
 import { SeasonHistoryView } from './components/SeasonHistoryView';
 import { ChronicleView } from './components/ChronicleView';
+import { DialogueHost } from './components/dialogs/DialogueHost';
 import { ManagerProfileView } from './components/ManagerProfileView';
 import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
@@ -1903,6 +1904,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       {comparePlayerA && comparePlayerB && <PlayerCompareModal playerA={comparePlayerA} playerB={comparePlayerB} onClose={() => { setComparePlayerA(null); setComparePlayerB(null); }} />}
       {contextMenu && <PlayerContextMenu player={contextMenu.player} x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} currentDate={currentDate} />}
       {seasonSummary && <SeasonSummaryModal summary={seasonSummary} userWonLeague={userWonLeague} onClose={() => { setSeasonSummary(null); setUserWonLeague(false); }} />}
+      <DialogueHost onStartMatch={handleStartMatch} />
       {currentView !== 'MATCH' && <BottomNav advanceTime={advanceTime} simulateToNextMatch={simulateToNextMatch} isSimulating={isSimulating} isPreMatchView={isPreMatchView} />}
     </div>
   );

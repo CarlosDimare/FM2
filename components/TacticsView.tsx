@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Player, Position, Club, TacticSettings, PlayerTacticSettings, Tactic } from '../types';
 import { world } from '../services/worldManager';
 import { notifyPlayers, notifyTactics } from '../stores/worldStore';
+import { useDialogueStore } from '../stores/dialogueStore';
 import { SLOT_CONFIG } from '../services/engine';
 import { Save, UserCheck, MousePointer2, ArrowUpRight, LayoutGrid, ClipboardList, X, Users, Star, Trash2, GitBranch } from 'lucide-react';
 import { FMButton, FMBox } from './FMUI';
@@ -740,6 +741,9 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
             <div className="flex flex-wrap gap-2">
                 <FMButton variant="secondary" onClick={() => setConfirmAction('AUTOPICK')} className="flex-1 min-w-[45%] py-2 text-[9px]">
                    <UserCheck size={12}/> EL SEGUNDO ELIGE 11
+                </FMButton>
+                <FMButton variant="vacation" onClick={() => useDialogueStore.getState().open('ASSISTANT', { clubId: club.id, source: 'TACTICS', tacticId: selectedTacticId || world.getTactics()[0]?.id })} className="flex-1 min-w-[45%] py-2 text-[9px]">
+                   🎩 CONSEJO DEL AYUDANTE
                 </FMButton>
                 <FMButton variant={arrowMode ? 'vacation' : 'secondary'} onClick={() => setArrowMode(!arrowMode)} className="flex-1 min-w-[45%] py-2 text-[9px]">
                    <GitBranch size={12}/> FLECHAS {arrowMode ? 'ON' : 'OFF'}

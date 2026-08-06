@@ -2,8 +2,9 @@
 import React, { useState, useMemo } from 'react';
 import { Player } from '../types';
 import { world } from '../services/worldManager';
-import { Search, ArrowDownUp, HandCoins } from 'lucide-react';
-import { FMBox, FMTable, FMTableCell } from './FMUI';
+import { useDialogueStore } from '../stores/dialogueStore';
+import { Search, ArrowDownUp, HandCoins, FolderOpen } from 'lucide-react';
+import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 import { TransferOfferModal } from './TransferOfferModal';
 
 interface MarketViewProps {
@@ -53,22 +54,27 @@ export const MarketView: React.FC<MarketViewProps> = ({ onSelectPlayer, userClub
               <p className="text-slate-600 font-bold text-[9px] md:text-[10px] uppercase tracking-widest italic">Buscando el próximo refuerzo estrella.</p>
            </div>
            
-            <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm w-full md:w-auto">
-               {[
-                 { id: 'ALL', label: 'Todos' },
-                 { id: 'TRANSFERABLE', label: 'Transf.' },
-                 { id: 'LOANABLE', label: 'Cedibles' },
-                 { id: 'FREE', label: 'Libres' }
-               ].map(f => (
-                 <button 
-                    key={f.id}
-                    onClick={() => setFilter(f.id as any)}
-                    className={`flex-1 md:px-6 py-1.5 text-[9px] font-black rounded-[1px] transition-all uppercase tracking-widest ${filter === f.id ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}
-                 >
-                    {f.label}
-                 </button>
-              ))}
-           </div>
+            <div className="flex flex-col gap-1.5 items-stretch md:items-end">
+               <FMButton onClick={() => useDialogueStore.getState().open('TRANSFERS', { clubId: userClubId, source: 'MARKET' })} className="w-full md:w-auto">
+                 <FolderOpen size={13} /> Carpeta de refuerzos
+               </FMButton>
+               <div className="flex bg-[#bcc8bc] p-0.5 rounded-sm border border-[#a0b0a0] shadow-sm w-full md:w-auto">
+                  {[
+                    { id: 'ALL', label: 'Todos' },
+                    { id: 'TRANSFERABLE', label: 'Transf.' },
+                    { id: 'LOANABLE', label: 'Cedibles' },
+                    { id: 'FREE', label: 'Libres' }
+                  ].map(f => (
+                    <button 
+                       key={f.id}
+                       onClick={() => setFilter(f.id as any)}
+                       className={`flex-1 md:px-6 py-1.5 text-[9px] font-black rounded-[1px] transition-all uppercase tracking-widest ${filter === f.id ? 'bg-[#3a4a3a] text-white shadow-sm' : 'text-slate-700 hover:bg-[#ccd9cc]'}`}
+                    >
+                       {f.label}
+                    </button>
+                 ))}
+              </div>
+            </div>
         </div>
 
         <div className="relative">
