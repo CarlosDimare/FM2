@@ -1,3 +1,5 @@
+import { NotificationPriority } from '../types';
+
 const NOTIFICATION_KEY = 'fm_arg_notifications_enabled';
 
 export const isNotificationSupported = (): boolean => {
@@ -42,7 +44,9 @@ export const sendMatchNotification = (matchInfo: string): void => {
   sendNotification('FM Argentina — Partido', matchInfo, 'match');
 };
 
-export const sendInboxNotification = (subject: string): void => {
+export const sendInboxNotification = (subject: string, priority: NotificationPriority = 'IMPORTANT'): void => {
+  // Solo las notificaciones Importantes y Críticas llegan al navegador: evita spam por INFO.
+  if (priority === 'INFO') return;
   sendNotification('FM Argentina — Nuevo mensaje', subject, 'inbox');
 };
 

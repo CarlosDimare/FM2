@@ -606,6 +606,19 @@ export interface RealManager {
 
 export type MessageCategory = 'MARKET' | 'SQUAD' | 'STATEMENTS' | 'FINANCE' | 'COMPETITION' | 'SCOUTING' | 'PEOPLE';
 
+export type NotificationPriority = 'INFO' | 'IMPORTANT' | 'CRITICAL';
+
+/** Secciones del diario de noticias (prensa). TU_CLUB es una sección virtual: se usa para
+ *  historias internas del club del usuario y además el filtro "Tu club" muestra isUserClubNews. */
+export type NewsSection =
+  | 'MERCADO'
+  | 'CLASIFICACION'
+  | 'DESPIDOS'
+  | 'RESULTADOS'
+  | 'LESIONES'
+  | 'INTERNACIONAL'
+  | 'TU_CLUB';
+
 export interface ScoutingReport {
   id: string;
   playerId: string;
@@ -624,6 +637,9 @@ export interface InboxMessage {
   id: string;
   date: Date;
   category: MessageCategory;
+  priority: NotificationPriority;
+  /** El mensaje exige una decisión del usuario (renovar, responder, aceptar...). */
+  actionRequired?: boolean;
   subject: string;
   body: string;
   isRead: boolean;
@@ -781,7 +797,7 @@ export interface InteractionLogEntry {
    id: string;
    date: Date;
    type: 'HEADLINE' | 'FEATURE' | 'RUMOR' | 'CRITICISM' | 'PRAISE';
-   category: 'MATCH' | 'TRANSFER' | 'INJURY' | 'BOARD' | 'GENERAL';
+   section: NewsSection;
    headline: string;
    subheadline: string;
    body: string;
@@ -790,6 +806,7 @@ export interface InteractionLogEntry {
    playerId?: string;
    isUserClubNews: boolean;
    read: boolean;
+   featured?: boolean;
  }
 
 export interface ReputationalBuff {

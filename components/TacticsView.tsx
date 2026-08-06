@@ -188,7 +188,7 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    const [pickBenchPlayer, setPickBenchPlayer] = useState<Player | null>(null);
    const [arrowMode, setArrowMode] = useState(false);
    const [arrowMenuSlot, setArrowMenuSlot] = useState<number | null>(null);
-   const [confirmAction, setConfirmAction] = useState<'AUTOPICK' | 'CLEAR' | null>(null);
+   const [confirmAction, setConfirmAction] = useState<'CLEAR' | null>(null);
 
    const activeTactic = world.getTactics().find(t => t.id === selectedTacticId) || world.getTactics()[0];
    const starters = players.filter(p => p.isStarter && p.tacticalPosition !== undefined);
@@ -739,9 +739,6 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
             {/* Toolbar - Tier 2 */}
             <div className="flex flex-wrap gap-2">
-                <FMButton variant="secondary" onClick={() => setConfirmAction('AUTOPICK')} className="flex-1 min-w-[45%] py-2 text-[9px]">
-                   <UserCheck size={12}/> EL SEGUNDO ELIGE 11
-                </FMButton>
                 <FMButton variant="vacation" onClick={() => useDialogueStore.getState().open('ASSISTANT', { clubId: club.id, source: 'TACTICS', tacticId: selectedTacticId || world.getTactics()[0]?.id })} className="flex-1 min-w-[45%] py-2 text-[9px]">
                    🎩 CONSEJO DEL AYUDANTE
                 </FMButton>
@@ -895,33 +892,21 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
             </div>
          )}
 
-         {/* Confirm Modal: Assistant XI / Clear Selection */}
+         {/* Confirm Modal: Clear Selection */}
          {confirmAction && (
             <div className="fixed inset-0 z-[500] bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-overlay-in" onClick={() => setConfirmAction(null)}>
-               <FMBox title={confirmAction === 'AUTOPICK' ? 'Delegar elección del once' : 'Borrar selección'} className="w-full max-w-sm shadow-2xl border-2 border-slate-400">
+               <FMBox title="Borrar selección" className="w-full max-w-sm shadow-2xl border-2 border-slate-400">
                   <div className="p-6 space-y-6">
                      <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white ${confirmAction === 'AUTOPICK' ? 'bg-[#3a4a3a]' : 'bg-red-600'}`}>
-                           {confirmAction === 'AUTOPICK' ? <UserCheck size={18} /> : <Trash2 size={18} />}
-                        </div>
+                        <div className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0"><Trash2 size={18} /></div>
                         <div>
-                           <p className="text-xs font-black text-slate-900 uppercase leading-snug">
-                              {confirmAction === 'AUTOPICK' ? 'El segundo entrenador armará el mejor once' : 'Quitar todos los jugadores del campo'}
-                           </p>
-                           <p className="text-[10px] text-slate-600 mt-1 leading-relaxed">
-                              {confirmAction === 'AUTOPICK'
-                                 ? 'Seleccionará los 11 titulares según la táctica activa, priorizando atributos, forma y estado físico.'
-                                 : 'Todos los puestos quedarán vacíos y podrás armar el once desde cero.'}
-                           </p>
+                           <p className="text-xs font-black text-slate-900 uppercase leading-snug">Quitar todos los jugadores del campo</p>
+                           <p className="text-[10px] text-slate-600 mt-1 leading-relaxed">Todos los puestos quedarán vacíos y podrás armar el once desde cero.</p>
                         </div>
                      </div>
                      <div className="flex gap-2">
                         <FMButton variant="secondary" onClick={() => setConfirmAction(null)} className="flex-1 py-3">CANCELAR</FMButton>
-                        <FMButton variant="primary" onClick={() => {
-                           if (confirmAction === 'AUTOPICK') handleAutoPick();
-                           else handleClearSelection();
-                           setConfirmAction(null);
-                        }} className="flex-1 py-3">CONFIRMAR</FMButton>
+                        <FMButton variant="primary" onClick={() => { handleClearSelection(); setConfirmAction(null); }} className="flex-1 py-3">CONFIRMAR</FMButton>
                      </div>
                   </div>
                </FMBox>

@@ -78,17 +78,19 @@ export class LifecycleManager {
              p.injury.daysLeft = Math.max(1, Math.round(p.injury.totalDays * (1 - p.injury.recoveryProgress / 100)));
              p.injury.relapseRisk = Math.min(100, p.injury.relapseRisk + 15);
              if (p.injury.severity === 'SERIOUS' || p.injury.severity === 'SEVERE') {
-               world.addInboxMessage('SQUAD',
-                 `Recaída: ${p.name}`,
-                 `${p.name} ha sufrido una recaída en su recuperación de ${p.injury.type}. Retrocede ${setback}% de progreso. El tratamiento agresivo tiene sus riesgos.`,
-                 new Date(), p.id);
-               world.mediaNews.push({
-                 id: generateUUID(), date: new Date(),
-                 type: 'CRITICISM', category: 'INJURY',
+               const isUserPlayer = p.clubId === world.managerProfile?.currentClubId;
+               if (isUserPlayer) {
+                 world.addInboxMessage('SQUAD',
+                   `Recaída: ${p.name}`,
+                   `${p.name} ha sufrido una recaída en su recuperación de ${p.injury.type}. Retrocede ${setback}% de progreso. El tratamiento agresivo tiene sus riesgos.`,
+                   new Date(), p.id, 'IMPORTANT');
+               }
+               world.publishNews('LESIONES', {
+                 type: 'CRITICISM',
                  headline: `Recaída de ${p.name} preocupa al cuerpo médico`,
                  subheadline: `El tratamiento agresivo pasa factura`,
                  body: `${p.name} sufrió un contratiempo en su recuperación. Fuentes del club cuestionan la decisión de acelerar su regreso.`,
-                 clubId: p.clubId, playerId: p.id, isUserClubNews: true, read: false,
+                 clubId: p.clubId, playerId: p.id,
                });
              }
            }
@@ -174,13 +176,25 @@ export class LifecycleManager {
       club.finances.transferBudget = Math.round(takeoverAmount * 0.3);
       club.reputation = Math.min(10000, Math.max(2000, club.reputation - 500));
 
-      world.addInboxMessage(
-        'FINANCE',
-        'Cambio de propietario',
-        `${club.name} ha sido adquirido por nuevos inversores tras problemas financieros. Se vendieron ${playersToSell.length} jugadores por $${(fireSaleRevenue / 1000).toFixed(0)}K. Nuevo presupuesto: $${(club.finances.transferBudget / 1000).toFixed(0)}K.`,
-        currentDate,
-        club.id
-      );
+      const userClubId = world.managerProfile?.currentClubId;
+      if (club.id === userClubId) {
+        world.addInboxMessage(
+          'FINANCE',
+          'Cambio de propietario',
+          `${club.name} ha sido adquirido por nuevos inversores tras problemas financieros. Se vendieron ${playersToSell.length} jugadores por $${(fireSaleRevenue / 1000).toFixed(0)}K. Nuevo presupuesto: $${(club.finances.transferBudget / 1000).toFixed(0)}K.`,
+          currentDate,
+          club.id,
+          'CRITICAL'
+        );
+      } else {
+        world.publishNews('INTERNACIONAL', {
+          type: 'HEADLINE',
+          headline: `Nuevos inversores compran ${club.shortName}`,
+          subheadline: `Liquidación de jugadores tras la crisis financiera`,
+          body: `${club.name} cambió de manos: nuevos inversores adquirieron el club tras sus problemas financieros y pusieron a la venta a varios jugadores para sanear las cuentas.`,
+          clubId: club.id,
+        });
+      }
    }
 
   // New: Decrement suspensions for clubs that just played
@@ -334,7 +348,18 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
           const amount = Math.round(pool * 0.5);
           champ.finances.balance += amount;
           champ.finances.transferBudget += Math.round(amount * 0.3);
-          if (currentDate) world.addInboxMessage('FINANCE', `Premio: ${summary.compName}`, `${champ.name} ha recibido $${amount.toLocaleString()} por ganar la ${summary.compName}.`, currentDate);
+          if (currentDate) {
+            if (champ.id === userClubId) {
+              world.addInboxMessage('FINANCE', `Premio: ${summary.compName}`, `${champ.name} ha recibido $${amount.toLocaleString()} por ganar la ${summary.compName}.`, currentDate, undefined, 'IMPORTANT');
+            }
+            world.publishNews('CLASIFICACION', {
+              type: 'HEADLINE',
+              headline: `${champ.shortName} campeón de ${summary.compName}`,
+              subheadline: `Premio económico: $${amount.toLocaleString()}`,
+              body: `${champ.name} se consagró campeón de la ${summary.compName}. Además del título, el club recibió un premio de $${amount.toLocaleString()}.`,
+              clubId: champ.id,
+            });
+          }
         }
       }
     });
@@ -349,7 +374,19 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
         const deficit = MIN_U21_MINUTES - (club.u21MinutesThisSeason || 0);
         const penaltyPoints = Math.min(6, Math.ceil(deficit / 200));
         entry.points = Math.max(0, entry.points - penaltyPoints);
-        if (currentDate) world.addInboxMessage('COMPETITION', `Sanción sub-21: ${club.name}`, `${club.name} pierde ${penaltyPoints} puntos por no cumplir el mínimo de ${MIN_U21_MINUTES} minutos para jugadores sub-21 (total: ${Math.round(club.u21MinutesThisSeason || 0)}).`, currentDate, club.id);
+        if (currentDate) {
+          if (club.id === userClubId) {
+            world.addInboxMessage('COMPETITION', `Sanción sub-21: ${club.name}`, `${club.name} pierde ${penaltyPoints} puntos por no cumplir el mínimo de ${MIN_U21_MINUTES} minutos para jugadores sub-21 (total: ${Math.round(club.u21MinutesThisSeason || 0)}).`, currentDate, club.id, 'IMPORTANT');
+          } else {
+            world.publishNews('CLASIFICACION', {
+              type: 'CRITICISM',
+              headline: `${club.shortName} sancionado por la liga`,
+              subheadline: `Pierde ${penaltyPoints} puntos por el reglamento sub-21`,
+              body: `${club.name} fue sancionado con ${penaltyPoints} puntos por no cumplir el mínimo de minutos sub-21 exigido por la liga. Un golpe duro para sus aspiraciones.`,
+              clubId: club.id,
+            });
+          }
+        }
       });
     });
     world.clubs.forEach(c => c.u21MinutesThisSeason = 0);
@@ -512,10 +549,17 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
          if (club) {
             club.leagueId = 'L_ARG_2'; 
             if (club.id === userClubId) {
-               world.addInboxMessage('COMPETITION', 'DESCENSO CONSUMADO', `Día triste para el club. Hemos descendido a la Segunda División.`, currentDate, club.id);
-            } else {
-               world.addInboxMessage('COMPETITION', 'Noticias de Liga', `El ${club.name} ha descendido a Segunda División.`, currentDate, club.id);
+               world.addInboxMessage('COMPETITION', 'DESCENSO CONSUMADO', `Día triste para el club. Hemos descendido a la Segunda División.`, currentDate, club.id, 'CRITICAL');
             }
+            world.publishNews('CLASIFICACION', {
+              type: 'CRITICISM',
+              headline: `${club.shortName} desciende a Segunda División`,
+              subheadline: 'El descenso se consumó',
+              body: club.id === userClubId
+                ? `Se consumó el descenso de ${club.name}: la próxima temporada se jugará en Segunda División. Un golpe muy duro para el club y su afición.`
+                : `El ${club.name} descendió a Segunda División tras una mala campaña. El club deberá rearmarse para buscar el ascenso.`,
+              clubId: club.id,
+            });
          }
       });
 
@@ -524,10 +568,17 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
          if (club) {
             club.leagueId = 'L_ARG_1'; 
             if (club.id === userClubId) {
-               world.addInboxMessage('COMPETITION', '¡ASCENSO!', `¡Objetivo cumplido! Jugaremos en Primera División la próxima temporada.`, currentDate, club.id);
-            } else {
-               world.addInboxMessage('COMPETITION', 'Noticias de Liga', `El ${club.name} ha ascendido a Primera División.`, currentDate, club.id);
+               world.addInboxMessage('COMPETITION', '¡ASCENSO!', `¡Objetivo cumplido! Jugaremos en Primera División la próxima temporada.`, currentDate, club.id, 'CRITICAL');
             }
+            world.publishNews('CLASIFICACION', {
+              type: 'PRAISE',
+              headline: `${club.shortName} asciende a Primera División`,
+              subheadline: 'Regreso a la elite',
+              body: club.id === userClubId
+                ? `${club.name} logró el ascenso a Primera División. Objetivo cumplido: la próxima temporada se jugará en la elite del fútbol argentino.`
+                : `El ${club.name} consiguió el ascenso a Primera División y jugará la próxima temporada en la elite del fútbol argentino.`,
+              clubId: club.id,
+            });
          }
       });
 
@@ -535,7 +586,7 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
          const club = world.getClub(l.clubId);
          if (club) {
             club.qualifiedFor = 'CONT_LIB';
-            if (club.id === userClubId) world.addInboxMessage('COMPETITION', 'Clasificación Continental', `Nos hemos clasificado para la COPA LIBERTADORES.`, currentDate, club.id);
+            if (club.id === userClubId) world.addInboxMessage('COMPETITION', 'Clasificación Continental', `Nos hemos clasificado para la COPA LIBERTADORES.`, currentDate, club.id, 'IMPORTANT');
          }
       });
 
@@ -543,7 +594,7 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
          const club = world.getClub(s.clubId);
          if (club) {
             club.qualifiedFor = 'CONT_SUD';
-            if (club.id === userClubId) world.addInboxMessage('COMPETITION', 'Clasificación Continental', `Nos hemos clasificado para la COPA SUDAMERICANA.`, currentDate, club.id);
+            if (club.id === userClubId) world.addInboxMessage('COMPETITION', 'Clasificación Continental', `Nos hemos clasificado para la COPA SUDAMERICANA.`, currentDate, club.id, 'IMPORTANT');
          }
       });
   }
@@ -592,7 +643,13 @@ MatchSimulator.finalizeSeasonStats(hEleven, aEleven, stats, homeScore, awayScore
                          });
                       }
                    }
-                   world.addInboxMessage('COMPETITION', 'UCL Playoff', `Clasificados al playoff de la Champions League.`, currentDate, 'UCL');
+                   world.publishNews('INTERNACIONAL', {
+                     type: 'HEADLINE',
+                     headline: 'Definidos los cruces del playoff de la Champions',
+                     subheadline: 'La fase de liga ya tiene sus clasificados',
+                     body: 'Finalizada la fase de liga de la Champions League, quedaron definidos los cruces del playoff que buscarán un lugar en octavos de final.',
+                     competitionId: 'UCL',
+                   });
                 }
                 
                 // If no playoffs needed (all direct), go to R16
@@ -684,7 +741,13 @@ const allClubIds = Array.from(new Set(leaguePhaseMatches.flatMap(f => [f.homeTea
                          });
                       }
                    }
-                   world.addInboxMessage('COMPETITION', `${cup.name} - Eliminatorias`, `Finalizada la fase de grupos. Se han definido los Cuartos de Final.`, currentDate, cup.id);
+                   world.publishNews('RESULTADOS', {
+                     type: 'FEATURE',
+                     headline: `Definidos los cruces de cuartos en ${cup.name}`,
+                     subheadline: 'Finalizada la fase de grupos',
+                     body: `Finalizada la fase de grupos de la ${cup.name}, quedaron definidos los cruces de cuartos de final.`,
+                     competitionId: cup.id,
+                   });
                 } else if (winners.length >= 4) {
                    const nextDate = this.findNextCupDate(currentDate);
                    for (let i = 0; i < winners.length; i += 2) {
@@ -721,7 +784,13 @@ const allClubIds = Array.from(new Set(leaguePhaseMatches.flatMap(f => [f.homeTea
                 if (pot1.length === 8 && pot2.length === 8) {
                    const nextDate = this.findNextCupDate(currentDate);
                    newFixtures.push(...Scheduler.generateKnockoutDraw(cup.id, pot1, pot2, nextDate, 'ROUND_OF_16'));
-                   world.addInboxMessage('COMPETITION', `Sorteo ${cup.name}`, `Finalizada la fase de grupos. Se han sorteado los cruces de Octavos.`, currentDate, cup.id);
+                   world.publishNews('RESULTADOS', {
+                     type: 'FEATURE',
+                     headline: `Sorteo de octavos en ${cup.name}`,
+                     subheadline: 'Los cruces quedaron definidos',
+                     body: `Finalizada la fase de grupos de la ${cup.name}, el sorteo definió los cruces de octavos de final.`,
+                     competitionId: cup.id,
+                   });
                 }
              } else {
                 this.processKnockoutStage(cup, cupFixtures, currentDate, newFixtures);
@@ -824,7 +893,13 @@ private static calculateUCLStandings(fixtures: Fixture[], clubIds: string[]): Le
         newFixtures.push(...Scheduler.generateCupRound(cup.id, winners, nextDate, nextStage));
         
         const msg = nextStage === 'FINAL' ? `Definida la Gran Final de la ${cup.name}.` : `Definidos los cruces de ${nextStage} en la ${cup.name}.`;
-        world.addInboxMessage('COMPETITION', `Fase Avanzada ${cup.name}`, msg, currentDate, cup.id);
+        world.publishNews('RESULTADOS', {
+          type: 'FEATURE',
+          headline: `${cup.name}: ${nextStage === 'FINAL' ? 'definida la gran final' : 'avanzan los cruces'}`,
+          subheadline: msg,
+          body: msg,
+          competitionId: cup.id,
+        });
       }
   }
 

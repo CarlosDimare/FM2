@@ -195,7 +195,7 @@ export const PeopleHub: React.FC<PeopleHubProps> = ({ userClub, currentDate }) =
               {latestNews.map(news => (
                 <div key={news.id} className="bg-white border border-slate-200 p-3 rounded-sm">
                   <div className="flex justify-between gap-2">
-                    <span className="text-[9px] font-black uppercase text-slate-500">{news.type} · {news.category}</span>
+                    <span className="text-[9px] font-black uppercase text-slate-500">{news.type} · {news.section}</span>
                     <span className="text-[9px] text-slate-400">{new Date(news.date).toLocaleDateString()}</span>
                   </div>
                   <div className="text-[11px] font-black text-slate-900 mt-1">{news.headline}</div>

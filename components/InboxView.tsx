@@ -1,25 +1,43 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { world } from '../services/worldManager';
-import { InboxMessage, MessageCategory } from '../types';
+import { InboxMessage, MessageCategory, NotificationPriority } from '../types';
 import { notifyInbox } from '../stores/worldStore';
 import { useUIStore } from '../stores/uiStore';
-import { Mail, ShoppingBag, Users, MessageSquare, Wallet, Trash2, Clock, ChevronRight, Inbox, Trophy, ArrowLeft, ChevronLeft, Binoculars, Briefcase } from 'lucide-react';
+import { Mail, ShoppingBag, Users, MessageSquare, Wallet, Trash2, ChevronRight, Inbox, Trophy, ChevronLeft, Binoculars, Briefcase, Bell, AlertOctagon, AlertTriangle, Info } from 'lucide-react';
 import { FMButton } from './FMUI';
 
 interface InboxViewProps {
   setView: (view: string) => void;
 }
 
+const PRIORITY_META: Record<NotificationPriority, { label: string; chipClass: string; chipIcon: React.ReactNode }> = {
+  CRITICAL: { label: 'Crítica', chipClass: 'bg-red-600 text-white', chipIcon: <AlertOctagon size={14} className="text-white" /> },
+  IMPORTANT: { label: 'Importante', chipClass: 'bg-amber-500 text-white', chipIcon: <AlertTriangle size={14} className="text-white" /> },
+  INFO: { label: 'Info', chipClass: 'bg-slate-400 text-white', chipIcon: <Info size={14} className="text-white" /> },
+};
+
 export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'ALL' | MessageCategory>('ALL');
+  const [viewFilter, setViewFilter] = useState<'ALL' | 'UNREAD' | 'CRITICAL' | 'IMPORTANT' | 'ACTION'>('ALL');
   const [showDetailOnMobile, setShowDetailOnMobile] = useState(false);
   const userClub = useUIStore(s => s.userClub);
 
   const filteredMessages = useMemo(() => {
-    return world.inbox.filter(m => filter === 'ALL' || m.category === filter);
-  }, [filter, world.inbox.length]);
+    let list = world.inbox;
+    if (viewFilter === 'UNREAD') list = list.filter(m => !m.isRead);
+    else if (viewFilter === 'CRITICAL') list = list.filter(m => (m.priority || 'INFO') === 'CRITICAL');
+    else if (viewFilter === 'IMPORTANT') list = list.filter(m => (m.priority || 'INFO') === 'IMPORTANT');
+    else if (viewFilter === 'ACTION') list = list.filter(m => !!m.actionRequired);
+    if (filter !== 'ALL') list = list.filter(m => m.category === filter);
+    // Orden: prioridad desc → fecha desc
+    const weight: Record<NotificationPriority, number> = { CRITICAL: 3, IMPORTANT: 2, INFO: 1 };
+    return [...list].sort((a, b) =>
+      ((weight[b.priority || 'INFO'] || 1) - (weight[a.priority || 'INFO'] || 1)) ||
+      (b.date.getTime() - a.date.getTime())
+    );
+  }, [viewFilter, filter, world.inbox.length]);
 
   const selectedMessage = useMemo(() => {
     return world.inbox.find(m => m.id === selectedMessageId);
@@ -76,8 +94,8 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
       <div className={`w-full lg:w-[400px] border-r border-[#a0b0a0] flex flex-col bg-[#e8ece8] shadow-sm shrink-0 ${showDetailOnMobile ? 'hidden lg:flex' : 'flex'}`}>
         <header className="p-3 border-b border-[#a0b0a0] shrink-0" style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
           <div className="flex items-center gap-2 mb-3">
-            <Inbox size={18} className="text-slate-800" />
-            <h2 className="text-lg font-black text-slate-900 uppercase italic tracking-tighter" style={{ fontFamily: 'Verdana, sans-serif' }}>CORREO</h2>
+            <Bell size={18} className="text-slate-800" />
+            <h2 className="text-lg font-black text-slate-900 uppercase italic tracking-tighter" style={{ fontFamily: 'Verdana, sans-serif' }}>Notificaciones</h2>
           </div>
           {userClub && (
             <div className="flex items-center gap-3 mb-2 text-[9px] font-black uppercase tracking-wider">
@@ -101,6 +119,24 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
               </span>
             </div>
           )}
+          <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1 mb-1">
+            {[
+              { id: 'ALL', label: 'Todas' },
+              { id: 'UNREAD', label: 'No leídas' },
+              { id: 'CRITICAL', label: 'Críticas' },
+              { id: 'IMPORTANT', label: 'Importantes' },
+              { id: 'ACTION', label: 'Requieren acción' },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setViewFilter(f.id as any)}
+                className={`px-2.5 py-1 text-[8px] md:text-[9px] font-black uppercase rounded-[1px] border transition-all whitespace-nowrap shadow-sm ${viewFilter === f.id ? 'bg-[#3a4a3a] border-[#0a1a0a] text-white' : 'bg-white border-[#a0b0a0] text-slate-600 hover:bg-[#ccd9cc]'}`}
+                style={{ fontFamily: 'Verdana, sans-serif' }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
           <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
             {[
               { id: 'ALL', label: 'TODOS' },
@@ -126,7 +162,7 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
           {filteredMessages.length === 0 ? (
             <div className="p-12 text-center text-slate-400 italic">
                <Mail size={32} className="mx-auto mb-2 opacity-20" />
-               <p className="text-[10px] uppercase font-black tracking-widest">Buzón Vacío</p>
+               <p className="text-[10px] uppercase font-black tracking-widest">Sin notificaciones</p>
             </div>
           ) : (
             filteredMessages.map(m => (
@@ -136,11 +172,13 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
                 className={`p-3 md:p-4 cursor-pointer transition-all hover:bg-[#ccd9cc] relative group border-l-[3px] ${selectedMessageId === m.id ? 'bg-white border-l-[#3a4a3a] shadow-inner' : 'border-l-transparent'} ${!m.isRead ? 'bg-[#e0e8e0]' : ''}`}
               >
                 <div className="flex justify-between items-start mb-1 gap-2">
-                   <div className="flex items-center gap-2">
+                   <div className="flex items-center gap-1.5">
                       {getCategoryIcon(m.category)}
                       <span className="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-widest font-mono">{m.date.toLocaleDateString()}</span>
+                      <span className={`text-[7px] font-black uppercase tracking-widest px-1 py-0.5 rounded-sm ${(PRIORITY_META[m.priority || 'INFO'] || PRIORITY_META.INFO).chipClass}`}>{(PRIORITY_META[m.priority || 'INFO'] || PRIORITY_META.INFO).label}</span>
                    </div>
-                   <div className="flex items-center gap-2">
+                   <div className="flex items-center gap-1.5">
+                      {m.actionRequired && <span className="text-[7px] font-black uppercase tracking-widest px-1 py-0.5 bg-blue-100 text-blue-800 rounded-sm">Acción</span>}
                       {!m.isRead && <div className="w-1.5 h-1.5 bg-blue-600 rounded-full shadow-sm"></div>}
                       <button 
                         onClick={(e) => deleteMessage(m.id, e)}
@@ -174,10 +212,16 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
                <div className="max-w-3xl mx-auto bg-white border border-[#a0b0a0] shadow-xl rounded-sm overflow-hidden flex flex-col min-h-full animate-fade-up">
                 <div className="p-4 md:p-6 border-b border-[#a0b0a0] bg-[#f8faf8] flex flex-col gap-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                     <div className="flex items-center gap-2 px-2 py-1 bg-[#3a4a3a]/10 border border-[#3a4a3a]/20 rounded-[1px]">
-                        {getCategoryIcon(selectedMessage.category)}
-                        <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#3a4a3a]">
-                           {selectedMessage.category}
+                     <div className="flex items-center gap-1.5 flex-wrap">
+                        <div className="flex items-center gap-2 px-2 py-1 bg-[#3a4a3a]/10 border border-[#3a4a3a]/20 rounded-[1px]">
+                           {getCategoryIcon(selectedMessage.category)}
+                           <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-[#3a4a3a]">
+                              {selectedMessage.category}
+                           </span>
+                        </div>
+                        <span className={`flex items-center gap-1 px-2 py-1 rounded-[1px] text-[8px] md:text-[9px] font-black uppercase tracking-widest ${(PRIORITY_META[selectedMessage.priority || 'INFO'] || PRIORITY_META.INFO).chipClass}`}>
+                           {(PRIORITY_META[selectedMessage.priority || 'INFO'] || PRIORITY_META.INFO).chipIcon}
+                           {(PRIORITY_META[selectedMessage.priority || 'INFO'] || PRIORITY_META.INFO).label}
                         </span>
                      </div>
                      <span className="text-[10px] text-slate-500 font-mono font-bold">{selectedMessage.date.toLocaleDateString()} • {selectedMessage.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -192,7 +236,7 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
                     {selectedMessage.body}
                   </p>
                   
-                  {(selectedMessage.category === 'MARKET' || selectedMessage.category === 'SQUAD' || selectedMessage.category === 'COMPETITION' || (selectedMessage.category === 'STATEMENTS' && selectedMessage.relatedId)) && (
+                  {(selectedMessage.actionRequired || selectedMessage.category === 'MARKET' || selectedMessage.category === 'SQUAD' || selectedMessage.category === 'COMPETITION' || (selectedMessage.category === 'STATEMENTS' && selectedMessage.relatedId)) && (
                     <button 
                       onClick={handleActionRequired}
                       className="mt-10 w-full p-4 md:p-6 bg-[#f0f4f0] border border-[#a0b0a0] rounded-sm flex items-center justify-between shadow-inner hover:bg-[#ccd9cc] transition-all group"

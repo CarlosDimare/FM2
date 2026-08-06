@@ -37,6 +37,7 @@ import { world } from './services/worldManager';
 import { LifecycleManager } from './services/lifecycleManager';
 import { generateMatchChronicle, generateMonthlyChronicle } from './services/chronicleService';
 import { simulateDayFixtures } from './services/simulationService';
+import { migrateInboxAndNews, migrateSquadDistribution } from './services/saveLoadService';
 import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager, CareerMode, Chronicle } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID, randomInt } from './services/utils';
 import { MatchSimulator } from './services/engine';
@@ -323,7 +324,7 @@ if (result.userWonLeague) gs.trackTitle('Liga');
         const cupSemi = result.summaries.find((s: any) => s.compType !== 'LEAGUE')?.championId ? false : false;
         const changes = world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, cupSemi);
         if (changes <= -30) {
-          world.addInboxMessage('SQUAD', 'Confianza de la directiva baja', `La directiva no está satisfecha con los resultados de esta temporada. Se esperan mejoras significativas.`, currentDate);
+          world.addInboxMessage('SQUAD', 'Confianza de la directiva baja', `La directiva no está satisfecha con los resultados de esta temporada. Se esperan mejoras significativas.`, currentDate, undefined, 'IMPORTANT');
         }
         world.checkManagerJobOffers(currentDate, userClub.id, useGameStore.getState().managerReputation);
         const comps = world.getClubCompetitions(userClub.id);
@@ -399,6 +400,11 @@ if (result.userWonLeague) gs.trackTitle('Liga');
     world.processDailyContracts(nextDay, userClub?.id);
     world.processDailyScouting(nextDay, userClub?.id);
       world.generateGeneralNews(nextDay);
+      // ── Diario: resumen de clasificación y despidos de entrenadores (semanal, los lunes) ──
+      if (nextDay.getDay() === 1) {
+        world.generateStandingsNews(nextDay, fixtures);
+        world.simulateCoachChanges(nextDay, fixtures);
+      }
     if (nextDay.getMonth() === 7 && nextDay.getDate() === 1) {
       world.generateYouthIntake(nextDay.getFullYear());
       if (userClub) world.addInboxMessage('SQUAD', 'Cosecha de cantera', `Los juveniles de ${userClub.name} se han incorporado al club. Revisa los nuevos talentos en el equipo sub-20.`, nextDay);
@@ -823,6 +829,11 @@ const startVacation = async (targetOverride?: Date) => {
       world.mediaNews = data.worldState.mediaNews || [];
       world.seasonHistory = data.worldState.seasonHistory || [];
 
+      // Migración notificaciones vs noticias (saves previos a la separación)
+      migrateInboxAndNews();
+      // Migración de planteles rotos (todos los jugadores en SENIOR, reserva/sub-20 vacíos)
+      migrateSquadDistribution();
+
       world.players.forEach(p => {
         if (!p.relationships) p.relationships = {};
         if (!p.injuryHistory) p.injuryHistory = [];
@@ -1033,21 +1044,21 @@ const startVacation = async (targetOverride?: Date) => {
             )}
             <div id="header-inbox" className="bg-slate-100 p-4 rounded-sm border border-slate-300 shadow-sm">
               <h3 className="text-slate-950 font-black uppercase text-[11px] tracking-wider mb-4 border-b border-slate-300 pb-1 flex items-center justify-between">
-                <div className="flex items-center gap-2"><Mail size={14} /> Últimas Noticias</div>
-                <button onClick={() => setView('INBOX')} className="text-[9px] text-blue-600 hover:underline flex items-center">Ver todo <ChevronRight size={10} /> </button>
+                <div className="flex items-center gap-2"><Mail size={14} /> Últimas Noticias · Diario</div>
+                <button onClick={() => setView('MEDIA')} className="text-[9px] text-blue-600 hover:underline flex items-center">Ver todo <ChevronRight size={10} /> </button>
              </h3>
               <div className="space-y-2">
-                {world.inbox.slice(0, 3).map((msg) => (
-                  <div key={msg.id} className="p-3 bg-slate-200 border-l-4 border-slate-400 hover:bg-slate-300 transition-colors cursor-pointer" onClick={() => setView('INBOX')}>
+                {world.getAllNews(3).map((msg) => (
+                  <div key={msg.id} className="p-3 bg-slate-200 border-l-4 border-slate-400 hover:bg-slate-300 transition-colors cursor-pointer" onClick={() => setView('MEDIA')}>
                     <div className="flex justify-between items-center mb-1">
-                      <span className={`text-[9px] font-black px-1.5 py-0.5 rounded text-white ${msg.category === 'MARKET' ? 'bg-blue-600' : msg.category === 'SQUAD' ? 'bg-green-600' : 'bg-slate-600'}`}>{msg.category}</span>
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded text-white bg-[#3a4a3a]">{msg.section}</span>
                       <span className="text-[9px] text-slate-500 font-mono">{msg.date.toLocaleDateString()}</span>
                     </div>
-                    <h4 className="text-xs font-black text-slate-900 uppercase truncate">{msg.subject}</h4>
-                    <p className="text-[10px] text-slate-600 truncate italic">{msg.body}</p>
+                    <h4 className="text-xs font-black text-slate-900 uppercase truncate">{msg.headline}</h4>
+                    <p className="text-[10px] text-slate-600 truncate italic">{msg.subheadline}</p>
                   </div>
                 ))}
-                {world.inbox.length === 0 && <p className="text-center text-slate-400 italic text-xs py-4">No hay noticias recientes.</p>}
+                {world.getAllNews().length === 0 && <p className="text-center text-slate-400 italic text-xs py-4">No hay noticias recientes.</p>}
               </div>
             </div>
           </div>

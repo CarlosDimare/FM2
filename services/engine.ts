@@ -1326,8 +1326,16 @@ export class MatchSimulator {
                  `Lesión grave: ${player.name}`,
                  `Malas noticias: ${player.name} sufre ${stat.sustainedInjury.type} y estará de baja ${stat.sustainedInjury.days} días. Se perderá gran parte de la temporada.`,
                  new Date(),
-                 player.id
+                 player.id,
+                 'IMPORTANT'
                );
+               world.publishNews('LESIONES', {
+                 type: 'CRITICISM',
+                 headline: `Grave: ${player.name} se pierde gran parte de la temporada`,
+                 subheadline: `${stat.sustainedInjury.type} (${stat.sustainedInjury.days} días de baja)`,
+                 body: `${player.name} sufrió ${stat.sustainedInjury.type} y estará de baja ${stat.sustainedInjury.days} días. Un golpe durísimo para ${club.name}.`,
+                 clubId: club.id, playerId: player.id,
+               });
                sendInjuryNotification(player.name, stat.sustainedInjury.type, stat.sustainedInjury.days);
              }
            }

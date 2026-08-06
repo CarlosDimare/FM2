@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Inbox, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User, Star, BarChart3, Medal, BookMarked } from 'lucide-react';
+import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Bell, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User, Star, BarChart3, Medal, BookMarked } from 'lucide-react';
 import { Club, SquadType, Competition } from '../types';
 import { world } from '../services/worldManager';
 import { SettingsModal } from './SettingsModal';
@@ -22,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const unreadMessages = world.inbox.filter(m => !m.isRead).length;
+  const criticalUnread = world.inbox.filter(m => !m.isRead && (m.priority || 'INFO') === 'CRITICAL').length;
 
   const clubTournaments = club ? world.competitions.filter(comp => {
      if (comp.id === club.leagueId) return true;
@@ -68,7 +69,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
         <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-1">
           <div className="mb-2">
              <NavItem id="HOME" label="Inicio" icon={Home} active={currentView === 'HOME'} onClick={() => setView('HOME')} />
-             <NavItem id="INBOX" label="Buzón" icon={Inbox} active={currentView === 'INBOX'} onClick={() => setView('INBOX')} badge={unreadMessages} />
+             <NavItem id="INBOX" label="Notificaciones" icon={Bell} active={currentView === 'INBOX'} onClick={() => setView('INBOX')} badge={unreadMessages} badgeClass={criticalUnread > 0 ? 'bg-red-600' : ''} />
           </div>
 
           <div className="h-px bg-[#a0b0a0] mx-4 my-2"></div>
@@ -148,7 +149,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
              <NavItem id="CLUB_REPORT" label="Información Club" icon={Info} active={currentView === 'CLUB_REPORT'} onClick={() => setView('CLUB_REPORT')} />
            </>}
            <NavItem id="PEOPLE_HUB" label="Personas" icon={Users} active={currentView === 'PEOPLE_HUB'} onClick={() => setView('PEOPLE_HUB')} />
-           <NavItem id="MEDIA" label="Prensa" icon={Newspaper} active={currentView === 'MEDIA'} onClick={() => setView('MEDIA')} />
+           <NavItem id="MEDIA" label="Diario" icon={Newspaper} active={currentView === 'MEDIA'} onClick={() => setView('MEDIA')} />
            <NavItem id="CHRONICLES" label="Crónicas" icon={BookOpen} active={currentView === 'CHRONICLES'} onClick={() => setView('CHRONICLES')} />
            <NavItem id="MANAGER_PROFILE" label="Mi Carrera" icon={User} active={currentView === 'MANAGER_PROFILE'} onClick={() => setView('MANAGER_PROFILE')} />
 
@@ -170,10 +171,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
   );
 };
 
-const NavItem = ({ id, label, icon: Icon, active, onClick, badge }: any) => (
+const NavItem = ({ id, label, icon: Icon, active, onClick, badge, badgeClass }: any) => (
   <button onClick={onClick} className={`w-full flex items-center justify-between px-6 py-2.5 text-xs font-bold transition-colors border-l-4 ${active ? 'bg-white text-slate-900 border-[#3a4a3a]' : 'border-transparent text-slate-500 hover:bg-white hover:text-slate-900'}`}>
     <div className="flex items-center"><Icon className={`w-4 h-4 mr-3 ${active ? 'text-[#3a4a3a]' : 'text-slate-400'}`} /> {label}</div>
-    {badge > 0 && <span className="bg-[#3a4a3a] text-white text-[9px] font-black px-1.5 rounded-sm">{badge}</span>}
+    {badge > 0 && <span className={`${badgeClass || 'bg-[#3a4a3a]'} text-white text-[9px] font-black px-1.5 rounded-sm`}>{badge}</span>}
   </button>
 );
 

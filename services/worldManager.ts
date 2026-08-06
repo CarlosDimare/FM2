@@ -1,5 +1,5 @@
 
-import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle, ManagerProfile, ManagerOrigin, ClubHistoryEntry, RelationshipState, RealManager, ManagerNetworkEntry, PlayerPersonality, SeasonRecord, PLAYER_PERSONALITY_LABELS, PLAYER_PERSONALITY_DESC } from "../types";
+import { Player, Club, Competition, Position, PlayerStats, PlayerMatchStats, Fixture, TableEntry, Tactic, Staff, StaffRole, SquadType, TransferOffer, InboxMessage, MessageCategory, MediaNews, NotificationPriority, NewsSection, TacticalStyle, TacticSettings, MatchSettings, ScoutingReport, InteractionLogEntry, ReputationalBuff, Chronicle, ManagerProfile, ManagerOrigin, ClubHistoryEntry, RelationshipState, RealManager, ManagerNetworkEntry, PlayerPersonality, SeasonRecord, PLAYER_PERSONALITY_LABELS, PLAYER_PERSONALITY_DESC } from "../types";
 import { generateUUID, randomInt, weightedRandom } from "./utils";
 import { NATIONS } from "../constants";
 import { TACTIC_PRESETS, NAMES_DB, REGEN_DB, STAFF_NAMES, POS_DEFINITIONS, ARG_PRIMERA, ARG_NACIONAL, CONT_CLUBS, CONT_CLUBS_TIER2, WORLD_BOSSES, BRA_SERIE_A, BRA_SERIE_B, ESP_LA_LIGA, ITA_SERIE_A, DEU_BUNDESLIGA, FRA_LIGUE_1, PRT_LIGA, NLD_EREDIVISIE, MEX_LIGA_MX, USA_MLS, JPN_J1, ENG_PREMIER, CHI_PRIMERA, COL_LIGA, URY_PRIMERA, ECU_LIGA_PRO, PRY_DIVISION, BOL_DIVISION, VEN_LIGA, PER_LIGA1, PRY_DIVISION_B, DEU_2_BUNDESLIGA, FRA_LIGUE_2, ITA_SERIE_B, ENG_CHAMPIONSHIP, JPN_J2, KOR_K_LEAGUE, CHN_SUPER_LEAGUE, AUS_A_LEAGUE, EGY_PREMIER, MAR_BOTOLA, RSA_PSL, RealClubDef } from "../data/static";
@@ -9,6 +9,17 @@ import { sendTransferNotification, sendInboxNotification, sendInjuryNotification
 import { generatePlayer, generateRandomPlayer, getPlayerTag } from "./playerGenerator";
 import { useGameStore } from "../stores/gameStore";
 import { loadConvertedClubs, loadConvertedPlayers, loadConvertedLeagues } from "../data/convertedDataLoader";
+
+// ─── Perfil táctico de los entrenadores generados ───────────────────────────
+const COACH_STYLES = ['CONTROL', 'ATTACK', 'DEFENSE', 'COUNTER', 'BALANCED'] as const;
+const COACH_FORMATIONS = ['4-4-2', '4-3-3', '4-2-3-1', '3-5-2', '5-3-2', '4-1-4-1', '4-4-1-1', '4-2-2-2'];
+const COACH_PLAYING_STYLE: Record<string, string> = {
+  CONTROL: 'Posesión y paciencia',
+  ATTACK: 'Fútbol ofensivo y vertical',
+  DEFENSE: 'Bloque bajo y orden defensivo',
+  COUNTER: 'Contraataque veloz',
+  BALANCED: 'Estilo equilibrado',
+};
 
 export class WorldManager {
   players: Player[] = [];
@@ -151,7 +162,8 @@ export class WorldManager {
             age: p.age,
             nationality: p.nationality,
             clubId: club.id,
-            squad: 'SENIOR',
+            // Distribución por edades: el plantel se reparte entre SENIOR (23+), RESERVA (20-22) y SUB-20 (<=19)
+            squad: p.age >= 23 ? 'SENIOR' : p.age >= 20 ? 'RESERVE' : 'U20',
             positions: allPositions,
             primaryPosition: primaryPos,
             stats: {
@@ -217,12 +229,10 @@ export class WorldManager {
          this.players.push(player);
       }
 
-      // 5. Generate squads for clubs without players
+      // 5. Completar planteles de TODOS los clubes (SENIOR/RESERVA/SUB-20):
+      //    antes se saltaba para clubes con >=14 jugadores y dejaba RESERVA/SUB-20 vacíos.
       for (const club of this.clubs) {
-         const clubPlayers = this.players.filter(p => p.clubId === club.id);
-         if (clubPlayers.length < 14) {
-            this.generateSquadsForClub(club.id);
-         }
+         this.generateSquadsForClub(club.id);
          this.generateStaffForClub(club.id);
          this.updateClubMonthlyExpenses(club.id);
       }
@@ -601,6 +611,8 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
         const player = this.createRandomPlayer(clubId, primaryPos, ageRange[0], ageRange[1]);
         player.squad = squadType;
         this.players.push(player);
+        // Mantener el índice de jugadores por club consistente (el bucket es la misma referencia)
+        this.playersByClubIndex?.get(clubId)?.push(player);
       });
     });
   }
@@ -631,6 +643,8 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
     const economyMult = club ? (countryEconomy[club.country] || 0.8) : 0.8;
 
     roles.forEach(role => {
+      const coachStyle = role === 'HEAD_COACH' ? COACH_STYLES[randomInt(0, COACH_STYLES.length - 1)] : undefined;
+      const coachFormation = role === 'HEAD_COACH' ? COACH_FORMATIONS[randomInt(0, COACH_FORMATIONS.length - 1)] : undefined;
       const s: Staff = {
         id: generateUUID(), name: `${STAFF_NAMES.names[randomInt(0, STAFF_NAMES.names.length-1)]} ${STAFF_NAMES.surnames[randomInt(0, STAFF_NAMES.surnames.length-1)]}`,
         age: randomInt(35, 65), nationality: club?.country || "Argentina", role: role, clubId: clubId,
@@ -652,7 +666,12 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
         reputation: 50,
         relationships: {},
         pressReputation: 50,
-        boardRelationship: 60
+        boardRelationship: 60,
+        tacticalStyle: coachStyle,
+        preferredFormation: coachFormation,
+        playingStyle: coachStyle ? COACH_PLAYING_STYLE[coachStyle] : undefined,
+        pressIntensity: role === 'HEAD_COACH' ? (['LOW', 'MEDIUM', 'HIGH'] as const)[randomInt(0, 2)] : undefined,
+        possessionVsCounter: role === 'HEAD_COACH' ? (['POSSESSION', 'COUNTER', 'BALANCED'] as const)[randomInt(0, 2)] : undefined,
       };
       this.staff.push(s);
     });
@@ -912,15 +931,14 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
           this.addInboxMessage('SQUAD',
             `🚨 Conflicto grave: ${p1.name} y ${p2.name}`,
             `La prensa ha filtrado una pelea entre ${p1.name} y ${p2.name} en el entrenamiento. La directiva está preocupada. Ambos jugadores han bajado su moral.`,
-            date, clubId);
-          // Generate media news
-          this.mediaNews.push({
-            id: generateUUID(), date,
-            type: 'CRITICISM', category: 'GENERAL',
+            date, clubId, 'CRITICAL');
+          // Noticia de diario: crisis de vestuario en el club del usuario
+          this.publishNews('TU_CLUB', {
+            type: 'CRITICISM',
             headline: `Crisis en el vestuario de ${club.name}`,
             subheadline: `${p1.name} y ${p2.name} protagonizan un incidente`,
             body: `Fuentes internas confirman que la relación entre ${p1.name} (${PLAYER_PERSONALITY_LABELS[p1.personality!]}) y ${p2.name} (${PLAYER_PERSONALITY_LABELS[p2.personality!]}) es insostenible. El DT deberá tomar medidas.`,
-            clubId, isUserClubNews: true, read: false,
+            clubId,
           });
         }
       }
@@ -964,15 +982,14 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
     this.addInboxMessage('SQUAD',
       `${candidate.name} pidió ser transferido`,
       `${candidate.name} (${label}) ha solicitado formalmente salir del club. Motivo: "${reason}"\n\nPuedes intentar convencerlo de quedarse o buscarle un destino.`,
-      date, candidate.id);
+      date, candidate.id, 'IMPORTANT', true);
 
-    this.mediaNews.push({
-      id: generateUUID(), date,
-      type: 'RUMOR', category: 'TRANSFER',
+    this.publishNews('MERCADO', {
+      type: 'RUMOR',
       headline: `${candidate.name} quiere dejar ${club.name}`,
       subheadline: `El jugador habría pedido ser transferido`,
       body: `Según fuentes cercanas al jugador, ${candidate.name} comunicó su deseo de abandonar ${club.name}. El motivo principal: "${reason}"`,
-      clubId, playerId: candidate.id, isUserClubNews: true, read: false,
+      clubId, playerId: candidate.id,
     });
   }
 
@@ -1032,13 +1049,12 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
           `${veteran.name} apadrina a ${youth.name}`,
           `El veterano ${veteran.name} ha tomado bajo su ala al joven ${youth.name}. Se los ve entrenando juntos y la química del equipo mejora. ${youth.name} ha ganado 1 punto de CA.`,
           date, clubId);
-        this.mediaNews.push({
-          id: generateUUID(), date,
-          type: 'PRAISE', category: 'GENERAL',
+        this.publishNews('TU_CLUB', {
+          type: 'PRAISE',
           headline: `${veteran.name}, el mentor de ${club.name}`,
           subheadline: `El veterano impulsa el desarrollo de ${youth.name}`,
           body: `En ${club.name} destacan la labor de ${veteran.name} como guía de las jóvenes promesas. ${youth.name} es el último beneficiado.`,
-          clubId, isUserClubNews: true, read: false,
+          clubId,
         });
       }
     } else if (roll < 0.58) {
@@ -1062,14 +1078,13 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
       this.addInboxMessage('SQUAD',
         `${victim.name} se lesiona en el entrenamiento`,
         `Malas noticias: ${victim.name} sufrió un ${injuryType} durante la sesión de hoy. Estará aproximadamente ${days} días de baja. El cuerpo médico recomienda precaución.`,
-        date, clubId);
-      this.mediaNews.push({
-        id: generateUUID(), date,
-        type: 'CRITICISM', category: 'INJURY',
+        date, clubId, 'IMPORTANT');
+      this.publishNews('LESIONES', {
+        type: 'CRITICISM',
         headline: `${victim.name}, baja sensible en ${club.name}`,
         subheadline: `Lesión en el entrenamiento: ${days} días de baja`,
         body: `${victim.name} se perderá los próximos partidos de ${club.name} tras sufrir un ${injuryType} en la sesión matinal. Una baja que complica los planes del entrenador.`,
-        clubId, playerId: victim.id, isUserClubNews: true, read: false,
+        clubId, playerId: victim.id,
       });
       sendInjuryNotification(victim.name, injuryType, days);
     } else if (roll < 0.68) {
@@ -1092,13 +1107,12 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
           `La prensa del corazón vincula a ${player.name} con ${celeb}. El jugador ha declarado que no afectará a su rendimiento y que está centrado en el fútbol.`,
           date, clubId);
       }
-      this.mediaNews.push({
-        id: generateUUID(), date,
-        type: 'RUMOR', category: 'GENERAL',
+      this.publishNews('TU_CLUB', {
+        type: 'RUMOR',
         headline: `¿${player.name} tiene nuevo amor?`,
         subheadline: `El jugador de ${club.name} en boca de todos`,
         body: `Las imágenes de ${player.name} con ${celeb} han dado la vuelta al mundo. En ${club.name} prefieren no hacer comentarios.`,
-        clubId, playerId: player.id, isUserClubNews: true, read: false,
+        clubId, playerId: player.id,
       });
     } else if (roll < 0.77) {
       // Conflict with board/directiva
@@ -1110,13 +1124,12 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
           `${star.name} choca con la directiva`,
           `${star.name} ha tenido un encontronazo con la directiva por unas declaraciones sobre la política de fichajes del club. La afición está dividida: ¿apoyas al jugador o a la junta?`,
           date, clubId);
-        this.mediaNews.push({
-          id: generateUUID(), date,
-          type: 'HEADLINE', category: 'BOARD',
+        this.publishNews('TU_CLUB', {
+          type: 'HEADLINE',
           headline: `Terremoto en ${club.name}: ${star.name} carga contra la directiva`,
           subheadline: 'El vestuario, pendiente de la resolución del conflicto',
           body: `${star.name} no se mordió la lengua: "Este club merece más ambición". La directiva de ${club.name} estudia medidas disciplinarias mientras el entrenador intenta apaciguar los ánimos.`,
-          clubId, playerId: star.id, isUserClubNews: true, read: false,
+          clubId, playerId: star.id,
         });
       }
     } else if (roll < 0.86) {
@@ -1131,13 +1144,12 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
         `Escándalo: ${partyGoer.name} en una fiesta nocturna`,
         `La prensa ha publicado fotos de ${partyGoer.name} saliendo de una discoteca a las 4 AM el ${night} por la noche, a 48 horas de un partido importante. El código disciplinario del club podría aplicarse. Su condición física se resiente.`,
         date, clubId);
-      this.mediaNews.push({
-        id: generateUUID(), date,
-        type: 'CRITICISM', category: 'GENERAL',
+      this.publishNews('TU_CLUB', {
+        type: 'CRITICISM',
         headline: `${partyGoer.name}, cazado de fiesta a altas horas`,
         subheadline: 'El código disciplinario del club, en entredicho',
         body: `Exclusiva: ${partyGoer.name} fue fotografiado abandonando un conocido local nocturno en la madrugada del ${night}. En ${club.name} no ha sentado nada bien. El jugador se enfrenta a una posible sanción económica.`,
-        clubId, playerId: partyGoer.id, isUserClubNews: true, read: false,
+        clubId, playerId: partyGoer.id,
       });
     } else if (roll < 0.94) {
       // Bet between players (training challenge)
@@ -1156,13 +1168,12 @@ getStaffByClub(clubId: string) { return this.staff.filter(s => s.clubId === club
         date, clubId);
     } else {
       // Press amplifies minor squad friction
-      this.mediaNews.push({
-        id: generateUUID(), date,
-        type: 'RUMOR', category: 'GENERAL',
+      this.publishNews('TU_CLUB', {
+        type: 'RUMOR',
         headline: `¿Hay mal ambiente en ${club.name}?`,
         subheadline: 'La prensa especula sobre la química del plantel',
         body: `Varios medios señalan que no todo es armonía en el vestuario de ${club.name}. Fuentes anónimas hablan de pequeños roces que podrían escalar si no se gestionan.`,
-        clubId, isUserClubNews: true, read: false,
+        clubId,
       });
     }
   }
@@ -1342,7 +1353,7 @@ Días desde la lesión: ${i.daysSinceInjury}`;
     });
   }
 
-  /** Generate economic news when league reputations shift significantly */
+  /** Generate economic news when league reputations shift significantly (sección Internacional del diario) */
   generateEconomicNews(date: Date) {
     const leagues = this.competitions.filter(c => c.type === 'LEAGUE' && c.dynamicReputation !== undefined);
     // Find biggest movers
@@ -1357,18 +1368,24 @@ Días desde la lesión: ${i.daysSinceInjury}`;
       const direction = change >= 5 ? 'asciende' : change <= -5 ? 'desciende' : 'se mantiene';
       const tierNames: Record<string, string> = { ELITE: 'Élite', PRESTIGE: 'Prestigio', DEVELOPING: 'En Desarrollo', EMERGING: 'Emergente', LOCAL: 'Local' };
       if (Math.abs(change) >= 5) {
-        this.addInboxMessage('STATEMENTS',
-          `${league.name}: ${direction} al tier ${tierNames[tier]}`,
-          `La reputación de la ${league.name} se sitúa en ${league.dynamicReputation}/100 (${direction} ${Math.abs(change)} pts). Tier actual: ${tierNames[tier]}.`,
-          date);
+        this.publishNews('INTERNACIONAL', {
+          type: 'FEATURE',
+          headline: `${league.name}: ${direction} en el mapa del fútbol`,
+          subheadline: `Reputación en ${league.dynamicReputation}/100 (${direction} ${Math.abs(change)} pts)`,
+          body: `La reputación de la ${league.name} se sitúa en ${league.dynamicReputation}/100, ${direction} ${Math.abs(change)} puntos. El tier actual de la liga es ${tierNames[tier]}.`,
+          competitionId: league.id,
+        });
       }
     });
     // Cross-league comparison headline
     if (leagues.length >= 2) {
       const top3 = [...leagues].sort((a, b) => (b.dynamicReputation || 0) - (a.dynamicReputation || 0)).slice(0, 3);
-      this.addInboxMessage('STATEMENTS', 'Ranking Mundial de Ligas',
-        `Top 3 ligas por reputación:\n1. ${top3[0]?.name} (${top3[0]?.dynamicReputation}/100)\n2. ${top3[1]?.name} (${top3[1]?.dynamicReputation}/100)\n3. ${top3[2]?.name} (${top3[2]?.dynamicReputation}/100)`,
-        date);
+      this.publishNews('INTERNACIONAL', {
+        type: 'FEATURE',
+        headline: 'Ranking Mundial de Ligas',
+        subheadline: `Top 3: ${top3[0]?.name}, ${top3[1]?.name}, ${top3[2]?.name}`,
+        body: `El Top 3 de ligas por reputación:\n1. ${top3[0]?.name} (${top3[0]?.dynamicReputation}/100)\n2. ${top3[1]?.name} (${top3[1]?.dynamicReputation}/100)\n3. ${top3[2]?.name} (${top3[2]?.dynamicReputation}/100)`,
+      });
     }
   }
 
@@ -1477,13 +1494,13 @@ Días desde la lesión: ${i.daysSinceInjury}`;
     if (player.releaseClause && amount >= player.releaseClause) {
       const offer: TransferOffer = { id: generateUUID(), playerId, fromClubId, toClubId: player.clubId, amount, wageShare, type, status: 'ACCEPTED', date, responseDate: date, isViewed: false };
       this.offers.push(offer);
-      this.addInboxMessage('MARKET', `Cláusula activada: ${player.name}`, `${this.getClub(fromClubId)?.name} ha pagado la cláusula de rescisión de ${player.name}: $${amount.toLocaleString()}.`, date, playerId);
+      this.addInboxMessage('MARKET', `Cláusula activada: ${player.name}`, `${this.getClub(fromClubId)?.name} ha pagado la cláusula de rescisión de ${player.name}: $${amount.toLocaleString()}.`, date, playerId, 'IMPORTANT');
       return;
     }
     if (player.agent && Math.random() < 0.4) {
       const commission = Math.round(amount * player.agent.commission / 100);
       amount += commission;
-      this.addInboxMessage('FINANCE', `Comisión del agente: ${player.name}`, `El agente ${player.agent.name} exige una comisión del ${player.agent.commission}% ($${commission.toLocaleString()}) sobre el traspaso.`, date, playerId);
+      this.addInboxMessage('FINANCE', `Comisión del agente: ${player.name}`, `El agente ${player.agent.name} exige una comisión del ${player.agent.commission}% ($${commission.toLocaleString()}) sobre el traspaso.`, date, playerId, 'IMPORTANT');
     }
     const offer: TransferOffer = { id: generateUUID(), playerId, fromClubId, toClubId: player.clubId, amount, wageShare, type, status: 'PENDING', date, responseDate: date, isViewed: false };
     this.offers.push(offer);
@@ -1512,7 +1529,7 @@ Días desde la lesión: ${i.daysSinceInjury}`;
           this.addInboxMessage('FINANCE',
             `Prima de fichaje: ${p.name}`,
             `Se ha pagado una prima de fichaje de $${signingBonus.toLocaleString()} por la incorporación de ${p.name}.`,
-            offer.date, p.id);
+            offer.date, p.id, 'IMPORTANT');
         }
         p.clubId = offer.fromClubId; p.isStarter = false; p.tacticalPosition = undefined;
         this.invalidateClubCache(offer.fromClubId);
@@ -1526,8 +1543,12 @@ Días desde la lesión: ${i.daysSinceInjury}`;
         p.isUnhappyWithContract = false;
         p.requestedSalary = undefined;
         offer.status = 'COMPLETED';
-        this.addInboxMessage('MARKET', `Traspaso completado: ${p.name}`, `${p.name} se ha unido a ${newClub?.name || 'nuevo club'} por $${offer.amount.toLocaleString()}.`, offer.date, p.id);
-        sendTransferNotification(p.name, newClub?.name || 'nuevo club');
+        // Notificación solo si el traspaso involucra al club del usuario; la noticia del diario la emite processTransferDecisions.
+        const userClubHere = this.getUserClub();
+        if (userClubHere && (offer.fromClubId === userClubHere.id || offer.toClubId === userClubHere.id)) {
+          this.addInboxMessage('MARKET', `Traspaso completado: ${p.name}`, `${p.name} se ha unido a ${newClub?.name || 'nuevo club'} por $${offer.amount.toLocaleString()}.`, offer.date, p.id, 'IMPORTANT', true);
+          sendTransferNotification(p.name, newClub?.name || 'nuevo club');
+        }
     }
   }
 
@@ -2067,8 +2088,10 @@ Días desde la lesión: ${i.daysSinceInjury}`;
       if (offer.type === 'LOAN') return;
       const buyer = this.getClub(offer.fromClubId);
       const seller = this.getClub(offer.toClubId);
-      if (buyer && seller) {
-        this.addInboxMessage('MARKET', `Traspaso: ${this.getPlayer(offer.playerId)?.name || 'Jugador'}`, `${buyer.name} ha fichado a un jugador de ${seller.name} por $${offer.amount.toLocaleString()}.`, date);
+      const player = this.getPlayer(offer.playerId);
+      if (buyer && seller && player) {
+        // Noticia del diario (sección Mercado), para todos los traspasos del mundo
+        this.generateTransferNews(player, seller, buyer, offer.amount, date);
       }
     });
   }
@@ -2172,7 +2195,11 @@ offer.status = 'REJECTED';
     p.transferStatus = 'NONE';
     offer.status = 'COMPLETED';
     const newClub = this.getClub(offer.fromClubId);
-    this.addInboxMessage('MARKET', `Cedido: ${p.name}`, `${p.name} se marcha cedido a ${newClub?.name || 'nuevo club'}${isLoanToBuy ? ' (con opción de compra)' : ''} hasta final de temporada.`, offer.date, p.id);
+    // Notificación solo si la cesión involucra al club del usuario
+    const userClubHere = this.getUserClub();
+    if (userClubHere && (offer.fromClubId === userClubHere.id || offer.toClubId === userClubHere.id)) {
+      this.addInboxMessage('MARKET', `Cedido: ${p.name}`, `${p.name} se marcha cedido a ${newClub?.name || 'nuevo club'}${isLoanToBuy ? ' (con opción de compra)' : ''} hasta final de temporada.`, offer.date, p.id, 'IMPORTANT');
+    }
   }
 
   processLoanReturns(date: Date) {
@@ -2189,7 +2216,11 @@ offer.status = 'REJECTED';
         if (wasLoanToBuy) {
           const buyingClub = this.getClub(p.clubId);
           if (buyingClub && buyingClub.id) {
-            this.addInboxMessage('MARKET', `Opción de compra: ${p.name}`, `El préstamo de ${p.name} ha finalizado. ${buyingClub.name} puede ejercer la opción de compra pagando su valor de mercado.`, date, p.id);
+            // Notificación solo si la cesión involucra al club del usuario
+            const userClubHere = this.getUserClub();
+            if (userClubHere && p.clubId === userClubHere.id) {
+              this.addInboxMessage('MARKET', `Opción de compra: ${p.name}`, `El préstamo de ${p.name} ha finalizado. ${buyingClub.name} puede ejercer la opción de compra pagando su valor de mercado.`, date, p.id, 'IMPORTANT');
+            }
           }
         }
       }
@@ -2267,7 +2298,7 @@ offer.status = 'REJECTED';
 
     // Deadline day notification
     this.addInboxMessage('MARKET', 'DÍA LÍMITE DE FICHAJES', 
-      `¡Hoy cierra el mercado de pase! Se están ultimando los traspasos.`, date);
+      `¡Hoy cierra el mercado de pase! Se están ultimando los traspasos.`, date, undefined, 'IMPORTANT');
 
     // Process all pending offers immediately on deadline day
     this.processPendingOffers(date);
@@ -2310,8 +2341,12 @@ offer.status = 'REJECTED';
     this.offers.push(offer);
 
     if (daysLeft <= 2) {
-      this.addInboxMessage('MARKET', `Última oportunidad: ${target.name}`, 
-        `${club.name} ha hecho una oferta por ${target.name} - ¡Quedan ${daysLeft} días!`, date, target.id);
+      // Notificación solo si la oferta involucra al club del usuario
+      const userClubHere = this.getUserClub();
+      if (userClubHere && (club.id === userClubHere.id || target.clubId === userClubHere.id)) {
+        this.addInboxMessage('MARKET', `Última oportunidad: ${target.name}`, 
+          `${club.name} ha hecho una oferta por ${target.name} - ¡Quedan ${daysLeft} días!`, date, target.id, 'IMPORTANT');
+      }
     }
   }
 
@@ -2368,7 +2403,7 @@ offer.status = 'REJECTED';
     if (club.boardConfidence <= 0) {
       this.addInboxMessage('SQUAD', '¡DIRECTIVA HARTA!',
         `La directiva de ${club.name} ha perdido toda la confianza en el entrenador tras los malos resultados.`,
-        new Date());
+        new Date(), undefined, 'CRITICAL');
     }
     return confidenceChange;
   }
@@ -2387,7 +2422,7 @@ offer.status = 'REJECTED';
       this.addInboxMessage('FINANCE',
         `Directiva rechaza mejora de ${facility === 'training' ? 'entrenamiento' : 'juveniles'}`,
         `La directiva ha rechazado la solicitud de mejora. Consideran que no es el momento adecuado.`,
-        date);
+        date, undefined, 'IMPORTANT');
       return { success: false, cost: 0, message: 'La directiva ha rechazado la solicitud' };
     }
     club.finances.balance -= cost;
@@ -2411,7 +2446,7 @@ offer.status = 'REJECTED';
     if (Math.random() > grantChance) {
       club.boardConfidence = Math.max(0, club.boardConfidence - 3);
       this.addInboxMessage('FINANCE', 'Directiva rechaza aumento de presupuesto',
-        `La directiva no considera prudente aumentar el presupuesto de fichajes en este momento.`, date);
+        `La directiva no considera prudente aumentar el presupuesto de fichajes en este momento.`, date, undefined, 'IMPORTANT');
       return { success: false, amount: 0, message: 'Rechazado' };
     }
     club.finances.transferBudget += requestedAmount;
@@ -2439,7 +2474,7 @@ offer.status = 'REJECTED';
     if (Math.random() > acceptChance) {
       club.boardConfidence = Math.max(0, club.boardConfidence - 5);
       this.addInboxMessage('SQUAD', 'Directiva rechaza el cambio de objetivo',
-        `La directiva ha rechazado tu propuesta de fijar como objetivo \"${labels[objective]}\". Consideran que el momento no es adecuado para cambiar las exigencias.`, date);
+        `La directiva ha rechazado tu propuesta de fijar como objetivo \"${labels[objective]}\". Consideran que el momento no es adecuado para cambiar las exigencias.`, date, undefined, 'IMPORTANT');
       return { success: false, message: 'La directiva rechazó la propuesta.' };
     }
     club.seasonObjective = objective;
@@ -2464,15 +2499,16 @@ offer.status = 'REJECTED';
     const target = candidateClubs[randomInt(0, candidateClubs.length - 1)];
     this.addInboxMessage('STATEMENTS', `Oferta de trabajo: ${target.name}`,
       `El club ${target.name} está interesado en contratarte como entrenador. Tu reputación y resultados han llamado su atención.`,
-      date, target.id);
+      date, target.id, 'IMPORTANT', true);
   }
 
-addInboxMessage(category: MessageCategory, subject: string, body: string, date: Date, relatedId?: string) {
-     this.inbox.unshift({ id: generateUUID(), date: new Date(date), category, subject, body, isRead: false, relatedId });
+addInboxMessage(category: MessageCategory, subject: string, body: string, date: Date, relatedId?: string, priority: NotificationPriority = 'INFO', actionRequired = false) {
+     this.inbox.unshift({ id: generateUUID(), date: new Date(date), category, priority, subject, body, isRead: false, relatedId, actionRequired: actionRequired || undefined });
      // Bandeja acotada: evita crecimiento sin límite (memoria, render y barridos diarios)
      if (this.inbox.length > 800) this.inbox.length = 800;
-     if (category === 'SQUAD' || category === 'MARKET' || category === 'FINANCE') {
-       sendInboxNotification(subject);
+     // Push del navegador solo para asuntos Importantes/Críticos (las INFO no spamean)
+     if (priority !== 'INFO') {
+       sendInboxNotification(subject, priority);
      }
    }
 
@@ -2860,92 +2896,303 @@ generateYouthIntake(year: number) {
     const awayClub = this.getClub(fixture.awayTeamId);
     if (!homeClub || !awayClub) return;
     const isUserMatch = homeClub.id === this.getUserClub()?.id || awayClub.id === this.getUserClub()?.id;
-    const userClub = this.getUserClub();
+    const featured = Math.abs(homeScore - awayScore) >= 4; // goleadas a portada
 
     if (homeScore > awayScore) {
-      this.addMediaNews({
-        id: generateUUID(), date, type: 'HEADLINE', category: 'MATCH',
+      this.publishNews('RESULTADOS', {
+        type: 'HEADLINE',
         headline: `${homeClub.shortName} se impone al ${awayClub.shortName}`,
         subheadline: `${homeScore} - ${awayScore}`,
         body: `${homeClub.name} logró una victoria importante ante ${awayClub.name} por ${homeScore}-${awayScore}. El equipo mostró solidez tanto en ataque como en defensa.`,
         clubId: homeClub.id, competitionId: fixture.competitionId,
-        isUserClubNews: userClub && (homeClub.id === userClub.id || awayClub.id === userClub.id),
-        read: false,
+        featured,
       });
     } else if (awayScore > homeScore) {
-      this.addMediaNews({
-        id: generateUUID(), date, type: 'HEADLINE', category: 'MATCH',
+      this.publishNews('RESULTADOS', {
+        type: 'HEADLINE',
         headline: `${awayClub.shortName} derrota a ${homeClub.shortName}`,
         subheadline: `${awayScore} - ${homeScore}`,
         body: `${awayClub.name} se llevó los tres puntos ante ${homeClub.name} con un contundente ${awayScore}-${homeScore}.`,
         clubId: awayClub.id, competitionId: fixture.competitionId,
-        isUserClubNews: userClub && (homeClub.id === userClub.id || awayClub.id === userClub.id),
-        read: false,
+        featured,
       });
     } else {
-      this.addMediaNews({
-        id: generateUUID(), date, type: 'FEATURE', category: 'MATCH',
+      this.publishNews('RESULTADOS', {
+        type: 'FEATURE',
         headline: `${homeClub.shortName} y ${awayClub.shortName} empatan`,
         subheadline: `${homeScore} - ${awayScore}`,
         body: `Un vibrante empate ${homeScore}-${awayScore} entre ${homeClub.name} y ${awayClub.name} deja la tabla más pareja que nunca.`,
         clubId: homeClub.id, competitionId: fixture.competitionId,
-        isUserClubNews: userClub && (homeClub.id === userClub.id || awayClub.id === userClub.id),
-        read: false,
       });
     }
   }
 
   generateTransferNews(player: Player, fromClub: Club, toClub: Club, amount: number, date: Date) {
-    const userClub = this.getUserClub();
-    this.addMediaNews({
-      id: generateUUID(), date, type: 'HEADLINE', category: 'TRANSFER',
+    this.publishNews('MERCADO', {
+      type: 'HEADLINE',
       headline: `${player.name} ficha por ${toClub.shortName}`,
       subheadline: `Traspaso: $${amount.toLocaleString()}`,
       body: `El jugador ${player.name} deja ${fromClub.name} para unirse a ${toClub.name} en un movimiento que sacude el mercado.`,
       clubId: toClub.id, playerId: player.id,
-      isUserClubNews: userClub && (fromClub.id === userClub.id || toClub.id === userClub.id),
-      read: false,
     });
   }
 
   generateInjuryNews(player: Player, club: Club, date: Date) {
-    const userClub = this.getUserClub();
-    this.addMediaNews({
-      id: generateUUID(), date, type: 'CRITICISM', category: 'INJURY',
+    this.publishNews('LESIONES', {
+      type: 'CRITICISM',
       headline: `Duro golpe para ${club.shortName}: ${player.name} lesionado`,
       subheadline: `Fuera de los terrenos de juego`,
       body: `${player.name} sufre una lesión que lo dejará fuera de las canchas por varias semanas. Un golpe duro para las aspiraciones de ${club.name}.`,
       clubId: club.id, playerId: player.id,
-      isUserClubNews: userClub && club.id === userClub.id,
-      read: false,
     });
   }
 
+  /** Noticias de diario derivadas del estado real del mundo, con secciones reales. */
   generateGeneralNews(date: Date) {
-    const userClub = this.getUserClub();
-    const headlines = [
-      { headline: 'La liga se pone más emocionante que nunca', subheadline: 'Las posiciones se estrechan en la parte alta', type: 'FEATURE' as const, category: 'GENERAL' as const, isUserClub: false },
-      { headline: 'El mercado de pases no para: nuevas incorporaciones sorprenden', subheadline: 'Varios clubes apuestan por jóvenes promesas', type: 'HEADLINE' as const, category: 'TRANSFER' as const, isUserClub: false },
-      { headline: 'Lesiones preocupantes en la zona media de la tabla', subheadline: 'Varios jugadores clave fuera por lesión', type: 'CRITICISM' as const, category: 'INJURY' as const, isUserClub: false },
-      { headline: 'La afición responde: llenos históricos en los estadios', subheadline: 'La liga bate récord de asistencia', type: 'PRAISE' as const, category: 'GENERAL' as const, isUserClub: false },
-      { headline: 'El entrenador del año: ¿quién se lleva el galardón?', subheadline: 'Las votaciones están muy reñidas', type: 'FEATURE' as const, category: 'BOARD' as const, isUserClub: false },
-      { headline: 'Cantera: los jóvenes que están dando la campanada', subheadline: 'Varios juveniles llamados a la selección', type: 'PRAISE' as const, category: 'GENERAL' as const, isUserClub: false },
-      { headline: 'El VAR sigue generando polémica en la liga', subheadline: 'Varias decisiones polémicas alteran resultados', type: 'CRITICISM' as const, category: 'GENERAL' as const, isUserClub: false },
-      { headline: 'Negociaciones contractuales tensas en varios clubes', subheadline: 'Jugadores importantes piden renovaciones', type: 'RUMOR' as const, category: 'BOARD' as const, isUserClub: false },
-    ];
-    const pick = headlines[randomInt(0, headlines.length - 1)];
-    this.addMediaNews({
-      id: generateUUID(), date, type: pick.type, category: pick.category,
-      headline: pick.headline, subheadline: pick.subheadline,
-      body: `Noticia de interés general en el mundo del fútbol. ${pick.subheadline}.`,
-      isUserClubNews: userClub && Math.random() < 0.3,
-      read: false,
-    });
+    const leagues = this.getLeagues().filter(l => (l.dynamicReputation || 0) >= 40);
+    if (leagues.length === 0) return;
+    const league = leagues[randomInt(0, leagues.length - 1)];
+    const clubs = this.getClubsByLeague(league.id);
+    if (clubs.length < 2) return;
+    const a = clubs[randomInt(0, clubs.length - 1)];
+    let b = clubs[randomInt(0, clubs.length - 1)];
+    while (b.id === a.id) b = clubs[randomInt(0, clubs.length - 1)];
+    const senior = this.getPlayersByClub(a.id).filter(p => p.squad === 'SENIOR');
+    const star = senior[randomInt(0, Math.max(0, senior.length - 1))];
+    const roll = randomInt(0, 5);
+
+    if (roll === 0 && star) {
+      // Mercado: rumor de salida
+      this.publishNews('MERCADO', {
+        type: 'RUMOR',
+        headline: `${star.name}: ¿rumores de salida?`,
+        subheadline: `El mercado sigue activo en ${league.name}`,
+        body: `En ${league.name} crece la especulación alrededor de ${a.name}. Medios locales apuntan a posibles movimientos en los próximos días, aunque el club desmiente versiones de salidas.`,
+        clubId: a.id, playerId: star.id, competitionId: league.id,
+      });
+    } else if (roll === 1) {
+      // Resultados: duelo destacado de la fecha
+      this.publishNews('RESULTADOS', {
+        type: 'FEATURE',
+        headline: `${a.shortName} vs ${b.shortName}: choque de estilos`,
+        subheadline: `La jornada de ${league.name} tiene un duelo atractivo`,
+        body: `El duelo destacado de la fecha en ${league.name} enfrenta a ${a.name} y ${b.name}. Ambos llegan con aspiraciones distintas pero con la misma necesidad de sumar.`,
+        clubId: a.id, competitionId: league.id,
+      });
+    } else if (roll === 2) {
+      // Cantera: promesa en alza
+      const youth = this.getPlayersByClub(a.id).find(p => p.squad === 'U20' && p.potentialAbility >= 140);
+      this.publishNews('TU_CLUB', {
+        type: 'PRAISE',
+        headline: `La cantera de ${a.shortName} ilusiona`,
+        subheadline: youth ? `${youth.name} es la gran promesa` : 'Jóvenes valores en ascenso',
+        body: youth
+          ? `En ${a.name} destacan al juvenil ${youth.name}, una de las grandes promesas de la sub-20. Su potencial genera expectativas en el cuerpo técnico.`
+          : `El trabajo en las divisiones formativas de ${a.name} da frutos: varios juveniles piden pista en el primer equipo.`,
+        clubId: a.id, playerId: youth?.id,
+      });
+    } else if (roll === 3) {
+      // Internacional: calendario de selecciones
+      this.publishNews('INTERNACIONAL', {
+        type: 'FEATURE',
+        headline: `Las ligas del mundo, en plena ebullición`,
+        subheadline: `Selecciones y copas marcan el calendario`,
+        body: `El calendario internacional condiciona a los clubes: los próximos compromisos de selecciones obligan a los técnicos a gestionar minutos y descansos de sus figuras.`,
+        competitionId: league.id,
+      });
+    } else if (roll === 4) {
+      // Lesiones: parte médico de la fecha
+      const injured = this.players.find(p => p.injury && p.injury.daysLeft >= 10);
+      this.publishNews('LESIONES', {
+        type: 'CRITICISM',
+        headline: injured ? `Preocupación por ${injured.name}` : 'El parte médico de la fecha',
+        subheadline: injured ? `${injured.injury!.type} (${injured.injury!.daysLeft} días)` : 'Sin novedades graves',
+        body: injured
+          ? `${injured.name} arrastra una ${injured.injury!.type} y podría perderse los próximos compromisos. El cuerpo médico sigue de cerca su evolución.`
+          : `La jornada deja un parte médico tranquilo en las principales ligas: sin lesiones de larga duración que lamentar.`,
+        clubId: injured?.clubId, playerId: injured?.id,
+      });
+    } else {
+      // Clasificación: el club a vencer por jerarquía
+      const top = [...clubs].sort((x, y) => y.reputation - x.reputation)[0];
+      this.publishNews('CLASIFICACION', {
+        type: 'PRAISE',
+        headline: `${top.shortName} marca la pauta en ${league.name}`,
+        subheadline: `El club a vencer de la temporada`,
+        body: `${top.name} es, por jerarquía, el gran candidato en ${league.name}. El resto de los equipos miran al líder con respeto mientras la temporada avanza.`,
+        clubId: top.id, competitionId: league.id,
+      });
+    }
   }
 
-  addMediaNews(news: MediaNews) {
-    this.mediaNews.unshift(news);
+  /** Emite una noticia al diario. Si involucra al club del usuario queda etiquetada como "Tu club". */
+  publishNews(section: NewsSection, data: Partial<MediaNews> & { headline: string; subheadline?: string; body: string }) {
+    const userClub = this.getUserClub();
+    const involvesUser = userClub && (
+      data.isUserClubNews ||
+      data.clubId === userClub.id ||
+      (data.playerId ? this.getPlayer(data.playerId)?.clubId === userClub.id : false)
+    );
+    this.mediaNews.unshift({
+      id: generateUUID(),
+      date: new Date(data.date || new Date()),
+      type: data.type || 'FEATURE',
+      section,
+      headline: data.headline,
+      subheadline: data.subheadline || '',
+      body: data.body,
+      clubId: data.clubId,
+      competitionId: data.competitionId,
+      playerId: data.playerId,
+      isUserClubNews: !!involvesUser,
+      read: false,
+      featured: data.featured,
+    });
     if (this.mediaNews.length > 100) this.mediaNews.pop();
+  }
+
+  /** Resumen semanal de clasificación (sección Clasificación del diario). */
+  generateStandingsNews(date: Date, fixtures: Fixture[]) {
+    const leagues = this.getLeagues()
+      .filter(l => (l.dynamicReputation || 0) >= 40)
+      .sort((a, b) => (b.dynamicReputation || 0) - (a.dynamicReputation || 0))
+      .slice(0, 5);
+    for (const comp of leagues) {
+      if (Math.random() > 0.6) continue; // no todas las ligas todas las semanas
+      const table = this.getLeagueTable(comp.id, fixtures, 'SENIOR');
+      if (table.length < 4) continue;
+      const leader = table[0];
+      const leaderClub = this.getClub(leader.clubId);
+      const last = table[table.length - 1];
+      const lastClub = this.getClub(last.clubId);
+      const roll = randomInt(0, 3);
+      if (roll === 0 && leaderClub) {
+        this.publishNews('CLASIFICACION', {
+          type: 'HEADLINE',
+          headline: `${leaderClub.shortName} manda en ${comp.name}`,
+          subheadline: `${leader.points} pts, líder con ${leader.played} partidos jugados`,
+          body: `${leaderClub.name} se afirma en lo más alto de ${comp.name} con ${leader.points} puntos. Su diferencia de gol (${leader.gd > 0 ? '+' : ''}${leader.gd}) marca la diferencia en la lucha por el título.`,
+          clubId: leaderClub.id, competitionId: comp.id,
+        });
+      } else if (roll === 1 && lastClub) {
+        this.publishNews('CLASIFICACION', {
+          type: 'CRITICISM',
+          headline: `${lastClub.shortName}, en la cuerda floja en ${comp.name}`,
+          subheadline: `Colista con ${last.points} puntos`,
+          body: `${lastClub.name} cierra la tabla de ${comp.name} y ya siente el calor de la zona de descenso. Solo ${last.points} puntos en ${last.played} jornadas ponen al club en máxima alerta.`,
+          clubId: lastClub.id, competitionId: comp.id,
+        });
+      } else {
+        const climber = table[Math.max(1, Math.floor(table.length * 0.4))];
+        const climberClub = this.getClub(climber.clubId);
+        if (climberClub) {
+          this.publishNews('CLASIFICACION', {
+            type: 'PRAISE',
+            headline: `${climberClub.shortName} acecha los puestos de arriba`,
+            subheadline: `${climber.points} pts en ${comp.name}`,
+            body: `${climberClub.name} firma una campaña sólida en ${comp.name} y mira hacia la parte alta de la tabla. Con ${climber.points} puntos, el equipo ilusiona a su afición.`,
+            clubId: climberClub.id, competitionId: comp.id,
+          });
+        }
+      }
+    }
+  }
+
+  /** Simulación semanal de ceses y nombramientos de entrenadores en el mundo (sección Despidos). */
+  simulateCoachChanges(date: Date, fixtures?: Fixture[]) {
+    const userClubId = this.managerProfile?.currentClubId;
+    const deepIds = new Set(useGameStore.getState().deepSimLeagues);
+    const candidates = this.clubs.filter(c =>
+      c.id !== userClubId &&
+      deepIds.has(c.leagueId) &&
+      this.staff.some(s => s.role === 'HEAD_COACH' && s.clubId === c.id)
+    );
+    let firedCount = 0;
+    for (const club of candidates) {
+      if (Math.random() > 0.05) continue; // gate semanal por club
+      const board = club.boardConfidence ?? 50;
+      let pressure = (100 - board) / 300; // baja confianza de la directiva
+      if (fixtures && club.leagueId) {
+        const table = this.getLeagueTable(club.leagueId, fixtures, 'SENIOR');
+        const rank = table.findIndex(e => e.clubId === club.id) + 1;
+        if (rank > 0 && rank > Math.ceil(table.length * 0.75)) pressure += 0.5; // zona de descenso
+        else if (rank > 0 && rank <= 4) pressure -= 0.4;
+      }
+      const prob = Math.min(0.35, Math.max(0.02, pressure));
+      if (Math.random() > prob) continue;
+      if (this.fireAndReplaceCoach(club, date)) {
+        firedCount++;
+        if (firedCount >= 3) break;
+      }
+    }
+  }
+
+  /** Destituye al DT de un club IA y nombra reemplazante; emite noticia de la sección Despidos. */
+  private fireAndReplaceCoach(club: Club, date: Date): boolean {
+    const fired = this.staff.find(s => s.role === 'HEAD_COACH' && s.clubId === club.id);
+    if (!fired) return false;
+    let replacement = this.staff.find(s => s.role === 'HEAD_COACH' && s.clubId === '' && s.id !== fired.id);
+    if (!replacement) {
+      replacement = this.staff.find(s =>
+        (s.role === 'ASSISTANT_MANAGER' || s.role === 'RESERVE_MANAGER' || s.role === 'YOUTH_MANAGER') && s.clubId === club.id
+      );
+    }
+    if (replacement) {
+      replacement.clubId = club.id;
+      if (replacement.role !== 'HEAD_COACH') replacement.role = 'HEAD_COACH'; // promoción interna
+    } else {
+      replacement = this.createRandomHeadCoach(club.id, date);
+      this.staff.push(replacement);
+    }
+    fired.clubId = ''; // queda desempleado
+    club.boardConfidence = Math.min(100, (club.boardConfidence ?? 50) + 10); // efecto nuevo DT
+    this.publishNews('DESPIDOS', {
+      type: 'HEADLINE',
+      headline: `${club.shortName} destituye a ${fired.name}`,
+      subheadline: `${replacement.name} asume el banquillo`,
+      body: `La directiva de ${club.name} decidió prescindir de ${fired.name} como entrenador. El equipo no cumplió con las expectativas y ${replacement.name} tomará el mando de inmediato.`,
+      clubId: club.id,
+    });
+    return true;
+  }
+
+  /** Crea un DT nuevo para reemplazos (club IA). */
+  private createRandomHeadCoach(clubId: string, date: Date): Staff {
+    const club = this.getClub(clubId);
+    const style = COACH_STYLES[randomInt(0, COACH_STYLES.length - 1)];
+    return {
+      id: generateUUID(),
+      name: `${STAFF_NAMES.names[randomInt(0, STAFF_NAMES.names.length - 1)]} ${STAFF_NAMES.surnames[randomInt(0, STAFF_NAMES.surnames.length - 1)]}`,
+      age: randomInt(38, 62),
+      nationality: club?.country || 'Argentina',
+      role: 'HEAD_COACH',
+      clubId,
+      attributes: {
+        coaching: weightedRandom(8, 20),
+        judgingAbility: weightedRandom(8, 20),
+        judgingPotential: weightedRandom(8, 20),
+        tacticalKnowledge: weightedRandom(10, 20),
+        adaptability: weightedRandom(5, 20),
+        medical: 5,
+        physiotherapy: 5,
+        motivation: weightedRandom(8, 20),
+        manManagement: weightedRandom(8, 20),
+      },
+      salary: Math.round(randomInt(3000, 15000)),
+      contractExpiry: new Date(date.getFullYear() + 1, 5, 30),
+      history: [],
+      personality: ['LEADER', 'PASSIONATE', 'CALM', 'DISCIPLINARIAN', 'VISIONARY'][randomInt(0, 4)],
+      morale: 70,
+      reputation: 50,
+      relationships: {},
+      pressReputation: 50,
+      boardRelationship: 60,
+      tacticalStyle: style,
+      preferredFormation: COACH_FORMATIONS[randomInt(0, COACH_FORMATIONS.length - 1)],
+      playingStyle: COACH_PLAYING_STYLE[style],
+      pressIntensity: (['LOW', 'MEDIUM', 'HIGH'] as const)[randomInt(0, 2)],
+      possessionVsCounter: (['POSSESSION', 'COUNTER', 'BALANCED'] as const)[randomInt(0, 2)],
+    };
   }
 
   getUserClubNews(limit = 20): MediaNews[] {

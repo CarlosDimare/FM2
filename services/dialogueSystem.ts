@@ -482,7 +482,7 @@ export class DialogueSystem {
         ? `${player.name} ha solicitado formalmente ser transferido por tensión con el cuerpo técnico.`
         : `${player.name} criticó públicamente al DT en una entrevista.`;
 
-      world.addInboxMessage('STATEMENTS', 'Tensión en el plantel', text, currentDate, playerId);
+      world.addInboxMessage('STATEMENTS', 'Tensión en el plantel', text, currentDate, playerId, 'IMPORTANT');
       world.recordInteraction({
         id: generateUUID(), date: currentDate, channel: 'COACH_PLAYER', actorId: playerId, targetId: 'COACH',
         type: 'CRITICIZE_FORM', tone: 'AGGRESSIVE', result: 'NEGATIVE', moraleChange: -10, tensionChange: -10, description: text
@@ -509,7 +509,7 @@ export class DialogueSystem {
 
     if (tension >= 65) {
       const text = `Tensión entre ${s1.name} y ${s2.name}: no comparten la misma visión táctica.`;
-      world.addInboxMessage('STATEMENTS', 'Conflicto en el staff', text, currentDate, clubId);
+      world.addInboxMessage('STATEMENTS', 'Conflicto en el staff', text, currentDate, clubId, 'IMPORTANT');
       world.recordInteraction({
         id: generateUUID(), date: currentDate, channel: 'COACH_STAFF', actorId: s1.id, targetId: s2.id,
         type: 'REPRIMAND', tone: 'MODERATE', result: 'NEGATIVE', moraleChange: -5, tensionChange: -5, description: text

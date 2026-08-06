@@ -82,10 +82,16 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
     setPaso(2);
   };
 
-  const handleConfirmarPaso2 = () => {
+  /** Acepta el once: aplica la alineación y cierra el diálogo sin avanzar al partido. */
+  const handleAceptarOnce = () => {
     applyLineup(club.id, lineup.xi);
     recordEffects('Confirmó el once inicial para el próximo partido.');
     cerrar();
+  };
+
+  /** Acepta el once y, además, va directo al partido. */
+  const handleAceptarYPartido = () => {
+    handleAceptarOnce();
     onStartMatch?.();
   };
 
@@ -102,12 +108,18 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
 
   const footerPaso2 = (
     <>
-      <FMButton variant="primary" onClick={handleConfirmarPaso2} className="px-6 py-2.5 text-[10px]">
-        ¡Al partido!
+      <FMButton variant="primary" onClick={handleAceptarOnce} className="px-6 py-2.5 text-[10px]">
+        Aceptar once
       </FMButton>
-      <FMButton variant="secondary" onClick={() => setPaso(1)} className="px-6 py-2.5 text-[10px]">
-        Volver al consejo
-      </FMButton>
+      {onStartMatch ? (
+        <FMButton variant="secondary" onClick={handleAceptarYPartido} className="px-6 py-2.5 text-[10px]">
+          Aceptar e ir al partido
+        </FMButton>
+      ) : (
+        <FMButton variant="secondary" onClick={() => setPaso(1)} className="px-6 py-2.5 text-[10px]">
+          Volver al consejo
+        </FMButton>
+      )}
     </>
   );
 

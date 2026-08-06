@@ -306,7 +306,7 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
     }
     nationalManager.resolveNationalTeamOffer(nextTeamId, true);
     setSelectedNationalTeamId(nextTeamId);
-    world.addInboxMessage('STATEMENTS', 'Nuevo cargo internacional', `La federación confirma tu nombramiento al frente de ${nextTeam.name}.`, gameCurrentDate, nextTeamId);
+    world.addInboxMessage('STATEMENTS', 'Nuevo cargo internacional', `La federación confirma tu nombramiento al frente de ${nextTeam.name}.`, gameCurrentDate, nextTeamId, 'IMPORTANT');
     updateNextFixture(fixtures, gameCurrentDate, nextTeamId);
     setRosterVersion(version => version + 1);
     setOfferNotice(`Ahora diriges a ${nextTeam.name}.`);

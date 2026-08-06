@@ -171,6 +171,57 @@ export interface LoadResult {
   worldState: any;
 }
 
+/** Migra saves creados antes de la separación notificaciones/noticias:
+ *  - Inbox sin `priority` → INFO; sin `actionRequired` → false.
+ *  - MediaNews sin `section` → derivada de la antigua `category`. */
+/** Migra planteles rotos de saves previos: antes todos los jugadores convertidos quedaban en SENIOR
+ *  y RESERVA/SUB-20 quedaban vacíos (generateSquadsForClub se saltaba para clubes con >=14 jugadores).
+ *  Se redistribuye por edad y se completan los planteles. */
+export function migrateSquadDistribution(): void {
+  let needsFix = false;
+  world.clubs.forEach((club: any) => {
+    const squad = world.players.filter((p: any) => p.clubId === club.id);
+    const senior = squad.filter((p: any) => p.squad === 'SENIOR');
+    const reserve = squad.filter((p: any) => p.squad === 'RESERVE');
+    const u20 = squad.filter((p: any) => p.squad === 'U20');
+    // Estado roto típico: plantel volcado en SENIOR y reserva/sub-20 sin jugadores
+    if (reserve.length === 0 && u20.length === 0 && senior.length >= 14) {
+      senior.forEach((p: any) => {
+        if (p.age >= 23) return;
+        // Respetar a los titulares: si el usuario lo puso en el once, no se lo movemos
+        if (p.isStarter) return;
+        p.squad = p.age >= 20 ? 'RESERVE' : 'U20';
+        p.isStarter = false;
+        p.tacticalPosition = undefined;
+        needsFix = true;
+      });
+    }
+  });
+  if (needsFix) {
+    world.markPlayersDirty();
+    world.clubs.forEach((club: any) => world.generateSquadsForClub(club.id));
+  }
+}
+
+export function migrateInboxAndNews(): void {
+  world.inbox.forEach((m: any) => {
+    if (!m.priority) m.priority = 'INFO';
+    if (m.actionRequired === undefined) m.actionRequired = false;
+  });
+  world.mediaNews.forEach((n: any) => {
+    if (!n.section) {
+      const legacy = (n.category || '') as string;
+      n.section =
+        legacy === 'MATCH' ? 'RESULTADOS'
+        : legacy === 'TRANSFER' ? 'MERCADO'
+        : legacy === 'INJURY' ? 'LESIONES'
+        : legacy === 'BOARD' ? 'CLASIFICACION'
+        : 'INTERNACIONAL';
+    }
+    if (n.featured === undefined) n.featured = false;
+  });
+}
+
 export async function loadGameData(id: string): Promise<LoadResult | null> {
   const data = await loadGame(id);
   if (!data) return null;
@@ -190,6 +241,11 @@ export function applyWorldState(worldState: any): void {
   world.activeReputationalBuffs = worldState.activeReputationalBuffs || [];
   world.relationshipWeb = worldState.relationshipWeb || {};
   world.mediaNews = worldState.mediaNews || [];
+
+  // Migración notificaciones vs noticias (saves previos a la separación)
+  migrateInboxAndNews();
+  // Migración de planteles rotos (todos los jugadores en SENIOR, reserva/sub-20 vacíos)
+  migrateSquadDistribution();
 
   // Migrate player fields
   world.players.forEach((p: any) => {
