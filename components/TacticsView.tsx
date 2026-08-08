@@ -758,9 +758,6 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
 
             {/* Toolbar - Tier 2 */}
             <div className="flex flex-wrap gap-2">
-                <FMButton variant="vacation" onClick={() => useDialogueStore.getState().open('ASSISTANT', { clubId: club.id, source: 'TACTICS', tacticId: selectedTacticId || world.getTactics()[0]?.id })} className="flex-1 min-w-[45%] py-2 text-[9px]">
-                   🎩 CONSEJO DEL AYUDANTE
-                </FMButton>
                 <FMButton variant={arrowMode ? 'vacation' : 'secondary'} onClick={() => setArrowMode(!arrowMode)} className="flex-1 min-w-[45%] py-2 text-[9px]">
                    <GitBranch size={12}/> FLECHAS {arrowMode ? 'ON' : 'OFF'}
                 </FMButton>

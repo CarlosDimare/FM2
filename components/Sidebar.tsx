@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Home, Users, Trophy, Calendar, Clipboard, ListOrdered, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Bell, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User, Star, BarChart3, Medal, BookMarked } from 'lucide-react';
+import { Home, Users, Trophy, Calendar, Clipboard, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Bell, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User, Star, BarChart3, Medal, BookMarked, Award } from 'lucide-react';
 import { Club, SquadType, Competition } from '../types';
 import { world } from '../services/worldManager';
 import { SettingsModal } from './SettingsModal';
@@ -18,7 +17,14 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, nationalTeamId, onVacation, onSave, isSidebarOpen, setIsSidebarOpen }) => {
   const isNationalOnly = !club && Boolean(nationalTeamId);
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({'SENIOR': true,'RESERVE': false,'U20': false,'MARKET': false,'TORNEOS': false,'NATIONAL': true});
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
+    SENIOR: true,
+    RESERVE: false,
+    U20: false,
+    DEPARTAMENTOS: false,
+    DETALLE: false,
+    NATIONAL: true,
+  });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const unreadMessages = world.inbox.filter(m => !m.isRead).length;
@@ -39,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
     const isOpen = openMenus[squadType];
     return (
       <div className="mb-1">
-        <button 
+        <button
            onClick={() => toggleMenu(squadType)}
            className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors"
         >
@@ -67,12 +73,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-1">
-          <div className="mb-2">
+          {!isNationalOnly && <div className="mb-2">
              <NavItem id="HOME" label="Inicio" icon={Home} active={currentView === 'HOME'} onClick={() => setView('HOME')} />
              <NavItem id="INBOX" label="Notificaciones" icon={Bell} active={currentView === 'INBOX'} onClick={() => setView('INBOX')} badge={unreadMessages} badgeClass={criticalUnread > 0 ? 'bg-red-600' : ''} />
-          </div>
-
-          <div className="h-px bg-[#a0b0a0] mx-4 my-2"></div>
+          </div>}
 
           {!isNationalOnly && <>
             {renderSquadSubMenu('SENIOR', 'Primer Equipo')}
@@ -82,22 +86,47 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
           </>}
 
           {!isNationalOnly && <div className="mb-1">
-            <button onClick={() => toggleMenu('TORNEOS')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
-              <div className="flex items-center gap-2"><Trophy size={14} /> Competiciones</div>
-              {openMenus['TORNEOS'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            <button onClick={() => toggleMenu('DEPARTAMENTOS')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+              <div className="flex items-center gap-2"><Briefcase size={14} /> Departamentos</div>
+              {openMenus['DEPARTAMENTOS'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
-            {openMenus['TORNEOS'] && (
+            {openMenus['DEPARTAMENTOS'] && (
               <div className="mt-1 ml-4 space-y-1 border-l border-[#a0b0a0]">
-                {clubTournaments.map(comp => (
-                  <SubNavItem key={comp.id} id={`COMP_${comp.id}`} label={comp.name} icon={comp.type.startsWith('CONT') ? Globe : Trophy} active={currentView === `COMP_${comp.id}`} onClick={() => setView(`COMP_${comp.id}`)} />
-                ))}
+                 <SubNavItem id="MARKET" label="Mercado" icon={ShoppingBag} active={currentView === 'MARKET'} onClick={() => setView('MARKET')} />
+                 <SubNavItem id="SEARCH" label="Buscar Jugador" icon={Search} active={currentView === 'SEARCH'} onClick={() => setView('SEARCH')} />
+                 <SubNavItem id="NEGOTIATIONS" label="Negociaciones" icon={MessageSquare} active={currentView === 'NEGOTIATIONS'} onClick={() => setView('NEGOTIATIONS')} />
+                 <SubNavItem id="CLUBS_LIST" label="Clubes" icon={Building2} active={currentView === 'CLUBS_LIST'} onClick={() => setView('CLUBS_LIST')} />
+                 <SubNavItem id="ECONOMY" label="Economía" icon={Wallet} active={currentView === 'ECONOMY'} onClick={() => setView('ECONOMY')} />
+                 <SubNavItem id="STAFF" label="Empleados" icon={Briefcase} active={currentView === 'STAFF'} onClick={() => setView('STAFF')} />
+                 <SubNavItem id="TRAINING" label="Entrenamiento" icon={Dumbbell} active={currentView === 'TRAINING'} onClick={() => setView('TRAINING')} />
+                 <SubNavItem id="SCOUTING" label="Scouting" icon={Globe} active={currentView === 'SCOUTING'} onClick={() => setView('SCOUTING')} />
+                 <SubNavItem id="BOARD" label="Directiva" icon={Award} active={currentView === 'BOARD'} onClick={() => setView('BOARD')} />
+                 <SubNavItem id="CLUB_REPORT" label="Información Club" icon={Info} active={currentView === 'CLUB_REPORT'} onClick={() => setView('CLUB_REPORT')} />
               </div>
             )}
           </div>}
 
-          <SubNavItem id="LEAGUE_RANKING" label="Ranking Ligas" icon={BarChart3} active={currentView === 'LEAGUE_RANKING'} onClick={() => setView('LEAGUE_RANKING')} />
-          <SubNavItem id="SEASON_HISTORY" label="Libro de Temporadas" icon={BookMarked} active={currentView === 'SEASON_HISTORY'} onClick={() => setView('SEASON_HISTORY')} />
-          <SubNavItem id="HALL_OF_FAME" label="Salón de la Fama" icon={Medal} active={currentView === 'HALL_OF_FAME'} onClick={() => setView('HALL_OF_FAME')} />
+          {!isNationalOnly && <div className="mb-1">
+            <button onClick={() => toggleMenu('DETALLE')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
+              <div className="flex items-center gap-2"><BookOpen size={14} /> Detalle</div>
+              {openMenus['DETALLE'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+            {openMenus['DETALLE'] && (
+              <div className="mt-1 ml-4 space-y-1 border-l border-[#a0b0a0]">
+                <SubNavItem id="TABLE" label="Clasificación" icon={Trophy} active={currentView === 'TABLE'} onClick={() => setView('TABLE')} />
+                {clubTournaments.map(comp => (
+                  <SubNavItem key={comp.id} id={`COMP_${comp.id}`} label={comp.name} icon={comp.type.startsWith('CONT') ? Globe : Trophy} active={currentView === `COMP_${comp.id}`} onClick={() => setView(`COMP_${comp.id}`)} />
+                ))}
+                <SubNavItem id="LEAGUE_RANKING" label="Ranking Ligas" icon={BarChart3} active={currentView === 'LEAGUE_RANKING'} onClick={() => setView('LEAGUE_RANKING')} />
+                <SubNavItem id="SEASON_HISTORY" label="Libro de Temporadas" icon={BookMarked} active={currentView === 'SEASON_HISTORY'} onClick={() => setView('SEASON_HISTORY')} />
+                <SubNavItem id="HALL_OF_FAME" label="Salón de la Fama" icon={Medal} active={currentView === 'HALL_OF_FAME'} onClick={() => setView('HALL_OF_FAME')} />
+                <SubNavItem id="CHRONICLES" label="Crónicas" icon={BookOpen} active={currentView === 'CHRONICLES'} onClick={() => setView('CHRONICLES')} />
+                <SubNavItem id="MEDIA" label="Prensa" icon={Newspaper} active={currentView === 'MEDIA'} onClick={() => setView('MEDIA')} />
+                <SubNavItem id="MANAGER_PROFILE" label="Mi Carrera" icon={User} active={currentView === 'MANAGER_PROFILE'} onClick={() => setView('MANAGER_PROFILE')} />
+                <SubNavItem id="PEOPLE_HUB" label="Personas" icon={Users} active={currentView === 'PEOPLE_HUB'} onClick={() => setView('PEOPLE_HUB')} />
+              </div>
+            )}
+          </div>}
 
           {world.nationalTeamManager && (
             <div className="mb-1">
@@ -125,34 +154,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
             </div>
           )}
 
-          {!isNationalOnly && <div className="mb-1">
-            <button onClick={() => toggleMenu('MARKET')} className="w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-900 transition-colors">
-              <div className="flex items-center gap-2"><Globe size={14} /> Ojeo y Fichajes</div>
-              {openMenus['MARKET'] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </button>
-            {openMenus['MARKET'] && (
-              <div className="mt-1 ml-4 space-y-1 border-l border-[#a0b0a0]">
-                 <SubNavItem id="MARKET" label="Mercado" icon={ShoppingBag} active={currentView === 'MARKET'} onClick={() => setView('MARKET')} />
-                 <SubNavItem id="SEARCH" label="Buscar Jugador" icon={Search} active={currentView === 'SEARCH'} onClick={() => setView('SEARCH')} />
-                 <SubNavItem id="NEGOTIATIONS" label="Negociaciones" icon={MessageSquare} active={currentView === 'NEGOTIATIONS'} onClick={() => setView('NEGOTIATIONS')} />
-                 <SubNavItem id="CLUBS_LIST" label="Clubes" icon={Building2} active={currentView === 'CLUBS_LIST'} onClick={() => setView('CLUBS_LIST')} />
-              </div>
-            )}
-          </div>}
-
-          <div className="h-px bg-[#a0b0a0] mx-4 my-2"></div>
-
-           {!isNationalOnly && <>
-             <NavItem id="ECONOMY" label="Economía" icon={Wallet} active={currentView === 'ECONOMY'} onClick={() => setView('ECONOMY')} />
-             <NavItem id="STAFF" label="Empleados" icon={Briefcase} active={currentView === 'STAFF'} onClick={() => setView('STAFF')} />
-             <NavItem id="TRAINING" label="Entrenamiento" icon={Dumbbell} active={currentView === 'TRAINING'} onClick={() => setView('TRAINING')} />
-             <NavItem id="CLUB_REPORT" label="Información Club" icon={Info} active={currentView === 'CLUB_REPORT'} onClick={() => setView('CLUB_REPORT')} />
-           </>}
-           <NavItem id="PEOPLE_HUB" label="Personas" icon={Users} active={currentView === 'PEOPLE_HUB'} onClick={() => setView('PEOPLE_HUB')} />
-           <NavItem id="MEDIA" label="Diario" icon={Newspaper} active={currentView === 'MEDIA'} onClick={() => setView('MEDIA')} />
-           <NavItem id="CHRONICLES" label="Crónicas" icon={BookOpen} active={currentView === 'CHRONICLES'} onClick={() => setView('CHRONICLES')} />
-           <NavItem id="MANAGER_PROFILE" label="Mi Carrera" icon={User} active={currentView === 'MANAGER_PROFILE'} onClick={() => setView('MANAGER_PROFILE')} />
-
           <div className="mt-auto pt-6 px-4 pb-4 space-y-2">
              <button onClick={onVacation} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-[#f2f7f2] text-slate-700 hover:text-slate-900 rounded border border-[#a0b0a0] shadow-sm transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95">
                 <Sun size={14} /> Ir de Vacaciones
@@ -173,8 +174,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
 
 const NavItem = ({ id, label, icon: Icon, active, onClick, badge, badgeClass }: any) => (
   <button onClick={onClick} className={`w-full flex items-center justify-between px-6 py-2.5 text-xs font-bold transition-colors border-l-4 ${active ? 'bg-white text-slate-900 border-[#3a4a3a]' : 'border-transparent text-slate-500 hover:bg-white hover:text-slate-900'}`}>
-    <div className="flex items-center"><Icon className={`w-4 h-4 mr-3 ${active ? 'text-[#3a4a3a]' : 'text-slate-400'}`} /> {label}</div>
-    {badge > 0 && <span className={`${badgeClass || 'bg-[#3a4a3a]'} text-white text-[9px] font-black px-1.5 rounded-sm`}>{badge}</span>}
+     <div className="flex items-center"><Icon className={`w-4 h-4 mr-3 ${active ? 'text-[#3a4a3a]' : 'text-slate-400'}`} /> {label}</div>
+     {badge > 0 && <span className={`${badgeClass || 'bg-[#3a4a3a]'} text-white text-[9px] font-black px-1.5 rounded-sm`}>{badge}</span>}
   </button>
 );
 
