@@ -15,10 +15,15 @@ export const TransferFolderDialog: React.FC = () => {
   const { kind, phase, selection, result, data, select, setResult, setClosingPhrase, close, advance } = useDialogueStore();
   const currentDate = useGameStore(s => s.currentDate);
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
     if (kind === 'TRANSFERS' && phase === 'opening') {
-      const timer = setTimeout(() => advance(), 250);
+      setRevealed(false);
+      const timer = setTimeout(() => {
+        advance();
+        setRevealed(true);
+      }, 250);
       return () => clearTimeout(timer);
     }
   }, [kind, phase, advance]);
@@ -38,10 +43,14 @@ export const TransferFolderDialog: React.FC = () => {
   const iniciales = directorName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const clubPrimary = club?.primaryColor || 'bg-[#3a4a3a]';
 
-  const folder = useMemo(
-    () => (club ? compileTransferFolder(club, director) : null),
-    [club?.id],
-  );
+  const folder = useMemo(() => {
+    const raw = club ? compileTransferFolder(club, director) : null;
+    if (!raw || !director) return raw;
+    if (director.siguioConsejoUltimaVez) {
+      raw.textoInforme = `La última vez enviamos ofertas y tuvimos respuestas. Esta vez reviso la carpeta actualizada: "${raw.textoInforme}"`;
+    }
+    return raw;
+  }, [club?.id, director?.siguioConsejoUltimaVez]);
 
   if (kind !== 'TRANSFERS' || !club || !folder) return null;
 
@@ -85,6 +94,10 @@ export const TransferFolderDialog: React.FC = () => {
       return;
     }
     recordEffects(`Envió ${count} ofertas de la carpeta de refuerzos.`);
+    if (director) {
+      const staff = world.getStaff(director.id);
+      if (staff) staff.siguioConsejoUltimaVez = true;
+    }
     setResult(`Ofertas enviadas (${count}). Ahora toca esperar la respuesta de los clubes en el centro de fichajes.`);
   };
 
@@ -138,7 +151,7 @@ export const TransferFolderDialog: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className={`space-y-4 transition-all duration-500 ${revealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <SpeechBubble
             texto={`Jefe, aquí tienes la carpeta de refuerzos. Presupuesto disponible: £${(folder.presupuesto / 1000000).toFixed(1)}M. Marca a los que quieras y envío las ofertas.`}
           />

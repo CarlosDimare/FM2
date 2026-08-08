@@ -11,6 +11,8 @@ import { FMTable, FMTableCell, FMButton, FMBox } from './FMUI';
 import { getFlagUrl } from '../data/static';
 import { getPlayerTag } from '../services/playerGenerator';
 import { useUIStore } from '../stores/uiStore';
+import { useDialogueStore } from '../stores/dialogueStore';
+import { clearPlayerDialogue } from '../services/playerDialogueTriggers';
 
 interface PlayerModalProps {
   player: Player | null;
@@ -421,23 +423,21 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                 </div>
              )}
 
-             {activeTab === 'INTERACTION' && (
-               <div className="h-full flex flex-col p-2 gap-4 overflow-y-auto">
-                  {personalMotive && !dialogueResult && (
-                    <div className="bg-amber-100 border border-amber-300 p-3 rounded-sm flex items-start gap-3 animate-fade-up">
-                       <AlertCircle className="text-amber-600 shrink-0" size={18} />
-                       <div className="flex-1">
-                          <p className="text-[10px] font-black text-amber-700 uppercase">Petición del Jugador</p>
-                          <p className="text-xs italic font-bold text-slate-800 mt-1">"{personalMotive}"</p>
-                          <div className="mt-3 flex gap-2">
-                             <button onClick={() => setDialogueResult(DialogueSystem.resolveInitiatedMotive(player, 'PROMISE', currentDate))} className="text-[9px] bg-green-600 text-white px-3 py-1 font-black uppercase rounded-[1px] hover:bg-green-700 transition-colors">Hacer Promesa</button>
-                             <button onClick={() => setDialogueResult(DialogueSystem.resolveInitiatedMotive(player, 'IGNORE', currentDate))} className="text-[9px] bg-slate-400 text-white px-3 py-1 font-black uppercase rounded-[1px] hover:bg-slate-500 transition-colors">Ignorar</button>
-                          </div>
-                       </div>
-                    </div>
-                  )}
-
-                  {dialogueResult ? (
+              {activeTab === 'INTERACTION' && (
+                <div className="h-full flex flex-col p-2 gap-4 overflow-y-auto">
+                   {player.pendingDialogue && (
+                     <div className="bg-amber-100 border border-amber-300 p-3 rounded-sm flex items-start gap-3 animate-fade-up">
+                        <MessageCircle className="text-amber-600 shrink-0" size={18} />
+                        <div className="flex-1">
+                           <p className="text-[10px] font-black text-amber-700 uppercase">El jugador quiere hablar contigo</p>
+                           <p className="text-xs italic font-bold text-slate-800 mt-1">"{player.pendingDialogue === 'MINUTES_DISCONTENT' ? 'No estoy contento con los minutos. Necesito hablar de mi rol.' : player.pendingDialogue === 'CONTRACT_EXPIRING' ? 'Mi contrato está por vencer. Quiero hablar de mi futuro.' : player.pendingDialogue === 'TRANSFER_RUMOR' ? 'He visto rumores sobre mi futuro. Me gustaría saber qué piensa el club.' : 'Hay algo en el vestuario que no está bien. Necesito hablar de ello.'}"</p>
+                           <div className="mt-3">
+                              <button onClick={() => { clearPlayerDialogue(player.id); useDialogueStore.getState().open('PLAYER_DIALOG', { clubId: userClubId || '', playerId: player.id, initiatedBy: 'PLAYER', context: player.pendingDialogue }); }} className="text-[9px] bg-[#3a4a3a] text-white px-3 py-1 font-black uppercase rounded-[1px] hover:bg-[#4a6a4a] transition-colors">Hablar con {player.name.split(' ')[0]}</button>
+                           </div>
+                        </div>
+                     </div>
+                    )}
+                   {dialogueResult ? (
                     <div className="bg-white border border-[#a0b0a0] p-6 rounded-sm text-center flex flex-col items-center gap-4 animate-zoom-in">
                        <div className={`p-4 rounded-full border-4 ${dialogueResult.reactionType === 'POSITIVE' ? 'bg-green-100 border-green-500 text-green-600' : dialogueResult.reactionType === 'NEGATIVE' ? 'bg-red-100 border-red-500 text-red-600' : 'bg-slate-100 border-slate-400 text-slate-600'}`}>
                           <MessageCircle size={48} />

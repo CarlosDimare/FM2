@@ -3,6 +3,7 @@ import { useDialogueStore } from '../../stores/dialogueStore';
 import { AssistantAdviceDialog } from './AssistantAdviceDialog';
 import { FitnessCoachDialog } from './FitnessCoachDialog';
 import { TransferFolderDialog } from './TransferFolderDialog';
+import { PlayerDialog } from './PlayerDialog';
 
 interface DialogueHostProps {
   onStartMatch?: () => void;
@@ -19,6 +20,9 @@ export const DialogueHost: React.FC<DialogueHostProps> = ({ onStartMatch }) => {
   }
   if (kind === 'TRANSFERS') {
     return <TransferFolderDialog />;
+  }
+  if (kind === 'PLAYER_DIALOG') {
+    return <PlayerDialog />;
   }
   return null;
 };

@@ -4,7 +4,9 @@ import { world } from '../services/worldManager';
 import { InboxMessage, MessageCategory, NotificationPriority } from '../types';
 import { notifyInbox } from '../stores/worldStore';
 import { useUIStore } from '../stores/uiStore';
-import { Mail, ShoppingBag, Users, MessageSquare, Wallet, Trash2, ChevronRight, Inbox, Trophy, ChevronLeft, Binoculars, Briefcase, Bell, AlertOctagon, AlertTriangle, Info } from 'lucide-react';
+import { useDialogueStore } from '../stores/dialogueStore';
+import { clearPlayerDialogue } from '../services/playerDialogueTriggers';
+import { Mail, ShoppingBag, Users, MessageSquare, Wallet, Trash2, ChevronRight, Inbox, Trophy, ChevronLeft, Binoculars, Briefcase, Bell, AlertOctagon, AlertTriangle, Info, MessageCircle } from 'lucide-react';
 import { FMButton } from './FMUI';
 
 interface InboxViewProps {
@@ -23,6 +25,16 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
   const [viewFilter, setViewFilter] = useState<'ALL' | 'UNREAD' | 'CRITICAL' | 'IMPORTANT' | 'ACTION'>('ALL');
   const [showDetailOnMobile, setShowDetailOnMobile] = useState(false);
   const userClub = useUIStore(s => s.userClub);
+
+  const pendingPlayers = useMemo(() => {
+    if (!userClub) return [];
+    return world.getPlayersByClub(userClub.id).filter(p => p.squad === 'SENIOR' && p.pendingDialogue);
+  }, [userClub?.id]);
+
+  const handleOpenPlayerDialog = (playerId: string) => {
+    clearPlayerDialogue(playerId);
+    useDialogueStore.getState().open('PLAYER_DIALOG', { clubId: userClub?.id || '', playerId, initiatedBy: 'PLAYER', context: world.getPlayer(playerId)?.pendingDialogue || 'GENERAL' });
+  };
 
   const filteredMessages = useMemo(() => {
     let list = world.inbox;
@@ -157,6 +169,25 @@ export const InboxView: React.FC<InboxViewProps> = ({ setView }) => {
             ))}
           </div>
         </header>
+
+        {pendingPlayers.length > 0 && (
+          <div className="bg-amber-50 border-b border-amber-200 p-3">
+            <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-2">Jugadores que quieren hablar contigo</p>
+            <div className="flex flex-wrap gap-2">
+              {pendingPlayers.map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => handleOpenPlayerDialog(p.id)}
+                  className="flex items-center gap-2 bg-white border border-amber-300 rounded-sm px-3 py-2 hover:bg-amber-50 transition-colors"
+                >
+                  <MessageCircle size={14} className="text-amber-600" />
+                  <span className="text-[10px] font-black text-slate-900 uppercase">{p.name}</span>
+                  <span className="text-[8px] font-bold text-amber-700 uppercase">{p.pendingDialogue === 'MINUTES_DISCONTENT' ? 'Minutos' : p.pendingDialogue === 'CONTRACT_EXPIRING' ? 'Contrato' : p.pendingDialogue === 'TRANSFER_RUMOR' ? 'Rumor' : 'Vestuario'}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto custom-scroll divide-y divide-[#a0b0a0]/30 bg-[#f0f4f0]">
           {filteredMessages.length === 0 ? (

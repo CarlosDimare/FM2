@@ -162,6 +162,7 @@ export interface Player {
   playerTensions?: Record<string, number>;
   /** Narrative reason for requesting a transfer, if any */
   transferRequestReason?: string;
+  pendingDialogue?: string;
   relationships: Record<string, { trust: number; respect: number; tension: number }>;
 }
 

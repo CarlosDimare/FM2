@@ -9,7 +9,7 @@ import {
 } from '../../services/staffAdviceService';
 import { CharacterDialog } from './CharacterDialog';
 import { SpeechBubble } from './SpeechBubble';
-import { OptionCard } from './OptionCard';
+import { ProgressiveOptions } from './ProgressiveOptions';
 import { LineupPitch } from './LineupPitch';
 import { FMButton } from '../FMUI';
 
@@ -47,6 +47,10 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
     const arch = (selection as TacticArchetype) || advice.recomendacion;
     applyTacticPreset(tactic, arch);
     recordEffects(`Aplicó el plan táctico ${arch}.`);
+    if (assistant) {
+      const staff = world.getStaff(assistant.id);
+      if (staff) staff.siguioConsejoUltimaVez = true;
+    }
     setLocalPaso(2);
   };
 
@@ -63,10 +67,15 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
   const clubPrimary = club?.primaryColor || 'bg-[#3a4a3a]';
   const clubBorder = club?.primaryColor ? club.primaryColor.replace('bg-', 'border-') : 'border-[#3a4a3a]';
 
-  const advice = useMemo(
-    () => (club ? generateTacticAdvice(club, opponent) : null),
-    [club?.id, opponent?.id],
-  );
+  const advice = useMemo(() => {
+    const raw = club ? generateTacticAdvice(club, opponent) : null;
+    if (!raw || !assistant) return raw;
+    if (assistant.siguioConsejoUltimaVez && selection) {
+      const lastArch = selection as TacticArchetype;
+      raw.textoPrincipal = `La última vez fuimos con ${lastArch === 'CONSERVATIVE' ? 'Conservador' : lastArch === 'RISKY' ? 'Arriesgado' : 'Equilibrado'} y salió bien. ¿repetimos o probamos algo nuevo?`;
+    }
+    return raw;
+  }, [club?.id, opponent?.id, assistant?.siguioConsejoUltimaVez, selection]);
 
   const lineup = useMemo(
     () => (club ? generateLineupAdvice(club) : null),
@@ -166,23 +175,26 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
             texto={advice.textoPrincipal}
             subtitulo="Informe basado en el estado de ambos planteles"
           />
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            {advice.opciones.map(op => (
-              <OptionCard
-                key={op.id}
-                id={op.id}
-                icono={op.icono}
-                titulo={op.titulo}
-                descripcion={op.descripcion}
-                efectos={op.efectos}
-                recomendada={op.id === advice.recomendacion}
-                justificacion={op.id === advice.recomendacion ? advice.justificacion : undefined}
-                seleccionada={selection === op.id}
-                color={clubBorder}
-                onClick={() => { select(op.id); }}
-              />
-            ))}
-          </div>
+          <ProgressiveOptions
+            opciones={advice.opciones.map(op => ({
+              id: op.id,
+              icono: op.icono,
+              titulo: op.titulo,
+              descripcion: op.descripcion,
+              efectos: op.efectos,
+            }))}
+            seleccionada={selection}
+            color={clubBorder}
+            onSelect={(id) => select(id)}
+            renderExtra={(op) => {
+              const isRec = op.id === advice.recomendacion;
+              return isRec ? (
+                <p className="mt-2 pt-2 border-t border-[#a0b0a0]/40 text-[9px] italic font-bold text-slate-600 leading-snug">
+                  ⭐ {advice.justificacion}
+                </p>
+              ) : null;
+            }}
+          />
         </div>
       ) : (
         <div className="space-y-4">

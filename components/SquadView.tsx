@@ -8,6 +8,16 @@ import { getPlayerTag } from '../services/playerGenerator';
 import { DialogueSystem } from '../services/dialogueSystem';
 import { PlayerFormDots, PlayerStatusIcons } from './PlayerBadges';
 
+const PlayerDialogueBadge: React.FC<{ player: Player }> = ({ player }) => {
+  if (!player.pendingDialogue) return null;
+  return (
+    <span className="relative inline-flex h-2.5 w-2.5 ml-1.5 shrink-0">
+      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+    </span>
+  );
+};
+
 type SortField = 'POS' | 'NAME' | 'AGE' | 'TREND' | 'SAL' | 'FIT' | 'MOR' | 'VAL';
 
 interface SquadViewProps {
@@ -193,6 +203,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                             <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-slate-300" />
                             <span className="truncate">{player.name}</span>
                             <PlayerStatusIcons player={player} />
+                            <PlayerDialogueBadge player={player} />
                         </div>
                     </FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>{player.age}</FMTableCell>
@@ -233,6 +244,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                             <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-4 h-3 object-cover shadow-sm rounded-[1px] mr-2 shrink-0 border border-slate-300" />
                             <span className="truncate">{player.name}</span>
                             <PlayerStatusIcons player={player} />
+                            <PlayerDialogueBadge player={player} />
                         </div>
                     </FMTableCell>
                     <FMTableCell className="text-center font-bold" isNumber>{player.age}</FMTableCell>
@@ -276,6 +288,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
                             <img src={getFlagUrl(player.nationality)} alt={player.nationality} className="w-3 h-2 object-cover shadow-sm rounded-[1px] mr-1.5 shrink-0 border border-slate-300" />
                             <span className="truncate max-w-[100px] text-[10px]">{player.name}</span>
                             <PlayerStatusIcons player={player} />
+                            <PlayerDialogueBadge player={player} />
                         </div>
                     </FMTableCell>
                     <FMTableCell className="text-center font-bold text-[10px]" isNumber>{player.age}</FMTableCell>

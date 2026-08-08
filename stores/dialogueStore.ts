@@ -14,6 +14,9 @@ export interface DialoguePayload {
   opponentId?: string;
   tacticId?: string;
   source?: 'PRE_MATCH' | 'TACTICS' | 'HOME' | 'TRAINING' | 'STAFF' | 'MARKET' | 'NEGOTIATIONS';
+  playerId?: string;
+  initiatedBy?: 'PLAYER' | 'MANAGER';
+  context?: string;
 }
 
 interface DialogueStore {
@@ -23,12 +26,14 @@ interface DialogueStore {
   result: string | null;
   closingPhrase: string | null;
   data: DialoguePayload | null;
+  playerRelationship: number;
 
   open: (kind: DialogKind, data: DialoguePayload) => void;
   advance: () => void;
   select: (id: string) => void;
   setResult: (text: string) => void;
   setClosingPhrase: (phrase: string) => void;
+  setPlayerRelationship: (value: number) => void;
   close: () => void;
 }
 
@@ -39,6 +44,7 @@ export const useDialogueStore = create<DialogueStore>((set) => ({
   result: null,
   closingPhrase: null,
   data: null,
+  playerRelationship: 0,
 
   open: (kind, data) => set({
     kind,
@@ -47,6 +53,7 @@ export const useDialogueStore = create<DialogueStore>((set) => ({
     selection: null,
     result: null,
     closingPhrase: null,
+    playerRelationship: 0,
   }),
   advance: () => set((s) => {
     if (s.phase === 'opening') return { phase: 'bubble' };
@@ -59,5 +66,6 @@ export const useDialogueStore = create<DialogueStore>((set) => ({
   select: (id) => set({ selection: id }),
   setResult: (result) => set({ result, phase: 'result' }),
   setClosingPhrase: (closingPhrase) => set({ closingPhrase, phase: 'closing' }),
-  close: () => set({ kind: null, phase: 'opening', selection: null, result: null, closingPhrase: null, data: null }),
+  setPlayerRelationship: (playerRelationship) => set({ playerRelationship }),
+  close: () => set({ kind: null, phase: 'opening', selection: null, result: null, closingPhrase: null, data: null, playerRelationship: 0 }),
 }));

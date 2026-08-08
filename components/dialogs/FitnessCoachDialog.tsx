@@ -9,7 +9,7 @@ import {
 } from '../../services/staffAdviceService';
 import { CharacterDialog } from './CharacterDialog';
 import { SpeechBubble } from './SpeechBubble';
-import { OptionCard } from './OptionCard';
+import { ProgressiveOptions } from './ProgressiveOptions';
 import { FitnessPanel } from './FitnessPanel';
 import { FMButton } from '../FMUI';
 
@@ -33,10 +33,15 @@ export const FitnessCoachDialog: React.FC = () => {
   const clubPrimary = club?.primaryColor || 'bg-[#3a4a3a]';
   const clubBorder = club?.primaryColor ? club.primaryColor.replace('bg-', 'border-') : 'border-[#3a4a3a]';
 
-  const report = useMemo(
-    () => (club ? generateFitnessReport(club) : null),
-    [club?.id],
-  );
+  const report = useMemo(() => {
+    const raw = club ? generateFitnessReport(club) : null;
+    if (!raw || !coach) return raw;
+    if (coach.siguioConsejoUltimaVez && selection) {
+      const lastPlan = selection as FitnessPlanArchetype;
+      raw.textoPrincipal = `La última vez aplicamos ${lastPlan === 'RENDIMIENTO' ? 'Rendimiento' : lastPlan === 'RECUPERACION' ? 'Recuperación' : 'Equilibrio'} y el equipo respondió bien. Seguimos por ese camino o cambiamos?`;
+    }
+    return raw;
+  }, [club?.id, coach?.siguioConsejoUltimaVez, selection]);
 
   if (kind !== 'FITNESS' || !club || !report) return null;
 
@@ -63,6 +68,10 @@ export const FitnessCoachDialog: React.FC = () => {
     const count = applyFitnessPlan(club.id, plan);
     const planLabel = report.opciones.find(o => o.id === plan)?.titulo || plan;
     recordEffects(`Aplicó el plan «${planLabel}» para ${count} jugadores.`);
+    if (coach) {
+      const staff = world.getStaff(coach.id);
+      if (staff) staff.siguioConsejoUltimaVez = true;
+    }
     const reaccion = plan === 'RECUPERACION'
       ? 'Bien, Jefe. Bajamos la carga: el equipo llegará más fresco al próximo partido.'
       : plan === 'RENDIMIENTO'
@@ -131,23 +140,26 @@ export const FitnessCoachDialog: React.FC = () => {
             subtitulo={`Recomendado: ${report.opciones.find(o => o.id === report.recomendacion)?.titulo}`}
           />
           <FitnessPanel report={report} />
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
-            {report.opciones.map(op => (
-              <OptionCard
-                key={op.id}
-                id={op.id}
-                icono={op.icono}
-                titulo={op.titulo}
-                descripcion={op.descripcion}
-                efectos={op.efectos}
-                recomendada={op.id === report.recomendacion}
-                justificacion={op.id === report.recomendacion ? report.justificacion : undefined}
-                seleccionada={selection === op.id}
-                color={clubBorder}
-                onClick={() => select(op.id)}
-              />
-            ))}
-          </div>
+          <ProgressiveOptions
+            opciones={report.opciones.map(op => ({
+              id: op.id,
+              icono: op.icono,
+              titulo: op.titulo,
+              descripcion: op.descripcion,
+              efectos: op.efectos,
+            }))}
+            seleccionada={selection}
+            color={clubBorder}
+            onSelect={(id) => select(id)}
+            renderExtra={(op) => {
+              const isRec = op.id === report.recomendacion;
+              return isRec ? (
+                <p className="mt-2 pt-2 border-t border-[#a0b0a0]/40 text-[9px] italic font-bold text-slate-600 leading-snug">
+                  ⭐ {report.justificacion}
+                </p>
+              ) : null;
+            }}
+          />
         </div>
       )}
     </CharacterDialog>
