@@ -285,7 +285,71 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 - [x] Resolver duplicación de fuentes de datos de jugadores: **`public/data/convertedPlayers.json` es la fuente canónica para población masiva (29K jugadores, carga en runtime). `data/realPlayers.ts` se mantiene como lista específica de jugadores reales para inyección selectiva (`injectRealPlayers`). No son redundantes — propósitos distintos.**
 - [x] Congelar diseño de navegación y estética
 
-**Criterio de salida Fase 0:** pendiente solo la resolución de fuentes de datos.
+**Criterio de salida Fase 0:** completado.
+
+---
+
+## 📋 Fase 1 — Cerrar sistema de diálogos (estado)
+
+- [x] Triggers bidireccionales jugador→manager y manager→jugador
+- [x] 3 tonos (EMPÁTICO/FIRME/DISTANTE) con efecto real en `relacion_jugador` y moral, diferenciado por personalidad
+- [x] Modales alcanzables: TransferOfferModal, ContractNegotiationModal, SettingsModal conectados al flujo
+- [x] UI: avatar persistente + badge + revelado progresivo en diálogos de staff; en jugadores badge en Plantilla/Ficha + Buzón
+
+**Criterio de salida Fase 1:** completado. Se puede jugar una temporada y recibir/iniciar diálogos de jugador con consecuencia visible en moral/relación.
+
+---
+
+## 📋 Fase 2 — Cerrar huecos del motor (estado)
+
+- [x] Fichajes CPU a CPU: `processAIActivity` con ofertas cruzadas DEEP, migración de talentos, venta de excedentes y compra por necesidades
+- [x] Objetivos de temporada: `evaluateBoardConfidence` con cambio de confianza según objetivo cumplido/incumplido
+- [x] Bonus por objetivo cumplido: `applySeasonObjectiveBonus` agrega presupuesto y confianza
+- [x] Despido por confianza <= 0: modal de despido con opción de nueva carrera
+- [x] Economía: balance, presupuesto fichajes/salarial, previsión mensual, gráfico SVG
+- [x] Scouting: informes automáticos diarios desde pool de 29K jugadores, filtrado por ojeadores
+
+**Criterio de salida Fase 2:** completado. Mercado CPU activo, objetivos con consecuencia jugable (bonus/despido), scouting sobre pool completo.
+
+---
+
+## 📋 Fase 4 — Testing (estado)
+
+- [x] Tests unitarios básicos: `dialogueStore.test.ts` (3 tests pasando)
+- [ ] Tests de motor, economía y guardado/carga (pendiente para próxima iteración)
+
+**Criterio de salida Fase 4:** parcial. Suite mínima creada y funcionando.
+
+---
+
+## 📋 Fase 5 — Performance (estado)
+
+- [x] Code-splitting: MatchView, TacticsView, PreMatchView, PostMatchSummaryView como lazy chunks
+- [ ] Revisar `manualChunks` para separar datos del bundle (pendiente)
+- [ ] Medir tiempo de carga real en mobile (pendiente)
+
+**Criterio de salida Fase 5:** parcial. Bundle principal reducido de ~1.17MB a ~1.08MB; chunks separados para vistas pesadas.
+
+---
+
+## 📋 Fase 6 — Pulido visual (estado)
+
+- [x] ScreenBackground integrado con gradientes temáticos por vista (12 variantes)
+- [x] Paleta unificada verde-gris `#b8c4b8` + verde militar `#3a4a3a`
+- [ ] Fondos temáticos adicionales por pantalla (variantes actuales son sutiles; se puede ampliar)
+- [ ] Patrón de home-campo (pendiente)
+
+**Criterio de salida Fase 6:** parcial. Capa de fondo atmosférica aplicada globalmente.
+
+---
+
+## 📋 Fase 7 — Beta y lanzamiento (estado)
+
+- [ ] Playtesting con usuarios reales
+- [x] Criterio de v1.0 documentado: juego jugable de punta a punta, sin crasheos conocidos, diálogos staff/jugadores funcionando, mercado/economía estables
+- [x] Build de producción subido a GitHub Pages
+
+**Criterio de salida Fase 7:** build desplegado; playtesting pendiente.
 
 ---
 
