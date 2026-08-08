@@ -38,6 +38,7 @@ import { LifecycleManager } from './services/lifecycleManager';
 import { generateMatchChronicle, generateMonthlyChronicle } from './services/chronicleService';
 import { simulateDayFixtures } from './services/simulationService';
 import { migrateInboxAndNews, migrateSquadDistribution } from './services/saveLoadService';
+import { detectPlayerDialogueTriggers } from './services/playerDialogueTriggers';
 import { Club, Player, Fixture, SquadType, PlayerMatchStats, RealManager, CareerMode, Chronicle } from './types';
 import { saveGame, loadGame, checkSaveExists, listSaves, deleteSave, generateUUID, randomInt } from './services/utils';
 import { MatchSimulator } from './services/engine';
@@ -701,6 +702,8 @@ const startVacation = async (targetOverride?: Date) => {
       world.processDailyContracts(tempDate, userClub?.id);
       world.processDailyScouting(tempDate, userClub?.id);
          world.generateGeneralNews(tempDate);
+
+      if (userClub) detectPlayerDialogueTriggers(userClub.id);
 
       // Cosecha de cantera + retiros + purga (1 de agosto) — mismo gate que advanceTime
       if (tempDate.getMonth() === 7 && tempDate.getDate() === 1) {

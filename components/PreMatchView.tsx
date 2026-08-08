@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Club, Player } from '../types';
 import { Play, Clipboard, ShieldCheck, AlertOctagon, Info, Settings } from 'lucide-react';
 import { FMBox, FMButton } from './FMUI';
 import { useDialogueStore } from '../stores/dialogueStore';
+import { detectManagerInitiatedTriggers } from '../services/playerDialogueTriggers';
 
 interface PreMatchViewProps {
   club: Club;
@@ -16,6 +17,10 @@ export const PreMatchView: React.FC<PreMatchViewProps> = ({ club, opponent, star
   const invalidStarters = starters.filter(p => p.injury || (p.suspension && p.suspension.matchesLeft > 0));
   const hasInvalidStarters = invalidStarters.length > 0;
   const isReady = starters.length === 11 && !hasInvalidStarters;
+
+  useEffect(() => {
+    detectManagerInitiatedTriggers(club.id, 'PRE_MATCH');
+  }, [club.id]);
 
   return (
     <div className="h-full flex flex-col bg-[#d4dcd4] overflow-hidden" style={{ fontFamily: 'Verdana, sans-serif' }}>

@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Player, Staff, Club, TrainingSchedule, TrainingCategory } from '../types';
 import { world } from '../services/worldManager';
 import { useWorldStore, notifyPlayers, notifyClubs } from '../stores/worldStore';
@@ -10,6 +10,7 @@ import { TRAINING_PRESETS } from '../data/static';
 import { User, Dumbbell, Users, Settings2, Shield, Target, Zap, Activity, X, CalendarDays, HeartPulse } from 'lucide-react';
 import { DialogueAvatar } from './dialogs/DialogueAvatar';
 import { checkFitnessTrigger } from '../services/dialogueTriggers';
+import { detectManagerInitiatedTriggers } from '../services/playerDialogueTriggers';
 import { getFitnessCoach } from '../services/staffAdviceService';
 
 interface TrainingViewProps {
@@ -107,6 +108,10 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players: playersProp
   const coachName = coach?.name || 'El Preparador Físico';
   const coachIniciales = coachName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const coachColor = club?.primaryColor || 'bg-[#3a4a3a]';
+
+  useEffect(() => {
+    if (club) detectManagerInitiatedTriggers(club.id, 'TRAINING');
+  }, [club?.id]);
 
   const selectedPlayer = useMemo(() => players.find(p => p.id === selectedPlayerId), [selectedPlayerId, players]);
 

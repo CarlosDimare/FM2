@@ -255,6 +255,7 @@ export function applyWorldState(worldState: any): void {
     if (p.leadership === undefined) p.leadership = randomInt(5, 20);
     if (p.consistency === undefined) p.consistency = randomInt(5, 20);
     if (p.bigMatchTemperament === undefined) p.bigMatchTemperament = randomInt(5, 20);
+    if (p.pendingDialogue === undefined) p.pendingDialogue = undefined;
   });
 
   // Migrate staff fields
@@ -265,6 +266,7 @@ export function applyWorldState(worldState: any): void {
     if (s.reputation === undefined) s.reputation = 50;
     if (s.pressReputation === undefined) s.pressReputation = 50;
     if (s.boardRelationship === undefined) s.boardRelationship = 60;
+    if (s.siguioConsejoUltimaVez === undefined) s.siguioConsejoUltimaVez = false;
   });
 
   // Migrate competition fields

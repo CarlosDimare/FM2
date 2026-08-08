@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Club, Player, PlayerMatchStats, Chronicle } from '../types';
 import { world } from '../services/worldManager';
 import { FMButton } from './FMUI';
 import { Trophy, Star, Target, Shield, AlertTriangle, ChevronRight } from 'lucide-react';
+import { detectManagerInitiatedTriggers } from '../services/playerDialogueTriggers';
 
 interface PostMatchSummaryViewProps {
   homeTeam: Club;
@@ -18,6 +19,10 @@ interface PostMatchSummaryViewProps {
 export const PostMatchSummaryView: React.FC<PostMatchSummaryViewProps> = ({
   homeTeam, awayTeam, homeScore, awayScore, stats, chronicle, userClubId, onContinue,
 }) => {
+  useEffect(() => {
+    detectManagerInitiatedTriggers(userClubId, 'POST_MATCH');
+  }, [userClubId]);
+
   // Get all players who participated
   const allPlayerIds = Object.keys(stats);
   const allPlayers = allPlayerIds.map(id => world.getPlayer(id)).filter(Boolean) as Player[];
