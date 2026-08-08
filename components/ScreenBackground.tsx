@@ -1,56 +1,36 @@
 import React from 'react';
 
-/**
- * ScreenBackground — Ultra-subtle atmospheric layer.
- * 
- * Sits BEHIND the existing FM Industrial Steel background (bg-[#d4dcd4]).
- * Adds a barely-perceptible vignette + subtle gradient that gives depth
- * without touching the core color palette.
- * 
- * This is NOT a replacement for the original background — it's a complement.
- */
+const VIEW_BACKGROUNDS: Record<string, string> = {
+  HOME: 'radial-gradient(ellipse at 30% 20%, rgba(58,74,58,0.08) 0%, transparent 60%)',
+  SENIOR_SQUAD: 'radial-gradient(ellipse at 70% 80%, rgba(58,74,58,0.06) 0%, transparent 50%)',
+  SENIOR_TACTICS: 'radial-gradient(ellipse at 50% 50%, rgba(34,80,34,0.07) 0%, transparent 70%)',
+  MARKET: 'radial-gradient(ellipse at 80% 20%, rgba(120,80,40,0.06) 0%, transparent 60%)',
+  TRAINING: 'radial-gradient(ellipse at 20% 70%, rgba(58,74,58,0.06) 0%, transparent 50%)',
+  INBOX: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,30,0.05) 0%, transparent 60%)',
+  PRE_MATCH: 'radial-gradient(ellipse at 50% 50%, rgba(20,40,20,0.08) 0%, transparent 70%)',
+  MATCH: 'radial-gradient(ellipse at 50% 50%, rgba(10,30,10,0.10) 0%, transparent 70%)',
+  POST_MATCH_SUMMARY: 'radial-gradient(ellipse at 50% 30%, rgba(30,50,30,0.06) 0%, transparent 60%)',
+  BOARD: 'radial-gradient(ellipse at 30% 20%, rgba(60,60,40,0.05) 0%, transparent 60%)',
+  SCOUTING: 'radial-gradient(ellipse at 70% 70%, rgba(40,60,40,0.05) 0%, transparent 50%)',
+  ECONOMY: 'radial-gradient(ellipse at 20% 30%, rgba(60,50,30,0.04) 0%, transparent 60%)',
+};
+
 export const ScreenBackground: React.FC<{
   children: React.ReactNode;
   view?: string;
   className?: string;
 }> = ({ children, view, className = '' }) => {
+  const bg = VIEW_BACKGROUNDS[view || ''] || 'radial-gradient(ellipse at 50% 0%, transparent 50%, rgba(0,0,0,0.04) 100%)';
+
   return (
     <div className={`relative w-full h-full overflow-hidden ${className}`}>
-      {/* Layer 1: Subtle radial vignette — barely visible */}
       <div
         className="absolute inset-0 pointer-events-none z-0"
-        style={{
-          background: 'radial-gradient(ellipse at 50% 0%, transparent 50%, rgba(0,0,0,0.06) 100%)',
-        }}
+        style={{ background: bg }}
       />
-      {/* Content — always on top */}
       <div className="relative z-10 w-full h-full">
         {children}
       </div>
-    </div>
-  );
-};
-
-/**
- * ScreenHeader — Optional themed header bar for screens.
- * Uses the original FM color system (bg-[#3a4a3a], border-[#a0b0a0]).
- */
-export const ScreenHeader: React.FC<{
-  title: string;
-  subtitle?: string;
-  emoji?: string;
-  action?: React.ReactNode;
-}> = ({ title, subtitle, emoji, action }) => {
-  return (
-    <div className="bg-[#3a4a3a] border-b border-[#2a3a2a] px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        {emoji && <span className="text-lg">{emoji}</span>}
-        <div>
-          <h2 className="text-white font-black uppercase text-sm tracking-wide">{title}</h2>
-          {subtitle && <p className="text-[9px] text-[#a0b0a0] uppercase tracking-wider">{subtitle}</p>}
-        </div>
-      </div>
-      {action}
     </div>
   );
 };

@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: '0.0.0.0',
       },
+      test: {
+        environment: 'jsdom',
+        globals: true,
+      },
       plugins: [
         react(),
         VitePWA({

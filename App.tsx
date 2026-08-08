@@ -31,6 +31,7 @@ import { SeasonSummaryModal } from './components/SeasonSummaryModal';
 import { NationalTeamView } from './components/NationalTeamView';
 import { DialogueHost } from './components/dialogs/DialogueHost';
 import { FMLoadingOverlay, FMModal, FMButton } from './components/FMUI';
+import { ScreenBackground } from './components/ScreenBackground';
 
 const MatchView = lazy(() => import('./components/MatchView').then(m => ({ default: m.MatchView })));
 const TacticsView = lazy(() => import('./components/TacticsView').then(m => ({ default: m.TacticsView })));
@@ -1898,7 +1899,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
           <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
         )}
         <main className="flex-1 flex flex-col min-w-0 bg-[#b8c4b8] relative overflow-hidden pb-[104px] lg:pb-0">
-          {renderCurrentView()}
+          <ScreenBackground view={currentView}>{renderCurrentView()}</ScreenBackground>
         </main>
         {onboardingActive && <OnboardingTour active={onboardingActive} currentView={currentView} onComplete={() => setShowOnboarding(false)} />}
       </div>
