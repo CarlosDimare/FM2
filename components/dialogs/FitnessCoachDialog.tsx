@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { world } from '../../services/worldManager';
 import { generateUUID } from '../../services/utils';
 import { useGameStore } from '../../stores/gameStore';
@@ -13,14 +13,16 @@ import { OptionCard } from './OptionCard';
 import { FitnessPanel } from './FitnessPanel';
 import { FMButton } from '../FMUI';
 
-/**
- * Diálogo del Preparador Físico (spec §3):
- *  Paso 1: estado del plantel (carga/riesgo) + 3 planes de carga
- *  Resultado: reacción del PF tras aplicar el plan
- */
 export const FitnessCoachDialog: React.FC = () => {
-  const { dialog, seleccion, resultado, data, seleccionar, setResultado, cerrar } = useDialogueStore();
+  const { kind, phase, selection, result, data, select, setResult, setClosingPhrase, close, advance } = useDialogueStore();
   const currentDate = useGameStore(s => s.currentDate);
+
+  useEffect(() => {
+    if (kind === 'FITNESS' && phase === 'opening') {
+      const timer = setTimeout(() => advance(), 250);
+      return () => clearTimeout(timer);
+    }
+  }, [kind, phase, advance]);
 
   const clubId = data?.clubId;
   const club = clubId ? world.getClub(clubId) : undefined;
@@ -33,11 +35,10 @@ export const FitnessCoachDialog: React.FC = () => {
 
   const report = useMemo(
     () => (club ? generateFitnessReport(club) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [club?.id],
   );
 
-  if (dialog !== 'FITNESS' || !club || !report) return null;
+  if (kind !== 'FITNESS' || !club || !report) return null;
 
   const recordEffects = (accion: string) => {
     if (!currentDate) return;
@@ -58,7 +59,7 @@ export const FitnessCoachDialog: React.FC = () => {
   };
 
   const handleAplicar = () => {
-    const plan = (seleccion as FitnessPlanArchetype) || report.recomendacion;
+    const plan = (selection as FitnessPlanArchetype) || report.recomendacion;
     const count = applyFitnessPlan(club.id, plan);
     const planLabel = report.opciones.find(o => o.id === plan)?.titulo || plan;
     recordEffects(`Aplicó el plan «${planLabel}» para ${count} jugadores.`);
@@ -67,7 +68,11 @@ export const FitnessCoachDialog: React.FC = () => {
       : plan === 'RENDIMIENTO'
         ? '¡A por ello! Subimos la intensidad. Exigiré más en cada sesión.'
         : 'Entendido, mantenemos el ritmo actual. Seguiré vigilando las cargas.';
-    setResultado(reaccion);
+    setResult(reaccion);
+  };
+
+  const handleConfirmarResultado = () => {
+    setClosingPhrase('Plan aplicado. Ajusto las sesiones y aviso si algo cambia.');
   };
 
   const footerDecision = (
@@ -75,17 +80,26 @@ export const FitnessCoachDialog: React.FC = () => {
       <FMButton variant="primary" onClick={handleAplicar} className="px-6 py-2.5 text-[10px]">
         Aplicar plan
       </FMButton>
-      <FMButton variant="secondary" onClick={cerrar} className="px-6 py-2.5 text-[10px]">
+      <FMButton variant="secondary" onClick={close} className="px-6 py-2.5 text-[10px]">
         Cancelar
       </FMButton>
     </>
   );
 
   const footerResultado = (
-    <FMButton variant="primary" onClick={cerrar} className="px-8 py-2.5 text-[10px]">
-      Listo
-    </FMButton>
+    <>
+      <FMButton variant="primary" onClick={handleConfirmarResultado} className="px-8 py-2.5 text-[10px]">
+        Listo
+      </FMButton>
+    </>
   );
+
+  useEffect(() => {
+    if (phase === 'closing') {
+      const timer = setTimeout(() => close(), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, close]);
 
   return (
     <CharacterDialog
@@ -93,16 +107,19 @@ export const FitnessCoachDialog: React.FC = () => {
       cargo="Preparador Físico"
       iniciales={iniciales}
       clubColor={clubPrimary}
-      onClose={cerrar}
-      footer={resultado ? footerResultado : footerDecision}
+      onClose={close}
+      footer={phase === 'closing' ? null : (phase === 'result' || result ? footerResultado : footerDecision)}
     >
-      {resultado ? (
+      {phase === 'closing' ? (
         <div className="space-y-4 pt-2 animate-fade-up">
-          <SpeechBubble
-            texto={resultado || ''}
-            iniciales={iniciales}
-            clubColor={clubPrimary}
-          />
+          <SpeechBubble texto={useDialogueStore.getState().closingPhrase || ''} />
+          <p className="text-[9px] italic font-bold text-slate-500 uppercase tracking-widest px-1">
+            Los cambios quedaron aplicados al plan de entrenamiento del plantel.
+          </p>
+        </div>
+      ) : result ? (
+        <div className="space-y-4 pt-2 animate-fade-up">
+          <SpeechBubble texto={result} />
           <p className="text-[9px] italic font-bold text-slate-500 uppercase tracking-widest px-1">
             Los cambios quedaron aplicados al plan de entrenamiento del plantel.
           </p>
@@ -112,8 +129,6 @@ export const FitnessCoachDialog: React.FC = () => {
           <SpeechBubble
             texto={report.textoPrincipal}
             subtitulo={`Recomendado: ${report.opciones.find(o => o.id === report.recomendacion)?.titulo}`}
-            iniciales={iniciales}
-            clubColor={clubPrimary}
           />
           <FitnessPanel report={report} />
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -127,9 +142,9 @@ export const FitnessCoachDialog: React.FC = () => {
                 efectos={op.efectos}
                 recomendada={op.id === report.recomendacion}
                 justificacion={op.id === report.recomendacion ? report.justificacion : undefined}
-                seleccionada={seleccion === op.id}
+                seleccionada={selection === op.id}
                 color={clubBorder}
-                onClick={() => seleccionar(op.id)}
+                onClick={() => select(op.id)}
               />
             ))}
           </div>

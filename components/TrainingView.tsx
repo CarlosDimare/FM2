@@ -4,9 +4,13 @@ import { Player, Staff, Club, TrainingSchedule, TrainingCategory } from '../type
 import { world } from '../services/worldManager';
 import { useWorldStore, notifyPlayers, notifyClubs } from '../stores/worldStore';
 import { useDialogueStore } from '../stores/dialogueStore';
+import { useGameStore } from '../stores/gameStore';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 import { TRAINING_PRESETS } from '../data/static';
 import { User, Dumbbell, Users, Settings2, Shield, Target, Zap, Activity, X, CalendarDays, HeartPulse } from 'lucide-react';
+import { DialogueAvatar } from './dialogs/DialogueAvatar';
+import { checkFitnessTrigger } from '../services/dialogueTriggers';
+import { getFitnessCoach } from '../services/staffAdviceService';
 
 interface TrainingViewProps {
   players: Player[];
@@ -91,6 +95,18 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players: playersProp
   const [isMobileEditorOpen, setIsMobileEditorOpen] = useState(false);
   const [weeklyPlan, setWeeklyPlan] = useState<Partial<Record<string, TrainingCategory | 'REST'>>>(clubProp.trainingWeeklyPlan || {});
   const [planFeedback, setPlanFeedback] = useState<string | null>(null);
+  const currentDate = useGameStore(s => s.currentDate);
+
+  const fitnessTrigger = useMemo(() => checkFitnessTrigger({
+    currentView: 'TRAINING',
+    currentDate: currentDate || new Date(),
+    userClubId: club?.id,
+  }), [club?.id, currentDate]);
+
+  const coach = club ? getFitnessCoach(club.id) : null;
+  const coachName = coach?.name || 'El Preparador Físico';
+  const coachIniciales = coachName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const coachColor = club?.primaryColor || 'bg-[#3a4a3a]';
 
   const selectedPlayer = useMemo(() => players.find(p => p.id === selectedPlayerId), [selectedPlayerId, players]);
 
@@ -381,8 +397,18 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players: playersProp
                     </div>
                 </div>
             </div>
-        )}
-      </div>
-    </div>
+            )}
+          </div>
+          {fitnessTrigger && (
+            <DialogueAvatar
+              iniciales={coachIniciales}
+              clubColor={coachColor}
+              cargo="Preparador Físico"
+              badge
+              position="bottom-left"
+              onClick={() => useDialogueStore.getState().open('FITNESS', { clubId: club.id, source: 'TRAINING' })}
+            />
+          )}
+        </div>
   );
 };

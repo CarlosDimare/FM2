@@ -8,20 +8,16 @@ interface DialogueHostProps {
   onStartMatch?: () => void;
 }
 
-/**
- * Host global de diálogos de personajes. Se monta una sola vez en App.tsx
- * y decide qué diálogo renderizar según el estado del store (spec §6.1).
- */
 export const DialogueHost: React.FC<DialogueHostProps> = ({ onStartMatch }) => {
-  const dialog = useDialogueStore(s => s.dialog);
+  const kind = useDialogueStore(s => s.kind);
 
-  if (dialog === 'ASSISTANT') {
+  if (kind === 'ASSISTANT') {
     return <AssistantAdviceDialog onStartMatch={onStartMatch} />;
   }
-  if (dialog === 'FITNESS') {
+  if (kind === 'FITNESS') {
     return <FitnessCoachDialog />;
   }
-  if (dialog === 'TRANSFERS') {
+  if (kind === 'TRANSFERS') {
     return <TransferFolderDialog />;
   }
   return null;

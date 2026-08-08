@@ -576,6 +576,7 @@ export interface Staff {
   playingStyle?: string;
   careerHonours?: string[];
   previousClubs?: StaffPreviousClub[];
+  siguioConsejoUltimaVez?: boolean;
 }
 
 export interface RealManager {

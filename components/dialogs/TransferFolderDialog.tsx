@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { world } from '../../services/worldManager';
 import { generateUUID } from '../../services/utils';
 import { useGameStore } from '../../stores/gameStore';
@@ -11,15 +11,24 @@ import { SpeechBubble } from './SpeechBubble';
 import { TransferFolderTable } from './TransferFolderTable';
 import { FMButton } from '../FMUI';
 
-/**
- * Diálogo del Director Deportivo — Carpeta de Refuerzos (spec §4):
- *  lista de candidatos con semáforo 🟢🟡🔴 + informe del director +
- *  envío de ofertas por lote con validación de presupuesto.
- */
 export const TransferFolderDialog: React.FC = () => {
-  const { dialog, resultado, data, setResultado, cerrar } = useDialogueStore();
+  const { kind, phase, selection, result, data, select, setResult, setClosingPhrase, close, advance } = useDialogueStore();
   const currentDate = useGameStore(s => s.currentDate);
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (kind === 'TRANSFERS' && phase === 'opening') {
+      const timer = setTimeout(() => advance(), 250);
+      return () => clearTimeout(timer);
+    }
+  }, [kind, phase, advance]);
+
+  useEffect(() => {
+    if (phase === 'closing') {
+      const timer = setTimeout(() => close(), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, close]);
 
   const clubId = data?.clubId;
   const club = clubId ? world.getClub(clubId) : undefined;
@@ -31,17 +40,15 @@ export const TransferFolderDialog: React.FC = () => {
 
   const folder = useMemo(
     () => (club ? compileTransferFolder(club, director) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [club?.id],
   );
 
-  if (dialog !== 'TRANSFERS' || !club || !folder) return null;
+  if (kind !== 'TRANSFERS' || !club || !folder) return null;
 
   const costeSeleccion = useMemo(() => {
     let total = 0;
     folder.candidatos.forEach(c => { if (seleccionados.has(c.playerId)) total += c.value; });
     return total;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seleccionados, folder]);
 
   const toggle = (playerId: string) => {
@@ -74,11 +81,15 @@ export const TransferFolderDialog: React.FC = () => {
     if (!currentDate) return;
     const count = sendOffers(club.id, [...seleccionados], currentDate);
     if (count === 0) {
-      setResultado('El lote supera el presupuesto disponible. Reduce la selección o vende antes de intentarlo de nuevo, Jefe.');
+      setResult('El lote supera el presupuesto disponible. Reduce la selección o vende antes de intentarlo de nuevo, Jefe.');
       return;
     }
     recordEffects(`Envió ${count} ofertas de la carpeta de refuerzos.`);
-    setResultado(`Ofertas enviadas (${count}). Ahora toca esperar la respuesta de los clubes en el centro de fichajes.`);
+    setResult(`Ofertas enviadas (${count}). Ahora toca esperar la respuesta de los clubes en el centro de fichajes.`);
+  };
+
+  const handleConfirmarResultado = () => {
+    setClosingPhrase('Ofertas enviadas. Ahora toca esperar la respuesta de los clubes.');
   };
 
   const footerDecision = (
@@ -91,14 +102,14 @@ export const TransferFolderDialog: React.FC = () => {
       >
         Enviar ofertas ({seleccionados.size})
       </FMButton>
-      <FMButton variant="secondary" onClick={() => { setSeleccionados(new Set()); cerrar(); }} className="px-6 py-2.5 text-[10px]">
+      <FMButton variant="secondary" onClick={() => { setSeleccionados(new Set()); close(); }} className="px-6 py-2.5 text-[10px]">
         Descartar todo
       </FMButton>
     </>
   );
 
   const footerResultado = (
-    <FMButton variant="primary" onClick={cerrar} className="px-8 py-2.5 text-[10px]">
+    <FMButton variant="primary" onClick={handleConfirmarResultado} className="px-8 py-2.5 text-[10px]">
       Listo
     </FMButton>
   );
@@ -109,12 +120,19 @@ export const TransferFolderDialog: React.FC = () => {
       cargo="Director Deportivo"
       iniciales={iniciales}
       clubColor={clubPrimary}
-      onClose={cerrar}
-      footer={resultado ? footerResultado : footerDecision}
+      onClose={close}
+      footer={phase === 'closing' ? null : (result ? footerResultado : footerDecision)}
     >
-      {resultado ? (
+      {phase === 'closing' ? (
         <div className="space-y-4 pt-2 animate-fade-up">
-          <SpeechBubble texto={resultado} iniciales={iniciales} clubColor={clubPrimary} />
+          <SpeechBubble texto={useDialogueStore.getState().closingPhrase || ''} />
+          <p className="text-[9px] italic font-bold text-slate-500 uppercase tracking-widest px-1">
+            Las ofertas quedaron registradas en el centro de fichajes.
+          </p>
+        </div>
+      ) : result ? (
+        <div className="space-y-4 pt-2 animate-fade-up">
+          <SpeechBubble texto={result} />
           <p className="text-[9px] italic font-bold text-slate-500 uppercase tracking-widest px-1">
             Las ofertas quedaron registradas en el centro de fichajes.
           </p>
@@ -123,13 +141,10 @@ export const TransferFolderDialog: React.FC = () => {
         <div className="space-y-4">
           <SpeechBubble
             texto={`Jefe, aquí tienes la carpeta de refuerzos. Presupuesto disponible: £${(folder.presupuesto / 1000000).toFixed(1)}M. Marca a los que quieras y envío las ofertas.`}
-            iniciales={iniciales}
-            clubColor={clubPrimary}
           />
 
           <TransferFolderTable candidatos={folder.candidatos} seleccionados={seleccionados} onToggle={toggle} />
 
-          {/* Informe del director deportivo */}
           <div className="bg-white border border-[#a0b0a0] rounded-sm p-4">
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-1.5">
               📄 Informe del director deportivo

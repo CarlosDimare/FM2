@@ -6,6 +6,9 @@ import { useDialogueStore } from '../stores/dialogueStore';
 import { Search, ArrowDownUp, HandCoins, FolderOpen } from 'lucide-react';
 import { FMBox, FMTable, FMTableCell, FMButton } from './FMUI';
 import { TransferOfferModal } from './TransferOfferModal';
+import { DialogueAvatar } from './dialogs/DialogueAvatar';
+import { checkSportingDirectorTrigger } from '../services/dialogueTriggers';
+import { getSportingDirector } from '../services/staffAdviceService';
 
 interface MarketViewProps {
   onSelectPlayer: (player: Player) => void;
@@ -44,6 +47,17 @@ export const MarketView: React.FC<MarketViewProps> = ({ onSelectPlayer, userClub
       return isListed && matchesFilter && matchesSearch;
     }).sort(doSort);
   }, [filter, search, sortKey, sortDesc]);
+
+  const directorTrigger = useMemo(() => checkSportingDirectorTrigger({
+    currentView: 'MARKET',
+    currentDate,
+    userClubId,
+  }), [currentDate, userClubId]);
+
+  const director = userClubId ? getSportingDirector(userClubId) : null;
+  const directorName = director?.name || 'El Director Deportivo';
+  const directorIniciales = directorName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  const directorColor = world.getClub(userClubId)?.primaryColor || 'bg-[#3a4a3a]';
 
   return (
     <div className="p-2 md:p-4 h-full flex flex-col gap-3 bg-[#d4dcd4] overflow-hidden">
@@ -177,6 +191,16 @@ export const MarketView: React.FC<MarketViewProps> = ({ onSelectPlayer, userClub
           currentDate={currentDate}
           onClose={() => setOfferPlayer(null)}
           onOfferMade={() => setOfferPlayer(null)}
+        />
+      )}
+      {directorTrigger && (
+        <DialogueAvatar
+          iniciales={directorIniciales}
+          clubColor={directorColor}
+          cargo="Director Deportivo"
+          badge
+          position="top-right"
+          onClick={() => useDialogueStore.getState().open('TRANSFERS', { clubId: userClubId, source: 'MARKET' })}
         />
       )}
     </div>

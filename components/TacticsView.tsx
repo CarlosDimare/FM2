@@ -1,12 +1,16 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Player, Position, Club, TacticSettings, PlayerTacticSettings, Tactic } from '../types';
 import { world } from '../services/worldManager';
 import { notifyPlayers, notifyTactics } from '../stores/worldStore';
 import { useDialogueStore } from '../stores/dialogueStore';
+import { useGameStore } from '../stores/gameStore';
 import { SLOT_CONFIG } from '../services/engine';
+import { checkAssistantTrigger } from '../services/dialogueTriggers';
 import { Save, UserCheck, MousePointer2, ArrowUpRight, LayoutGrid, ClipboardList, X, Users, Star, Trash2, GitBranch } from 'lucide-react';
 import { FMButton, FMBox } from './FMUI';
+import { DialogueAvatar } from './dialogs/DialogueAvatar';
+import { getAssistantStaff } from '../services/staffAdviceService';
 
 interface TacticsViewProps {
    players: Player[];
@@ -188,7 +192,22 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
    const [pickBenchPlayer, setPickBenchPlayer] = useState<Player | null>(null);
    const [arrowMode, setArrowMode] = useState(false);
    const [arrowMenuSlot, setArrowMenuSlot] = useState<number | null>(null);
-   const [confirmAction, setConfirmAction] = useState<'CLEAR' | null>(null);
+    const [confirmAction, setConfirmAction] = useState<'CLEAR' | null>(null);
+
+    const currentDate = useGameStore(s => s.currentDate);
+    const nextFixture = useGameStore(s => s.nextFixture);
+
+    const assistantTrigger = useMemo(() => checkAssistantTrigger({
+      currentView: 'SENIOR_TACTICS',
+      currentDate: currentDate || new Date(),
+      userClubId: club?.id,
+      nextFixture: nextFixture || undefined,
+    }), [club?.id, currentDate, nextFixture]);
+
+    const assistant = club ? getAssistantStaff(club.id) : null;
+    const assistantName = assistant?.name || 'El Asistente';
+    const assistantIniciales = assistantName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    const assistantColor = club?.primaryColor || 'bg-[#3a4a3a]';
 
    const activeTactic = world.getTactics().find(t => t.id === selectedTacticId) || world.getTactics()[0];
    const starters = players.filter(p => p.isStarter && p.tacticalPosition !== undefined);
@@ -929,7 +948,16 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                   </div>
                </FMBox>
             </div>
-         )}
-      </div>
-   );
-};
+          )}
+          {assistantTrigger && (
+            <DialogueAvatar
+              iniciales={assistantIniciales}
+              clubColor={assistantColor}
+              cargo="Ayudante de Campo"
+              badge
+              onClick={() => useDialogueStore.getState().open('ASSISTANT', { clubId: club.id, source: 'TACTICS', tacticId: selectedTacticId || world.getTactics()[0]?.id })}
+            />
+          )}
+       </div>
+    );
+  };

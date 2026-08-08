@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { world } from '../../services/worldManager';
 import { generateUUID } from '../../services/utils';
 import { useGameStore } from '../../stores/gameStore';
@@ -17,15 +17,38 @@ interface AssistantAdviceDialogProps {
   onStartMatch?: () => void;
 }
 
-/**
- * Diálogo del Ayudante de Campo — flujo de 2 pasos (spec §2):
- *  Paso 1: consejo táctico (3 arquetipos + recomendación con justificación)
- *  Paso 2: anuncio del XI (cancha 2D + razones + banquillo) → ¡Al partido!
- */
 export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ onStartMatch }) => {
-  const { dialog, paso, seleccion, data, setPaso, seleccionar, cerrar } = useDialogueStore();
+  const { kind, phase, selection, data, advance, select, close, setClosingPhrase } = useDialogueStore();
+  const [localPaso, setLocalPaso] = useState(1);
   const nextFixture = useGameStore(s => s.nextFixture);
   const currentDate = useGameStore(s => s.currentDate);
+
+  useEffect(() => {
+    if (kind === 'ASSISTANT' && phase === 'opening') {
+      const timer = setTimeout(() => advance(), 250);
+      return () => clearTimeout(timer);
+    }
+  }, [kind, phase, advance]);
+
+  useEffect(() => {
+    if (phase === 'closing') {
+      const timer = setTimeout(() => {
+        close();
+        onStartMatch?.();
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, close, onStartMatch]);
+
+  const handleConfirmarPaso1 = () => {
+    const tactics = world.getTactics();
+    const tactic = (data?.tacticId && tactics.find(t => t.id === data.tacticId)) || tactics[0];
+    if (!tactic) return;
+    const arch = (selection as TacticArchetype) || advice.recomendacion;
+    applyTacticPreset(tactic, arch);
+    recordEffects(`Aplicó el plan táctico ${arch}.`);
+    setLocalPaso(2);
+  };
 
   const clubId = data?.clubId;
   const club = clubId ? world.getClub(clubId) : undefined;
@@ -42,17 +65,15 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
 
   const advice = useMemo(
     () => (club ? generateTacticAdvice(club, opponent) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [club?.id, opponent?.id],
   );
 
   const lineup = useMemo(
     () => (club ? generateLineupAdvice(club) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [club?.id, paso],
+    [club?.id, localPaso],
   );
 
-  if (dialog !== 'ASSISTANT' || !club || !advice || !lineup) return null;
+  if (kind !== 'ASSISTANT' || !club || !advice || !lineup) return null;
 
   const recordEffects = (accion: string) => {
     if (!currentDate) return;
@@ -72,27 +93,22 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
     });
   };
 
-  const handleConfirmarPaso1 = () => {
-    const tactics = world.getTactics();
-    const tactic = (data?.tacticId && tactics.find(t => t.id === data.tacticId)) || tactics[0];
-    if (!tactic) return;
-    const arch = (seleccion as TacticArchetype) || advice.recomendacion;
-    applyTacticPreset(tactic, arch);
-    recordEffects(`Aplicó el plan táctico ${arch}.`);
-    setPaso(2);
-  };
-
-  /** Acepta el once: aplica la alineación y cierra el diálogo sin avanzar al partido. */
   const handleAceptarOnce = () => {
     applyLineup(club.id, lineup.xi);
     recordEffects('Confirmó el once inicial para el próximo partido.');
-    cerrar();
+    const arch = (selection as TacticArchetype) || advice.recomendacion;
+    setClosingPhrase(arch === 'CONSERVATIVE' ? 'Dale, vamos con Conservador. Cerramos filas y esperamos el momento.'
+      : arch === 'RISKY' ? 'Dale, vamos con Arriesgado. A por todas desde el primer minuto.'
+      : 'Dale, vamos con Equilibrado. Nos vemos en la cancha.');
   };
 
-  /** Acepta el once y, además, va directo al partido. */
   const handleAceptarYPartido = () => {
     handleAceptarOnce();
     onStartMatch?.();
+  };
+
+  const handleVolverConsejo = () => {
+    setLocalPaso(1);
   };
 
   const footerPaso1 = (
@@ -100,7 +116,7 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
       <FMButton variant="primary" onClick={handleConfirmarPaso1} className="px-6 py-2.5 text-[10px]">
         Confirmar táctica
       </FMButton>
-      <FMButton variant="secondary" onClick={cerrar} className="px-6 py-2.5 text-[10px]">
+      <FMButton variant="secondary" onClick={close} className="px-6 py-2.5 text-[10px]">
         Volver
       </FMButton>
     </>
@@ -116,12 +132,16 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
           Aceptar e ir al partido
         </FMButton>
       ) : (
-        <FMButton variant="secondary" onClick={() => setPaso(1)} className="px-6 py-2.5 text-[10px]">
+        <FMButton variant="secondary" onClick={handleVolverConsejo} className="px-6 py-2.5 text-[10px]">
           Volver al consejo
         </FMButton>
       )}
     </>
   );
+
+  const quickReplies = localPaso === 1 ? [
+    { texto: '¿Por qué no la Arriesgada?', onClick: () => {} },
+  ] : undefined;
 
   return (
     <CharacterDialog
@@ -129,16 +149,22 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
       cargo="Segundo Entrenador · Ayudante de Campo"
       iniciales={iniciales}
       clubColor={clubPrimary}
-      onClose={cerrar}
-      footer={paso === 1 ? footerPaso1 : footerPaso2}
+      onClose={close}
+      footer={phase === 'closing' ? null : (localPaso === 1 ? footerPaso1 : footerPaso2)}
+      quickReplies={quickReplies}
     >
-      {paso === 1 ? (
+      {phase === 'closing' ? (
+        <div className="space-y-4 pt-2 animate-fade-up">
+          <SpeechBubble texto={useDialogueStore.getState().closingPhrase || ''} />
+          <p className="text-[9px] italic font-bold text-slate-500 uppercase tracking-widest px-1">
+            Los cambios quedaron aplicados al plan táctico del plantel.
+          </p>
+        </div>
+      ) : localPaso === 1 ? (
         <div className="space-y-4">
           <SpeechBubble
             texto={advice.textoPrincipal}
             subtitulo="Informe basado en el estado de ambos planteles"
-            iniciales={iniciales}
-            clubColor={clubPrimary}
           />
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             {advice.opciones.map(op => (
@@ -151,9 +177,9 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
                 efectos={op.efectos}
                 recomendada={op.id === advice.recomendacion}
                 justificacion={op.id === advice.recomendacion ? advice.justificacion : undefined}
-                seleccionada={seleccion === op.id}
+                seleccionada={selection === op.id}
                 color={clubBorder}
-                onClick={() => seleccionar(op.id)}
+                onClick={() => { select(op.id); }}
               />
             ))}
           </div>
@@ -163,8 +189,6 @@ export const AssistantAdviceDialog: React.FC<AssistantAdviceDialogProps> = ({ on
           <SpeechBubble
             texto={lineup.textoPaso2}
             subtitulo={lineup.resumen}
-            iniciales={iniciales}
-            clubColor={clubPrimary}
           />
           <LineupPitch
             clubId={club.id}
