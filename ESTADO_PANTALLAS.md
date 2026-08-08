@@ -3,7 +3,7 @@
 > **Propósito:** listar TODAS las pantallas del juego, su estado actual y qué falta en cada una, para priorizar la construcción.
 >
 > **Fecha del análisis:** 5 agosto 2026 · Basado en lectura del código actual (`App.tsx`, `components/`).
-> **Última actualización:** 5 agosto 2026 — **Unificación de paleta**: main a verde-gris `#b8c4b8`, reemplazado el gris azulado (slate) por la paleta verdosa FM en ~14 archivos (theads, ErrorBoundary, PeopleHub, Inbox, menú contextual, modales de traspaso/contrato, Scouting, ClubReport, LOADING), botones de acción del Partido y modales al verde militar, y **eliminado todo el dark mode residual** (clase `dark` + bloque CSS `.dark`). Antes: tareas de la auditoría visual implementadas (bug de tablas, partido en vivo, empty-states, Setup Liga).
+> **Última actualización:** 8 agosto 2026 — **Sistema de diálogos completo**: bottom sheet con avatar persistente, reveal progresivo de opciones, cierre con frase, memoria de staff (`siguioConsejoUltimaVez`), diálogos bidireccionales con jugadores (jugador→manager y manager→jugador) con personalidad y relación, badges de diálogo en Plantel/Buzón, triggers automáticos por minutos/contrato/rumor/vestuario y manager→jugador por pre-partido/post-partido/entreno. **Persistencia** de memoria y diálogos pendientes en save/load.
 
 ---
 
@@ -15,8 +15,8 @@
 | Modales / overlays | 9 |
 | Pantallas **completas y funcionales** | **~40** (100%) |
 | Pantallas **parciales / mejorables** | 0 (restan solo mejoras menores, detalladas en la sección H) |
-| Código muerto (no se usa) | ~~`components/views/` + `components/ViewRouter.tsx`~~ → **eliminado** ✅ |
-| **Auditoría visual (screenshots)** | **41/41 renderizan** · 0 crashes · 0 imágenes rotas · **1 bug visual crítico** (tablas altas recortadas) + notas de diseño |
+| Código muerto (no se usa) | ~~`components/views/` + `components/ViewRouter.tsx`~~ → **eliminado** ✅ · `OptionCard.tsx` (reemplazado por `ProgressiveOptions`) → **eliminado** ✅ |
+| **Auditoría visual (screenshots)** | **41/41 renderizan** · 0 crashes · 0 imágenes rotas · **1 bug visual crítico** (tablas altas recortadas) + sistema de diálogos implementado |
 
 **Conclusión principal:** el juego está **funcional de punta a punta** (setup → temporada → partido → resumen → prensa → siguiente temporada). No hay pantallas "stub" o vacías. La auditoría visual con screenshots reales confirmó que **todas las pantallas dibujan contenido**, con un **único bug de layout grave** (las tablas muy largas quedan recortadas sin posibilidad de scroll — ver sección I) y varias notas menores de diseño (pantallas espartanas al inicio de carrera, estética de partido muy oscura). Lo que queda no es construir pantallas nuevas, sino **corregir ese bug de layout, pulir profundidad de simulación, limpiar deuda técnica y completar features de gestión**.
 
@@ -276,6 +276,16 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 16. ~~**Setup: Liga enriquecida** (A7)~~ → **hecho** ✅ (por liga: estrellas de reputación dinámica, división, nº de clubes, prize pool total y confederación).
 17. ~~**Unificación de paleta y dark mode**~~ → **hecho** ✅ (análisis de coherencia estética en sección I.1.4: main a `#b8c4b8`, slate azulado → verde-gris en 14 archivos, botones azules → verde militar, dark mode residual eliminado del CSS y del DOM; también bordes internos de los modales de traspaso/contrato unificados a `#3a4a3a`).
 18. ~~**Análisis de jerarquía tipográfica/espaciado/densidad**~~ → **hecho** ✅ (sección I.1.5: jerarquía y espaciado coherentes; densidad varía por tipo de superficie —tabla vs. flujo—, correcto; se documentó la mejora opcional de accesibilidad en lecturas largas).
+19. ~~**Sistema de diálogos staff → jugadores**~~ → **hecho** ✅ (bottom sheet, avatar persistente + badge, reveal progresivo, cierre con frase, memoria `siguioConsejoUltimaVez`, diálogos bidireccionales con personalidad, relación jugador `-1 a +1`, triggers automáticos, badges en Plantel/Buzón, persistencia en save/load).
+
+## 📋 Fase 0 — Consolidación (estado)
+
+- [x] Reemplazar README.md (template CodeSandbox eliminado)
+- [x] Actualizar ESTADO_PANTALLAS.md con estado real
+- [x] Resolver duplicación de fuentes de datos de jugadores: **`public/data/convertedPlayers.json` es la fuente canónica para población masiva (29K jugadores, carga en runtime). `data/realPlayers.ts` se mantiene como lista específica de jugadores reales para inyección selectiva (`injectRealPlayers`). No son redundantes — propósitos distintos.**
+- [x] Congelar diseño de navegación y estética
+
+**Criterio de salida Fase 0:** pendiente solo la resolución de fuentes de datos.
 
 ---
 

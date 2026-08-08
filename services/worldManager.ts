@@ -2408,6 +2408,37 @@ offer.status = 'REJECTED';
     return confidenceChange;
   }
 
+  applySeasonObjectiveBonus(clubId: string, leaguePosition: number, totalTeams: number, wonCup: boolean, cupSemis: boolean): void {
+    const club = this.getClub(clubId);
+    if (!club) return;
+    const obj = club.seasonObjective;
+    let bonus = 0;
+    let achieved = false;
+    switch (obj) {
+      case 'WIN_LEAGUE':
+        if (leaguePosition === 1) { bonus = 500000; achieved = true; }
+        break;
+      case 'TOP_4':
+        if (leaguePosition <= 4) { bonus = 300000; achieved = true; }
+        break;
+      case 'TOP_HALF':
+        if (leaguePosition <= totalTeams / 2) { bonus = 150000; achieved = true; }
+        break;
+      case 'AVOID_RELEGATION':
+        if (leaguePosition <= totalTeams - 3) { bonus = 100000; achieved = true; }
+        break;
+      case 'WIN_CUP':
+        if (wonCup) { bonus = 400000; achieved = true; }
+        break;
+    }
+    if (achieved) {
+      club.finances.balance += bonus;
+      club.boardConfidence = Math.min(100, (club.boardConfidence || 50) + 10);
+      this.addInboxMessage('FINANCE', 'Bonus por objetivo cumplido',
+        `La directiva ha aprobado un bonus de £${bonus.toLocaleString()} por cumplir el objetivo de temporada (${obj}).`, new Date(), undefined, 'IMPORTANT');
+    }
+  }
+
   requestFacilityUpgrade(clubId: string, facility: 'training' | 'youth', date: Date): { success: boolean; cost: number; message: string } {
     const club = this.getClub(clubId);
     if (!club) return { success: false, cost: 0, message: 'Club no encontrado' };

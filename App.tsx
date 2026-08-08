@@ -1,9 +1,7 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Sidebar } from './components/Sidebar';
 import { PlayerModal } from './components/PlayerModal';
-import { MatchView } from './components/MatchView';
-import { TacticsView } from './components/TacticsView';
 import { LeagueTable } from './components/LeagueTable';
 import { SquadView } from './components/SquadView';
 import { StaffView } from './components/StaffView';
@@ -14,10 +12,30 @@ import { ClubReport } from './components/ClubReport';
 import { PlayerCompareModal } from './components/PlayerCompareModal';
 import { PeopleHub } from './components/PeopleHub';
 import { PressConferenceView } from './components/PressConferenceView';
-import { PreMatchView } from './components/PreMatchView';
-import { PostMatchSummaryView } from './components/PostMatchSummaryView';
 import { MarketView } from './components/MarketView';
 import { SearchView } from './components/SearchView';
+import { ClubsListView } from './components/ClubsListView';
+import { EconomyView } from './components/EconomyView';
+import { ChronicleView } from './components/ChronicleView';
+import { ManagerProfileView } from './components/ManagerProfileView';
+import { HallOfFameView } from './components/HallOfFameView';
+import { SeasonHistoryView } from './components/SeasonHistoryView';
+import { InboxView } from './components/InboxView';
+import { MediaView } from './components/MediaView';
+import { TransferOfferModal } from './components/TransferOfferModal';
+import { ContractNegotiationModal } from './components/ContractNegotiationModal';
+import { SettingsModal } from './components/SettingsModal';
+import { OnboardingTour } from './components/OnboardingTour';
+import { PlayerContextMenu } from './components/PlayerContextMenu';
+import { SeasonSummaryModal } from './components/SeasonSummaryModal';
+import { NationalTeamView } from './components/NationalTeamView';
+import { DialogueHost } from './components/dialogs/DialogueHost';
+import { FMLoadingOverlay, FMModal, FMButton } from './components/FMUI';
+
+const MatchView = lazy(() => import('./components/MatchView').then(m => ({ default: m.MatchView })));
+const TacticsView = lazy(() => import('./components/TacticsView').then(m => ({ default: m.TacticsView })));
+const PreMatchView = lazy(() => import('./components/PreMatchView').then(m => ({ default: m.PreMatchView })));
+const PostMatchSummaryView = lazy(() => import('./components/PostMatchSummaryView').then(m => ({ default: m.PostMatchSummaryView })));
 import { EconomyView } from './components/EconomyView';
 import { NegotiationsView } from './components/NegotiationsView';
 import { InboxView } from './components/InboxView';
@@ -76,6 +94,8 @@ const App: React.FC = () => {
   const [scheduleCompFilter, setScheduleCompFilter] = React.useState('ALL');
   const [lastMatchStats, setLastMatchStats] = React.useState<Record<string, PlayerMatchStats>>({});
   const [lastChronicle, setLastChronicle] = React.useState<Chronicle | null>(null);
+  const [isSackedModalOpen, setIsSackedModalOpen] = React.useState(false);
+  const [sackedClubName, setSackedClubName] = React.useState('');
 
   React.useEffect(() => {
     if (!isOnboarded()) {
@@ -326,6 +346,12 @@ if (result.userWonLeague) gs.trackTitle('Liga');
         const changes = world.evaluateBoardConfidence(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, cupSemi);
         if (changes <= -30) {
           world.addInboxMessage('SQUAD', 'Confianza de la directiva baja', `La directiva no está satisfecha con los resultados de esta temporada. Se esperan mejoras significativas.`, currentDate, undefined, 'IMPORTANT');
+        }
+        world.applySeasonObjectiveBonus(userClub.id, leaguePos || 10, leagueTotal || 20, wonCup, cupSemi);
+        if (userClub.boardConfidence <= 0) {
+          world.addInboxMessage('SQUAD', '¡DESPIDO!', `La directiva de ${userClub.name} ha decidido prescindir de tus servicios. Tu contrato ha sido rescindido.`, currentDate, undefined, 'CRITICAL');
+          setSackedClubName(userClub.name);
+          setIsSackedModalOpen(true);
         }
         world.checkManagerJobOffers(currentDate, userClub.id, useGameStore.getState().managerReputation);
         const comps = world.getClubCompetitions(userClub.id);
@@ -1210,7 +1236,7 @@ const startVacation = async (targetOverride?: Date) => {
          const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
          const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
          if (nextFixture && homeClub && awayClub) {
-           return <PostMatchSummaryView
+           return <Suspense fallback={<div className="p-8 text-center text-slate-500 font-black uppercase">Cargando resumen...</div>}><PostMatchSummaryView
              homeTeam={homeClub}
              awayTeam={awayClub}
              homeScore={nextFixture.homeScore ?? 0}
@@ -1219,7 +1245,7 @@ const startVacation = async (targetOverride?: Date) => {
              chronicle={lastChronicle}
              userClubId={userClub.id}
              onContinue={() => setView('PRESS_CONFERENCE_POST')}
-           />;
+           /></Suspense>;
          }
          return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos no disponibles</div>;
        }
@@ -1246,7 +1272,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
-          return <PreMatchView club={userClub} opponent={homeClub.id === userClub.id ? awayClub : homeClub} starters={world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR')} onStart={() => setView('MATCH')} onGoToTactics={() => setView('SENIOR_TACTICS')} />;
+          return <Suspense fallback={<div className="p-8 text-center text-slate-500 font-black uppercase">Cargando previa...</div>}><PreMatchView club={userClub} opponent={homeClub.id === userClub.id ? awayClub : homeClub} starters={world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR')} onStart={() => setView('MATCH')} onGoToTactics={() => setView('SENIOR_TACTICS')} /></Suspense>;
         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
       }
@@ -1254,7 +1280,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
-           return <MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats: Record<string, PlayerMatchStats>, events) => {               nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
+           return <Suspense fallback={<div className="p-8 text-center text-slate-500 font-black uppercase">Cargando partido...</div>}><MatchView userClubId={userClub.id} currentDate={currentDate} homeTeam={homeClub} awayTeam={awayClub} homePlayers={getMatchSquad(nextFixture.homeTeamId)} awayPlayers={getMatchSquad(nextFixture.awayTeamId)} onFinish={(h, a, stats: Record<string, PlayerMatchStats>, events) => {               nextFixture.played = true; nextFixture.homeScore = h; nextFixture.awayScore = a;
                world.bumpFixturesVersion();
               MatchSimulator.finalizeSeasonStats(
                 world.getPlayersByClub(nextFixture.homeTeamId).filter(p => p.squad === 'SENIOR'),
@@ -1276,8 +1302,8 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
                setLastChronicle(chronicle);
                setView('POST_MATCH_SUMMARY');
                notify();
-           }} />;
-        }
+            }} /></Suspense>;
+         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
       }
       default:
@@ -1287,7 +1313,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         }
         if (currentView.endsWith('_TACTICS')) {
           const type = currentView.split('_')[0] as SquadType;
-          return <TacticsView club={userClub} players={world.getPlayersByClub(userClub.id).filter(p => p.squad === type)} onContextMenu={handlePlayerContextMenu} />;
+          return <Suspense fallback={<div className="p-8 text-center text-slate-500 font-black uppercase">Cargando tácticas...</div>}><TacticsView club={userClub} players={world.getPlayersByClub(userClub.id).filter(p => p.squad === type)} onContextMenu={handlePlayerContextMenu} /></Suspense>;
         }
         if (currentView.endsWith('_SCHEDULE')) {
           const type = currentView.split('_')[0] as SquadType;
@@ -1918,6 +1944,18 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       {comparePlayerA && comparePlayerB && <PlayerCompareModal playerA={comparePlayerA} playerB={comparePlayerB} onClose={() => { setComparePlayerA(null); setComparePlayerB(null); }} />}
       {contextMenu && <PlayerContextMenu player={contextMenu.player} x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} currentDate={currentDate} />}
       {seasonSummary && <SeasonSummaryModal summary={seasonSummary} userWonLeague={userWonLeague} onClose={() => { setSeasonSummary(null); setUserWonLeague(false); }} />}
+      {isSackedModalOpen && (
+        <FMModal isOpen={isSackedModalOpen} onClose={() => setIsSackedModalOpen(false)} title="Despido" size="md">
+          <div className="p-6 text-center space-y-4">
+            <p className="text-sm font-black text-red-700 uppercase">La directiva de {sackedClubName} te ha despedido.</p>
+            <p className="text-xs font-bold text-slate-600">Tu contrato ha sido rescindido por los malos resultados.</p>
+            <div className="flex gap-2 justify-center">
+              <FMButton variant="primary" onClick={() => { setIsSackedModalOpen(false); setGameState('SETUP'); setView('SETUP_USER'); useGameStore.getState().resetForNewCareer(); }} className="px-6">Nueva carrera</FMButton>
+              <FMButton variant="secondary" onClick={() => setIsSackedModalOpen(false)} className="px-6">Cerrar</FMButton>
+            </div>
+          </div>
+        </FMModal>
+      )}
       <DialogueHost onStartMatch={handleStartMatch} />
       {currentView !== 'MATCH' && <BottomNav advanceTime={advanceTime} simulateToNextMatch={simulateToNextMatch} isSimulating={isSimulating} isPreMatchView={isPreMatchView} />}
     </div>
