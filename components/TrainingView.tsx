@@ -105,8 +105,6 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players: playersProp
   }), [club?.id, currentDate]);
 
   const coach = club ? getFitnessCoach(club.id) : null;
-  const coachName = coach?.name || 'El Preparador Físico';
-  const coachIniciales = coachName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const coachColor = club?.primaryColor || 'bg-[#3a4a3a]';
 
   useEffect(() => {
@@ -404,12 +402,11 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players: playersProp
             </div>
             )}
           </div>
-          {fitnessTrigger && (
+          {coach && (
             <DialogueAvatar
-              iniciales={coachIniciales}
               clubColor={coachColor}
               cargo="Preparador Físico"
-              badge
+              badge={fitnessTrigger}
               position="bottom-left"
               onClick={() => useDialogueStore.getState().open('FITNESS', { clubId: club.id, source: 'TRAINING' })}
             />

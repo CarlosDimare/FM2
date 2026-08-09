@@ -1273,7 +1273,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
         const homeClub = nextFixture ? (nextFixture.homeTeamId === userClub.id ? userClub : world.getClub(nextFixture.homeTeamId)) : undefined;
         const awayClub = nextFixture ? (nextFixture.awayTeamId === userClub.id ? userClub : world.getClub(nextFixture.awayTeamId)) : undefined;
         if (nextFixture && homeClub && awayClub) {
-          return <Suspense fallback={<div className="p-8 text-center text-slate-500 font-black uppercase">Cargando previa...</div>}><PreMatchView club={userClub} opponent={homeClub.id === userClub.id ? awayClub : homeClub} starters={world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR')} onStart={() => setView('MATCH')} onGoToTactics={() => setView('SENIOR_TACTICS')} /></Suspense>;
+           return <Suspense fallback={<div className="p-8 text-center text-slate-500 font-black uppercase">Cargando previa...</div>}><PreMatchView club={userClub} opponent={homeClub.id === userClub.id ? awayClub : homeClub} starters={world.getPlayersByClub(userClub.id).filter(p => p.isStarter && p.squad === 'SENIOR')} nextFixture={nextFixture} onStart={() => setView('MATCH')} onGoToTactics={() => setView('SENIOR_TACTICS')} /></Suspense>;
         }
         return <div className="p-8 text-center text-slate-500 font-black uppercase">Error: Datos de partido no disponibles</div>;
       }
@@ -1875,9 +1875,6 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       {!isMatchView && !isPreMatchView && (
         <header className={`h-12 border-b flex items-center justify-between px-4 shadow-sm z-[110] shrink-0 transition-colors duration-300 ${userClub ? `${userClub.primaryColor} ${userClub.secondaryColor} border-black/20` : 'bg-gradient-to-b from-slate-200 to-slate-300 border-slate-600'}`}>
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className={`lg:hidden hover:opacity-80 transition-opacity ${userClub ? 'text-current' : 'text-slate-900'}`}>
-              <Menu size={20} />
-            </button>
             <div className="flex items-center gap-3">
               <div className={`w-1.5 h-8 ${userClub ? userClub.secondaryColor.replace('text-', 'bg-') : 'bg-[#3a4a3a]'} border-x border-black/10 opacity-80`}></div>
               <h1 className={`text-sm font-black uppercase tracking-tight italic drop-shadow-sm truncate max-w-[150px] sm:max-w-none ${userClub ? '' : 'text-slate-950'}`}>
@@ -1896,7 +1893,9 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
 
       <div className="flex flex-1 overflow-hidden relative">
         {(userClub || selectedNationalTeamId) && !isMatchView && (
-          <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
+          <div className="hidden lg:block">
+            <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
+          </div>
         )}
         <main className="flex-1 flex flex-col min-w-0 bg-[#b8c4b8] relative overflow-hidden pb-[104px] lg:pb-0">
           <ScreenBackground view={currentView}>{renderCurrentView()}</ScreenBackground>

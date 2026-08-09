@@ -1,9 +1,9 @@
 import React from 'react';
+import { User } from 'lucide-react';
 
 export type AvatarPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 
 interface DialogueAvatarProps {
-  iniciales: string;
   clubColor: string;
   cargo: string;
   badge?: boolean;
@@ -19,7 +19,7 @@ const positionClasses: Record<AvatarPosition, string> = {
 };
 
 export const DialogueAvatar: React.FC<DialogueAvatarProps> = ({
-  iniciales, clubColor, cargo, badge = false, onClick, position = 'bottom-right',
+  clubColor, cargo, badge = false, onClick, position = 'bottom-right',
 }) => {
   return (
     <div className={`fixed ${positionClasses[position]} z-[100] flex flex-col items-center gap-1`}>
@@ -32,10 +32,10 @@ export const DialogueAvatar: React.FC<DialogueAvatarProps> = ({
       <button
         onClick={onClick}
         aria-label={`Hablar con ${cargo}`}
-        className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-xs uppercase italic shadow-lg border-2 border-white hover:scale-110 transition-transform ${clubColor}`}
+        className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white hover:scale-110 transition-transform ${clubColor}`}
         title={cargo}
       >
-        {iniciales}
+        <User size={20} />
       </button>
     </div>
   );

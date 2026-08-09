@@ -55,8 +55,6 @@ export const MarketView: React.FC<MarketViewProps> = ({ onSelectPlayer, userClub
   }), [currentDate, userClubId]);
 
   const director = userClubId ? getSportingDirector(userClubId) : null;
-  const directorName = director?.name || 'El Director Deportivo';
-  const directorIniciales = directorName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const directorColor = world.getClub(userClubId)?.primaryColor || 'bg-[#3a4a3a]';
 
   return (
@@ -193,16 +191,15 @@ export const MarketView: React.FC<MarketViewProps> = ({ onSelectPlayer, userClub
           onOfferMade={() => setOfferPlayer(null)}
         />
       )}
-      {directorTrigger && (
-        <DialogueAvatar
-          iniciales={directorIniciales}
-          clubColor={directorColor}
-          cargo="Director Deportivo"
-          badge
-          position="top-right"
-          onClick={() => useDialogueStore.getState().open('TRANSFERS', { clubId: userClubId, source: 'MARKET' })}
-        />
-      )}
+       {director && (
+         <DialogueAvatar
+           clubColor={directorColor}
+           cargo="Director Deportivo"
+           badge={directorTrigger}
+           position="top-right"
+           onClick={() => useDialogueStore.getState().open('TRANSFERS', { clubId: userClubId, source: 'MARKET' })}
+         />
+       )}
     </div>
   );
 };

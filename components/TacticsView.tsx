@@ -205,8 +205,6 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
     }), [club?.id, currentDate, nextFixture]);
 
     const assistant = club ? getAssistantStaff(club.id) : null;
-    const assistantName = assistant?.name || 'El Asistente';
-    const assistantIniciales = assistantName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     const assistantColor = club?.primaryColor || 'bg-[#3a4a3a]';
 
    const activeTactic = world.getTactics().find(t => t.id === selectedTacticId) || world.getTactics()[0];
@@ -946,15 +944,12 @@ export const TacticsView: React.FC<TacticsViewProps> = ({ players, club, onConte
                </FMBox>
             </div>
           )}
-          {assistantTrigger && (
-            <DialogueAvatar
-              iniciales={assistantIniciales}
-              clubColor={assistantColor}
-              cargo="Ayudante de Campo"
-              badge
-              onClick={() => useDialogueStore.getState().open('ASSISTANT', { clubId: club.id, source: 'TACTICS', tacticId: selectedTacticId || world.getTactics()[0]?.id })}
-            />
-          )}
+           <DialogueAvatar
+             clubColor={assistantColor}
+             cargo="Ayudante de Campo"
+             badge={assistantTrigger}
+             onClick={() => useDialogueStore.getState().open('ASSISTANT', { clubId: club.id, source: 'TACTICS', tacticId: selectedTacticId || world.getTactics()[0]?.id })}
+           />
        </div>
     );
   };
