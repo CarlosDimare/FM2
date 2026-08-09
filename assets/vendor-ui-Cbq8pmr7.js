@@ -1,4 +1,4 @@
-import{r as B,a as M}from"./vendor-icons-DmbZHX0B.js";var F={exports:{}},E={};/**
+import{r as B,a as M}from"./vendor-icons-BSoCdrvN.js";var F={exports:{}},E={};/**
  * @license React
  * react-dom.production.js
  *
