@@ -1902,7 +1902,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
       <div className="flex flex-1 overflow-hidden relative">
         {(userClub || selectedNationalTeamId) && !isMatchView && (
           <div className="hidden lg:block">
-            <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
+            <Sidebar currentView={currentView} setView={setView} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
           </div>
         )}
         <main className="flex-1 flex flex-col min-w-0 bg-[#b8c4b8] relative min-h-0 overflow-hidden pb-[104px] lg:pb-0">

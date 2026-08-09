@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Users, Trophy, Calendar, Clipboard, Sun, Info, ShoppingBag, Search, Wallet, X, MessageSquare, Bell, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User, Star, BarChart3, Medal, BookMarked, Award } from 'lucide-react';
+import { Home, Users, Trophy, Calendar, Clipboard, Sun, Info, ShoppingBag, Search, Wallet, MessageSquare, Bell, ChevronDown, ChevronRight, Globe, Briefcase, Building2, Save, Dumbbell, Settings, Newspaper, Flag, BookOpen, User, Star, BarChart3, Medal, BookMarked, Award } from 'lucide-react';
 import { Club, SquadType, Competition } from '../types';
 import { world } from '../services/worldManager';
 import { SettingsModal } from './SettingsModal';
@@ -11,11 +11,9 @@ interface SidebarProps {
   onVacation: () => void;
   onSave: () => void;
   nationalTeamId?: string | null;
-  isSidebarOpen: boolean;
-  setIsSidebarOpen: (open: boolean) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, nationalTeamId, onVacation, onSave, isSidebarOpen, setIsSidebarOpen }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, nationalTeamId, onVacation, onSave }) => {
   const isNationalOnly = !club && Boolean(nationalTeamId);
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
     SENIOR: true,
@@ -64,15 +62,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
   };
 
   return (
-    <>
-      {isSidebarOpen && <div className="fixed inset-0 bg-black/30 z-[90] lg:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />}
-      <div id="main-sidebar" className={`fixed lg:static top-0 lg:top-0 left-0 bottom-0 z-[100] w-64 bg-[#e8ece8] border-r border-[#a0b0a0] h-full flex flex-col transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`} style={{ fontFamily: 'Verdana, sans-serif' }}>
-        <div className="lg:hidden p-4 border-b border-[#a0b0a0] flex justify-between items-center shrink-0">
-          <span className="font-bold text-slate-900 text-sm">Menú</span>
-          <button onClick={() => setIsSidebarOpen(false)} className="text-slate-600"><X size={20} /></button>
-        </div>
-
-        <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-1">
+    <div id="main-sidebar" className="hidden lg:flex lg:static top-0 left-0 bottom-0 w-64 bg-[#e8ece8] border-r border-[#a0b0a0] h-full flex-col" style={{ fontFamily: 'Verdana, sans-serif' }}>
+      <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-1">
           {!isNationalOnly && <div className="mb-2">
              <NavItem id="HOME" label="Inicio" icon={Home} active={currentView === 'HOME'} onClick={() => setView('HOME')} />
              <NavItem id="INBOX" label="Notificaciones" icon={Bell} active={currentView === 'INBOX'} onClick={() => setView('INBOX')} badge={unreadMessages} badgeClass={criticalUnread > 0 ? 'bg-red-600' : ''} />
@@ -166,10 +157,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, club, na
              </button>
           </div>
         </nav>
+        {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
       </div>
-      {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
-    </>
-  );
+    );
 };
 
 const NavItem = ({ id, label, icon: Icon, active, onClick, badge, badgeClass }: any) => (

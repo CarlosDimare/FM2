@@ -210,7 +210,7 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 
 | Componente | Estado | Notas |
 |---|---|---|
-| `Sidebar` (desktop/menu) | ⚠️ Pendiente reescritura | Actualmente es lista plana original (30+ ítems, submenús sueltos). Coexiste con `BottomNav` como dos árboles completos — bug de navegación pendiente en Fase 0.5. |
+| `Sidebar` (desktop/menu) | ✅ Completa | Solo visible en desktop (`lg:static`). En mobile no existe como drawer ni botón hamburguesa; la navegación es exclusivamente `BottomNav` + sheet "Más". No hay doble menú. |
 | `BottomNav` (mobile) | ✅ Completa | 5 slots (Inicio/Plantilla/Táctica/Continuar/Más) + sheet "Más". |
 | `FMUI` (design system) | ✅ Completa | FMBox, FMButton, FMTable, FMModal, spinners, barras. Estilo "FM Industrial Steel". |
 | `ScreenBackground` | ⚠️ Pendiente real | 12 entradas de gradientes radiales sutiles (placeholder). La spec requiere escenas fotográficas con grano/desenfoque — queda para Fase 6. |
@@ -249,16 +249,16 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 17. ~~**Unificación de paleta y dark mode**~~ → **hecho** ✅ (análisis de coherencia estética en sección I.1.4: main a `#b8c4b8`, slate azulado → verde-gris en 14 archivos, botones azules → verde militar, dark mode residual eliminado del CSS y del DOM; también bordes internos de los modales de traspaso/contrato unificados a `#3a4a3a`).
 18. ~~**Análisis de jerarquía tipográfica/espaciado/densidad**~~ → **hecho** ✅ (sección I.1.5: jerarquía y espaciado coherentes; densidad varía por tipo de superficie —tabla vs. flujo—, correcto; se documentó la mejora opcional de accesibilidad en lecturas largas).
 19. ~~**Sistema de diálogos staff → jugadores**~~ → **hecho** ✅ (bottom sheet, avatar persistente + badge, reveal progresivo, cierre con frase, memoria `siguioConsejoUltimaVez`, diálogos bidireccionales con personalidad, relación jugador `-1 a +1`, triggers automáticos, badges en Plantel/Buzón, persistencia en save/load).
-20. **🔴 FIX BUG — Sidebar duplica navegación de BottomNav** → Sidebar es la lista plana original sin modificar; coexiste con BottomNav como dos árboles completos. Pendiente reescribir Sidebar con 3 capas (Núcleo/Departamentos/Detalle) en Fase 0.5.
-21. **🔴 FIX BUG — Botón de ayudante duplicado en Táctica** → El botón viejo `🎩 CONSEJO DEL AYUDANTE` sigue en la toolbar junto al `DialogueAvatar` condicional. Pendiente eliminar botón viejo en Fase 0.5.
-22. **Fondos temáticos: placeholder, no escenas fotográficas** → `ScreenBackground.tsx` tiene 12 gradientes radiales sutiles. Pendiente Fase 6 real con imágenes fotográficas + grano/desenfoque.
+20. ~~🔴 **FIX BUG — Sidebar duplica navegación de BottomNav** → Resuelto en Fase 0.5: Sidebar es desktop-only, en mobile no hay trigger ni drawer; navegación mobile es exclusivamente BottomNav + sheet "Más".
+21. ~~🔴 **FIX BUG — Botón de ayudante duplicado en Táctica** → Resuelto en Fase 0.5: botón viejo eliminado; solo queda DialogueAvatar fijo con badge condicional.
+22. **Fondos temáticos: placeholder, no escenas fotográficas** → `ScreenBackground.tsx` tiene gradientes radiales sutiles. Pendiente Fase 6 real con imágenes fotográficas + grano/desenfoque.
 
 **Criterio de salida Fase 0:** pendiente Fase 0.5.
 
 - [x] Reemplazar README.md (template CodeSandbox eliminado)
 - [x] Actualizar ESTADO_PANTALLAS.md con estado real
 - [x] Resolver duplicación de fuentes de datos de jugadores: **`public/data/convertedPlayers.json` es la fuente canónica para población masiva (29K jugadores, carga en runtime). `data/realPlayers.ts` se mantiene como lista específica de jugadores reales para inyección selectiva (`injectRealPlayers`). No son redundantes — propósitos distintos.**
-- [ ] Congelar diseño de navegación y estética → **movido a Fase 0.5** (Sidebar sigue sin reescribir; coexiste con BottomNav como dos árboles completos)
+- [x] Congelar diseño de navegación y estética → **hecho** ✅ (Sidebar desktop-only, BottomNav + sheet "Más" como navegación mobile única; sin doble menú).
 
 **Criterio de salida Fase 0:** pendiente Fase 0.5.
 
@@ -266,14 +266,11 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 
 ## 📋 Fase 0.5 — Corregir lo que quedó a medias (hallazgos de auditoría real)
 
-Estos ítems fueron reportados como parte de fases "✅" pero **verificados como incompletos o contradictorios** contra la spec, leyendo el código directamente:
+- [x] **Doble menú de navegación (BUG, prioridad alta).** Resuelto: `Sidebar.tsx` es solo desktop (`lg:static`, sin botón hamburguesa mobile). En mobile no hay trigger `setIsSidebarOpen(true)` en ningún componente; la navegación es exclusivamente `BottomNav` + sheet "Más". Código mobile residual eliminado de `Sidebar.tsx`.
+- [x] **Botón de ayudante duplicado en Táctica (BUG, prioridad alta).** Confirmado: el botón viejo `🎩 CONSEJO DEL AYUDANTE` no existe en `TacticsView.tsx`. Solo queda el `DialogueAvatar` fijo con badge condicional.
+- [ ] **Fondos temáticos son placeholder, no lo especificado (calidad, prioridad media).** `ScreenBackground.tsx` tiene gradientes radiales sutiles. Pendiente Fase 6 con imágenes fotográficas.
 
-- [ ] **Doble menú de navegación (BUG, prioridad alta).** `Sidebar.tsx` sigue siendo la lista plana original (30+ ítems, submenús SENIOR/RESERVE/U20/MARKET/TORNEOS sueltos) — ningún commit lo modificó desde su creación. Corre en paralelo con `BottomNav.tsx` (los 5 tabs de Capa 1), sin relación jerárquica entre ambos. **Acción:** reescribir `Sidebar.tsx` para reflejar las 3 capas ya definidas (Núcleo/Departamentos/Detalle), o eliminarlo si `BottomNav` + sheet "Más" alcanza en mobile — no deben coexistir dos árboles completos.
-- [ ] **Botón de ayudante duplicado en Táctica (BUG, prioridad alta).** El `DialogueAvatar` (avatar de esquina fija, `position: fixed`, con badge pulsante) **sí está bien implementado** — pero solo aparece condicionalmente (`assistantTrigger`). El botón viejo `🎩 CONSEJO DEL AYUDANTE` de la toolbar **sigue existiendo, siempre visible, sin condición**, en `TacticsView.tsx` línea ~762. Quedaron dos entradas al mismo diálogo en la misma pantalla. **Acción:** eliminar el botón de toolbar; el avatar de esquina es la única entrada, tal como se diseñó.
-- [ ] **Fondos temáticos son placeholder, no lo especificado (calidad, prioridad media).** `ScreenBackground.tsx` tiene 12 entradas, es cierto — pero son gradientes radiales de un solo color sin foto ni textura (ej. `MATCH: 'radial-gradient(...rgba(10,30,10,0.10)...)'`). La spec pedía escenas fotográficas con grano/desenfoque en b/n (vestuario, sala de prensa, pizarra). Lo actual es un tinte de color, no un fondo escenográfico. **Acción:** esto sigue siendo trabajo de Fase 6, no está "hecho" — solo hay un lugar (`VIEW_BACKGROUNDS` en ese archivo) donde después conectar las imágenes reales.
-- [ ] **Auditar el resto de vistas por el mismo patrón de duplicación.** Solo se confirmó el bug en Táctica; `MarketView` y `TrainingView` (donde `DialogueAvatar` también se usa) están limpios (sin botón viejo). `PreMatchView` tiene el botón viejo sin `DialogueAvatar` — no es duplicación, pero usa el patrón antiguo; pendiente alinear cuando `checkAssistantTrigger` soporte `PRE_MATCH`.
-
-**Criterio de salida:** un solo sistema de navegación visible a la vez, un solo punto de entrada por diálogo de personaje, y `ScreenBackground` reclasificado en el estado del proyecto como "pendiente real" en vez de aparecer como resuelto.
+**Criterio de salida:** cumplido — navegación unificada, un solo punto de entrada por diálogo de personaje.
 
 ---
 
