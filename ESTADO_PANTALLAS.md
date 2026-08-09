@@ -3,7 +3,7 @@
 > **Propósito:** listar TODAS las pantallas del juego, su estado actual y qué falta en cada una, para priorizar la construcción.
 >
 > **Fecha del análisis:** 5 agosto 2026 · Basado en lectura del código actual (`App.tsx`, `components/`).
-> **Última actualización:** 9 agosto 2026 — **Bugs de producción corregidos**: workbox skipWaiting/clientsClaim/cleanupOutdatedCaches, lazyWithReload para recarga en fetch fallido, FMBox header layout fix (truncate + wrap), BoardView accordion para densidad. **Auditoría visual mobile 360px documentada.**
+> **Última actualización:** 9 agosto 2026 — **Bugs de producción corregidos**: workbox skipWaiting/clientsClaim/cleanupOutdatedCaches, lazyWithReload para recarga en fetch fallido, FMBox header layout fix (truncate + wrap), BoardView accordion para densidad. **Bug de tablas largas sin scroll cerrado** (SquadView, MarketView, NationalTeamView, TrainingView, StaffView, EXTERNAL_CLUB). **Auditoría visual mobile 360px documentada.** **Fase 4: tests de motor iniciados** (ProfileNarrativeEngine, 8 tests nuevos).
 
 ---
 

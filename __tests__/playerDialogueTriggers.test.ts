@@ -66,7 +66,8 @@ describe('playerDialogueTriggers', () => {
 
   it('detects transfer rumors', async () => {
     const { detectPlayerDialogueTriggers } = await import('../services/playerDialogueTriggers');
-    mockWorld.getPlayersByClub.mockReturnValue([mockPlayer({ id: 'p3', transferRequestReason: 'Wants to leave' })]);
+    const farExpiry = new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000);
+    mockWorld.getPlayersByClub.mockReturnValue([mockPlayer({ id: 'p3', transferRequestReason: 'Wants to leave', contractExpiry: farExpiry })]);
     const triggered = detectPlayerDialogueTriggers('club1');
     expect(triggered).toHaveLength(1);
     expect(triggered[0].pendingDialogue).toBe('TRANSFER_RUMOR');
