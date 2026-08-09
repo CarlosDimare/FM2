@@ -3,7 +3,7 @@
 > **Propósito:** listar TODAS las pantallas del juego, su estado actual y qué falta en cada una, para priorizar la construcción.
 >
 > **Fecha del análisis:** 5 agosto 2026 · Basado en lectura del código actual (`App.tsx`, `components/`).
-> **Última actualización:** 9 agosto 2026 — **Bugs de producción corregidos**: workbox skipWaiting/clientsClaim/cleanupOutdatedCaches, lazyWithReload para recarga en fetch fallido, FMBox header layout fix (truncate + wrap), BoardView accordion para densidad. **Bug de tablas largas sin scroll cerrado** (SquadView, MarketView, NationalTeamView, TrainingView, StaffView, EXTERNAL_CLUB). **Auditoría visual mobile 360px documentada.** **Fase 4: tests de motor iniciados** (ProfileNarrativeEngine, 8 tests nuevos).
+> **Última actualización:** 9 agosto 2026 — **Bugs de producción corregidos**: workbox skipWaiting/clientsClaim/cleanupOutdatedCaches, lazyWithReload para recarga en fetch fallido, FMBox header layout fix (truncate + wrap), BoardView accordion para densidad. **Bug de tablas largas sin scroll cerrado** (SquadView, MarketView, NationalTeamView, TrainingView, StaffView, EXTERNAL_CLUB). **Auditoría visual mobile 360px documentada.** **Fase 4: tests de motor ampliados** (ProfileNarrativeEngine 8 tests + MatchSimulator 18 tests nuevos).
 
 ---
 
@@ -16,7 +16,7 @@
 | Pantallas **completas y funcionales** | **~40** (100%) |
 | Pantallas **parciales / mejorables** | 0 (restan solo mejoras menores, detalladas en la sección H) |
 | Código muerto (no se usa) | ~~`components/views/` + `components/ViewRouter.tsx`~~ → **eliminado** ✅ · `OptionCard.tsx` (reemplazado por `ProgressiveOptions`) → **eliminado** ✅ |
-| **Auditoría visual (screenshots)** | **41/41 renderizan** · 0 crashes · 0 imágenes rotas · **1 bug visual crítico** (tablas altas recortadas) + sistema de diálogos implementado |
+| **Auditoría visual (screenshots)** | **40/40 renderizan** · 0 crashes · 0 imágenes rotas · **0 bugs visuales críticos** (tablas altas recortadas corregidas) + sistema de diálogos implementado |
 
 **Conclusión principal:** el juego está **funcional de punta a punta** (setup → temporada → partido → resumen → prensa → siguiente temporada). No hay pantallas "stub" o vacías. La auditoría visual con screenshots reales confirmó que **todas las pantallas dibujan contenido**, con un **único bug de layout grave** (las tablas muy largas quedan recortadas sin posibilidad de scroll — ver sección I) y varias notas menores de diseño (pantallas espartanas al inicio de carrera, estética de partido muy oscura). Lo que queda no es construir pantallas nuevas, sino **corregir ese bug de layout, pulir profundidad de simulación, limpiar deuda técnica y completar features de gestión**.
 
@@ -304,9 +304,10 @@ Estos ítems fueron reportados como parte de fases "✅" pero **verificados como
 ## 📋 Fase 4 — Testing (estado)
 
 - [x] Tests unitarios básicos: `dialogueStore.test.ts` (3 tests pasando)
-- [ ] Tests de motor, economía y guardado/carga (pendiente para próxima iteración)
+- [x] Tests de motor: `engine.test.ts` (ProfileNarrativeEngine 8 tests) + `matchSimulator.test.ts` (MatchSimulator 18 tests: initMatchStats, initMatchState, performSubstitution, adjustTacticsDynamically, selectBestXI, distributeStats, simulateLightMatch, simulateQuickMatch, simulateNationalTeamMatch, finalizeSeasonStats)
+- [ ] Tests de economía por temporada y guardado/carga (pendiente para próxima iteración)
 
-**Criterio de salida Fase 4:** parcial. Suite mínima creada y funcionando.
+**Criterio de salida Fase 4:** parcial. Cobertura de MatchSimulator agregada; falta economía y guardado/carga.
 
 ---
 
