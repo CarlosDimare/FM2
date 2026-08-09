@@ -37,7 +37,7 @@ function lazyWithReload(importFn: () => Promise<any>) {
   return lazy(() => importFn().catch(err => {
     console.error('Failed to load chunk', err);
     window.location.reload();
-    return Promise.reject(err);
+    return new Promise(() => {});
   }));
 }
 
