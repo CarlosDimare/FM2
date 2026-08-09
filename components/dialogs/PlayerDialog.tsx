@@ -59,12 +59,25 @@ export const PlayerDialog: React.FC = () => {
         if (personality === 'LEADER') return `Hay tensiones en el vestuario que están afectando al equipo. Podemos solucionarlo?`;
         return `Hay algo en el vestuario que no está bien. Necesito hablar de ello.`;
       case 'PRE_MATCH_CHAT':
-        return `Jefe, listo para el partido. Quería saludarlo antes de salir a la cancha.`;
+        if (personality === 'VOLATILE') return `Jefe, hoy salimos a quemar todo. Necesito que lo sepa.`;
+        if (personality === 'LEADER') return `El equipo está concentrado. Quería darle un poco de tranquilidad antes del partido.`;
+        if (personality === 'LAZY') return `Bueno, ya es hora de salir a la cancha.`;
+        return `Jefe, listo para el partido. Quería saludarlo antes de salir.`;
       case 'POST_MATCH_WARNING':
+        if (personality === 'VOLATILE') return `No me salieron las cosas, pero no me repita lo mismo dos veces.`;
+        if (personality === 'LEADER') return `Asumo mi parte. Hoy no estuve a la altura y lo sabe el grupo entero.`;
+        if (personality === 'LAZY') return `Tuve un mal día. No fue mi mejor partido, lo reconozco.`;
         return `Mi rendimiento no fue el esperado. Asumo mi responsabilidad y prometo trabajar para revertirlo.`;
       case 'POST_MATCH_PRAISE':
+        if (personality === 'VOLATILE') return `Hoy fui imparable. Que no se me suba a la cabeza, pero estoy en llamas.`;
+        if (personality === 'LEADER') return `Fue un buen partido del equipo. Me motiva ver que el grupo está respondiendo.`;
+        if (personality === 'MERCENARY') return `Buen rendimiento. Espero que esto se refleje en lo que viene.`;
         return `Gracias por confiar en mí. Hoy salió todo bien, pero no me voy a conformar.`;
       case 'CONTRACT_RENEWAL':
+        if (personality === 'VOLATILE') return `No me deje con la duda. Si cuenta conmigo, dígamelo ya.`;
+        if (personality === 'LOYAL') return `Me gusta estar aquí. Pero necesito saber si mi futuro está en este club.`;
+        if (personality === 'MERCENARY') return `Señor, mi contrato está en un punto clave. Hablemos de números y años.`;
+        if (personality === 'LEADER') return `Quiero seguir siendo referente. Si el proyecto me incluye, cerremos el acuerdo.`;
         return `Mi contrato está en un punto donde deberíamos hablar de mi futuro aquí.`;
       default:
         return `Jefe, quería charlar un rato.`;
