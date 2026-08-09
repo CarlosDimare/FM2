@@ -268,9 +268,11 @@ Existían **DOS sistemas de renderizado de pantallas**: el `switch` inline en `A
 
 - [x] **Doble menú de navegación (BUG, prioridad alta).** Resuelto: `Sidebar.tsx` es solo desktop (`lg:static`, sin botón hamburguesa mobile). En mobile no hay trigger `setIsSidebarOpen(true)` en ningún componente; la navegación es exclusivamente `BottomNav` + sheet "Más". Código mobile residual eliminado de `Sidebar.tsx`.
 - [x] **Botón de ayudante duplicado en Táctica (BUG, prioridad alta).** Confirmado: el botón viejo `🎩 CONSEJO DEL AYUDANTE` no existe en `TacticsView.tsx`. Solo queda el `DialogueAvatar` fijo con badge condicional.
+- [x] **Wrapper redundante de Sidebar.** Eliminado el `<div className="hidden lg:block">` exterior en `App.tsx` que duplicaba la visibilidad ya controlada por `Sidebar.tsx` con `hidden lg:flex`.
+- [x] **`isSidebarOpen`/`setIsSidebarOpen` sin uso.** Eliminados del destructuring en `App.tsx` al no tener uso funcional activo.
 - [ ] **Fondos temáticos son placeholder, no lo especificado (calidad, prioridad media).** `ScreenBackground.tsx` tiene gradientes radiales sutiles. Pendiente Fase 6 con imágenes fotográficas.
 
-**Criterio de salida:** cumplido — navegación unificada, un solo punto de entrada por diálogo de personaje.
+**Criterio de salida:** cumplido — navegación unificada, un solo punto de entrada por diálogo de personaje, sin código residual de visibilidad.
 
 ---
 

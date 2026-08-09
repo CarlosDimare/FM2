@@ -120,7 +120,7 @@ const App: React.FC = () => {
   const notify = useWorldStore(s => s.notify);
 
 const {
-    gameState, currentView, selectedPlayer, contextMenu, isSidebarOpen,
+    gameState, currentView, selectedPlayer, contextMenu,
     userName, userSurname, userNationality, userOrigin, userBirthDate, selectedCountry, selectedLeague, userClub, viewExternalClub,
     careerMode, selectedNationalTeamId,
     isVacationModalOpen, vacationTargetDate, isSimulating, isInVacation,
@@ -129,7 +129,7 @@ const {
     seasonSummary, userWonLeague, viewLeagueId, viewSquadType,
     currentDate, seasonEndDate, hasSave,
     isSaveModalOpen, saveNameInput, isLoadModalOpen, availableSaves,
-    setGameState, setView, setSelectedPlayer, setContextMenu, setIsSidebarOpen,
+    setGameState, setView, setSelectedPlayer, setContextMenu,
     setUserName, setUserSurname, setUserNationality, setUserOrigin, setUserBirthDate, setSelectedCountry, setSelectedLeague, setUserClub, setCareerMode, setSelectedNationalTeamId,
     setViewExternalClub, setIsVacationModalOpen, setVacationTargetDate, setIsSimulating,
     setIsInVacation, setSeasonSummary, setUserWonLeague, setViewLeagueId, setViewSquadType,
@@ -1901,9 +1901,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
 
       <div className="flex flex-1 overflow-hidden relative">
         {(userClub || selectedNationalTeamId) && !isMatchView && (
-          <div className="hidden lg:block">
-            <Sidebar currentView={currentView} setView={setView} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
-          </div>
+          <Sidebar currentView={currentView} setView={setView} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
         )}
         <main className="flex-1 flex flex-col min-w-0 bg-[#b8c4b8] relative min-h-0 overflow-hidden pb-[104px] lg:pb-0">
           <ScreenBackground view={currentView}>{renderCurrentView()}</ScreenBackground>
