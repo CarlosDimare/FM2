@@ -9,13 +9,14 @@ export type TriggerContext = {
 };
 
 export function checkAssistantTrigger(ctx: TriggerContext): boolean {
-  if (ctx.currentView !== 'SENIOR_TACTICS') return false;
+  if (ctx.currentView !== 'SENIOR_TACTICS' && ctx.currentView !== 'PRE_MATCH') return false;
   const club = ctx.userClubId ? world.getClub(ctx.userClubId) : null;
   if (!club) return false;
   const assistant = getAssistantStaff(ctx.userClubId);
   if (!assistant) return false;
   const nextFixture = ctx.nextFixture;
   if (!nextFixture) return false;
+  if (ctx.currentView === 'PRE_MATCH') return true;
   const daysUntil = (nextFixture.date.getTime() - ctx.currentDate.getTime()) / (1000 * 60 * 60 * 24);
   return daysUntil <= 3 && daysUntil >= 0;
 }

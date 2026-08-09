@@ -199,7 +199,7 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players: playersProp
   );
 
   return (
-    <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-hidden">
+    <div className="p-2 md:p-4 h-full flex flex-col gap-4 bg-[#d4dcd4] overflow-y-auto">
       <header className="shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#e8ece8] border border-[#a0b0a0] p-3 md:p-4 rounded-sm shadow-sm">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-[#3a4a3a] rounded-sm text-white">
@@ -292,9 +292,9 @@ export const TrainingView: React.FC<TrainingViewProps> = ({ players: playersProp
         </div>
       </FMBox>
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 overflow-hidden relative">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 overflow-y-auto relative">
         {/* Left: Players List */}
-        <FMBox title="Planificación de Jugadores" className="flex-1 lg:flex-[2] overflow-hidden" noPadding>
+        <FMBox title="Planificación de Jugadores" className="flex-1 lg:flex-[2] overflow-y-auto" noPadding>
           <FMTable headers={['Nombre', 'Carga', 'Mor', 'Fis']} colWidths={['auto', '100px', '40px', '40px']}>
             {players.sort((a,b) => b.currentAbility - a.currentAbility).map(p => {
               const schedule = p.trainingSchedule || TRAINING_PRESETS[0].schedule;
