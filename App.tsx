@@ -1943,7 +1943,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
 
       {selectedPlayer && (userClub || selectedNationalTeamId) && <PlayerModal player={selectedPlayer} userClubId={userClub?.id} onClose={() => setSelectedPlayer(null)} currentDate={currentDate} />}
       {comparePlayerA && comparePlayerB && <PlayerCompareModal playerA={comparePlayerA} playerB={comparePlayerB} onClose={() => { setComparePlayerA(null); setComparePlayerB(null); }} />}
-      {contextMenu && <PlayerContextMenu player={contextMenu.player} x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} currentDate={currentDate} />}
+      {contextMenu && <PlayerContextMenu player={contextMenu.player} x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} currentDate={currentDate} userClubId={userClub?.id} />}
       {seasonSummary && <SeasonSummaryModal summary={seasonSummary} userWonLeague={userWonLeague} onClose={() => { setSeasonSummary(null); setUserWonLeague(false); }} />}
       {isSackedModalOpen && (
         <FMModal isOpen={isSackedModalOpen} onClose={() => setIsSackedModalOpen(false)} title="Despido" size="md">

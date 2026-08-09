@@ -58,6 +58,14 @@ export const PlayerDialog: React.FC = () => {
         if (personality === 'VOLATILE') return `No estoy de acuerdo con algunas decisiones del grupo. No me siento cómodo.`;
         if (personality === 'LEADER') return `Hay tensiones en el vestuario que están afectando al equipo. Podemos solucionarlo?`;
         return `Hay algo en el vestuario que no está bien. Necesito hablar de ello.`;
+      case 'PRE_MATCH_CHAT':
+        return `Jefe, listo para el partido. Quería saludarlo antes de salir a la cancha.`;
+      case 'POST_MATCH_WARNING':
+        return `Mi rendimiento no fue el esperado. Asumo mi responsabilidad y prometo trabajar para revertirlo.`;
+      case 'POST_MATCH_PRAISE':
+        return `Gracias por confiar en mí. Hoy salió todo bien, pero no me voy a conformar.`;
+      case 'CONTRACT_RENEWAL':
+        return `Mi contrato está en un punto donde deberíamos hablar de mi futuro aquí.`;
       default:
         return `Jefe, quería charlar un rato.`;
     }
@@ -124,6 +132,7 @@ export const PlayerDialog: React.FC = () => {
         description: reactionText,
       });
       world.adjustRelationship('COACH', player.id, relationshipDelta * 50, relationshipDelta * 30, Math.abs(relationshipDelta) * 30);
+      player.morale = Math.max(0, Math.min(100, (player.morale || 50) + moraleChange));
     }
 
     setResult(reactionText);

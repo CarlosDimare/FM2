@@ -3,7 +3,8 @@ import React from 'react';
 import { Player } from '../types';
 import { world } from '../services/worldManager';
 import { notifyPlayers } from '../stores/worldStore';
-import { UserPlus, UserMinus, ArrowRightLeft, DollarSign, Clock, ShieldCheck, UserX } from 'lucide-react';
+import { useDialogueStore } from '../stores/dialogueStore';
+import { UserPlus, UserMinus, ArrowRightLeft, DollarSign, Clock, ShieldCheck, UserX, MessageCircle } from 'lucide-react';
 
 interface PlayerContextMenuProps {
   player: Player;
@@ -11,9 +12,10 @@ interface PlayerContextMenuProps {
   y: number;
   onClose: () => void;
   currentDate?: Date;
+  userClubId?: string;
 }
 
-export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x, y, onClose, currentDate }) => {
+export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x, y, onClose, currentDate, userClubId }) => {
   const handleAction = (action: () => void) => {
     action();
     notifyPlayers();
@@ -56,23 +58,28 @@ export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({ player, x,
       </div>
 
       <div className="border-t border-slate-700 py-1">
-        <ContextItem 
-          icon={<DollarSign size={14} className={player.transferStatus === 'TRANSFERABLE' ? 'text-green-400' : ''}/>} 
-          label={player.transferStatus === 'TRANSFERABLE' ? "Quitar de Transferibles" : "Declarar Transferible"} 
-          onClick={() => handleAction(() => setStatus(player.transferStatus === 'TRANSFERABLE' ? 'NONE' : 'TRANSFERABLE'))} 
-        />
-        <ContextItem 
-          icon={<ShieldCheck size={14} className={player.transferStatus === 'LOANABLE' ? 'text-blue-400' : ''}/>} 
-          label={player.transferStatus === 'LOANABLE' ? "Quitar de Cedibles" : "Declarar Cedible"} 
-          onClick={() => handleAction(() => setStatus(player.transferStatus === 'LOANABLE' ? 'NONE' : 'LOANABLE'))} 
-        />
-        {currentDate && player.clubId !== 'FREE_AGENT' && (
-           <ContextItem 
-             icon={<UserX size={14} className="text-red-500"/>} 
-             label="Rescindir Contrato" 
-             onClick={() => handleAction(() => world.rescindContract(player.id, currentDate))} 
-           />
-        )}
+         <ContextItem 
+           icon={<MessageCircle size={14} className="text-emerald-400"/>} 
+           label="Hablar" 
+           onClick={() => handleAction(() => { useDialogueStore.getState().open('PLAYER_DIALOG', { clubId: userClubId || '', playerId: player.id, initiatedBy: 'MANAGER', context: 'GENERAL' }); })} 
+         />
+         <ContextItem 
+           icon={<DollarSign size={14} className={player.transferStatus === 'TRANSFERABLE' ? 'text-green-400' : ''}/>} 
+           label={player.transferStatus === 'TRANSFERABLE' ? "Quitar de Transferibles" : "Declarar Transferible"} 
+           onClick={() => handleAction(() => setStatus(player.transferStatus === 'TRANSFERABLE' ? 'NONE' : 'TRANSFERABLE'))} 
+         />
+         <ContextItem 
+           icon={<ShieldCheck size={14} className={player.transferStatus === 'LOANABLE' ? 'text-blue-400' : ''}/>} 
+           label={player.transferStatus === 'LOANABLE' ? "Quitar de Cedibles" : "Declarar Cedible"} 
+           onClick={() => handleAction(() => setStatus(player.transferStatus === 'LOANABLE' ? 'NONE' : 'LOANABLE'))} 
+         />
+         {currentDate && player.clubId !== 'FREE_AGENT' && (
+            <ContextItem 
+              icon={<UserX size={14} className="text-red-500"/>} 
+              label="Rescindir Contrato" 
+              onClick={() => handleAction(() => world.rescindContract(player.id, currentDate))} 
+            />
+         )}
       </div>
     </div>
   );
