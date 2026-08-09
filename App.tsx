@@ -1905,7 +1905,7 @@ return <div className="p-8 text-center text-slate-500 font-black uppercase">Erro
             <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} currentView={currentView} setView={(v) => { setView(v); setIsSidebarOpen(false); }} club={userClub} nationalTeamId={selectedNationalTeamId} onVacation={() => setIsVacationModalOpen(true)} onSave={handleOpenSaveModal} />
           </div>
         )}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#b8c4b8] relative overflow-hidden pb-[104px] lg:pb-0">
+        <main className="flex-1 flex flex-col min-w-0 bg-[#b8c4b8] relative min-h-0 overflow-hidden pb-[104px] lg:pb-0">
           <ScreenBackground view={currentView}>{renderCurrentView()}</ScreenBackground>
         </main>
         {onboardingActive && <OnboardingTour active={onboardingActive} currentView={currentView} onComplete={() => setShowOnboarding(false)} />}

@@ -78,7 +78,7 @@ export const FMBox: React.FC<{
                     {headerRight && <div className="min-w-0 flex-wrap">{headerRight}</div>}
                 </div>
             )}
-            <div className={`flex-1 min-h-0 overflow-hidden ${noPadding ? '' : 'p-2'}`}>
+            <div className={`flex-1 min-h-0 overflow-y-auto ${noPadding ? '' : 'p-2'}`}>
                 {children}
             </div>
         </div>

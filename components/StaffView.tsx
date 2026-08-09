@@ -251,7 +251,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
       <div className="flex-1 min-h-0 pb-24">
         <FMBox title={`Cuerpo Técnico (${sortedStaff.length})`} className="h-full" noPadding>
           {/* Desktop Table View */}
-          <div className="hidden md:block h-full overflow-hidden">
+          <div className="hidden md:block h-full overflow-y-auto">
             <FMTable
               headers={['Rol', 'Nombre', 'Edad', 'Nacionalidad', 'Rep', 'Sueldo', 'Delegaciones']}
               colWidths={['70px', 'auto', '40px', '90px', '40px', '70px', '150px']}
@@ -297,7 +297,7 @@ export const StaffView: React.FC<StaffViewProps> = ({ staff, club }) => {
           </div>
 
           {/* Mobile Table View */}
-          <div className="md:hidden h-full overflow-hidden">
+          <div className="md:hidden h-full overflow-y-auto">
             <FMTable
               headers={['Rol', 'Nombre', 'Edad', 'Delegaciones']}
               colWidths={['56px', 'auto', '36px', '120px']}

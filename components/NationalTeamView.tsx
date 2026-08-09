@@ -521,7 +521,7 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
           {/* Lista de convocados — mismo FMBox/FMTable que la Plantilla de club */}
           <div className="flex-1 min-h-0">
             <FMBox title={`Convocatoria (${filteredPlayers.length})`} className="h-full" noPadding>
-              <div className="hidden md:block h-full overflow-hidden">
+              <div className="hidden md:block h-full overflow-y-auto">
                 <FMTable headers={desktopHeaders} colWidths={desktopWidths} onHeaderClick={handleHeaderClick}>
                   {sortedPlayers.map((player, idx) => {
                     const club = world.getClub(player.clubId);
@@ -563,7 +563,7 @@ export const NationalTeamView: React.FC<NationalTeamViewProps> = ({ teamId, sect
                 </FMTable>
               </div>
 
-              <div className="md:hidden h-full overflow-hidden">
+              <div className="md:hidden h-full overflow-y-auto">
                 <FMTable headers={mobileHeaders} colWidths={mobileWidths} onHeaderClick={handleHeaderClick}>
                   {sortedPlayers.map((player, idx) => (
                     <tr

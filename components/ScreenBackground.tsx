@@ -39,12 +39,12 @@ export const ScreenBackground: React.FC<{
   const bg = VIEW_BACKGROUNDS[view || ''] || 'radial-gradient(ellipse at 50% 0%, transparent 50%, rgba(0,0,0,0.04) 100%)';
 
   return (
-    <div className={`relative w-full h-full overflow-hidden ${className}`}>
+    <div className={`relative w-full h-full overflow-hidden min-h-0 ${className}`}>
       <div
         className="absolute inset-0 pointer-events-none z-0"
         style={{ background: bg }}
       />
-      <div className="relative z-10 w-full h-full">
+      <div className="relative z-10 w-full h-full min-h-0">
         {children}
       </div>
     </div>

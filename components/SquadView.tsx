@@ -179,7 +179,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
       </div>
       <FMBox title={customTitle || `Plantilla (${visiblePlayers.length})`} className="flex-1" noPadding>
         {/* Tablet Table View */}
-        <div className="hidden md:block lg:hidden h-full overflow-hidden">
+        <div className="hidden md:block lg:hidden h-full overflow-y-auto">
             <FMTable
                 headers={tabletHeaders}
                 colWidths={tabletWidths}
@@ -220,7 +220,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
         </div>
 
         {/* Desktop Table View */}
-        <div className="hidden lg:block h-full overflow-hidden">
+        <div className="hidden lg:block h-full overflow-y-auto">
             <FMTable
                 headers={desktopHeaders}
                 colWidths={desktopWidths}
@@ -264,7 +264,7 @@ export const SquadView: React.FC<SquadViewProps> = ({ players, onSelectPlayer, o
         </div>
         
         {/* Mobile Table View */}
-        <div className="md:hidden h-full overflow-hidden">
+        <div className="md:hidden h-full overflow-y-auto">
             <FMTable 
                 headers={mobileHeaders}
                 colWidths={mobileWidths}

@@ -58,7 +58,7 @@ export const MarketView: React.FC<MarketViewProps> = ({ onSelectPlayer, userClub
   const directorColor = world.getClub(userClubId)?.primaryColor || 'bg-[#3a4a3a]';
 
   return (
-    <div className="p-2 md:p-4 h-full flex flex-col gap-3 bg-[#d4dcd4] overflow-hidden">
+    <div className="p-2 md:p-4 h-full flex flex-col gap-3 bg-[#d4dcd4] overflow-y-auto">
       <header className="flex flex-col gap-3 shrink-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
            <div>
