@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
       test: {
         environment: 'jsdom',
         globals: true,
+        pool: 'forks',
       },
       plugins: [
         react(),
