@@ -13,6 +13,22 @@ const VIEW_BACKGROUNDS: Record<string, string> = {
   BOARD: 'radial-gradient(ellipse at 30% 20%, rgba(60,60,40,0.05) 0%, transparent 60%)',
   SCOUTING: 'radial-gradient(ellipse at 70% 70%, rgba(40,60,40,0.05) 0%, transparent 50%)',
   ECONOMY: 'radial-gradient(ellipse at 20% 30%, rgba(60,50,30,0.04) 0%, transparent 60%)',
+  SEARCH: 'radial-gradient(ellipse at 50% 50%, rgba(58,74,58,0.05) 0%, transparent 60%)',
+  NEGOTIATIONS: 'radial-gradient(ellipse at 30% 50%, rgba(80,60,40,0.05) 0%, transparent 60%)',
+  CLUBS_LIST: 'radial-gradient(ellipse at 50% 30%, rgba(58,74,58,0.04) 0%, transparent 60%)',
+  EXTERNAL_CLUB: 'radial-gradient(ellipse at 40% 60%, rgba(58,74,58,0.05) 0%, transparent 60%)',
+  STAFF: 'radial-gradient(ellipse at 60% 40%, rgba(58,74,58,0.05) 0%, transparent 60%)',
+  CLUB_REPORT: 'radial-gradient(ellipse at 50% 50%, rgba(58,74,58,0.04) 0%, transparent 60%)',
+  PEOPLE_HUB: 'radial-gradient(ellipse at 50% 50%, rgba(58,74,58,0.05) 0%, transparent 60%)',
+  MEDIA: 'radial-gradient(ellipse at 30% 20%, rgba(50,50,50,0.05) 0%, transparent 60%)',
+  CHRONICLES: 'radial-gradient(ellipse at 50% 50%, rgba(58,74,58,0.05) 0%, transparent 60%)',
+  MANAGER_PROFILE: 'radial-gradient(ellipse at 40% 30%, rgba(58,74,58,0.05) 0%, transparent 60%)',
+  HALL_OF_FAME: 'radial-gradient(ellipse at 50% 20%, rgba(60,50,30,0.05) 0%, transparent 60%)',
+  SEASON_HISTORY: 'radial-gradient(ellipse at 50% 50%, rgba(58,74,58,0.04) 0%, transparent 60%)',
+  LEAGUE_RANKING: 'radial-gradient(ellipse at 30% 30%, rgba(58,74,58,0.05) 0%, transparent 60%)',
+  TABLE: 'radial-gradient(ellipse at 50% 50%, rgba(58,74,58,0.04) 0%, transparent 60%)',
+  COMP_DEFAULT: 'radial-gradient(ellipse at 50% 50%, rgba(58,74,58,0.05) 0%, transparent 60%)',
+  NT_DEFAULT: 'radial-gradient(ellipse at 50% 50%, rgba(30,50,80,0.05) 0%, transparent 60%)',
 };
 
 export const ScreenBackground: React.FC<{
