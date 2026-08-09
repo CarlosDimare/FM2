@@ -1216,7 +1216,7 @@ const startVacation = async (targetOverride?: Date) => {
                   <ArrowLeft size={10} /> Volver
                 </button>
               </div>
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto">
                 <SquadView
                   players={world.getPlayersByClub(viewExternalClub.id).filter(p => p.squad === 'SENIOR')}
                   onSelectPlayer={setSelectedPlayer}
