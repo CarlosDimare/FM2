@@ -72,10 +72,10 @@ export const FMBox: React.FC<{
     return (
         <div className={`bg-[#e8ece8] border border-[#a0b0a0] rounded-sm shadow-md flex flex-col min-h-0 ${className}`}>
             {title && (
-                <div className="border-b border-[#a0b0a0] px-2 py-1 flex justify-between items-center shrink-0 h-8" 
+                <div className="border-b border-[#a0b0a0] px-2 py-1 flex flex-wrap justify-between items-center gap-1 min-h-8 shrink-0" 
                      style={{ background: 'linear-gradient(to bottom, #cfd8cf 0%, #a3b4a3 100%)' }}>
-                    <span className="text-[#1a1a1a] font-bold text-[11px] tracking-tight uppercase" style={{ fontFamily: 'Verdana, sans-serif' }}>{title}</span>
-                    {headerRight && <div>{headerRight}</div>}
+                    <span className="text-[#1a1a1a] font-bold text-[11px] tracking-tight uppercase min-w-0 truncate" style={{ fontFamily: 'Verdana, sans-serif' }}>{title}</span>
+                    {headerRight && <div className="min-w-0 flex-wrap">{headerRight}</div>}
                 </div>
             )}
             <div className={`flex-1 min-h-0 overflow-hidden ${noPadding ? '' : 'p-2'}`}>

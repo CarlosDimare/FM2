@@ -33,10 +33,18 @@ import { DialogueHost } from './components/dialogs/DialogueHost';
 import { FMLoadingOverlay, FMModal, FMButton } from './components/FMUI';
 import { ScreenBackground } from './components/ScreenBackground';
 
-const MatchView = lazy(() => import('./components/MatchView').then(m => ({ default: m.MatchView })));
-const TacticsView = lazy(() => import('./components/TacticsView').then(m => ({ default: m.TacticsView })));
-const PreMatchView = lazy(() => import('./components/PreMatchView').then(m => ({ default: m.PreMatchView })));
-const PostMatchSummaryView = lazy(() => import('./components/PostMatchSummaryView').then(m => ({ default: m.PostMatchSummaryView })));
+function lazyWithReload(importFn: () => Promise<any>) {
+  return lazy(() => importFn().catch(err => {
+    console.error('Failed to load chunk', err);
+    window.location.reload();
+    return Promise.reject(err);
+  }));
+}
+
+const MatchView = lazyWithReload(() => import('./components/MatchView').then(m => ({ default: m.MatchView })));
+const TacticsView = lazyWithReload(() => import('./components/TacticsView').then(m => ({ default: m.TacticsView })));
+const PreMatchView = lazyWithReload(() => import('./components/PreMatchView').then(m => ({ default: m.PreMatchView })));
+const PostMatchSummaryView = lazyWithReload(() => import('./components/PostMatchSummaryView').then(m => ({ default: m.PostMatchSummaryView })));
 import { EconomyView } from './components/EconomyView';
 import { NegotiationsView } from './components/NegotiationsView';
 import { InboxView } from './components/InboxView';

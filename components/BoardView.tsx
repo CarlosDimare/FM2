@@ -3,7 +3,7 @@ import { Club } from '../types';
 import { world } from '../services/worldManager';
 import { notifyAll } from '../stores/worldStore';
 import { FMBox, FMButton } from './FMUI';
-import { Building2, Award, DollarSign, Users, ArrowUp, Target, TrendingUp, ShieldCheck, Briefcase, Megaphone } from 'lucide-react';
+import { Building2, Award, DollarSign, Users, ArrowUp, Target, TrendingUp, ShieldCheck, Briefcase, Megaphone, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface BoardViewProps {
   userClub: Club;
@@ -41,6 +41,8 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub, currentDate }) =
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [objectiveDraft, setObjectiveDraft] = useState<string>(userClub.seasonObjective || 'TOP_HALF');
   const [meetingLog, setMeetingLog] = useState<{ topic: string; response: string; tone: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' }[]>([]);
+  const [showFacilities, setShowFacilities] = useState(false);
+  const [showMeetings, setShowMeetings] = useState(false);
 
   const refreshClub = () => notifyAll();
 
@@ -174,30 +176,38 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub, currentDate }) =
 
       <FMBox title="Mejoras de Instalaciones">
         <div className="space-y-2">
-          <div className="bg-white border border-slate-300 p-3 rounded-sm flex items-center justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] font-black uppercase flex items-center gap-2 mb-1">
-                <Building2 size={14} /> Entrenamiento
+          <button onClick={() => setShowFacilities(!showFacilities)} className="w-full flex items-center justify-between text-[9px] font-black uppercase text-slate-500 hover:text-slate-900 transition-colors">
+            {showFacilities ? 'Ocultar' : 'Mostrar'} instalaciones
+            {showFacilities ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          {showFacilities && (
+            <>
+              <div className="bg-white border border-slate-300 p-3 rounded-sm flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-black uppercase flex items-center gap-2 mb-1">
+                    <Building2 size={14} /> Entrenamiento
+                  </div>
+                  <div className="text-[9px] text-slate-600">Nivel actual: <b>{userClub.trainingFacilities}/20</b></div>
+                  <div className="text-[9px] text-slate-600">Costo proximo nivel: <b>${trainingCost.toLocaleString()}</b></div>
+                </div>
+                <FMButton onClick={() => handleUpgrade('training')} disabled={userClub.trainingFacilities >= 20 || userClub.finances.balance < trainingCost} className="text-[10px] shrink-0">
+                  <ArrowUp size={12} /> Mejorar
+                </FMButton>
               </div>
-              <div className="text-[9px] text-slate-600">Nivel actual: <b>{userClub.trainingFacilities}/20</b></div>
-              <div className="text-[9px] text-slate-600">Costo proximo nivel: <b>${trainingCost.toLocaleString()}</b></div>
-            </div>
-            <FMButton onClick={() => handleUpgrade('training')} disabled={userClub.trainingFacilities >= 20 || userClub.finances.balance < trainingCost} className="text-[10px] shrink-0">
-              <ArrowUp size={12} /> Mejorar
-            </FMButton>
-          </div>
-          <div className="bg-white border border-slate-300 p-3 rounded-sm flex items-center justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] font-black uppercase flex items-center gap-2 mb-1">
-                <Users size={14} /> Juveniles
+              <div className="bg-white border border-slate-300 p-3 rounded-sm flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-black uppercase flex items-center gap-2 mb-1">
+                    <Users size={14} /> Juveniles
+                  </div>
+                  <div className="text-[9px] text-slate-600">Nivel actual: <b>{userClub.youthFacilities}/20</b></div>
+                  <div className="text-[9px] text-slate-600">Costo proximo nivel: <b>${youthCost.toLocaleString()}</b></div>
+                </div>
+                <FMButton onClick={() => handleUpgrade('youth')} disabled={userClub.youthFacilities >= 20 || userClub.finances.balance < youthCost} className="text-[10px] shrink-0">
+                  <ArrowUp size={12} /> Mejorar
+                </FMButton>
               </div>
-              <div className="text-[9px] text-slate-600">Nivel actual: <b>{userClub.youthFacilities}/20</b></div>
-              <div className="text-[9px] text-slate-600">Costo proximo nivel: <b>${youthCost.toLocaleString()}</b></div>
-            </div>
-            <FMButton onClick={() => handleUpgrade('youth')} disabled={userClub.youthFacilities >= 20 || userClub.finances.balance < youthCost} className="text-[10px] shrink-0">
-              <ArrowUp size={12} /> Mejorar
-            </FMButton>
-          </div>
+            </>
+          )}
         </div>
       </FMBox>
 
@@ -213,27 +223,35 @@ export const BoardView: React.FC<BoardViewProps> = ({ userClub, currentDate }) =
 
       <FMBox title="Reunión con la directiva">
         <div className="space-y-2">
-          <p className="text-[9px] text-slate-600 italic">Concierta una reunión y elige el tema del día. La respuesta de la junta depende de la confianza y la reputación del club.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {MEETING_TOPICS.map(topic => (
-              <button
-                key={topic.id}
-                onClick={() => handleMeeting(topic)}
-                className="flex items-center gap-2 bg-white border border-[#a0b0a0] hover:border-[#3a4a3a] hover:bg-[#f2f7f2] rounded-sm px-3 py-2 text-[9px] font-black uppercase text-slate-700 transition-all text-left"
-              >
-                <span className="text-[#3a4a3a]">{topic.icon}</span> {topic.label}
-              </button>
-            ))}
-          </div>
-          {meetingLog.length > 0 && (
-            <div className="space-y-1.5 mt-2">
-              {meetingLog.map((entry, i) => (
-                <div key={i} className={`border-l-4 rounded-sm px-3 py-2 text-[10px] font-bold ${entry.tone === 'POSITIVE' ? 'border-green-500 bg-green-50 text-green-900' : entry.tone === 'NEUTRAL' ? 'border-amber-500 bg-amber-50 text-amber-900' : 'border-red-500 bg-red-50 text-red-900'}`}>
-                  <div className="text-[8px] font-black uppercase tracking-widest opacity-70 mb-0.5">Acta · {entry.topic}</div>
-                  {entry.response}
+          <button onClick={() => setShowMeetings(!showMeetings)} className="w-full flex items-center justify-between text-[9px] font-black uppercase text-slate-500 hover:text-slate-900 transition-colors">
+            {showMeetings ? 'Ocultar' : 'Mostrar'} reuniones
+            {showMeetings ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          {showMeetings && (
+            <>
+              <p className="text-[9px] text-slate-600 italic">Concierta una reunión y elige el tema del día. La respuesta de la junta depende de la confianza y la reputación del club.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                {MEETING_TOPICS.map(topic => (
+                  <button
+                    key={topic.id}
+                    onClick={() => handleMeeting(topic)}
+                    className="flex items-center gap-2 bg-white border border-[#a0b0a0] hover:border-[#3a4a3a] hover:bg-[#f2f7f2] rounded-sm px-3 py-2 text-[9px] font-black uppercase text-slate-700 transition-all text-left"
+                  >
+                    <span className="text-[#3a4a3a]">{topic.icon}</span> {topic.label}
+                  </button>
+                ))}
+              </div>
+              {meetingLog.length > 0 && (
+                <div className="space-y-1.5 mt-2">
+                  {meetingLog.map((entry, i) => (
+                    <div key={i} className={`border-l-4 rounded-sm px-3 py-2 text-[10px] font-bold ${entry.tone === 'POSITIVE' ? 'border-green-500 bg-green-50 text-green-900' : entry.tone === 'NEUTRAL' ? 'border-amber-500 bg-amber-50 text-amber-900' : 'border-red-500 bg-red-50 text-red-900'}`}>
+                      <div className="text-[8px] font-black uppercase tracking-widest opacity-70 mb-0.5">Acta · {entry.topic}</div>
+                      {entry.response}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </FMBox>

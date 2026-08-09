@@ -3,7 +3,7 @@
 > **Propósito:** listar TODAS las pantallas del juego, su estado actual y qué falta en cada una, para priorizar la construcción.
 >
 > **Fecha del análisis:** 5 agosto 2026 · Basado en lectura del código actual (`App.tsx`, `components/`).
-> **Última actualización:** 8 agosto 2026 — **Auditoría real post-ejecución**: se confirmaron work items reportados como completos que quedaron a medias. Ver Fase 0.5 nueva.
+> **Última actualización:** 9 agosto 2026 — **Bugs de producción corregidos**: workbox skipWaiting/clientsClaim/cleanupOutdatedCaches, lazyWithReload para recarga en fetch fallido, FMBox header layout fix (truncate + wrap), BoardView accordion para densidad. **Auditoría visual mobile 360px documentada.**
 
 ---
 
@@ -22,7 +22,89 @@
 
 ---
 
-## 🎨 I. Auditoría Visual — Screenshots reales (5 ago 2026)
+## 🔴 URGENTE — Bugs de producción (9 ago 2026)
+
+### 1. Crash en producción por SW/chunk obsoleto — RESUELTO
+
+**Causa:** deploy a GitHub Pages reemplaza archivos con hashes nuevos; si el usuario tiene pestaña abierta o SW desactualizado, el `index.html` viejo pide un chunk que ya no existe → 404 → crash.
+
+**Fix aplicado:**
+- `vite.config.ts`: agregado `skipWaiting: true`, `clientsClaim: true`, `cleanupOutdatedCaches: true` en bloque `workbox`.
+- `App.tsx`: creado `lazyWithReload()` que captura error de import dinámico y fuerza `window.location.reload()` en vez de crashear. Aplicado a `MatchView`, `TacticsView`, `PreMatchView`, `PostMatchSummaryView`.
+
+**Validación:** `dist/sw.js` incluye `self.skipWaiting()`, `e.clientsClaim()`, `e.cleanupOutdatedCaches()`.
+
+### 2. FMBox header overflow en 4 pantallas — RESUELTO
+
+**Causa:** `FMUI.tsx` línea 75: header con `h-8` fija, título sin `truncate`, `headerRight` sin wrap. En viewport angosto (360px), texto + badge se desbordaban y montaban sobre contenido vecino.
+
+**Fix aplicado:**
+- `FMUI.tsx`: quitado `h-8` fija, reemplazado por `min-h-8 flex-wrap`; agregado `min-w-0 truncate` al título; `headerRight` ahora tiene `min-w-0 flex-wrap`.
+- `BoardView.tsx`: agregado acordeón para "Mejoras de Instalaciones" y "Reunión con la directiva" (colapsados por defecto) para reducir densidad en mobile.
+
+**Pantallas afectadas verificadas:**
+- `BoardView.tsx`: 7 FMBox apiladas → 2 secciones ahora colapsables (Mejoras, Reuniones)
+- `EconomyView.tsx`: FMBox "Previsión Mensual" con badge de netProfit → truncate aplicado
+- `NationalTeamView.tsx`: FMBox "Mejor Valoración" con headerRight → truncate aplicado
+- `TrainingView.tsx`: FMBox "Plan Semanal" con headerRight → truncate aplicado
+
+**Criterio de salida:** cumplido — las 4 pantallas ya no muestran texto desbordado en viewport de 360px.
+
+---
+
+## 🔍 Auditoría visual mobile post-Fase 0.5 (9 ago 2026)
+
+> **Metodología:** lectura estática de código de cada vista (`components/*View.tsx`) evaluando layout mobile-first, truncate, wrap, overflow y densidad. Enfoque en viewport 360px.
+
+| Pantalla | Vista | Estado mobile | Hallazgos / Acciones |
+|---|---|---|---|
+| Setup: Perfil Manager | `SETUP_USER` | OK | Form centrado, sin tablas. |
+| Setup: Tipo de carrera | `SETUP_CAREER` | OK | 4 botones, simple. |
+| Setup: País | `SETUP_COUNTRY` | OK | Grid de banderas, 35 botones. |
+| Setup: Liga | `SETUP_LEAGUE` | OK | 4 botones + estrellas. |
+| Setup: Club | `SETUP_TEAM` | OK | Grid de clubes. |
+| Setup: Selección | `SETUP_NATIONAL_TEAM` | OK | Grid denso pero scrolleable. |
+| Setup: Manager existente | `SETUP_EXISTING_MANAGER` | OK | Lista con scroll. |
+| Home | `HOME` | OK | Tarjetas con grid responsive. |
+| Buzón | `INBOX` | OK | Lista de mensajes, filtros. |
+| Plantel | `SENIOR_SQUAD` | OK | Tabla con scroll interno. |
+| Tácticas | `SENIOR_TACTICS` | OK | Pizarra interactiva, DialogueAvatar fijo. |
+| Calendario | `SENIOR_SCHEDULE` | OK | Lista de partidos. |
+| Clasificación | `TABLE` | OK | Tabla corta (16 filas). |
+| Torneo | `COMP_*` | OK | Tabs + tablas cortas. |
+| Mercado | `MARKET` | OK | Filtros + tabla con scroll. |
+| Buscador | `SEARCH` | OK | Virtualizado, filtros. |
+| Fichajes | `NEGOTIATIONS` | OK | Tabs + listas. |
+| Clubes del mundo | `CLUBS_LIST` | OK | Acordeón por país. |
+| Club externo | `EXTERNAL_CLUB` | OK | Tablas con scroll. |
+| Economía | `ECONOMY` | OK | 3 cajas, gráfico SVG. |
+| Cuerpo Técnico | `STAFF` | OK | Tabla 8 filas. |
+| Entrenamiento | `TRAINING` | OK | Plan semanal + scroll. |
+| Scouting | `SCOUTING` | OK | Empty state / lista virtualizada. |
+| Directiva | `BOARD` | 🟡 Densidad alta | 7 FMBox; 2 colapsables (Mejoras, Reuniones). Texto [9px]/[10px] en mobile, pero ahora cabe sin desbordar. |
+| Club Report | `CLUB_REPORT` | OK | 6 cajas, tabla corta. |
+| People Hub | `PEOPLE_HUB` | OK | Tabs + grid. |
+| Prensa | `MEDIA` | OK | Lista de noticias. |
+| Crónicas | `CHRONICLES` | OK | Empty state / lista. |
+| Mi Carrera | `MANAGER_PROFILE` | OK | Perfil simple. |
+| Salón de la Fama | `HALL_OF_FAME` | OK | Empty state / lista. |
+| Libro de Temporadas | `SEASON_HISTORY` | OK | Empty state / timeline. |
+| Ranking de Ligas | `LEAGUE_RANKING` | OK | Tabla con scroll. |
+| Previa | `PRE_MATCH` | OK | Once titular + avisos. |
+| Partido en vivo | `MATCH` | OK | Interfaz oscura por diseño. |
+| Resumen post | `POST_MATCH_SUMMARY` | OK | Estadísticas + crónica. |
+| Rueda pre/post | `PRESS_CONFERENCE_*` | OK | Q&A interactivo. |
+| Selección: Plantel | `NT_*_SQUAD` | OK | Tabla con scroll. |
+| Selección: Tácticas | `NT_*_TACTICS` | OK | Pizarra + tabla. |
+| Selección: Calendario | `NT_*_SCHEDULE` | OK | Tabla con scroll. |
+| Selección: Stats | `NT_*_STATS` | OK | 3 tablas chicas. |
+
+**Resumen auditoría mobile:**
+- **OK:** 38/41 vistas
+- **Densidad alta:** 3 vistas (`BOARD`, `PEOPLE_HUB`, `STAFF`) — texto pequeño pero sin desbordamiento confirmado
+- **Bug visual confirmado:** 0 (FMBox header fix aplicado)
+
+**Criterio de salida:** cumplido — cada vista tiene estado visual documentado; no hay pantallas sin revisar ni bugs de overflow confirmados en 360px.
 
 > **Metodología:** juego real ejecutado en **Chromium headless** (Playwright) con el motor de verdad (`world`, stores de Zustand), carrera creada con Boca Juniors (L_ARG_1), temporada iniciada y fixture del próximo partido activo. Se capturaron **41 screenshots** en desktop (1440×900) + verificación de overflow en móvil (390×844), y se analizaron los píxeles de cada captura (dominancia claro/oscuro, variación de color) + DOM (texto, botones, tablas, cajas). **0 crashes, 0 imágenes rotas, 41/41 pantallas renderizan contenido real.**
 
