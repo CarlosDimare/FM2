@@ -423,20 +423,24 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({ player, onClose, userC
                 </div>
              )}
 
-              {activeTab === 'INTERACTION' && (
-                <div className="h-full flex flex-col p-2 gap-4 overflow-y-auto">
-                   {player.pendingDialogue && (
-                     <div className="bg-amber-100 border border-amber-300 p-3 rounded-sm flex items-start gap-3 animate-fade-up">
-                        <MessageCircle className="text-amber-600 shrink-0" size={18} />
-                        <div className="flex-1">
-                           <p className="text-[10px] font-black text-amber-700 uppercase">El jugador quiere hablar contigo</p>
-                           <p className="text-xs italic font-bold text-slate-800 mt-1">"{player.pendingDialogue === 'MINUTES_DISCONTENT' ? 'No estoy contento con los minutos. Necesito hablar de mi rol.' : player.pendingDialogue === 'CONTRACT_EXPIRING' ? 'Mi contrato está por vencer. Quiero hablar de mi futuro.' : player.pendingDialogue === 'TRANSFER_RUMOR' ? 'He visto rumores sobre mi futuro. Me gustaría saber qué piensa el club.' : 'Hay algo en el vestuario que no está bien. Necesito hablar de ello.'}"</p>
-                           <div className="mt-3">
-                              <button onClick={() => { clearPlayerDialogue(player.id); useDialogueStore.getState().open('PLAYER_DIALOG', { clubId: userClubId || '', playerId: player.id, initiatedBy: 'PLAYER', context: player.pendingDialogue }); }} className="text-[9px] bg-[#3a4a3a] text-white px-3 py-1 font-black uppercase rounded-[1px] hover:bg-[#4a6a4a] transition-colors">Hablar con {player.name.split(' ')[0]}</button>
-                           </div>
-                        </div>
-                     </div>
-                    )}
+               {activeTab === 'INTERACTION' && (
+                 <div className="h-full flex flex-col p-2 gap-4 overflow-y-auto">
+                    {player.pendingDialogue && (() => {
+                      const isManagerInitiated = ['PRE_MATCH_CHAT', 'POST_MATCH_WARNING', 'POST_MATCH_PRAISE', 'CONTRACT_RENEWAL'].includes(player.pendingDialogue);
+                      const motiveText = player.pendingDialogue === 'MINUTES_DISCONTENT' ? 'No estoy contento con los minutos. Necesito hablar de mi rol.' : player.pendingDialogue === 'CONTRACT_EXPIRING' ? 'Mi contrato está por vencer. Quiero hablar de mi futuro.' : player.pendingDialogue === 'TRANSFER_RUMOR' ? 'He visto rumores sobre mi futuro. Me gustaría saber qué piensa el club.' : player.pendingDialogue === 'DRESSING_ROOM_CONFLICT' ? 'Hay algo en el vestuario que no está bien. Necesito hablar de ello.' : player.pendingDialogue === 'PRE_MATCH_CHAT' ? 'Listo para el partido. Quería saludarlo antes de salir a la cancha.' : player.pendingDialogue === 'POST_MATCH_WARNING' ? 'Mi rendimiento no fue el esperado. Asumo mi responsabilidad.' : player.pendingDialogue === 'POST_MATCH_PRAISE' ? 'Gracias por confiar en mí. Hoy salió todo bien.' : 'Mi contrato está en un punto donde deberíamos hablar de mi futuro aquí.';
+                      return (
+                      <div className={`p-3 rounded-sm flex items-start gap-3 animate-fade-up ${isManagerInitiated ? 'bg-blue-100 border border-blue-300' : 'bg-amber-100 border border-amber-300'}`}>
+                         <MessageCircle className={`shrink-0 size={18}`} style={{color: isManagerInitiated ? '#2563eb' : '#d97706'}} />
+                         <div className="flex-1">
+                            <p className={`text-[10px] font-black uppercase ${isManagerInitiated ? 'text-blue-700' : 'text-amber-700'}`}>{isManagerInitiated ? 'Tenés que hablar con el jugador' : 'El jugador quiere hablar contigo'}</p>
+                            <p className="text-xs italic font-bold text-slate-800 mt-1">"{motiveText}"</p>
+                            <div className="mt-3">
+                               <button onClick={() => { clearPlayerDialogue(player.id); useDialogueStore.getState().open('PLAYER_DIALOG', { clubId: userClubId || '', playerId: player.id, initiatedBy: isManagerInitiated ? 'MANAGER' : 'PLAYER', context: player.pendingDialogue }); }} className="text-[9px] bg-[#3a4a3a] text-white px-3 py-1 font-black uppercase rounded-[1px] hover:bg-[#4a6a4a] transition-colors">Hablar con {player.name.split(' ')[0]}</button>
+                            </div>
+                         </div>
+                      </div>
+                      );
+                    })()}
                    {dialogueResult ? (
                     <div className="bg-white border border-[#a0b0a0] p-6 rounded-sm text-center flex flex-col items-center gap-4 animate-zoom-in">
                        <div className={`p-4 rounded-full border-4 ${dialogueResult.reactionType === 'POSITIVE' ? 'bg-green-100 border-green-500 text-green-600' : dialogueResult.reactionType === 'NEGATIVE' ? 'bg-red-100 border-red-500 text-red-600' : 'bg-slate-100 border-slate-400 text-slate-600'}`}>
