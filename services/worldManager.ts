@@ -2060,6 +2060,32 @@ Días desde la lesión: ${i.daysSinceInjury}`;
     });
   }
 
+  processLightMarketActivity(date: Date) {
+    if (Math.random() > 0.03) return;
+    const deepIds = new Set(useGameStore.getState().deepSimLeagues);
+    const lightClubs = this.clubs.filter(c => !deepIds.has(c.leagueId) && c.finances.transferBudget > 5000);
+    if (lightClubs.length < 2) return;
+
+    const buyer = lightClubs[randomInt(0, lightClubs.length - 1)];
+    const buyerLeague = this.competitions.find(c => c.id === buyer.leagueId);
+    const candidates = this.players.filter(p => {
+      if (p.clubId === buyer.id || p.clubId === 'FREE_AGENT' || p.squad !== 'SENIOR') return false;
+      const sellerClub = this.getClub(p.clubId);
+      if (!sellerClub || deepIds.has(sellerClub.leagueId)) return false;
+      const sameCountry = sellerClub.country === buyer.country;
+      const sameConfederation = buyerLeague?.confederation &&
+        this.competitions.find(c => c.id === sellerClub.leagueId)?.confederation === buyerLeague.confederation;
+      return sameCountry || sameConfederation;
+    });
+
+    if (candidates.length === 0) return;
+    const target = candidates[randomInt(0, Math.min(3, candidates.length - 1))];
+    const amount = Math.round(Math.min(target.value, buyer.finances.transferBudget * 0.25) * (0.6 + Math.random() * 0.3));
+    if (amount < 1000) return;
+
+    this.makeTransferOffer(target.id, buyer.id, amount, 'PURCHASE', date);
+  }
+
   processDailyContracts(date: Date, userClubId?: string) {
     if (userClubId) {
       const userPlayers = this.getPlayersByClub(userClubId);
@@ -2862,31 +2888,121 @@ generateYouthIntake(year: number) {
   }
 
   autoPromoteYouthPlayers(date: Date) {
-    // Auto-promote eligible U20 players at end of season (June)
-    if (date.getMonth() !== 5 || date.getDate() !== 30) return;
+    const isMonthly = date.getDate() === 1;
+    const isSeasonEnd = date.getMonth() === 5 && date.getDate() === 30;
+    if (!isMonthly && !isSeasonEnd) return;
     let released = false;
 
     this.clubs.forEach(club => {
       const youthPlayers = this.getYouthPlayers(club.id);
       const seniorCount = this.getPlayersByClub(club.id).filter(p => p.squad === 'SENIOR').length;
       
-      youthPlayers.forEach(player => {
-        if (this.isPlayerReadyForPromotion(player.id) && seniorCount < 30) {
-          this.promoteToFirstTeam(player.id);
-        }
-      });
+      if (isMonthly) {
+        youthPlayers.forEach(player => {
+          if (this.isPlayerReadyForPromotion(player.id) && seniorCount < 30) {
+            this.promoteToFirstTeam(player.id);
+          }
+        });
+      }
 
-      // Release low-potential U20 players over 19
-      youthPlayers.forEach(player => {
-        if (player.age >= 19 && player.potentialAbility < 100) {
-          player.clubId = 'FREE_AGENT';
-          player.squad = 'U20';
-          released = true;
-        }
-      });
+      if (isSeasonEnd) {
+        youthPlayers.forEach(player => {
+          if (player.age >= 19 && player.potentialAbility < 100) {
+            player.clubId = 'FREE_AGENT';
+            player.squad = 'U20';
+            released = true;
+          }
+        });
+      }
     });
-    // Reconstruir los índices una sola vez (no por cada liberación)
     if (released) this.markPlayersDirty();
+  }
+
+  processQuarterlyYouthIntake(date: Date) {
+    if (date.getMonth() % 3 !== 0 || date.getDate() !== 1) return;
+    this.clubs.forEach(club => {
+      const youthCount = randomInt(0, 2);
+      for (let i = 0; i < youthCount; i++) {
+        const posPool = [Position.GK, Position.DC, Position.DL, Position.DR, Position.DM, Position.MC, Position.ML, Position.MR, Position.AM, Position.AML, Position.AMR, Position.ST, Position.STR, Position.STL];
+        const pos = posPool[randomInt(0, posPool.length - 1)];
+        const age = 15 + randomInt(0, 2);
+        const nationality = this.getYouthNationality(club);
+        const youthBonus = (club.youthFacilities + club.youthRecruitment) / 40;
+        const repBonus = club.reputation / 1000;
+        const ca = randomInt(30, Math.round(50 + youthBonus * 15 + repBonus * 10));
+        const pa = Math.min(200, ca + randomInt(10, 40 + Math.round(youthBonus * 20)));
+        const player = this.createRandomPlayer(club.id, pos, age, age, date.getFullYear());
+        player.nationality = nationality;
+        player.currentAbility = ca;
+        player.potentialAbility = pa;
+        player.squad = 'U20';
+        player.value = Math.round(ca * pa * 8);
+        player.salary = Math.round(ca * 150 / 12);
+        this.players.push(player);
+      }
+    });
+  }
+
+  private getYouthNationality(club: Club): string {
+    switch (club.scoutingRegion) {
+      case 'ARG': return 'Argentina';
+      case 'BRA': return 'Brasil';
+      case 'URU': return 'Uruguay';
+      case 'CHL': return 'Chile';
+      case 'COL': return 'Colombia';
+      case 'ECU': return 'Ecuador';
+      case 'PAR': return 'Paraguay';
+      case 'PER': return 'Perú';
+      case 'VEN': return 'Venezuela';
+      case 'BOL': return 'Bolivia';
+      default:
+        if (Math.random() < 0.1) return 'Uruguay';
+        else if (Math.random() < 0.05) return 'Chile';
+        else if (Math.random() < 0.05) return 'Brasil';
+        else return 'Argentina';
+    }
+  }
+
+  ensureMinimumSquadSizes() {
+    const MIN_BY_LINE: Record<string, number> = {
+      'GK': 2, 'DEF': 5, 'DM': 2, 'MID': 3, 'AM': 2, 'ATT': 2,
+    };
+    const positionToLine = (pos: Position): string => {
+      if (pos === Position.GK) return 'GK';
+      if ([Position.DC, Position.DL, Position.DR, Position.SW, Position.DML, Position.DMR].includes(pos)) return 'DEF';
+      if (pos === Position.DM) return 'DM';
+      if ([Position.MC, Position.ML, Position.MR].includes(pos)) return 'MID';
+      if ([Position.AM, Position.AML, Position.AMR].includes(pos)) return 'AM';
+      if ([Position.ST, Position.STR, Position.STL].includes(pos)) return 'ATT';
+      return 'MID';
+    };
+
+    this.clubs.forEach(club => {
+      const seniors = this.getPlayersByClub(club.id).filter(p => p.squad === 'SENIOR');
+      const lineCounts = new Map<string, number>();
+      seniors.forEach(p => {
+        const line = positionToLine(p.positions[0]);
+        lineCounts.set(line, (lineCounts.get(line) || 0) + 1);
+      });
+      for (const [line, min] of Object.entries(MIN_BY_LINE)) {
+        const count = lineCounts.get(line) || 0;
+        if (count < min) {
+          const deficit = min - count;
+          const posPool = line === 'GK' ? [Position.GK] :
+                          line === 'DEF' ? [Position.DC, Position.DL, Position.DR, Position.SW] :
+                          line === 'DM' ? [Position.DM, Position.DML, Position.DMR] :
+                          line === 'MID' ? [Position.MC, Position.ML, Position.MR] :
+                          line === 'AM' ? [Position.AM, Position.AML, Position.AMR] :
+                          [Position.ST, Position.STR, Position.STL];
+          for (let i = 0; i < deficit; i++) {
+            const pos = posPool[randomInt(0, posPool.length - 1)];
+            const regen = this.createRandomPlayer(club.id, pos, 20, 28, new Date().getFullYear());
+            regen.squad = 'SENIOR';
+            this.players.push(regen);
+          }
+        }
+      }
+    });
   }
 
   developYouthPlayers(date: Date) {
@@ -2927,7 +3043,19 @@ generateYouthIntake(year: number) {
     const awayClub = this.getClub(fixture.awayTeamId);
     if (!homeClub || !awayClub) return;
     const isUserMatch = homeClub.id === this.getUserClub()?.id || awayClub.id === this.getUserClub()?.id;
-    const featured = Math.abs(homeScore - awayScore) >= 4; // goleadas a portada
+    const deepIds = new Set(useGameStore.getState().deepSimLeagues);
+    const isDeepLeague = deepIds.has(fixture.competitionId);
+
+    if (!isDeepLeague && !isUserMatch) {
+      const isInteresting =
+        Math.abs(homeScore - awayScore) >= 3 ||
+        (homeScore === awayScore && homeScore >= 3) ||
+        ((homeClub.reputation > 7000 || awayClub.reputation > 7000) && Math.abs(homeScore - awayScore) >= 2) ||
+        Math.random() < 0.02;
+      if (!isInteresting) return;
+    }
+
+    const featured = Math.abs(homeScore - awayScore) >= 4;
 
     if (homeScore > awayScore) {
       this.publishNews('RESULTADOS', {
@@ -3079,7 +3207,47 @@ generateYouthIntake(year: number) {
       read: false,
       featured: data.featured,
     });
-    if (this.mediaNews.length > 100) this.mediaNews.pop();
+    this.enforceNewsLimits();
+  }
+
+  private enforceNewsLimits() {
+    const SECTION_CAPS: Partial<Record<NewsSection, number>> = {
+      RESULTADOS: 25,
+      MERCADO: 20,
+      TU_CLUB: 15,
+      INTERNACIONAL: 15,
+      CLASIFICACION: 12,
+      DESPIDOS: 10,
+      LESIONES: 10,
+    };
+    const MAX_TOTAL = 150;
+
+    while (this.mediaNews.length > MAX_TOTAL) {
+      const sectionCounts = new Map<NewsSection, number>();
+      for (const n of this.mediaNews) {
+        sectionCounts.set(n.section, (sectionCounts.get(n.section) || 0) + 1);
+      }
+
+      const overCap = [...sectionCounts.entries()]
+        .filter(([sec, count]) => count > (SECTION_CAPS[sec] || 8))
+        .sort((a, b) => (SECTION_CAPS[b[0]] || 8) - (SECTION_CAPS[a[0]] || 8));
+
+      let removed = false;
+      for (const [sec] of overCap) {
+        const idx = this.mediaNews.findLastIndex(n => n.section === sec && !n.featured && !n.isUserClubNews);
+        if (idx >= 0) {
+          this.mediaNews.splice(idx, 1);
+          removed = true;
+          break;
+        }
+      }
+
+      if (!removed) {
+        const idx = this.mediaNews.findLastIndex(n => !n.featured && !n.isUserClubNews);
+        if (idx >= 0) this.mediaNews.splice(idx, 1);
+        else break;
+      }
+    }
   }
 
   /** Resumen semanal de clasificación (sección Clasificación del diario). */
