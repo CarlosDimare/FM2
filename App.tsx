@@ -435,8 +435,11 @@ if (result.userWonLeague) gs.trackTitle('Liga');
     world.processAIActivity(nextDay);
     world.processDailyContracts(nextDay, userClub?.id);
     world.processDailyScouting(nextDay, userClub?.id);
-      world.generateGeneralNews(nextDay);
-      // ── Diario: resumen de clasificación y despidos de entrenadores (semanal, los lunes) ──
+    world.generateGeneralNews(nextDay);
+    world.processLightMarketActivity(nextDay);
+    world.processQuarterlyYouthIntake(nextDay);
+    world.ensureMinimumSquadSizes();
+    // ── Diario: resumen de clasificación y despidos de entrenadores (semanal, los lunes) ──
       if (nextDay.getDay() === 1) {
         world.generateStandingsNews(nextDay, fixtures);
         world.simulateCoachChanges(nextDay, fixtures);
@@ -583,6 +586,11 @@ const startVacation = async (targetOverride?: Date) => {
       world.processAIActivity(tempDate);
       world.processDailyContracts(tempDate, userClub?.id);
       world.processDailyScouting(tempDate, userClub?.id);
+
+      world.generateGeneralNews(tempDate);
+      world.processLightMarketActivity(tempDate);
+      world.processQuarterlyYouthIntake(tempDate);
+      world.ensureMinimumSquadSizes();
 
       // Cosecha de cantera + retiros + purga (1 de agosto) — mismo gate que advanceTime
       if (tempDate.getMonth() === 7 && tempDate.getDate() === 1) {
@@ -737,6 +745,9 @@ const startVacation = async (targetOverride?: Date) => {
       world.processDailyContracts(tempDate, userClub?.id);
       world.processDailyScouting(tempDate, userClub?.id);
          world.generateGeneralNews(tempDate);
+         world.processLightMarketActivity(tempDate);
+         world.processQuarterlyYouthIntake(tempDate);
+         world.ensureMinimumSquadSizes();
 
       if (userClub) detectPlayerDialogueTriggers(userClub.id);
 
